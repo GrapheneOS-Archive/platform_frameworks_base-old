@@ -296,6 +296,23 @@ public class RuntimeInit {
         applicationInit(targetSdkVersion, argv, null);
     }
 
+    /**
+     * The main function called when an application is started via exec.
+     *
+     * When the process starts, the runtime starts {@link RuntimeInit#main}
+     * which calls {@link ExecInit#main} which then calls this method.
+     * So we don't need to call commonInit() here.
+     *
+     * @param targetSdkVersion target SDK version
+     * @param argv arg strings
+     */
+    public static void execInit(int targetSdkVersion, String[] argv)
+            throws ZygoteInit.MethodAndArgsCaller {
+        if (DEBUG) Slog.d(TAG, "RuntimeInit: Starting application from zygote with exec");
+
+        applicationInit(targetSdkVersion, argv, null);
+    }
+
     private static void applicationInit(int targetSdkVersion, String[] argv, ClassLoader classLoader)
             throws ZygoteInit.MethodAndArgsCaller {
         // If the application calls System.exit(), terminate the process
