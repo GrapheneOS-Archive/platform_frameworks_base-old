@@ -25,6 +25,7 @@ import static com.android.internal.os.ZygoteConnectionConstants.WRAPPED_PID_TIME
 
 import android.compat.annotation.UnsupportedAppUsage;
 import android.content.pm.ApplicationInfo;
+import android.ext.settings.ExtSettings;
 import android.net.Credentials;
 import android.net.LocalSocket;
 import android.os.Parcel;
@@ -247,7 +248,7 @@ class ZygoteConnection {
                     fdsToClose[1] = zygoteFd.getInt$();
                 }
 
-                if (parsedArgs.mInvokeWith != null || parsedArgs.mStartChildZygote
+                if (parsedArgs.mInvokeWith != null || ExtSettings.EXEC_SPAWNING.get() || parsedArgs.mStartChildZygote
                         || !multipleOK || peer.getUid() != Process.SYSTEM_UID) {
                     // Continue using old code for now. TODO: Handle these cases in the other path.
                     pid = Zygote.forkAndSpecialize(parsedArgs.mUid, parsedArgs.mGid,
@@ -535,6 +536,13 @@ class ZygoteConnection {
             throw new IllegalStateException("WrapperInit.execApplication unexpectedly returned");
         } else {
             if (!isZygote) {
+                if (ExtSettings.EXEC_SPAWNING.get()) {
+                    ExecInit.execApplication(parsedArgs.mNiceName, parsedArgs.mTargetSdkVersion,
+                            VMRuntime.getCurrentInstructionSet(), parsedArgs.mRemainingArgs);
+
+                    // Should not get here.
+                    throw new IllegalStateException("ExecInit.execApplication unexpectedly returned");
+                }
                 return ZygoteInit.zygoteInit(parsedArgs.mTargetSdkVersion,
                         parsedArgs.mDisabledCompatChanges,
                         parsedArgs.mRemainingArgs, null /* classLoader */);
