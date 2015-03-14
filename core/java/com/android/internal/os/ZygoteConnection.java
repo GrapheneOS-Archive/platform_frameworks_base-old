@@ -33,6 +33,7 @@ import android.net.Credentials;
 import android.net.LocalSocket;
 import android.os.Parcel;
 import android.os.Process;
+import android.os.SystemProperties;
 import android.os.Trace;
 import android.system.ErrnoException;
 import android.system.Os;
@@ -596,6 +597,13 @@ class ZygoteConnection {
             throw new IllegalStateException("WrapperInit.execApplication unexpectedly returned");
         } else {
             if (!isZygote) {
+                if (SystemProperties.getBoolean("sys.spawn.exec", true)) {
+                    ExecInit.execApplication(parsedArgs.mNiceName, parsedArgs.mTargetSdkVersion,
+                            VMRuntime.getCurrentInstructionSet(), parsedArgs.mRemainingArgs);
+
+                    // Should not get here.
+                    throw new IllegalStateException("ExecInit.execApplication unexpectedly returned");
+                }
                 return ZygoteInit.zygoteInit(parsedArgs.mTargetSdkVersion,
                         parsedArgs.mRemainingArgs, null /* classLoader */);
             } else {
