@@ -334,7 +334,7 @@ public class AssetAtlasService extends IAssetAtlas.Stub {
 
     @Override
     public boolean isCompatible(int ppid) {
-        return ppid == android.os.Process.myPpid();
+        return false;
     }
 
     @Override
