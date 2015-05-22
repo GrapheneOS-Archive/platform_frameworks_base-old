@@ -4379,4 +4379,18 @@
     <!-- Accessibilty string added to a widget that has been suspended [CHAR LIMIT=20] -->
     <string name="suspended_widget_accessibility">Disabled <xliff:g id="label" example="Calendar">%1$s</xliff:g></string>
 
+<!-- Copperhead OS Additions -->
+
+    <string name="permgrouplab_pax">PaX exceptions</string>
+    <string name="permgroupdesc_pax">Exceptions from PaX exploit mitigation features.</string>
+
+    <string name="permlab_paxNoPageexec">recover from no-execute violations</string>
+    <string name="permdesc_paxNoPageexec">Allows the app to recover from violations of no-execute memory permissions runtime (PAGEEXEC exception).</string>
+
+    <string name="permlab_paxNoMprotect">dynamic code generation</string>
+    <string name="permdesc_paxNoMprotect">Allows the app to create or modify executable code at runtime (MPROTECT exception).</string>
+
+    <string name="permlab_paxNoRandmmap">weak address space layout randomization</string>
+    <string name="permdesc_paxNoRandmmap">Use the standard Linux kernel ASLR instead of the stronger PaX implementation (RANDMMAP exception).</string>
+
 </resources>

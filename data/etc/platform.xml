@@ -125,6 +125,18 @@
     <permission name="android.permission.READ_EXTERNAL_STORAGE" />
     <permission name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
+    <permission name="android.permission.PAX_NO_PAGEEXEC" >
+        <group gid="pax_no_pageexec" />
+    </permission>
+
+    <permission name="android.permission.PAX_NO_MPROTECT" >
+        <group gid="pax_no_mprotect" />
+    </permission>
+
+    <permission name="android.permission.PAX_NO_RANDMMAP" >
+        <group gid="pax_no_randmmap" />
+    </permission>
+
     <!-- ================================================================== -->
     <!-- ================================================================== -->
     <!-- ================================================================== -->
