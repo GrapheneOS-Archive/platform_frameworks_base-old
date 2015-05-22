@@ -186,12 +186,8 @@ static const char ZYGOTE_NICE_NAME[] = "zygote";
 int main(int argc, char* const argv[])
 {
     if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) < 0) {
-        // Older kernels don't understand PR_SET_NO_NEW_PRIVS and return
-        // EINVAL. Don't die on such kernels.
-        if (errno != EINVAL) {
-            LOG_ALWAYS_FATAL("PR_SET_NO_NEW_PRIVS failed: %s", strerror(errno));
-            return 12;
-        }
+        LOG_ALWAYS_FATAL("PR_SET_NO_NEW_PRIVS failed: %s", strerror(errno));
+        return 12;
     }
 
     AppRuntime runtime(argv[0], computeArgBlockSize(argc, argv));
