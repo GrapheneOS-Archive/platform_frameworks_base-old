@@ -1744,6 +1744,38 @@
     <permission android:name="android.permission.UPDATE_CONFIG"
         android:protectionLevel="signature|privileged" />
 
+    <!-- =============================================== -->
+    <!-- Permissions for disabling PaX security features -->
+    <!-- =============================================== -->
+    <eat-comment />
+
+    <!-- @hide -->
+    <permission-group android:name="android.permission-group.PAX"
+        android:label="@string/permgrouplab_pax"
+        android:icon="@drawable/perm_group_screenlock"
+        android:description="@string/permgroupdesc_pax" />
+
+    <!-- @hide -->
+    <permission android:name="android.permission.PAX_NO_PAGEEXEC"
+        android:permissionGroup="android.permission-group.PAX"
+        android:protectionLevel="normal"
+        android:label="@string/permlab_paxNoPageexec"
+        android:description="@string/permdesc_paxNoPageexec" />
+
+    <!-- @hide -->
+    <permission android:name="android.permission.PAX_NO_MPROTECT"
+        android:permissionGroup="android.permission-group.PAX"
+        android:protectionLevel="normal"
+        android:label="@string/permlab_paxNoMprotect"
+        android:description="@string/permdesc_paxNoMprotect" />
+
+    <!-- @hide -->
+    <permission android:name="android.permission.PAX_NO_RANDMMAP"
+        android:permissionGroup="android.permission-group.PAX"
+        android:protectionLevel="normal"
+        android:label="@string/permlab_paxNoRandmmap"
+        android:description="@string/permdesc_paxNoRandmmap" />
+
     <!-- ========================================= -->
     <!-- Permissions for special development tools -->
     <!-- ========================================= -->
