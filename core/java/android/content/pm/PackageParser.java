@@ -142,6 +142,17 @@ public class PackageParser {
         }
     }
 
+    /** @hide */
+    public static class PaxExceptionInfo {
+        public final String packageName;
+        public final String[] permissions;
+
+        public PaxExceptionInfo(String packageName, String[] permissions) {
+            this.packageName = packageName;
+            this.permissions = permissions;
+        }
+    }
+
     /**
      * List of new permissions that have been added since 1.0.
      * NOTE: These must be declared in SDK version order, with permissions
@@ -180,6 +191,13 @@ public class PackageParser {
                     new String[] { android.Manifest.permission.WRITE_CALL_LOG },
                     android.os.Build.VERSION_CODES.JELLY_BEAN)
     };
+
+    /**
+     * Internal database of PaX exceptions.
+     * @hide
+     */
+    public static final PackageParser.PaxExceptionInfo PAX_EXCEPTIONS[] =
+        new PackageParser.PaxExceptionInfo[] {};
 
     /**
      * @deprecated callers should move to explicitly passing around source path.
@@ -1850,6 +1868,18 @@ public class PackageParser {
                 final String perm = spi.newPerms[in];
                 if (!pkg.requestedPermissions.contains(perm)) {
                     pkg.requestedPermissions.add(perm);
+                }
+            }
+        }
+
+        for (PackageParser.PaxExceptionInfo e : PackageParser.PAX_EXCEPTIONS) {
+            if (pkg.packageName != e.packageName) {
+                continue;
+            }
+
+            for (String p : e.permissions) {
+                if (!pkg.requestedPermissions.contains(p)) {
+                    pkg.requestedPermissions.add(p);
                 }
             }
         }
