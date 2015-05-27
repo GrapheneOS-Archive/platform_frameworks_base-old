@@ -159,7 +159,7 @@ public class PasswordEntryKeyboardHelper implements OnKeyboardActionListener {
                 mKeyboardState = KEYBOARD_STATE_NORMAL;
                 final boolean visiblePassword = Settings.System.getInt(
                         mContext.getContentResolver(),
-                        Settings.System.TEXT_SHOW_PASSWORD, 1) != 0;
+                        Settings.System.TEXT_SHOW_PASSWORD, 0) != 0;
                 final boolean enablePreview = false; // TODO: grab from configuration
                 mKeyboardView.setPreviewEnabled(visiblePassword && enablePreview);
                 break;
