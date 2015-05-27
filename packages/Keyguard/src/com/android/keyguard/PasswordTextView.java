@@ -134,7 +134,7 @@ public class PasswordTextView extends View {
         mDrawPaint.setColor(0xffffffff);
         mDrawPaint.setTypeface(Typeface.create("sans-serif-light", 0));
         mShowPassword = Settings.System.getInt(mContext.getContentResolver(),
-                Settings.System.TEXT_SHOW_PASSWORD, 1) == 1;
+                Settings.System.TEXT_SHOW_PASSWORD, 0) == 1;
         mAppearInterpolator = AnimationUtils.loadInterpolator(mContext,
                 android.R.interpolator.linear_out_slow_in);
         mDisappearInterpolator = AnimationUtils.loadInterpolator(mContext,
