@@ -197,7 +197,11 @@ public class PackageParser {
      * @hide
      */
     public static final PackageParser.PaxExceptionInfo PAX_EXCEPTIONS[] =
-        new PackageParser.PaxExceptionInfo[] {};
+        new PackageParser.PaxExceptionInfo[] {
+            // Text relocation(s)
+            new PackageParser.PaxExceptionInfo("org.videolan.vlc",
+                    new String[] { android.Manifest.permission.PAX_NO_MPROTECT })
+    };
 
     /**
      * @deprecated callers should move to explicitly passing around source path.
