@@ -291,7 +291,7 @@ public class TextKeyListener extends BaseKeyListener implements SpanWatcher {
         boolean cap = System.getInt(resolver, System.TEXT_AUTO_CAPS, 1) > 0;
         boolean text = System.getInt(resolver, System.TEXT_AUTO_REPLACE, 1) > 0;
         boolean period = System.getInt(resolver, System.TEXT_AUTO_PUNCTUATE, 1) > 0;
-        boolean pw = System.getInt(resolver, System.TEXT_SHOW_PASSWORD, 1) > 0;
+        boolean pw = System.getInt(resolver, System.TEXT_SHOW_PASSWORD, 0) > 0;
 
         mPrefs = (cap ? AUTO_CAP : 0) |
                  (text ? AUTO_TEXT : 0) |

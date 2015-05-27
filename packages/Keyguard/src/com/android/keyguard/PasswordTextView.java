@@ -129,7 +129,7 @@ public class PasswordTextView extends View {
         mCharPadding = getContext().getResources().getDimensionPixelSize(R.dimen
                 .password_char_padding);
         mShowPassword = Settings.System.getInt(mContext.getContentResolver(),
-                Settings.System.TEXT_SHOW_PASSWORD, 1) == 1;
+                Settings.System.TEXT_SHOW_PASSWORD, 0) == 1;
         mAppearInterpolator = AnimationUtils.loadInterpolator(mContext,
                 android.R.interpolator.linear_out_slow_in);
         mDisappearInterpolator = AnimationUtils.loadInterpolator(mContext,
