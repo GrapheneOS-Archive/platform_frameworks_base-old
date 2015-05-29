@@ -198,6 +198,15 @@ public class PackageParser {
      */
     public static final PackageParser.PaxExceptionInfo PAX_EXCEPTIONS[] =
         new PackageParser.PaxExceptionInfo[] {
+            // V8
+            new PackageParser.PaxExceptionInfo("com.android.chrome",
+                    new String[] { android.Manifest.permission.PAX_NO_MPROTECT }),
+            // V8
+            new PackageParser.PaxExceptionInfo("com.chrome.beta",
+                    new String[] { android.Manifest.permission.PAX_NO_MPROTECT }),
+            // V8
+            new PackageParser.PaxExceptionInfo("com.chrome.dev",
+                    new String[] { android.Manifest.permission.PAX_NO_MPROTECT }),
             // Text relocation(s)
             new PackageParser.PaxExceptionInfo("org.videolan.vlc",
                     new String[] { android.Manifest.permission.PAX_NO_MPROTECT })
