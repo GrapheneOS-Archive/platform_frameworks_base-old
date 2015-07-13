@@ -97,6 +97,7 @@ import com.android.server.DeviceIdleController;
 import com.android.server.IntentResolver;
 import com.android.server.LocalServices;
 import com.android.server.ServiceThread;
+import com.android.server.SystemConfig;
 import com.android.server.SystemService;
 import com.android.server.SystemServiceManager;
 import com.android.server.Watchdog;
@@ -3304,6 +3305,32 @@ public final class ActivityManagerService extends ActivityManagerNative
                 }
                 gids[0] = UserHandle.getSharedAppGid(UserHandle.getAppId(uid));
                 gids[1] = UserHandle.getUserGid(UserHandle.getUserId(uid));
+            } else {
+                // Give isolated services PaX exception permissions
+                String[] paxPermissions = {
+                    android.Manifest.permission.PAX_NO_PAGEEXEC,
+                    android.Manifest.permission.PAX_NO_MPROTECT,
+                    android.Manifest.permission.PAX_NO_RANDMMAP
+                };
+
+                SystemConfig systemConfig = SystemConfig.getInstance();
+                ArrayMap<String, SystemConfig.PermissionEntry> permConfig
+                        = systemConfig.getPermissions();
+
+                ArrayList<Integer> paxGids = new ArrayList<Integer>();
+                for (String perm : paxPermissions) {
+                    final PackageManager pm = mContext.getPackageManager();
+                    if (pm.checkPermission(perm, app.info.packageName) == PERMISSION_GRANTED) {
+                        for (int gid : permConfig.get(perm).gids) {
+                            paxGids.add(gid);
+                        }
+                    }
+                }
+
+                gids = new int[paxGids.size()];
+                for (int i = 0; i < paxGids.size(); i++) {
+                    gids[i] = paxGids.get(i);
+                }
             }
             checkTime(startTime, "startProcess: building args");
             if (mFactoryTest != FactoryTest.FACTORY_TEST_OFF) {
