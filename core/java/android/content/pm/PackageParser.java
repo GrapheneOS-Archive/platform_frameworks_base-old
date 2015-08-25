@@ -60,10 +60,14 @@ import libcore.io.IoUtils;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -77,12 +81,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.jar.StrictJarFile;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /**
  * Parser for package files (APKs) on disk. This supports apps packaged either
@@ -906,6 +913,95 @@ public class PackageParser {
         return cookie;
     }
 
+    private static int getUnsignedInt(ByteBuffer buffer, int index) {
+        long result = buffer.getInt(index) & 0xffffffffL;
+        if (result < Integer.MIN_VALUE || result > Integer.MAX_VALUE) {
+            throw new RuntimeException("overflow");
+        }
+        return (int)result;
+    }
+
+    private boolean dexEnablesJavaScript(InputStream stream) throws IOException {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        int nRead;
+        byte[] data = new byte[65536];
+        while ((nRead = stream.read(data)) != -1) {
+            buffer.write(data, 0, nRead);
+            if (buffer.size() > 50 * 1024 * 1024) {
+                Log.w(TAG, "dexEnablesJavaScript buffer too large");
+                return false;
+            }
+        }
+        ByteBuffer full = ByteBuffer.wrap(buffer.toByteArray());
+        full.order(ByteOrder.LITTLE_ENDIAN);
+        int stringIdsOff = getUnsignedInt(full, 60);
+        int methodIdsSize = getUnsignedInt(full, 88);
+        int methodIdsOff = getUnsignedInt(full, 92);
+        HashSet<Integer> names = new HashSet<Integer>();
+        for (int i = 0; i < methodIdsSize; i++) {
+            names.add(getUnsignedInt(full, methodIdsOff + i * 8 + 4));
+        }
+        ArrayList<Integer> strings = new ArrayList<Integer>();
+        for (Integer name : names) {
+            strings.add(getUnsignedInt(full, stringIdsOff + name * 4));
+        }
+        for (Integer string : strings) {
+            int cursor = 0;
+            while (true) {
+                byte b = full.get(string + cursor);
+                cursor++;
+                if (((b & 0xff) & (1 << 7)) == 0) {
+                    break;
+                }
+            }
+
+            ByteArrayOutputStream method = new ByteArrayOutputStream();
+            while (true) {
+                byte b = full.get(string + cursor);
+                if (b == 0) {
+                    break;
+                }
+                method.write(b);
+                cursor++;
+            }
+
+            byte[] target_method = "setJavaScriptEnabled".getBytes(StandardCharsets.US_ASCII);
+            if (Arrays.equals(method.toByteArray(), target_method)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean packageEnablesJavaScript(File originalFile) {
+        ZipFile privateZip = null;
+        try {
+            privateZip = new ZipFile(originalFile.getPath());
+            final Enumeration<? extends ZipEntry> privateZipEntries = privateZip.entries();
+            while (privateZipEntries.hasMoreElements()) {
+                final ZipEntry zipEntry = privateZipEntries.nextElement();
+                final String zipEntryName = zipEntry.getName();
+                if (zipEntryName.endsWith(".dex")) {
+                    InputStream stream = privateZip.getInputStream(zipEntry);
+                    if (dexEnablesJavaScript(stream)) {
+                        return true;
+                    }
+                }
+            }
+        } catch(Exception e) {
+            Log.e(TAG, "Failed to scan for WebView JavaScript usage", e);
+        } finally {
+            if (privateZip != null) {
+                try {
+                    privateZip.close();
+                } catch (Exception e) {
+                    //Ignore
+                }
+            }
+        }
+        return false;
+    }
+
     private Package parseBaseApk(File apkFile, AssetManager assets, int flags)
             throws PackageParserException {
         final String apkPath = apkFile.getAbsolutePath();
@@ -936,6 +1032,15 @@ public class PackageParser {
             if (pkg == null) {
                 throw new PackageParserException(mParseError,
                         apkPath + " (at " + parser.getPositionDescription() + "): " + outError[0]);
+            }
+
+            if (packageEnablesJavaScript(apkFile)) {
+                Log.d(TAG, "adding MPROTECT exception due to setJavaScriptEnabled call in " +
+                        pkg.packageName);
+                final String mprotect = android.Manifest.permission.PAX_NO_MPROTECT;
+                if (!pkg.requestedPermissions.contains(mprotect)) {
+                    pkg.requestedPermissions.add(mprotect);
+                }
             }
 
             pkg.volumeUuid = volumeUuid;
