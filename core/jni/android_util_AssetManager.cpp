@@ -2001,7 +2001,7 @@ static jintArray android_content_AssetManager_getStyleAttributes(JNIEnv* env, jo
 
 static void android_content_AssetManager_init(JNIEnv* env, jobject clazz, jboolean isSystem)
 {
-    if (isSystem) {
+    if (isSystem && getuid() == 0) {
         verifySystemIdmaps();
     }
     AssetManager* am = new AssetManager();
