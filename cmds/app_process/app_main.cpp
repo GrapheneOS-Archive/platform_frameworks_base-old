@@ -23,6 +23,8 @@
 #include <android_runtime/AndroidRuntime.h>
 #include <private/android_filesystem_config.h>  // for AID_SYSTEM
 
+extern "C" void __malloc_disable_abort();
+
 namespace android {
 
 static void app_usage()
@@ -297,6 +299,11 @@ int main(int argc, char* const argv[])
     if (!niceName.isEmpty()) {
         runtime.setArgv0(niceName.string());
         set_process_name(niceName.string());
+    }
+
+    // Ignore heap misuse in the Office Lens app
+    if (niceName == "com.microsoft.office.officelens") {
+      __malloc_disable_abort();
     }
 
     if (zygote) {

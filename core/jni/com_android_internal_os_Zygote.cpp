@@ -55,6 +55,8 @@
 
 #include "nativebridge/native_bridge.h"
 
+extern "C" void __malloc_disable_abort();
+
 namespace {
 
 using android::String8;
@@ -548,6 +550,11 @@ static pid_t ForkAndSpecializeCommon(JNIEnv* env, uid_t uid, gid_t gid, jintArra
     }
     if (se_info_c_str != NULL) {
       SetThreadName(se_name_c_str);
+
+      // Ignore heap misuse in the Office Lens app
+      if (strcmp(se_info_c_str, "com.microsoft.office.officelens") == 0) {
+        __malloc_disable_abort();
+      }
     }
 
     delete se_info;
