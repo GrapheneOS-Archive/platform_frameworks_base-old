@@ -555,6 +555,14 @@ static pid_t ForkAndSpecializeCommon(JNIEnv* env, uid_t uid, gid_t gid, jintArra
 
     UnsetSigChldHandler();
 
+    // Avoid intermittent GeckoLinker crashes
+    //
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=959254
+    setenv("MOZ_LINKER_ONDEMAND", "0", 1);
+
+    // Avoid requiring execute permissions for ashmem/tmpfs
+    setenv("MOZ_LINKER_EXTRACT", "1", 1);
+
     env->CallStaticVoidMethod(gZygoteClass, gCallPostForkChildHooks, debug_flags,
                               is_system_server ? NULL : instructionSet);
     if (env->ExceptionCheck()) {
