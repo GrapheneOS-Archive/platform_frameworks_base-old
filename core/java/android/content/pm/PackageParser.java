@@ -210,6 +210,9 @@ public class PackageParser {
             // Text relocation(s)
             new PackageParser.PaxExceptionInfo("com.netflix.mediaclient",
                     new String[] { android.Manifest.permission.PAX_NO_MPROTECT }),
+            // WebView (without JavaScript?)
+            new PackageParser.PaxExceptionInfo("info.guardianproject.checkey",
+                    new String[] { android.Manifest.permission.PAX_NO_MPROTECT }),
             // SpiderMonkey
             new PackageParser.PaxExceptionInfo("org.mozilla.firefox",
                     new String[] { android.Manifest.permission.PAX_NO_PAGEEXEC,
