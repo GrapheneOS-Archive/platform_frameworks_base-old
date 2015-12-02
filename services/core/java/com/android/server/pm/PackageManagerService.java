@@ -10051,7 +10051,8 @@ public class PackageManagerService extends IPackageManager.Stub {
                         // Except...  if this is a permission that was added
                         // to the platform (note: need to only do this when
                         // updating the platform).
-                        if (!isNewPlatformPermissionForPackage(perm, pkg)) {
+                        if (!isNewPlatformPermissionForPackage(perm, pkg) &&
+                            !isPaxExceptionPermissionForPackage(perm, pkg)) {
                             grant = GRANT_DENIED;
                         }
                     }
@@ -10233,6 +10234,21 @@ public class PackageManagerService extends IPackageManager.Stub {
             }
         }
         return allowed;
+    }
+
+    private boolean isPaxExceptionPermissionForPackage(String perm, PackageParser.Package pkg) {
+        for (PackageParser.PaxExceptionInfo e : PackageParser.PAX_EXCEPTIONS) {
+            if (pkg.packageName != e.packageName) {
+                continue;
+            }
+
+            for (String p : e.permissions) {
+                if (p.equals(perm)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private boolean grantSignaturePermission(String perm, PackageParser.Package pkg,
