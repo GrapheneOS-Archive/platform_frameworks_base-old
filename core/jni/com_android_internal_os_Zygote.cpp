@@ -31,7 +31,6 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <sys/capability.h>
-#include <sys/personality.h>
 #include <sys/prctl.h>
 #include <sys/resource.h>
 #include <sys/stat.h>
@@ -338,26 +337,6 @@ static bool MountEmulatedStorage(uid_t uid, jint mount_mode,
     return true;
 }
 
-static bool NeedsNoRandomizeWorkaround() {
-#if !defined(__arm__)
-    return false;
-#else
-    int major;
-    int minor;
-    struct utsname uts;
-    if (uname(&uts) == -1) {
-        return false;
-    }
-
-    if (sscanf(uts.release, "%d.%d", &major, &minor) != 2) {
-        return false;
-    }
-
-    // Kernels before 3.4.* need the workaround.
-    return (major < 3) || ((major == 3) && (minor < 4));
-#endif
-}
-
 // Utility to close down the Zygote socket file descriptors while
 // the child is still running as root with Zygote's privileges.  Each
 // descriptor (if any) is closed via dup2(), replacing it with a valid
@@ -529,15 +508,6 @@ static pid_t ForkAndSpecializeCommon(JNIEnv* env, uid_t uid, gid_t gid, jintArra
     if (rc == -1) {
       ALOGE("setresuid(%d) failed: %s", uid, strerror(errno));
       RuntimeAbort(env);
-    }
-
-    if (NeedsNoRandomizeWorkaround()) {
-        // Work around ARM kernel ASLR lossage (http://b/5817320).
-        int old_personality = personality(0xffffffff);
-        int new_personality = personality(old_personality | ADDR_NO_RANDOMIZE);
-        if (new_personality == -1) {
-            ALOGW("personality(%d) failed: %s", new_personality, strerror(errno));
-        }
     }
 
     SetCapabilities(env, permittedCapabilities, effectiveCapabilities);
