@@ -752,8 +752,14 @@ class ZygoteConnection {
                     VMRuntime.getCurrentInstructionSet(),
                     pipeFd, parsedArgs.remainingArgs);
         } else {
-            ExecInit.execApplication(parsedArgs.niceName, parsedArgs.targetSdkVersion,
-                    VMRuntime.getCurrentInstructionSet(), parsedArgs.remainingArgs);
+            boolean exec = SystemProperties.getBoolean("sys.exec", false);
+            if (exec) {
+                ExecInit.execApplication(parsedArgs.niceName, parsedArgs.targetSdkVersion,
+                        VMRuntime.getCurrentInstructionSet(), parsedArgs.remainingArgs);
+            } else {
+                RuntimeInit.zygoteInit(parsedArgs.targetSdkVersion,
+                        parsedArgs.remainingArgs, null /* classLoader */);
+            }
         }
     }
 
