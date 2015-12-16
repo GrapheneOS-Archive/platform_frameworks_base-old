@@ -792,13 +792,13 @@ android_hardware_Radio_hasControl(JNIEnv *env, jobject thiz)
 }
 
 
-static JNINativeMethod gMethods[] = {
+static const JNINativeMethod gMethods[] = {
     {"listModules",
         "(Ljava/util/List;)I",
         (void *)android_hardware_Radio_listModules},
 };
 
-static JNINativeMethod gModuleMethods[] = {
+static const JNINativeMethod gModuleMethods[] = {
     {"native_setup",
         "(Ljava/lang/Object;Landroid/hardware/radio/RadioManager$BandConfig;Z)V",
         (void *)android_hardware_Radio_setup},

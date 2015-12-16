@@ -225,7 +225,7 @@ static jint android_emoji_EmojiFactory_getMinimumAndroidPua(
   return factory->GetMinimumAndroidPua();
 }
 
-static JNINativeMethod gMethods[] = {
+static const JNINativeMethod gMethods[] = {
   { "newInstance", "(Ljava/lang/String;)Landroid/emoji/EmojiFactory;",
     (void*)android_emoji_EmojiFactory_newInstance},
   { "newAvailableInstance", "()Landroid/emoji/EmojiFactory;",

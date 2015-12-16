@@ -242,7 +242,7 @@ android_app_ActivityThread_dumpGraphics(JNIEnv* env, jobject clazz, jobject java
 
 const char* const kClassPathName = "android/view/DisplayListCanvas";
 
-static JNINativeMethod gMethods[] = {
+static const JNINativeMethod gMethods[] = {
     { "nIsAvailable",       "()Z",             (void*) android_view_DisplayListCanvas_isAvailable },
     { "nSetViewport",       "(JII)V",          (void*) android_view_DisplayListCanvas_setViewport },
     { "nSetHighContrastText","(JZ)V",          (void*) android_view_DisplayListCanvas_setHighContrastText },
@@ -270,7 +270,7 @@ static JNINativeMethod gMethods[] = {
     { "nGetMaximumTextureHeight", "()I",       (void*) android_view_DisplayListCanvas_getMaxTextureHeight },
 };
 
-static JNINativeMethod gActivityThreadMethods[] = {
+static const JNINativeMethod gActivityThreadMethods[] = {
     { "dumpGraphicsInfo",        "(Ljava/io/FileDescriptor;)V",
                                                (void*) android_app_ActivityThread_dumpGraphics }
 };

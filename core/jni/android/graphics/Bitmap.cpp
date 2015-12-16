@@ -1349,7 +1349,7 @@ static jlong Bitmap_refPixelRef(JNIEnv* env, jobject, jlong bitmapHandle) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static JNINativeMethod gBitmapMethods[] = {
+static const JNINativeMethod gBitmapMethods[] = {
     {   "nativeCreate",             "([IIIIIIZ)Landroid/graphics/Bitmap;",
         (void*)Bitmap_creator },
     {   "nativeCopy",               "(JIZ)Landroid/graphics/Bitmap;",

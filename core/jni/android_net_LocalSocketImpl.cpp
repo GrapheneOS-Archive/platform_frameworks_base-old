@@ -857,7 +857,7 @@ static jobject socket_getSockName(JNIEnv *env,
 /*
  * JNI registration.
  */
-static JNINativeMethod gMethods[] = {
+static const JNINativeMethod gMethods[] = {
      /* name, signature, funcPtr */
     {"getOption_native", "(Ljava/io/FileDescriptor;I)I", (void*)socket_getOption},
     {"setOption_native", "(Ljava/io/FileDescriptor;III)V", (void*)socket_setOption},
