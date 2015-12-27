@@ -231,6 +231,10 @@ public class PackageParser {
             new PackageParser.PaxExceptionInfo("org.mozilla.firefox_beta",
                     new String[] { android.Manifest.permission.PAX_NO_PAGEEXEC,
                                    android.Manifest.permission.PAX_NO_MPROTECT }),
+            // SpiderMonkey
+            new PackageParser.PaxExceptionInfo("org.palemoon.android",
+                    new String[] { android.Manifest.permission.PAX_NO_PAGEEXEC,
+                                   android.Manifest.permission.PAX_NO_MPROTECT }),
             // Text relocation(s)
             new PackageParser.PaxExceptionInfo("org.videolan.vlc",
                     new String[] { android.Manifest.permission.PAX_NO_MPROTECT })
