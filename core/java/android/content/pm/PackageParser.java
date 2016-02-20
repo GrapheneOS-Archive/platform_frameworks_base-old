@@ -288,6 +288,10 @@ public class PackageParser {
             new PackageParser.PaxExceptionInfo("info.guardianproject.checkey",
                     new String[] { android.Manifest.permission.PAX_NO_MPROTECT }),
             // SpiderMonkey
+            new PackageParser.PaxExceptionInfo("org.gnu.icecat",
+                    new String[] { android.Manifest.permission.PAX_NO_PAGEEXEC,
+                                   android.Manifest.permission.PAX_NO_MPROTECT }),
+            // SpiderMonkey
             new PackageParser.PaxExceptionInfo("org.mozilla.firefox",
                     new String[] { android.Manifest.permission.PAX_NO_PAGEEXEC,
                                    android.Manifest.permission.PAX_NO_MPROTECT }),
