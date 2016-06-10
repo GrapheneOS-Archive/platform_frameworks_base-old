@@ -189,25 +189,25 @@ public class ZygoteInit {
 
     static void preload() {
         Log.d(TAG, "begin preload");
-        Trace.traceBegin(Trace.TRACE_TAG_DALVIK, "BeginIcuCachePinning");
-        beginIcuCachePinning();
-        Trace.traceEnd(Trace.TRACE_TAG_DALVIK);
-        Trace.traceBegin(Trace.TRACE_TAG_DALVIK, "PreloadClasses");
-        preloadClasses();
-        Trace.traceEnd(Trace.TRACE_TAG_DALVIK);
+        //Trace.traceBegin(Trace.TRACE_TAG_DALVIK, "BeginIcuCachePinning");
+        //beginIcuCachePinning();
+        //Trace.traceEnd(Trace.TRACE_TAG_DALVIK);
+        //Trace.traceBegin(Trace.TRACE_TAG_DALVIK, "PreloadClasses");
+        //preloadClasses();
+        //Trace.traceEnd(Trace.TRACE_TAG_DALVIK);
         Trace.traceBegin(Trace.TRACE_TAG_DALVIK, "PreloadResources");
         preloadResources();
         Trace.traceEnd(Trace.TRACE_TAG_DALVIK);
-        Trace.traceBegin(Trace.TRACE_TAG_DALVIK, "PreloadOpenGL");
-        preloadOpenGL();
-        Trace.traceEnd(Trace.TRACE_TAG_DALVIK);
+        //Trace.traceBegin(Trace.TRACE_TAG_DALVIK, "PreloadOpenGL");
+        //preloadOpenGL();
+        //Trace.traceEnd(Trace.TRACE_TAG_DALVIK);
         preloadSharedLibraries();
         preloadTextResources();
         // Ask the WebViewFactory to do any initialization that must run in the zygote process,
         // for memory sharing purposes.
-        WebViewFactory.prepareWebViewInZygote();
-        endIcuCachePinning();
-        warmUpJcaProviders();
+        //WebViewFactory.prepareWebViewInZygote();
+        //endIcuCachePinning();
+        //warmUpJcaProviders();
         Log.d(TAG, "end preload");
     }
 
@@ -249,7 +249,7 @@ public class ZygoteInit {
 
     private static void preloadTextResources() {
         Hyphenator.init();
-        TextView.preloadFontCache();
+        //TextView.preloadFontCache();
     }
 
     /**
