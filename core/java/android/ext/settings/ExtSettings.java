@@ -96,6 +96,32 @@ public class ExtSettings {
     public static final IntSetting BLUETOOTH_AUTO_OFF = new IntSetting(
             Setting.Scope.GLOBAL, "bluetooth_off_timeout", 0 /* off by default */);
 
+    public static final String DENY_NEW_USB_DISABLED = "disabled";
+    public static final String DENY_NEW_USB_DYNAMIC = "dynamic";
+    public static final String DENY_NEW_USB_ENABLED = "enabled";
+    // also specified in build/make/core/main.mk
+    public static final String DENY_NEW_USB_DEFAULT = DENY_NEW_USB_DYNAMIC;
+
+    // see system/core/rootdir/init.rc
+    public static final String DENY_NEW_USB_TRANSIENT_PROP = "security.deny_new_usb";
+    public static final String DENY_NEW_USB_TRANSIENT_ENABLE = "1";
+    public static final String DENY_NEW_USB_TRANSIENT_DISABLE = "0";
+
+    public static final StringSysProperty DENY_NEW_USB = new StringSysProperty(
+            "persist.security.deny_new_usb", DENY_NEW_USB_DEFAULT) {
+        @Override
+        public boolean validateValue(String val) {
+            switch (val) {
+                case DENY_NEW_USB_DISABLED:
+                case DENY_NEW_USB_DYNAMIC:
+                case DENY_NEW_USB_ENABLED:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+    };
+
     private ExtSettings() {}
 
     // used for making settings defined in this class unreadable by third-party apps
