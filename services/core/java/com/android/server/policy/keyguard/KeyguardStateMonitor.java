@@ -20,6 +20,7 @@ import android.app.ActivityManager;
 import android.content.Context;
 import android.os.RemoteException;
 import android.os.ServiceManager;
+import android.os.SystemProperties;
 import android.security.IKeystoreService;
 import android.util.Slog;
 
@@ -99,6 +100,10 @@ public class KeyguardStateMonitor extends IKeyguardStateCallback.Stub {
             mKeystoreService.onKeyguardVisibilityChanged(showing, mCurrentUserId);
         } catch (RemoteException e) {
             Slog.e(TAG, "Error informing keystore of screen lock", e);
+        }
+
+        if ("dynamic".equals(SystemProperties.get("persist.security.deny_new_usb"))) {
+            SystemProperties.set("security.deny_new_usb", showing ? "1" : "0");
         }
     }
 
