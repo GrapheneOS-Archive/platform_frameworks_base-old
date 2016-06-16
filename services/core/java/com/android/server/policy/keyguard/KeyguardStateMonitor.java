@@ -18,7 +18,9 @@ package com.android.server.policy.keyguard;
 
 import android.app.ActivityManager;
 import android.content.Context;
+import android.ext.settings.DenyNewUsbSetting;
 import android.os.RemoteException;
+import android.os.SystemProperties;
 import android.util.Slog;
 
 import com.android.internal.policy.IKeyguardService;
@@ -89,6 +91,12 @@ public class KeyguardStateMonitor extends IKeyguardStateCallback.Stub {
         mIsShowing = showing;
 
         mCallback.onShowingChanged();
+
+        if (DenyNewUsbSetting.DYNAMIC.equals(DenyNewUsbSetting.SYS_PROP.get())) {
+            SystemProperties.set(DenyNewUsbSetting.TRANSIENT_PROP, showing ?
+                    DenyNewUsbSetting.TRANSIENT_ENABLE :
+                    DenyNewUsbSetting.TRANSIENT_DISABLE);
+        }
     }
 
     @Override // Binder interface
