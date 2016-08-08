@@ -406,15 +406,15 @@ public final class WebViewFactory {
         // unexpected values will be handled there to ensure that we trigger notifying any process
         // waiting on relro creation.
         if (Build.SUPPORTED_32_BIT_ABIS.length > 0) {
-            if (DEBUG) Log.v(LOGTAG, "Create 32 bit relro");
-            createRelroFile(false /* is64Bit */, nativeLibraryPaths);
-            numRelros++;
+            //if (DEBUG) Log.v(LOGTAG, "Create 32 bit relro");
+            //createRelroFile(false [> is64Bit <], nativeLibraryPaths);
+            //numRelros++;
         }
 
         if (Build.SUPPORTED_64_BIT_ABIS.length > 0) {
-            if (DEBUG) Log.v(LOGTAG, "Create 64 bit relro");
-            createRelroFile(true /* is64Bit */, nativeLibraryPaths);
-            numRelros++;
+            //if (DEBUG) Log.v(LOGTAG, "Create 64 bit relro");
+            //createRelroFile(true [> is64Bit <], nativeLibraryPaths);
+            //numRelros++;
         }
         return numRelros;
     }
@@ -549,77 +549,6 @@ public final class WebViewFactory {
         return new String[] { path32, path64 };
     }
 
-    private static void createRelroFile(final boolean is64Bit, String[] nativeLibraryPaths) {
-        final String abi =
-                is64Bit ? Build.SUPPORTED_64_BIT_ABIS[0] : Build.SUPPORTED_32_BIT_ABIS[0];
-
-        // crashHandler is invoked by the ActivityManagerService when the isolated process crashes.
-        Runnable crashHandler = new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Log.e(LOGTAG, "relro file creator for " + abi + " crashed. Proceeding without");
-                    getUpdateService().notifyRelroCreationCompleted();
-                } catch (RemoteException e) {
-                    Log.e(LOGTAG, "Cannot reach WebViewUpdateService. " + e.getMessage());
-                }
-            }
-        };
-
-        try {
-            if (nativeLibraryPaths == null
-                    || nativeLibraryPaths[0] == null || nativeLibraryPaths[1] == null) {
-                throw new IllegalArgumentException(
-                        "Native library paths to the WebView RelRo process must not be null!");
-            }
-            int pid = LocalServices.getService(ActivityManagerInternal.class).startIsolatedProcess(
-                    RelroFileCreator.class.getName(), nativeLibraryPaths, "WebViewLoader-" + abi, abi,
-                    Process.SHARED_RELRO_UID, crashHandler);
-            if (pid <= 0) throw new Exception("Failed to start the relro file creator process");
-        } catch (Throwable t) {
-            // Log and discard errors as we must not crash the system server.
-            Log.e(LOGTAG, "error starting relro file creator for abi " + abi, t);
-            crashHandler.run();
-        }
-    }
-
-    private static class RelroFileCreator {
-        // Called in an unprivileged child process to create the relro file.
-        public static void main(String[] args) {
-            boolean result = false;
-            boolean is64Bit = VMRuntime.getRuntime().is64Bit();
-            try{
-                if (args.length != 2 || args[0] == null || args[1] == null) {
-                    Log.e(LOGTAG, "Invalid RelroFileCreator args: " + Arrays.toString(args));
-                    return;
-                }
-                Log.v(LOGTAG, "RelroFileCreator (64bit = " + is64Bit + "), " +
-                        " 32-bit lib: " + args[0] + ", 64-bit lib: " + args[1]);
-                if (!sAddressSpaceReserved) {
-                    Log.e(LOGTAG, "can't create relro file; address space not reserved");
-                    return;
-                }
-                result = nativeCreateRelroFile(args[0] /* path32 */,
-                                               args[1] /* path64 */,
-                                               CHROMIUM_WEBVIEW_NATIVE_RELRO_32,
-                                               CHROMIUM_WEBVIEW_NATIVE_RELRO_64);
-                if (result && DEBUG) Log.v(LOGTAG, "created relro file");
-            } finally {
-                // We must do our best to always notify the update service, even if something fails.
-                try {
-                    getUpdateService().notifyRelroCreationCompleted();
-                } catch (RemoteException e) {
-                    Log.e(LOGTAG, "error notifying update service", e);
-                }
-
-                if (!result) Log.e(LOGTAG, "failed to create relro file");
-
-                // Must explicitly exit or else this process will just sit around after we return.
-                System.exit(0);
-            }
-        }
-    }
-
     // Assumes that we have waited for relro creation and set sPackageInfo
     private static int loadNativeLibrary(ClassLoader clazzLoader) {
         if (!sAddressSpaceReserved) {
@@ -650,8 +579,6 @@ public final class WebViewFactory {
     }
 
     private static native boolean nativeReserveAddressSpace(long addressSpaceToReserve);
-    private static native boolean nativeCreateRelroFile(String lib32, String lib64,
-                                                        String relro32, String relro64);
     private static native int nativeLoadWithRelroFile(String lib32, String lib64,
                                                       String relro32, String relro64,
                                                       ClassLoader clazzLoader);
