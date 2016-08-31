@@ -754,8 +754,13 @@ class ZygoteConnection {
                     VMRuntime.getCurrentInstructionSet(),
                     pipeFd, parsedArgs.remainingArgs);
         } else {
-            ExecInit.execApplication(parsedArgs.niceName, parsedArgs.targetSdkVersion,
-                    VMRuntime.getCurrentInstructionSet(), parsedArgs.remainingArgs);
+            if ("com.android.bluetooth".equals(parsedArgs.niceName)) {
+                RuntimeInit.zygoteInit(parsedArgs.targetSdkVersion,
+                        parsedArgs.remainingArgs, null /* classLoader */);
+            } else {
+                ExecInit.execApplication(parsedArgs.niceName, parsedArgs.targetSdkVersion,
+                        VMRuntime.getCurrentInstructionSet(), parsedArgs.remainingArgs);
+            }
         }
     }
 
