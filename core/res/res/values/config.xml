@@ -216,7 +216,7 @@
          dozing).  This should be enabled if you have such services and expect apps to
          correctly use them when installed on your device.  Otherwise, keep this disabled
          so that applications can still use their own mechanisms. -->
-    <bool name="config_enableAutoPowerModes">false</bool>
+    <bool name="config_enableAutoPowerModes">true</bool>
 
     <!-- The threshold angle for any motion detection in auto-power save modes.
          In hundreths of a degree. -->
