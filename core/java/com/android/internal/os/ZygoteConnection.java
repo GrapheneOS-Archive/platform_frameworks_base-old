@@ -754,7 +754,8 @@ class ZygoteConnection {
                     VMRuntime.getCurrentInstructionSet(),
                     pipeFd, parsedArgs.remainingArgs);
         } else {
-            if ("com.android.bluetooth".equals(parsedArgs.niceName)) {
+            if ("com.android.bluetooth".equals(parsedArgs.niceName) ||
+                    "com.android.systemui".equals(parsedArgs.niceName)) {
                 RuntimeInit.zygoteInit(parsedArgs.targetSdkVersion,
                         parsedArgs.remainingArgs, null /* classLoader */);
             } else {
