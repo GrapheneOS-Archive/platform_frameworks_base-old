@@ -795,11 +795,16 @@ class ZygoteConnection {
             // Should not get here.
             throw new IllegalStateException("WrapperInit.execApplication unexpectedly returned");
         } else {
-            ExecInit.execApplication(parsedArgs.niceName, parsedArgs.targetSdkVersion,
-                    VMRuntime.getCurrentInstructionSet(), parsedArgs.debugFlags, parsedArgs.remainingArgs);
+            if ("com.android.systemui".equals(parsedArgs.niceName)) {
+                return ZygoteInit.zygoteInit(parsedArgs.targetSdkVersion,
+                        parsedArgs.remainingArgs, null /* classLoader */);
+            } else {
+                ExecInit.execApplication(parsedArgs.niceName, parsedArgs.targetSdkVersion,
+                        VMRuntime.getCurrentInstructionSet(), parsedArgs.debugFlags, parsedArgs.remainingArgs);
 
-            // Should not get here.
-            throw new IllegalStateException("ExecInit.execApplication unexpectedly returned");
+                // Should not get here.
+                throw new IllegalStateException("ExecInit.execApplication unexpectedly returned");
+            }
         }
     }
 
