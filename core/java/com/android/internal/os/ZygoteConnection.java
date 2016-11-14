@@ -760,7 +760,7 @@ class ZygoteConnection {
                         parsedArgs.remainingArgs, null /* classLoader */);
             } else {
                 ExecInit.execApplication(parsedArgs.niceName, parsedArgs.targetSdkVersion,
-                        VMRuntime.getCurrentInstructionSet(), parsedArgs.remainingArgs);
+                        VMRuntime.getCurrentInstructionSet(), false, parsedArgs.remainingArgs);
             }
         }
     }
