@@ -524,18 +524,23 @@ public class ZygoteInit {
                     parsedArgs.niceName, parsedArgs.targetSdkVersion,
                     VMRuntime.getCurrentInstructionSet(), null, args);
         } else {
-            ClassLoader cl = null;
-            if (systemServerClasspath != null) {
-                cl = createSystemServerClassLoader(systemServerClasspath,
-                                                   parsedArgs.targetSdkVersion);
+            if (!SystemProperties.getBoolean("exec.system_server", false)) {
+                ClassLoader cl = null;
+                if (systemServerClasspath != null) {
+                    cl = createSystemServerClassLoader(systemServerClasspath,
+                                                       parsedArgs.targetSdkVersion);
 
-                Thread.currentThread().setContextClassLoader(cl);
+                    Thread.currentThread().setContextClassLoader(cl);
+                }
+
+                /*
+                 * Pass the remaining arguments to SystemServer.
+                 */
+                RuntimeInit.zygoteInit(parsedArgs.targetSdkVersion, parsedArgs.remainingArgs, cl);
+            } else {
+                ExecInit.execApplication(parsedArgs.niceName, parsedArgs.targetSdkVersion,
+                        VMRuntime.getCurrentInstructionSet(), true, parsedArgs.remainingArgs);
             }
-
-            /*
-             * Pass the remaining arguments to SystemServer.
-             */
-            RuntimeInit.zygoteInit(parsedArgs.targetSdkVersion, parsedArgs.remainingArgs, cl);
         }
 
         /* should never reach here */
@@ -546,7 +551,7 @@ public class ZygoteInit {
      * a shared namespace associated with the classloader to let it access
      * platform-private native libraries.
      */
-    private static PathClassLoader createSystemServerClassLoader(String systemServerClasspath,
+    public static PathClassLoader createSystemServerClassLoader(String systemServerClasspath,
                                                                  int targetSdkVersion) {
       String librarySearchPath = System.getProperty("java.library.path");
 

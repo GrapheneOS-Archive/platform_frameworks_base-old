@@ -317,11 +317,11 @@ public class RuntimeInit {
      * @param targetSdkVersion target SDK version
      * @param argv arg strings
      */
-    public static void execInit(int targetSdkVersion, String[] argv)
+    public static void execInit(int targetSdkVersion, String[] argv, ClassLoader classLoader)
             throws ZygoteInit.MethodAndArgsCaller {
         if (DEBUG) Slog.d(TAG, "RuntimeInit: Starting application from zygote with exec");
 
-        applicationInit(targetSdkVersion, argv, null);
+        applicationInit(targetSdkVersion, argv, classLoader);
     }
 
     private static void applicationInit(int targetSdkVersion, String[] argv, ClassLoader classLoader)
