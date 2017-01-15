@@ -21,8 +21,10 @@ import static com.android.systemui.statusbar.policy.DevicePostureController.DEVI
 import static com.android.systemui.statusbar.policy.DevicePostureController.DEVICE_POSTURE_UNKNOWN;
 
 import android.animation.ValueAnimator;
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.res.Configuration;
+import android.provider.Settings;
 import android.util.AttributeSet;
 import android.util.MathUtils;
 import android.view.View;
@@ -31,6 +33,11 @@ import android.view.animation.Interpolator;
 
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
+
+import java.security.SecureRandom;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import com.android.settingslib.animation.DisappearAnimationUtils;
 import com.android.systemui.R;
@@ -53,6 +60,8 @@ public class KeyguardPINView extends KeyguardPinBasedInputView {
     private View mBouncerMessageView;
     @DevicePostureInt private int mLastDevicePosture = DEVICE_POSTURE_UNKNOWN;
     public static final long ANIMATION_DURATION = 650;
+    private boolean mScramblePin;
+    private List<Integer> mDigits = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 0);
 
     public KeyguardPINView(Context context) {
         this(context, null);
@@ -168,6 +177,22 @@ public class KeyguardPINView extends KeyguardPinBasedInputView {
                 new View[]{
                         null, mEcaView, null
                 }};
+
+        mScramblePin = Settings.Secure.getIntForUser(mContext.getContentResolver(),
+                Settings.Secure.SCRAMBLE_PIN_LAYOUT, 0, ActivityManager.getCurrentUser()) == 1;
+
+        if (mScramblePin) {
+            Collections.shuffle(mDigits, new SecureRandom());
+            int finished = 0;
+            for (int i = 0; i < mContainer.getChildCount(); i++) {
+                View view = mContainer.getChildAt(i);
+                if (view instanceof NumPadKey) {
+                    NumPadKey key = (NumPadKey) view;
+                    key.setDigit(mDigits.get(finished));
+                    finished++;
+                }
+            }
+        }
     }
 
     @Override
@@ -206,6 +231,14 @@ public class KeyguardPINView extends KeyguardPinBasedInputView {
                 },
                 getAnimationListener(CUJ_LOCKSCREEN_PIN_DISAPPEAR));
         return true;
+    }
+
+    @Override
+    protected int getNumberIndex(int number) {
+        if (mScramblePin) {
+            return (mDigits.indexOf(number) + 1) % mDigits.size();
+        }
+        return super.getNumberIndex(number);
     }
 
     @Override
