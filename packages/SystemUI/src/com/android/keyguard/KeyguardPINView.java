@@ -21,12 +21,18 @@ import static com.android.systemui.statusbar.policy.DevicePostureController.DEVI
 
 import android.content.Context;
 import android.content.res.Configuration;
+import android.provider.Settings;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.animation.AnimationUtils;
 
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
+
+import java.security.SecureRandom;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import com.android.internal.jank.InteractionJankMonitor;
 import com.android.settingslib.animation.AppearAnimationUtils;
@@ -159,6 +165,23 @@ public class KeyguardPINView extends KeyguardPinBasedInputView {
                 new View[]{
                         null, mEcaView, null
                 }};
+
+        boolean scramblePin = Settings.System.getInt(getContext().getContentResolver(),
+                Settings.System.SCRAMBLE_PIN_LAYOUT, 0) == 1;
+
+        if (scramblePin) {
+            List<Integer> digits = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 0);
+            Collections.shuffle(digits, new SecureRandom());
+            int finished = 0;
+            for (int i = 0; i < mContainer.getChildCount(); i++) {
+                View view = mContainer.getChildAt(i);
+                if (view instanceof NumPadKey) {
+                    NumPadKey key = (NumPadKey) view;
+                    key.setDigit(digits.get(finished));
+                    finished++;
+                }
+            }
+        }
     }
 
     @Override
