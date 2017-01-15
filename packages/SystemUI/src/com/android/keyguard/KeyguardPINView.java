@@ -17,10 +17,17 @@
 package com.android.keyguard;
 
 import android.content.Context;
+import android.provider.Settings;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AnimationUtils;
+import android.widget.LinearLayout;
+
+import java.security.SecureRandom;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import com.android.settingslib.animation.AppearAnimationUtils;
 import com.android.settingslib.animation.DisappearAnimationUtils;
@@ -119,6 +126,28 @@ public class KeyguardPINView extends KeyguardPinBasedInputView {
                 mCallback.reset();
                 mCallback.onCancelClicked();
             });
+        }
+        boolean scramblePin = Settings.System.getInt(getContext().getContentResolver(),
+                Settings.System.SCRAMBLE_PIN_LAYOUT, 0) == 1;
+
+        if (scramblePin) {
+            List<Integer> digits = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 0);
+            Collections.shuffle(digits, new SecureRandom());
+            LinearLayout container = (LinearLayout) findViewById(R.id.container);
+            int finished = 0;
+            for (int i = 0; i < container.getChildCount(); i++) {
+                if (container.getChildAt(i) instanceof LinearLayout) {
+                    LinearLayout nestedLayout = ((LinearLayout) container.getChildAt(i));
+                    for (int j = 0; j < nestedLayout.getChildCount(); j++){
+                        View view = nestedLayout.getChildAt(j);
+                        if (view.getClass() == NumPadKey.class) {
+                            NumPadKey key = (NumPadKey) view;
+                            key.setDigit(digits.get(finished));
+                            finished++;
+                        }
+                    }
+                }
+            }
         }
     }
 
