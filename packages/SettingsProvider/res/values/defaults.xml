@@ -320,4 +320,7 @@
 
     <!-- Whether vibrate icon is shown in the status bar by default. -->
     <integer name="def_statusBarVibrateIconEnabled">0</integer>
+
+    <bool name="def_text_show_password">false</bool>
+
 </resources>
