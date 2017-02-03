@@ -314,4 +314,7 @@
 
     <!-- Whether tilt to bright is enabled by default. -->
     <bool name="def_wearable_tiltToBrightEnabled">false</bool>
+
+    <bool name="def_text_show_password">false</bool>
+
 </resources>
