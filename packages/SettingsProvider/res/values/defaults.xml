@@ -240,4 +240,6 @@
 
     <!-- Default for setting for Settings.Global.HDMI_CONTROL_AUTO_DEVICE_OFF_ENABLED -->
     <bool name="def_hdmiControlAutoDeviceOff">false</bool>
+
+    <bool name="def_text_show_password">false</bool>
 </resources>
