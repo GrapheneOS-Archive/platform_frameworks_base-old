@@ -217,4 +217,6 @@
 
     <!-- Default for Settings.System.VIBRATE_WHEN_RINGING -->
     <bool name="def_vibrate_when_ringing">false</bool>
+
+    <bool name="def_text_show_password">false</bool>
 </resources>
