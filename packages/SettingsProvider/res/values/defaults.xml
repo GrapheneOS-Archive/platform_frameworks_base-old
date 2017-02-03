@@ -338,4 +338,7 @@
 
     <!-- Value to use as default scale for fonts -->
     <item name="def_device_font_scale" format="float" type="dimen">1.0</item>
+
+    <bool name="def_text_show_password">false</bool>
+
 </resources>
