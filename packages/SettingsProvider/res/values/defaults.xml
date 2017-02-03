@@ -190,4 +190,6 @@
 
     <!-- default setting for Settings.Global.DEFAULT_RESTRICT_BACKGROUND_DATA -->
     <bool name="def_restrict_background_data">false</bool>
+
+    <bool name="def_text_show_password">false</bool>
 </resources>
