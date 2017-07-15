@@ -3272,7 +3272,7 @@
          with targetSdkVersion < 23, i.e apps using the old permission model.
          If review is not required, permissions are reviewed before the app
          is installed. -->
-    <bool name="config_permissionReviewRequired">false</bool>
+    <bool name="config_permissionReviewRequired">true</bool>
 
     <!-- Default value for android:focusableInTouchMode for some framework scrolling containers.
          ListView/GridView are notably absent since this is their default anyway.
