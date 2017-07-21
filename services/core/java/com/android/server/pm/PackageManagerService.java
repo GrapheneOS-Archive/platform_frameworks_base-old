@@ -19926,7 +19926,8 @@ public class PackageManagerService extends IPackageManager.Stub
             }
 
             // If this permission was granted by default, make sure it is.
-            if ((oldFlags & FLAG_PERMISSION_GRANTED_BY_DEFAULT) != 0) {
+            if ((oldFlags & FLAG_PERMISSION_GRANTED_BY_DEFAULT) != 0
+                    || PermissionManagerService.isSpecialRuntimePermission(bp.getName())) {
                 mPermissionManager.grantRuntimePermission(permName, packageName, false,
                         Process.SYSTEM_UID, userId, delayingPermCallback);
             // If permission review is enabled the permissions for a legacy apps
