@@ -19462,7 +19462,8 @@ public class PackageManagerService extends IPackageManager.Stub
             }
 
             // If this permission was granted by default, make sure it is.
-            if ((oldFlags & FLAG_PERMISSION_GRANTED_BY_DEFAULT) != 0) {
+            if ((oldFlags & FLAG_PERMISSION_GRANTED_BY_DEFAULT) != 0
+                    || PermissionManagerService.isSpecialRuntimePermission(bp.getName())) {
                 if (permissionsState.grantRuntimePermission(bp, userId)
                         != PERMISSION_OPERATION_FAILURE) {
                     writeRuntimePermissions = true;
