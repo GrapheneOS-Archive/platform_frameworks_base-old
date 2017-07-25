@@ -50,6 +50,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.provider.MediaStore;
 import android.service.media.CameraPrewarmService;
@@ -962,7 +963,8 @@ public class KeyguardBottomAreaView extends FrameLayout implements View.OnClickL
             mIconState.isVisible = !isCameraDisabled
                     && mShowCameraAffordance
                     && mUserSetupComplete
-                    && resolveCameraIntent() != null;
+                    && resolveCameraIntent() != null
+                    && SystemProperties.getBoolean("persist.keyguard.camera", true);
             mIconState.drawable = mContext.getDrawable(R.drawable.ic_camera_alt_24dp);
             mIconState.contentDescription =
                     mContext.getString(R.string.accessibility_camera_button);
