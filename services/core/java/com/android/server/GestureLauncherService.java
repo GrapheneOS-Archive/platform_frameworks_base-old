@@ -17,6 +17,7 @@
 package com.android.server;
 
 import android.app.ActivityManager;
+import android.app.KeyguardManager;
 import android.app.StatusBarManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -398,6 +399,14 @@ public class GestureLauncherService extends SystemService {
      */
     @VisibleForTesting
     boolean handleCameraGesture(boolean useWakelock, int source) {
+        if (!SystemProperties.getBoolean("persist.keyguard.camera", true)) {
+            final KeyguardManager manager = (KeyguardManager) getContext().getSystemService(
+                    Context.KEYGUARD_SERVICE);
+            if (manager.inKeyguardRestrictedInputMode()) {
+                return false;
+            }
+        }
+
         boolean userSetupComplete = Settings.Secure.getIntForUser(mContext.getContentResolver(),
                 Settings.Secure.USER_SETUP_COMPLETE, 0, UserHandle.USER_CURRENT) != 0;
         if (!userSetupComplete) {
