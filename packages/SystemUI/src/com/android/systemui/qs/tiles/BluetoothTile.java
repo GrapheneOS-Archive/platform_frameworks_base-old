@@ -45,6 +45,7 @@ import com.android.systemui.qs.QSDetailItems.Item;
 import com.android.systemui.qs.QSHost;
 import com.android.systemui.qs.tileimpl.QSTileImpl;
 import com.android.systemui.statusbar.policy.BluetoothController;
+import com.android.systemui.statusbar.policy.KeyguardMonitor;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -57,11 +58,15 @@ public class BluetoothTile extends QSTileImpl<BooleanState> {
     private final BluetoothDetailAdapter mDetailAdapter;
     private final ActivityStarter mActivityStarter;
 
+    private final KeyguardMonitor mKeyguard;
+    private final KeyguardCallback mKeyguardCallback = new KeyguardCallback();
+
     public BluetoothTile(QSHost host) {
         super(host);
         mController = Dependency.get(BluetoothController.class);
         mActivityStarter = Dependency.get(ActivityStarter.class);
         mDetailAdapter = (BluetoothDetailAdapter) createDetailAdapter();
+        mKeyguard = Dependency.get(KeyguardMonitor.class);
     }
 
     @Override
@@ -78,16 +83,29 @@ public class BluetoothTile extends QSTileImpl<BooleanState> {
     public void handleSetListening(boolean listening) {
         if (listening) {
             mController.addCallback(mCallback);
+            mKeyguard.addCallback(mKeyguardCallback);
         } else {
             mController.removeCallback(mCallback);
+            mKeyguard.removeCallback(mKeyguardCallback);
         }
+    }
+
+    void handleClickInner() {
+        // Secondary clicks are header clicks, just toggle.
+        final boolean isEnabled = mState.value;
+        mController.setBluetoothEnabled(!isEnabled);
     }
 
     @Override
     protected void handleClick() {
-        // Secondary clicks are header clicks, just toggle.
-        final boolean isEnabled = mState.value;
-        mController.setBluetoothEnabled(!isEnabled);
+        if (mKeyguard.isSecure() && mKeyguard.isShowing()) {
+            Dependency.get(ActivityStarter.class).postQSRunnableDismissingKeyguard(() -> {
+                mHost.openPanels();
+                handleClickInner();
+            });
+            return;
+        }
+        handleClickInner();
     }
 
     @Override
@@ -100,6 +118,13 @@ public class BluetoothTile extends QSTileImpl<BooleanState> {
         if (!mController.canConfigBluetooth()) {
             mActivityStarter.postStartActivityDismissingKeyguard(
                     new Intent(Settings.ACTION_BLUETOOTH_SETTINGS), 0);
+            return;
+        }
+        if (mKeyguard.isSecure() && mKeyguard.isShowing()) {
+            Dependency.get(ActivityStarter.class).postQSRunnableDismissingKeyguard(() -> {
+                mHost.openPanels();
+                showDetail(true);
+            });
             return;
         }
         showDetail(true);
@@ -354,4 +379,11 @@ public class BluetoothTile extends QSTileImpl<BooleanState> {
             }
         }
     }
+
+    private final class KeyguardCallback implements KeyguardMonitor.Callback {
+        @Override
+        public void onKeyguardShowingChanged() {
+            refreshState();
+        }
+    };
 }
