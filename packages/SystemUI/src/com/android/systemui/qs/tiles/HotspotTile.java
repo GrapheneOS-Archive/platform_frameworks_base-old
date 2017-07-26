@@ -33,6 +33,8 @@ import com.android.systemui.qs.QSHost;
 import com.android.systemui.plugins.qs.QSTile.AirplaneBooleanState;
 import com.android.systemui.qs.tileimpl.QSTileImpl;
 import com.android.systemui.statusbar.policy.HotspotController;
+import com.android.systemui.plugins.ActivityStarter;
+import com.android.systemui.statusbar.policy.KeyguardMonitor;
 
 /** Quick settings tile: Hotspot **/
 public class HotspotTile extends QSTileImpl<AirplaneBooleanState> {
@@ -47,9 +49,13 @@ public class HotspotTile extends QSTileImpl<AirplaneBooleanState> {
     private final GlobalSetting mAirplaneMode;
     private boolean mListening;
 
+    private final KeyguardMonitor mKeyguard;
+    private final KeyguardCallback mKeyguardCallback = new KeyguardCallback();
+
     public HotspotTile(QSHost host) {
         super(host);
         mController = Dependency.get(HotspotController.class);
+        mKeyguard = Dependency.get(KeyguardMonitor.class);
         mAirplaneMode = new GlobalSetting(mContext, mHandler, Global.AIRPLANE_MODE_ON) {
             @Override
             protected void handleValueChanged(int value) {
@@ -82,8 +88,10 @@ public class HotspotTile extends QSTileImpl<AirplaneBooleanState> {
             final IntentFilter filter = new IntentFilter();
             filter.addAction(Intent.ACTION_AIRPLANE_MODE_CHANGED);
             refreshState();
+            mKeyguard.addCallback(mKeyguardCallback);
         } else {
             mController.removeCallback(mCallback);
+            mKeyguard.removeCallback(mKeyguardCallback);
         }
         mAirplaneMode.setListening(listening);
     }
@@ -97,6 +105,13 @@ public class HotspotTile extends QSTileImpl<AirplaneBooleanState> {
     protected void handleClick() {
         final boolean isEnabled = (Boolean) mState.value;
         if (!isEnabled && mAirplaneMode.getValue() != 0) {
+            return;
+        }
+        if (mKeyguard.isSecure() && mKeyguard.isShowing()) {
+            Dependency.get(ActivityStarter.class).postQSRunnableDismissingKeyguard(() -> {
+                mHost.openPanels();
+                mController.setHotspotEnabled(!isEnabled);
+            });
             return;
         }
         mController.setHotspotEnabled(!isEnabled);
@@ -151,6 +166,13 @@ public class HotspotTile extends QSTileImpl<AirplaneBooleanState> {
         @Override
         public void onHotspotChanged(boolean enabled) {
             refreshState(enabled);
+        }
+    };
+
+    private final class KeyguardCallback implements KeyguardMonitor.Callback {
+        @Override
+        public void onKeyguardShowingChanged() {
+            refreshState();
         }
     };
 }
