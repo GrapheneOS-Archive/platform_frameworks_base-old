@@ -192,4 +192,6 @@
     <bool name="def_restrict_background_data">false</bool>
 
     <bool name="def_text_show_password">false</bool>
+
+    <integer name="def_tether_dun_required">0</integer>
 </resources>
