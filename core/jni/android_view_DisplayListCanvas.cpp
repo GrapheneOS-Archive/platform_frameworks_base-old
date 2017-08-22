@@ -193,7 +193,7 @@ static void android_view_DisplayListCanvas_drawCircleProps(jlong canvasPtr,
 
 const char* const kClassPathName = "android/view/DisplayListCanvas";
 
-static JNINativeMethod gMethods[] = {
+static const JNINativeMethod gMethods[] = {
 
     // ------------ @FastNative ------------------
 
@@ -213,7 +213,7 @@ static JNINativeMethod gMethods[] = {
     { "nDrawRoundRect",           "(JJJJJJJJ)V",(void*) android_view_DisplayListCanvas_drawRoundRectProps },
 };
 
-static JNINativeMethod gActivityThreadMethods[] = {
+static const JNINativeMethod gActivityThreadMethods[] = {
         // ------------ Regular JNI ------------------
     { "nDumpGraphicsInfo",        "(Ljava/io/FileDescriptor;)V",
                                                (void*) android_app_ActivityThread_dumpGraphics }

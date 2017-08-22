@@ -413,7 +413,7 @@ static jboolean JHwRemoteBinder_unlinkToDeath(JNIEnv* env, jobject thiz,
     return res;
 }
 
-static JNINativeMethod gMethods[] = {
+static const JNINativeMethod gMethods[] = {
     { "native_init", "()J", (void *)JHwRemoteBinder_native_init },
 
     { "native_setup_empty", "()V",

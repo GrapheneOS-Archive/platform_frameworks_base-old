@@ -405,7 +405,7 @@ void JHwBinder_native_joinRpcThreadpool() {
     IPCThreadState::self()->joinThreadPool();
 }
 
-static JNINativeMethod gMethods[] = {
+static const JNINativeMethod gMethods[] = {
     { "native_init", "()J", (void *)JHwBinder_native_init },
     { "native_setup", "()V", (void *)JHwBinder_native_setup },
 
