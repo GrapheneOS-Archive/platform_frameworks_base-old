@@ -445,15 +445,15 @@ public final class WebViewFactory {
         // unexpected values will be handled there to ensure that we trigger notifying any process
         // waiting on relro creation.
         if (Build.SUPPORTED_32_BIT_ABIS.length > 0) {
-            if (DEBUG) Log.v(LOGTAG, "Create 32 bit relro");
-            WebViewLibraryLoader.createRelroFile(false /* is64Bit */, nativeLibraryPaths);
-            numRelros++;
+            //if (DEBUG) Log.v(LOGTAG, "Create 32 bit relro");
+            //WebViewLibraryLoader.createRelroFile(false [> is64Bit <], nativeLibraryPaths);
+            //numRelros++;
         }
 
         if (Build.SUPPORTED_64_BIT_ABIS.length > 0) {
-            if (DEBUG) Log.v(LOGTAG, "Create 64 bit relro");
-            WebViewLibraryLoader.createRelroFile(true /* is64Bit */, nativeLibraryPaths);
-            numRelros++;
+            //if (DEBUG) Log.v(LOGTAG, "Create 64 bit relro");
+            //WebViewLibraryLoader.createRelroFile(true [> is64Bit <], nativeLibraryPaths);
+            //numRelros++;
         }
         return numRelros;
     }
