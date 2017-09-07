@@ -4454,12 +4454,7 @@ public class ActivityManagerService extends IActivityManager.Stub
 
             ProfilerInfo profilerInfo = mAppProfiler.setupProfilerInfoLocked(thread, app, instr);
 
-            // We deprecated Build.SERIAL and it is not accessible to
-            // Instant Apps and target APIs higher than O MR1. Since access to the serial
-            // is now behind a permission we push down the value.
-            final String buildSerial = (!appInfo.isInstantApp()
-                    && appInfo.targetSdkVersion < Build.VERSION_CODES.P)
-                            ? sTheRealBuildSerial : Build.UNKNOWN;
+            final String buildSerial = Build.UNKNOWN;
 
             // Figure out whether the app needs to run in autofill compat mode.
             AutofillOptions autofillOptions = null;
