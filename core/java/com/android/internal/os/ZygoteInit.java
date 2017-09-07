@@ -479,36 +479,29 @@ public class ZygoteInit {
             }
         }
 
-        if (parsedArgs.invokeWith != null) {
-            String[] args = parsedArgs.remainingArgs;
-            // If we have a non-null system server class path, we'll have to duplicate the
-            // existing arguments and append the classpath to it. ART will handle the classpath
-            // correctly when we exec a new process.
-            if (systemServerClasspath != null) {
-                String[] amendedArgs = new String[args.length + 2];
-                amendedArgs[0] = "-cp";
-                amendedArgs[1] = systemServerClasspath;
-                System.arraycopy(args, 0, amendedArgs, 2, args.length);
-                args = amendedArgs;
-            }
+        String[] args = parsedArgs.remainingArgs;
+        // If we have a non-null system server class path, we'll have to duplicate the
+        // existing arguments and append the classpath to it. ART will handle the classpath
+        // correctly when we exec a new process.
+        if (systemServerClasspath != null) {
+            String[] amendedArgs = new String[args.length + 2];
+            amendedArgs[0] = "-cp";
+            amendedArgs[1] = systemServerClasspath;
+            System.arraycopy(args, 0, amendedArgs, 2, args.length);
+            args = amendedArgs;
+        }
 
+        if (parsedArgs.invokeWith != null) {
             WrapperInit.execApplication(parsedArgs.invokeWith,
                     parsedArgs.niceName, parsedArgs.targetSdkVersion,
                     VMRuntime.getCurrentInstructionSet(), null, args);
 
             throw new IllegalStateException("Unexpected return from WrapperInit.execApplication");
         } else {
-            ClassLoader cl = null;
-            if (systemServerClasspath != null) {
-                cl = createPathClassLoader(systemServerClasspath, parsedArgs.targetSdkVersion);
+            ExecInit.execApplication(parsedArgs.niceName, parsedArgs.targetSdkVersion,
+                    VMRuntime.getCurrentInstructionSet(), parsedArgs.debugFlags, args);
 
-                Thread.currentThread().setContextClassLoader(cl);
-            }
-
-            /*
-             * Pass the remaining arguments to SystemServer.
-             */
-            return ZygoteInit.zygoteInit(parsedArgs.targetSdkVersion, parsedArgs.remainingArgs, cl);
+            throw new IllegalStateException("Unexpected return from ExecInit.execApplication");
         }
 
         /* should never reach here */
