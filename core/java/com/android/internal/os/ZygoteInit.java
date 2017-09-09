@@ -109,7 +109,7 @@ public class ZygoteInit {
     private static final String PRELOADED_CLASSES = "/system/etc/preloaded-classes";
 
     /** Controls whether we should preload resources during zygote init. */
-    public static final boolean PRELOAD_RESOURCES = true;
+    public static final boolean PRELOAD_RESOURCES = false;
 
     private static final int UNPRIVILEGED_UID = 9999;
     private static final int UNPRIVILEGED_GID = 9999;
