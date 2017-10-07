@@ -116,6 +116,7 @@ package android {
     field public static final String NFC = "android.permission.NFC";
     field public static final String NFC_PREFERRED_PAYMENT_INFO = "android.permission.NFC_PREFERRED_PAYMENT_INFO";
     field public static final String NFC_TRANSACTION_EVENT = "android.permission.NFC_TRANSACTION_EVENT";
+    field public static final String OTHER_SENSORS = "android.permission.OTHER_SENSORS";
     field public static final String PACKAGE_USAGE_STATS = "android.permission.PACKAGE_USAGE_STATS";
     field @Deprecated public static final String PERSISTENT_ACTIVITY = "android.permission.PERSISTENT_ACTIVITY";
     field @Deprecated public static final String PROCESS_OUTGOING_CALLS = "android.permission.PROCESS_OUTGOING_CALLS";
@@ -204,6 +205,7 @@ package android {
     field public static final String MICROPHONE = "android.permission-group.MICROPHONE";
     field public static final String NEARBY_DEVICES = "android.permission-group.NEARBY_DEVICES";
     field public static final String NETWORK = "android.permission-group.NETWORK";
+    field public static final String OTHER_SENSORS = "android.permission-group.OTHER_SENSORS";
     field public static final String PHONE = "android.permission-group.PHONE";
     field public static final String SENSORS = "android.permission-group.SENSORS";
     field public static final String SMS = "android.permission-group.SMS";
