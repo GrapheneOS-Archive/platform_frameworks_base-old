@@ -254,8 +254,10 @@ public class AppOpsManager {
     public static final int OP_ANSWER_PHONE_CALLS = 69;
     /** @hide */
     public static final int OP_READ_CLIPBOARD_BACKGROUND = 70;
+    /** @hide Record Audio in the background */
+    public static final int OP_RECORD_AUDIO_BACKGROUND = 71;
     /** @hide */
-    public static final int _NUM_OP = 71;
+    public static final int _NUM_OP = 72;
 
     /** Access to coarse location information. */
     public static final String OPSTR_COARSE_LOCATION = "android:coarse_location";
@@ -495,7 +497,8 @@ public class AppOpsManager {
             OP_PICTURE_IN_PICTURE,
             OP_INSTANT_APP_START_FOREGROUND,
             OP_ANSWER_PHONE_CALLS,
-            OP_READ_CLIPBOARD_BACKGROUND
+            OP_READ_CLIPBOARD_BACKGROUND,
+            OP_RECORD_AUDIO_BACKGROUND
     };
 
     /**
@@ -573,6 +576,7 @@ public class AppOpsManager {
             OPSTR_PICTURE_IN_PICTURE,
             OPSTR_INSTANT_APP_START_FOREGROUND,
             OPSTR_ANSWER_PHONE_CALLS,
+            null,
             null
     };
 
@@ -651,7 +655,8 @@ public class AppOpsManager {
             "PICTURE_IN_PICTURE",
             "INSTANT_APP_START_FOREGROUND",
             "ANSWER_PHONE_CALLS",
-            "READ_CLIPBOARD_BACKGROUND"
+            "READ_CLIPBOARD_BACKGROUND",
+            "RECORD_AUDIO_BACKGROUND"
     };
 
     /**
@@ -729,7 +734,8 @@ public class AppOpsManager {
             null, // no permission for entering picture-in-picture on hide
             Manifest.permission.INSTANT_APP_FOREGROUND_SERVICE,
             Manifest.permission.ANSWER_PHONE_CALLS,
-            null // no permission for reading clipboard in the background
+            null, // no permission for reading clipboard in the background
+            android.Manifest.permission.RECORD_AUDIO
     };
 
     /**
@@ -808,7 +814,8 @@ public class AppOpsManager {
             null, // ENTER_PICTURE_IN_PICTURE_ON_HIDE
             null, // INSTANT_APP_START_FOREGROUND
             null, // ANSWER_PHONE_CALLS
-            null //READ_CLIPBOARD_BACKGROUND
+            null, //READ_CLIPBOARD_BACKGROUND
+            UserManager.DISALLOW_RECORD_AUDIO // RECORD_AUDIO_BACKGROUND
     };
 
     /**
@@ -886,7 +893,8 @@ public class AppOpsManager {
             false, // ENTER_PICTURE_IN_PICTURE_ON_HIDE
             false, // INSTANT_APP_START_FOREGROUND
             false, // ANSWER_PHONE_CALLS
-            false // READ_CLIPBOARD_BACKGROUND
+            false, // READ_CLIPBOARD_BACKGROUND
+            false // RECORD_AUDIO_BACKGROUND
     };
 
     /**
@@ -963,7 +971,8 @@ public class AppOpsManager {
             AppOpsManager.MODE_ALLOWED,  // OP_PICTURE_IN_PICTURE
             AppOpsManager.MODE_DEFAULT,  // OP_INSTANT_APP_START_FOREGROUND
             AppOpsManager.MODE_ALLOWED, // ANSWER_PHONE_CALLS
-            AppOpsManager.MODE_IGNORED // OP_READ_CLIPBOARD_BACKGROUND
+            AppOpsManager.MODE_IGNORED, // OP_READ_CLIPBOARD_BACKGROUND
+            AppOpsManager.MODE_IGNORED // OP_RECORD_AUDIO_BACKGROUND
     };
 
     /**
@@ -1044,6 +1053,7 @@ public class AppOpsManager {
             false, // OP_PICTURE_IN_PICTURE
             false,
             false, // ANSWER_PHONE_CALLS
+            false,
             false
     };
 
@@ -1108,6 +1118,7 @@ public class AppOpsManager {
 
         // All the Ops having a matching background op
         sOpToBgOp.put(OP_READ_CLIPBOARD, OP_READ_CLIPBOARD_BACKGROUND);
+        sOpToBgOp.put(OP_RECORD_AUDIO, OP_RECORD_AUDIO_BACKGROUND);
     }
 
     /**
