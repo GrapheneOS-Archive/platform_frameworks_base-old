@@ -1047,6 +1047,11 @@ public class AppOpsManager {
      */
     private static HashMap<String, Integer> sPermToOp = new HashMap<>();
 
+    /**
+     * Mapping from an app op code to the coressponding background app op code.
+     */
+    private static HashMap<Integer, Integer> sOpToBgOp = new HashMap<>();
+
     static {
         if (sOpToSwitch.length != _NUM_OP) {
             throw new IllegalStateException("sOpToSwitch length " + sOpToSwitch.length
@@ -1171,6 +1176,22 @@ public class AppOpsManager {
      */
     public static boolean opAllowsReset(int op) {
         return !sOpDisableReset[op];
+    }
+
+    /**
+     * Retrieve the background op of an op
+     * @hide
+     */
+    public static int opToBgOp(int op) {
+        return sOpToBgOp.get(op);
+    }
+
+    /**
+     * Check whether op has a matching bg op
+     * @hide
+     */
+    public static boolean isBgOp(int op) {
+        return sOpToBgOp.containsKey(op);
     }
 
     /**
