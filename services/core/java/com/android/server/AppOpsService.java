@@ -1120,6 +1120,34 @@ public class AppOpsService extends IAppOpsService.Stub {
                     return switchOp.mode;
                 }
             }
+
+            if (AppOpsManager.isBgOp(code) || AppOpsManager.isBgOp(switchCode)) {
+                try {
+                    boolean fg = ActivityManager.getService().isAppForeground(uid);
+                    if (!fg) {
+                        Op bgOp = getOpLocked(ops, AppOpsManager.opToBgOp(code), true);
+                        if (bgOp.mode != AppOpsManager.MODE_ALLOWED) {
+                            if (DEBUG) Log.d(TAG, "noteOperation: reject #" + op.mode + " for code "
+                                    + switchCode + " (" + code + ") uid " + uid + " package "
+                                    + packageName + " as it is not a foreground app");
+                            op.rejectTime = System.currentTimeMillis();
+                            return AppOpsManager.MODE_IGNORED;
+                        }
+
+                        Op bgSwitchOp = getOpLocked(ops, AppOpsManager.opToBgOp(switchCode), true);
+                        if (bgSwitchOp.mode != AppOpsManager.MODE_ALLOWED) {
+                            if (DEBUG) Log.d(TAG, "noteOperation: reject #" + op.mode + " for code "
+                                    + switchCode + " (" + code + ") uid " + uid + " package "
+                                    + packageName + " as it is not a foreground app");
+                            op.rejectTime = System.currentTimeMillis();
+                            return AppOpsManager.MODE_IGNORED;
+                        }
+                    }
+                } catch (RemoteException e) {
+                    Log.d(TAG, "noteOperation: failed to get ActivityManager service");
+                }
+            }
+
             if (DEBUG) Log.d(TAG, "noteOperation: allowing code " + code + " uid " + uid
                     + " package " + packageName);
             op.time = System.currentTimeMillis();
@@ -1170,6 +1198,34 @@ public class AppOpsService extends IAppOpsService.Stub {
                 op.rejectTime = System.currentTimeMillis();
                 return switchOp.mode;
             }
+
+            if (AppOpsManager.isBgOp(code) || AppOpsManager.isBgOp(switchCode)) {
+                try {
+                    boolean fg = ActivityManager.getService().isAppForeground(uid);
+                    if (!fg) {
+                        Op bgOp = getOpLocked(ops, AppOpsManager.opToBgOp(code), true);
+                        if (bgOp.mode != AppOpsManager.MODE_ALLOWED) {
+                            if (DEBUG) Log.d(TAG, "startOperation: reject #" + op.mode + " for code "
+                                    + switchCode + " (" + code + ") uid " + uid + " package "
+                                    + packageName + " as it is not a foreground app");
+                            op.rejectTime = System.currentTimeMillis();
+                            return AppOpsManager.MODE_IGNORED;
+                        }
+
+                        Op bgSwitchOp = getOpLocked(ops, AppOpsManager.opToBgOp(switchCode), true);
+                        if (bgSwitchOp.mode != AppOpsManager.MODE_ALLOWED) {
+                            if (DEBUG) Log.d(TAG, "startOperation: reject #" + op.mode + " for code "
+                                    + switchCode + " (" + code + ") uid " + uid + " package "
+                                    + packageName + " as it is not a foreground app");
+                            op.rejectTime = System.currentTimeMillis();
+                            return AppOpsManager.MODE_IGNORED;
+                        }
+                    }
+                } catch (RemoteException e) {
+                    Log.d(TAG, "startOperation: failed to get ActivityManager service");
+                }
+            }
+
             if (DEBUG) Log.d(TAG, "startOperation: allowing code " + code + " uid " + uid
                     + " package " + resolvedPackageName);
             if (op.nesting == 0) {
