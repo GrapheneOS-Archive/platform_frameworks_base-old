@@ -186,7 +186,6 @@ public class AudioService extends IAudioService.Stub
     private final Context mContext;
     private final ContentResolver mContentResolver;
     private final AppOpsManager mAppOps;
-    private final ActivityManager mActivityManager;
 
     // the platform type affects volume and silent mode behavior
     private final int mPlatformType;
@@ -668,8 +667,6 @@ public class AudioService extends IAudioService.Stub
         mContext = context;
         mContentResolver = context.getContentResolver();
         mAppOps = (AppOpsManager)context.getSystemService(Context.APP_OPS_SERVICE);
-        mActivityManager
-                = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
 
         mPlatformType = AudioSystem.getPlatformType(context);
 
@@ -806,51 +803,6 @@ public class AudioService extends IAudioService.Stub
         mRecordMonitor.initMonitor();
     }
 
-    public void systemRunning() {
-        // listen for background/foreground changes
-        ActivityManager.OnUidImportanceListener uidImportanceListener
-        = new ActivityManager.OnUidImportanceListener() {
-            @Override
-            public void onUidImportance(int uid, int importance) {
-                boolean foreground = isImportanceForeground(importance);
-                // Skip foreground processes
-                if (foreground) {
-                    return;
-                }
-                // Skip system processes
-                if (UserHandle.getAppId(uid) < FIRST_APPLICATION_UID) {
-                    return;
-                }
-                final String[] packages = mContext.getPackageManager().getPackagesForUid(uid);
-                for (String packageName : packages) {
-                    try {
-                        PackageInfo pi = mContext.getPackageManager().getPackageInfo(packageName, PackageManager.GET_PERMISSIONS);
-                        if (Arrays.asList(pi.requestedPermissions).contains(android.Manifest.permission.RECORD_AUDIO)) {
-                            int mode = mAppOps.checkOp(AppOpsManager.OP_RECORD_AUDIO_BACKGROUND, uid, packageName);
-                            if (mode != AppOpsManager.MODE_ALLOWED) {
-                                try {
-                                    ActivityManager.getService().killUid(UserHandle.getAppId(uid),
-                                        UserHandle.getUserId(uid),
-                                        "killBackgroundProcessWithoutAudioRecordBackgroundPermission");
-                                } catch (RemoteException e) {
-                                    Log.w(TAG, "Error calling killUid", e);
-                                }
-                            }
-                        }
-                    } catch (PackageManager.NameNotFoundException e) {
-                        // Do nothing.
-                    }
-                }
-            }
-        };
-        mActivityManager.addOnUidImportanceListener(uidImportanceListener,
-            ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND_SERVICE);
-    }
-
-    private static boolean isImportanceForeground(int importance) {
-        return importance <= ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND_SERVICE;
-    }
-
     public void systemReady() {
         sendMsg(mAudioHandler, MSG_SYSTEM_READY, SENDMSG_QUEUE,
                 0, 0, null, 0);
@@ -920,7 +872,6 @@ public class AudioService extends IAudioService.Stub
 
         initA11yMonitoring();
         onIndicateSystemReady();
-        systemRunning();
     }
 
     void onIndicateSystemReady() {
