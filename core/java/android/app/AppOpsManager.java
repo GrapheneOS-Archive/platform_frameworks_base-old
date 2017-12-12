@@ -972,7 +972,7 @@ public class AppOpsManager {
             AppOpsManager.MODE_DEFAULT,  // OP_INSTANT_APP_START_FOREGROUND
             AppOpsManager.MODE_ALLOWED, // ANSWER_PHONE_CALLS
             AppOpsManager.MODE_IGNORED, // OP_READ_CLIPBOARD_BACKGROUND
-            AppOpsManager.MODE_IGNORED // OP_RECORD_AUDIO_BACKGROUND
+            AppOpsManager.MODE_ALLOWED // OP_RECORD_AUDIO_BACKGROUND
     };
 
     /**
