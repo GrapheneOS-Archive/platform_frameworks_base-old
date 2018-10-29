@@ -1530,6 +1530,11 @@ public class GnssLocationProvider extends AbstractLocationProvider implements
         int type = AGPS_SETID_TYPE_NONE;
         String setId = null;
 
+        /*
+         * We don't want to tell the SUPL our IMSI or phone number!
+         * As devices w/o SIM card also have working GPS, providing this data does
+         * not seem to add a lot of value, at least not for the device holder.
+         *
         int ddSubId = SubscriptionManager.getDefaultDataSubscriptionId();
         if (SubscriptionManager.isValidSubscriptionId(ddSubId)) {
             phone = phone.createForSubscriptionId(ddSubId);
@@ -1546,7 +1551,7 @@ public class GnssLocationProvider extends AbstractLocationProvider implements
                 // This means the framework has the SIM card.
                 type = AGPS_SETID_TYPE_MSISDN;
             }
-        }
+        } */
 
         mGnssNative.setAgpsSetId(type, (setId == null) ? "" : setId);
     }
