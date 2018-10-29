@@ -1716,33 +1716,7 @@ public class GnssLocationProvider extends AbstractLocationProvider implements
 
     @Override
     public void onRequestSetID(@GnssNative.AGpsCallbacks.AgpsSetIdFlags int flags) {
-        TelephonyManager phone = (TelephonyManager)
-                mContext.getSystemService(Context.TELEPHONY_SERVICE);
-        int type = AGPS_SETID_TYPE_NONE;
-        String setId = null;
-
-        int subId = SubscriptionManager.getDefaultDataSubscriptionId();
-        if (mNIHandler.getInEmergency() && mNetworkConnectivityHandler.getActiveSubId() >= 0) {
-            subId = mNetworkConnectivityHandler.getActiveSubId();
-        }
-        if (SubscriptionManager.isValidSubscriptionId(subId)) {
-            phone = phone.createForSubscriptionId(subId);
-        }
-        if ((flags & AGPS_REQUEST_SETID_IMSI) == AGPS_REQUEST_SETID_IMSI) {
-            setId = phone.getSubscriberId();
-            if (setId != null) {
-                // This means the framework has the SIM card.
-                type = AGPS_SETID_TYPE_IMSI;
-            }
-        } else if ((flags & AGPS_REQUEST_SETID_MSISDN) == AGPS_REQUEST_SETID_MSISDN) {
-            setId = phone.getLine1Number();
-            if (setId != null) {
-                // This means the framework has the SIM card.
-                type = AGPS_SETID_TYPE_MSISDN;
-            }
-        }
-
-        mGnssNative.setAgpsSetId(type, (setId == null) ? "" : setId);
+        mGnssNative.setAgpsSetId(AGPS_SETID_TYPE_NONE, "");
     }
 
     @Override
