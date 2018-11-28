@@ -2306,7 +2306,7 @@
     <integer name="config_multiuserMaxRunningUsers">3</integer>
 
     <!-- Whether UI for multi user should be shown -->
-    <bool name="config_enableMultiUserUI">false</bool>
+    <bool name="config_enableMultiUserUI">true</bool>
 
     <!-- Whether the new Auto Selection Network UI should be shown -->
     <bool name="config_enableNewAutoSelectNetworkUI">false</bool>
