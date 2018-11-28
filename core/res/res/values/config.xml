@@ -2922,7 +2922,7 @@
     <bool name="config_canSwitchToHeadlessSystemUser">false</bool>
 
     <!-- Whether UI for multi user should be shown -->
-    <bool name="config_enableMultiUserUI">false</bool>
+    <bool name="config_enableMultiUserUI">true</bool>
 
     <!-- Whether multiple admins are allowed on the device. If set to true, new users can be created
      with admin privileges and admin privileges can be granted/revoked from existing users. -->
