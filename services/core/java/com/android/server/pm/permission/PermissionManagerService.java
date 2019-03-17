@@ -660,7 +660,7 @@ public class PermissionManagerService {
     }
 
     public static boolean isSpecialRuntimePermission(final String permission) {
-        return false;
+        return Manifest.permission.INTERNET.equals(permission);
     }
 
     private void grantPermissions(PackageParser.Package pkg, boolean replace,
