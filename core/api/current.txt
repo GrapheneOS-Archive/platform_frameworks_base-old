@@ -225,6 +225,7 @@ package android {
     field public static final String LOCATION = "android.permission-group.LOCATION";
     field public static final String MICROPHONE = "android.permission-group.MICROPHONE";
     field public static final String NEARBY_DEVICES = "android.permission-group.NEARBY_DEVICES";
+    field public static final String NETWORK = "android.permission-group.NETWORK";
     field public static final String NOTIFICATIONS = "android.permission-group.NOTIFICATIONS";
     field public static final String PHONE = "android.permission-group.PHONE";
     field public static final String READ_MEDIA_AURAL = "android.permission-group.READ_MEDIA_AURAL";
