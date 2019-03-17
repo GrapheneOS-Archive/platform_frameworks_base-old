@@ -643,7 +643,7 @@ public final class DefaultPermissionGrantPolicy {
         }
         if (browserPackage != null
                 && doesPackageSupportRuntimePermissions(browserPackage)) {
-            grantRuntimePermissions(browserPackage, LOCATION_PERMISSIONS, userId);
+            //grantRuntimePermissions(browserPackage, LOCATION_PERMISSIONS, userId);
         }
 
         // Voice interaction
@@ -1053,7 +1053,7 @@ public final class DefaultPermissionGrantPolicy {
         PackageParser.Package browserPackage = getSystemPackage(packageName);
         if (browserPackage != null
                 && doesPackageSupportRuntimePermissions(browserPackage)) {
-            grantRuntimePermissions(browserPackage, LOCATION_PERMISSIONS, false, false, userId);
+            //grantRuntimePermissions(browserPackage, LOCATION_PERMISSIONS, false, false, userId);
         }
     }
 
