@@ -43,6 +43,7 @@ public class SpecialRuntimePermUtils {
 
     public static boolean isSpecialRuntimePermission(String permission) {
         switch (permission) {
+            case Manifest.permission.INTERNET:
             case Manifest.permission.OTHER_SENSORS:
                 return true;
         }
