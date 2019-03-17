@@ -27,6 +27,7 @@ public class SpecialRuntimePermUtils {
     private static final String TAG = SpecialRuntimePermUtils.class.getSimpleName();
 
     private static final ArraySet<String> specialRuntimePermissions = new ArraySet<>(new String[] {
+            Manifest.permission.INTERNET,
             Manifest.permission.OTHER_SENSORS,
     });
 
