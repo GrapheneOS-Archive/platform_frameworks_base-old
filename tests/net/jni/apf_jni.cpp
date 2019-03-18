@@ -185,7 +185,7 @@ extern "C" jint JNI_OnLoad(JavaVM* vm, void*) {
         return -1;
     }
 
-    static JNINativeMethod gMethods[] = {
+    static const JNINativeMethod gMethods[] = {
             { "apfSimulate", "([B[B[BI)I",
                     (void*)com_android_server_ApfTest_apfSimulate },
             { "compileToBpf", "(Ljava/lang/String;)Ljava/lang/String;",
