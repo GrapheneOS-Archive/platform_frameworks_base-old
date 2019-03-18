@@ -39,7 +39,7 @@ android_app_ActivityThread_dumpGraphics(JNIEnv* env, jobject clazz, jobject java
 }
 
 
-static JNINativeMethod gActivityThreadMethods[] = {
+static const JNINativeMethod gActivityThreadMethods[] = {
     // ------------ Regular JNI ------------------
     { "nPurgePendingResources",        "()V",
       (void*) android_app_ActivityThread_purgePendingResources },
