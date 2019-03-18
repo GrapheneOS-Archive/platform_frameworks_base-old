@@ -184,7 +184,7 @@ static void android_view_DisplayListCanvas_drawCircleProps(jlong canvasPtr,
 
 const char* const kClassPathName = "android/view/DisplayListCanvas";
 
-static JNINativeMethod gMethods[] = {
+static const JNINativeMethod gMethods[] = {
 
     // ------------ @FastNative ------------------
 

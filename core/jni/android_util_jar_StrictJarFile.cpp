@@ -156,7 +156,7 @@ static void StrictJarFile_nativeClose(JNIEnv*, jobject, jlong nativeHandle) {
   CloseArchive(reinterpret_cast<ZipArchiveHandle>(nativeHandle));
 }
 
-static JNINativeMethod gMethods[] = {
+static const JNINativeMethod gMethods[] = {
   NATIVE_METHOD(StrictJarFile, nativeOpenJarFile, "(Ljava/lang/String;I)J"),
   NATIVE_METHOD(StrictJarFile, nativeStartIteration, "(JLjava/lang/String;)J"),
   NATIVE_METHOD(StrictJarFile, nativeNextEntry, "(J)Ljava/util/zip/ZipEntry;"),
