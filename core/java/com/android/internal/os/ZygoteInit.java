@@ -133,9 +133,11 @@ public class ZygoteInit {
         bootTimingsTraceLog.traceBegin("CacheNonBootClasspathClassLoaders");
         cacheNonBootClasspathClassLoaders();
         bootTimingsTraceLog.traceEnd(); // CacheNonBootClasspathClassLoaders
-        bootTimingsTraceLog.traceBegin("PreloadResources");
-        Resources.preloadResources();
-        bootTimingsTraceLog.traceEnd(); // PreloadResources
+        if (fullPreload) {
+            bootTimingsTraceLog.traceBegin("PreloadResources");
+            Resources.preloadResources();
+            bootTimingsTraceLog.traceEnd(); // PreloadResources
+        }
         Trace.traceBegin(Trace.TRACE_TAG_DALVIK, "PreloadAppProcessHALs");
         nativePreloadAppProcessHALs();
         Trace.traceEnd(Trace.TRACE_TAG_DALVIK);
