@@ -159,9 +159,11 @@ public class ZygoteInit {
         Trace.traceEnd(Trace.TRACE_TAG_DALVIK);
         preloadSharedLibraries();
         preloadTextResources();
-        // Ask the WebViewFactory to do any initialization that must run in the zygote process,
-        // for memory sharing purposes.
-        WebViewFactory.prepareWebViewInZygote();
+        if (fullPreload) {
+            // Ask the WebViewFactory to do any initialization that must run in the zygote process,
+            // for memory sharing purposes.
+            WebViewFactory.prepareWebViewInZygote();
+        }
         endPreload(fullPreload);
         warmUpJcaProviders();
         Log.d(TAG, "end preload");
