@@ -122,9 +122,11 @@ public class ZygoteInit {
 
     static void preload(TimingsTraceLog bootTimingsTraceLog, boolean fullPreload) {
         Log.d(TAG, "begin preload");
-        bootTimingsTraceLog.traceBegin("BeginIcuCachePinning");
-        beginIcuCachePinning();
-        bootTimingsTraceLog.traceEnd(); // BeginIcuCachePinning
+        if (fullPreload) {
+            bootTimingsTraceLog.traceBegin("BeginIcuCachePinning");
+            beginIcuCachePinning();
+            bootTimingsTraceLog.traceEnd(); // BeginIcuCachePinning
+        }
         bootTimingsTraceLog.traceBegin("PreloadClasses");
         preloadClasses();
         bootTimingsTraceLog.traceEnd(); // PreloadClasses
@@ -146,7 +148,9 @@ public class ZygoteInit {
         // Ask the WebViewFactory to do any initialization that must run in the zygote process,
         // for memory sharing purposes.
         WebViewFactory.prepareWebViewInZygote();
-        endIcuCachePinning();
+        if (fullPreload) {
+            endIcuCachePinning();
+        }
         warmUpJcaProviders();
         Log.d(TAG, "end preload");
 
