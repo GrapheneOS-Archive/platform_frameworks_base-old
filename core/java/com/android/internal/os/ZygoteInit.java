@@ -120,7 +120,7 @@ public class ZygoteInit {
 
     private static boolean sPreloadComplete;
 
-    static void preload(TimingsTraceLog bootTimingsTraceLog) {
+    static void preload(TimingsTraceLog bootTimingsTraceLog, boolean fullPreload) {
         Log.d(TAG, "begin preload");
         bootTimingsTraceLog.traceBegin("BeginIcuCachePinning");
         beginIcuCachePinning();
@@ -147,6 +147,10 @@ public class ZygoteInit {
         Log.d(TAG, "end preload");
 
         sPreloadComplete = true;
+    }
+
+    static void preload(TimingsTraceLog bootTimingsTraceLog) {
+        preload(bootTimingsTraceLog, true);
     }
 
     public static void lazyPreload() {
