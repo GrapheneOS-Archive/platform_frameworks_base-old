@@ -127,9 +127,11 @@ public class ZygoteInit {
             beginIcuCachePinning();
             bootTimingsTraceLog.traceEnd(); // BeginIcuCachePinning
         }
-        bootTimingsTraceLog.traceBegin("PreloadClasses");
-        preloadClasses();
-        bootTimingsTraceLog.traceEnd(); // PreloadClasses
+        if (fullPreload) {
+            bootTimingsTraceLog.traceBegin("PreloadClasses");
+            preloadClasses();
+            bootTimingsTraceLog.traceEnd(); // PreloadClasses
+        }
         if (fullPreload) {
             bootTimingsTraceLog.traceBegin("PreloadResources");
             preloadResources();
