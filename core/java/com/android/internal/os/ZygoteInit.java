@@ -133,7 +133,7 @@ public class ZygoteInit {
      */
     private static ClassLoader sCachedSystemServerClassLoader = null;
 
-    static void preload(TimingsTraceLog bootTimingsTraceLog) {
+    static void preload(TimingsTraceLog bootTimingsTraceLog, boolean fullPreload) {
         Log.d(TAG, "begin preload");
         bootTimingsTraceLog.traceBegin("BeginPreload");
         beginPreload();
@@ -163,6 +163,10 @@ public class ZygoteInit {
         Log.d(TAG, "end preload");
 
         sPreloadComplete = true;
+    }
+
+    static void preload(TimingsTraceLog bootTimingsTraceLog) {
+        preload(bootTimingsTraceLog, true);
     }
 
     static void lazyPreload() {
