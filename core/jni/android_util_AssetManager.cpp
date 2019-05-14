@@ -111,6 +111,10 @@ constexpr inline static ApkAssetsCookie JavaCookieToApkAssetsCookie(jint cookie)
 
 // This is called by zygote (running as user root) as part of preloadResources.
 static void NativeVerifySystemIdmaps(JNIEnv* /*env*/, jclass /*clazz*/) {
+  // avoid triggering an error with exec-based spawning
+  if (getuid() != 0) {
+    return;
+  }
   switch (pid_t pid = fork()) {
     case -1:
       PLOG(ERROR) << "failed to fork for idmap";
