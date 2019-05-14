@@ -159,7 +159,7 @@ public class ZygoteInit {
             WebViewFactory.prepareWebViewInZygote();
         }
         endPreload(fullPreload);
-        warmUpJcaProviders();
+        warmUpJcaProviders(fullPreload);
         Log.d(TAG, "end preload");
 
         sPreloadComplete = true;
@@ -229,7 +229,7 @@ public class ZygoteInit {
      * By doing it here we avoid that each app does it when requesting a service from the provider
      * for the first time.
      */
-    private static void warmUpJcaProviders() {
+    private static void warmUpJcaProviders(boolean fullPreload) {
         long startTime = SystemClock.uptimeMillis();
         Trace.traceBegin(
                 Trace.TRACE_TAG_DALVIK, "Starting installation of AndroidKeyStoreProvider");
@@ -241,15 +241,17 @@ public class ZygoteInit {
                 + (SystemClock.uptimeMillis() - startTime) + "ms.");
         Trace.traceEnd(Trace.TRACE_TAG_DALVIK);
 
-        startTime = SystemClock.uptimeMillis();
-        Trace.traceBegin(
-                Trace.TRACE_TAG_DALVIK, "Starting warm up of JCA providers");
-        for (Provider p : Security.getProviders()) {
-            p.warmUpServiceProvision();
+        if (fullPreload) {
+            startTime = SystemClock.uptimeMillis();
+            Trace.traceBegin(
+                    Trace.TRACE_TAG_DALVIK, "Starting warm up of JCA providers");
+            for (Provider p : Security.getProviders()) {
+                p.warmUpServiceProvision();
+            }
+            Log.i(TAG, "Warmed up JCA providers in "
+                    + (SystemClock.uptimeMillis() - startTime) + "ms.");
+            Trace.traceEnd(Trace.TRACE_TAG_DALVIK);
         }
-        Log.i(TAG, "Warmed up JCA providers in "
-                + (SystemClock.uptimeMillis() - startTime) + "ms.");
-        Trace.traceEnd(Trace.TRACE_TAG_DALVIK);
     }
 
     /**
