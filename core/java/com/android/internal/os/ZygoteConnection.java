@@ -880,7 +880,7 @@ class ZygoteConnection {
             throw new IllegalStateException("WrapperInit.execApplication unexpectedly returned");
         } else {
             if (!isZygote) {
-                if (SystemProperties.getBoolean("sys.spawn.exec", true)) {
+                if (SystemProperties.getBoolean("sys.spawn.exec", true) && parsedArgs.runtimeFlags == 0) {
                     ExecInit.execApplication(parsedArgs.niceName, parsedArgs.targetSdkVersion,
                             VMRuntime.getCurrentInstructionSet(), parsedArgs.remainingArgs);
 
