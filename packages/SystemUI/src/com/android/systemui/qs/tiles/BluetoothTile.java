@@ -123,16 +123,16 @@ public class BluetoothTile extends QSTileImpl<BooleanState> {
 
     @Override
     protected void handleSecondaryClick() {
-        if (!mController.canConfigBluetooth()) {
-            mActivityStarter.postStartActivityDismissingKeyguard(
-                    new Intent(Settings.ACTION_BLUETOOTH_SETTINGS), 0);
-            return;
-        }
         if (mKeyguard.isSecure() && mKeyguard.isShowing()) {
             Dependency.get(ActivityStarter.class).postQSRunnableDismissingKeyguard(() -> {
                 mHost.openPanels();
                 showDetail(true);
             });
+            return;
+        }
+        if (!mController.canConfigBluetooth()) {
+            mActivityStarter.postStartActivityDismissingKeyguard(
+                    new Intent(Settings.ACTION_BLUETOOTH_SETTINGS), 0);
             return;
         }
         showDetail(true);
