@@ -1507,9 +1507,7 @@
     <!-- ======================================= -->
     <eat-comment />
 
-    <!-- Network access
-         @hide
-    -->
+    <!-- Network access -->
     <permission-group android:name="android.permission-group.NETWORK"
         android:icon="@drawable/perm_group_network"
         android:label="@string/permgrouplab_network"
