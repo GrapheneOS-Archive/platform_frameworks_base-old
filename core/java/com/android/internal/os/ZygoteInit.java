@@ -143,9 +143,11 @@ public class ZygoteInit {
             preloadClasses();
             bootTimingsTraceLog.traceEnd(); // PreloadClasses
         }
-        bootTimingsTraceLog.traceBegin("CacheNonBootClasspathClassLoaders");
-        cacheNonBootClasspathClassLoaders();
-        bootTimingsTraceLog.traceEnd(); // CacheNonBootClasspathClassLoaders
+        if (fullPreload) {
+            bootTimingsTraceLog.traceBegin("CacheNonBootClasspathClassLoaders");
+            cacheNonBootClasspathClassLoaders();
+            bootTimingsTraceLog.traceEnd(); // CacheNonBootClasspathClassLoaders
+        }
         if (fullPreload) {
             bootTimingsTraceLog.traceBegin("PreloadResources");
             preloadResources();
