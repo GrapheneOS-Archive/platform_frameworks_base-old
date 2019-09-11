@@ -145,9 +145,11 @@ public class ZygoteInit {
             preloadResources();
             bootTimingsTraceLog.traceEnd(); // PreloadResources
         }
-        Trace.traceBegin(Trace.TRACE_TAG_DALVIK, "PreloadAppProcessHALs");
-        nativePreloadAppProcessHALs();
-        Trace.traceEnd(Trace.TRACE_TAG_DALVIK);
+        if (fullPreload) {
+            Trace.traceBegin(Trace.TRACE_TAG_DALVIK, "PreloadAppProcessHALs");
+            nativePreloadAppProcessHALs();
+            Trace.traceEnd(Trace.TRACE_TAG_DALVIK);
+        }
         if (fullPreload) {
             Trace.traceBegin(Trace.TRACE_TAG_DALVIK, "PreloadGraphicsDriver");
             maybePreloadGraphicsDriver();
