@@ -135,7 +135,7 @@ public class ZygoteInit {
     static void preload(TimingsTraceLog bootTimingsTraceLog, boolean fullPreload) {
         Log.d(TAG, "begin preload");
         bootTimingsTraceLog.traceBegin("BeginPreload");
-        beginPreload();
+        beginPreload(fullPreload);
         bootTimingsTraceLog.traceEnd(); // BeginPreload
         bootTimingsTraceLog.traceBegin("PreloadClasses");
         preloadClasses();
@@ -157,7 +157,7 @@ public class ZygoteInit {
         // Ask the WebViewFactory to do any initialization that must run in the zygote process,
         // for memory sharing purposes.
         WebViewFactory.prepareWebViewInZygote();
-        endPreload();
+        endPreload(fullPreload);
         warmUpJcaProviders();
         Log.d(TAG, "end preload");
 
@@ -175,14 +175,14 @@ public class ZygoteInit {
         preload(new TimingsTraceLog("ZygoteInitTiming_lazy", Trace.TRACE_TAG_DALVIK));
     }
 
-    private static void beginPreload() {
+    private static void beginPreload(boolean fullPreload) {
         Log.i(TAG, "Calling ZygoteHooks.beginPreload()");
 
-        ZygoteHooks.onBeginPreload();
+        ZygoteHooks.onBeginPreload(fullPreload);
     }
 
-    private static void endPreload() {
-        ZygoteHooks.onEndPreload();
+    private static void endPreload(boolean fullPreload) {
+        ZygoteHooks.onEndPreload(fullPreload);
 
         Log.i(TAG, "Called ZygoteHooks.endPreload()");
     }
