@@ -598,7 +598,8 @@ class ZygoteConnection {
         } else {
             if (!isZygote) {
                 if (SystemProperties.getBoolean("sys.spawn.exec", true) &&
-                        (parsedArgs.mRuntimeFlags & ApplicationInfo.FLAG_DEBUGGABLE) == 0) {
+                        (parsedArgs.mRuntimeFlags & ApplicationInfo.FLAG_DEBUGGABLE) == 0 &&
+                        !parsedArgs.mNiceName.equals("com.android.phone")) {
                     ExecInit.execApplication(parsedArgs.mNiceName, parsedArgs.mTargetSdkVersion,
                             VMRuntime.getCurrentInstructionSet(), parsedArgs.mRemainingArgs);
 
