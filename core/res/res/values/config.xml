@@ -2201,8 +2201,13 @@
          it should be disabled in that locale's resources. -->
     <bool name="config_actionMenuItemAllCaps">true</bool>
 
+    <!-- Network derived time preferred protocol
+         Supports "ntp" or "https" only now -->
+    <string translatable="false" name="config_ntpMode">https</string>
     <!-- Remote server that can provide NTP responses. -->
     <string translatable="false" name="config_ntpServer">time.android.com</string>
+    <!-- Remote server that can provide HTTPS time responses -->
+    <string translatable="false" name="config_httpsTimeServer">https://time.grapheneos.org/generate_204</string>
     <!-- Normal polling frequency in milliseconds -->
     <integer name="config_ntpPollingInterval">86400000</integer>
     <!-- Try-again polling interval in milliseconds, in case the network request failed -->
