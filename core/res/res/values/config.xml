@@ -2470,11 +2470,19 @@
          it should be disabled in that locale's resources. -->
     <bool name="config_actionMenuItemAllCaps">true</bool>
 
+    <!-- Network derived time preferred protocol
+         Supports "ntp" or "https" only now -->
+    <string translatable="false" name="config_ntpMode">https</string>
+
     <!-- SNTP client config: NTP servers to use to obtain an accurate time.
          Items must be in the form: "ntp://<host>[:port]"
          This is not a registered IANA URI scheme. -->
     <string-array translatable="false" name="config_ntpServers">
         <item>ntp://time.android.com</item>
+    </string-array>
+    <!-- Remote servers that can provide HTTPS time responses -->
+    <string-array name="config_httpsTimeServers" translatable="false">
+        <item>https://time.grapheneos.org/generate_204</item>
     </string-array>
     <!-- SNTP client config: Timeout to wait for an NTP server response in milliseconds. -->
     <integer name="config_ntpTimeout">5000</integer>
