@@ -9947,6 +9947,11 @@ public final class Settings {
 
        /** Preferred NTP server. {@hide} */
        public static final String NTP_SERVER = "ntp_server";
+       /** Preferred HTTPS time server. {@hide} */
+       public static final String HTTPS_TIME_SERVER = "https_time_server";
+       /** Prefered method to get NTP. {@hide} */
+       public static final String NTP_MODE = "ntp_mode";
+
        /** Timeout in milliseconds to wait for NTP server. {@hide} */
        public static final String NTP_TIMEOUT = "ntp_timeout";
 
