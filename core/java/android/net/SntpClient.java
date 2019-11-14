@@ -22,10 +22,25 @@ import android.util.Log;
 
 import com.android.internal.util.TrafficStatsConstants;
 
+import java.net.URL;
+import java.net.URLConnection;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.Arrays;
+
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.HttpsURLConnection;
+
+import java.security.cert.X509Certificate;
+
+import java.security.KeyStore;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateExpiredException;
+import java.security.cert.CertificateNotYetValidException;
 
 /**
  * {@hide}
@@ -72,6 +87,9 @@ public class SntpClient {
     // round trip time in milliseconds
     private long mRoundTripTime;
 
+    // SntpClient mode (http/ntp)
+    private String mNtpMode = "ntp";
+
     private static class InvalidServerReplyException extends Exception {
         public InvalidServerReplyException(String message) {
             super(message);
@@ -90,13 +108,23 @@ public class SntpClient {
         final Network networkForResolv = network.getPrivateDnsBypassingCopy();
         InetAddress address = null;
         try {
-            address = networkForResolv.getByName(host);
+            switch(mNtpMode) {
+                case "https":
+                    URL url = new URL(host);
+                    return requestHttpTime(url, timeout, network);
+                case "ntp":
+                    address = networkForResolv.getByName(host);
+                    return requestTime(address, NTP_PORT, timeout, networkForResolv);
+                default:
+                    EventLogTags.writeNtpFailure(host, "unknown protocol " + mNtpMode + " provided");
+                    if (DBG) Log.d(TAG, "request time failed, wrong protocol");
+                    return false;
+            }
         } catch (Exception e) {
             EventLogTags.writeNtpFailure(host, e.toString());
             if (DBG) Log.d(TAG, "request time failed: " + e);
             return false;
         }
-        return requestTime(address, NTP_PORT, timeout, networkForResolv);
     }
 
     public boolean requestTime(InetAddress address, int port, int timeout, Network network) {
@@ -152,7 +180,7 @@ public class SntpClient {
             long clockOffset = ((receiveTime - originateTime) + (transmitTime - responseTime))/2;
             EventLogTags.writeNtpSuccess(address.toString(), roundTripTime, clockOffset);
             if (DBG) {
-                Log.d(TAG, "round trip: " + roundTripTime + "ms, " +
+                Log.d(TAG, "default method -- round trip: " + roundTripTime + "ms, " +
                         "clock offset: " + clockOffset + "ms");
             }
 
@@ -172,6 +200,114 @@ public class SntpClient {
             TrafficStats.setThreadStatsTag(oldTag);
         }
 
+        return true;
+    }
+
+    private boolean requestHttpTime(URL url, int timeout, Network network) {
+        final int oldTag = TrafficStats.getAndSetThreadStatsTag(
+                TrafficStatsConstants.TAG_SYSTEM_NTP);
+        final Network networkForResolv = network.getPrivateDnsBypassingCopy();
+        try {
+            TrustManagerFactory tmf = TrustManagerFactory
+                .getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            tmf.init((KeyStore) null);
+
+            X509TrustManager x509Tm = null;
+            for (TrustManager tm : tmf.getTrustManagers()) {
+                if (tm instanceof X509TrustManager) {
+                    x509Tm = (X509TrustManager) tm;
+                    break;
+                }
+            }
+
+            final X509TrustManager finalTm = x509Tm;
+            X509TrustManager customTm = new X509TrustManager() {
+                @Override
+                public X509Certificate[] getAcceptedIssuers() {
+                    return finalTm.getAcceptedIssuers();
+                }
+
+                @Override
+                public void checkServerTrusted(X509Certificate[] chain,
+                        String authType) throws CertificateException {
+                    try {
+                        finalTm.checkServerTrusted(chain, authType);
+                    } catch (CertificateException e) {
+                        // deliberately catch certificate time checks to prevent
+                        // propogating to SSLHandshake Error only when getting
+                        // authenticated timestamps.
+                        final Throwable validationFailCause = e.getCause();
+                        if (validationFailCause instanceof CertificateNotYetValidException ||
+                                validationFailCause instanceof CertificateExpiredException) {
+                            return;
+                        }
+                        throw e;
+                    }
+                }
+
+                @Override
+                public void checkClientTrusted(X509Certificate[] chain,
+                        String authType) throws CertificateException {
+                    try {
+                        finalTm.checkClientTrusted(chain, authType);
+                    } catch (CertificateException e) {
+                        // deliberately catch certificate time checks to prevent
+                        // propogating to SSLHandshake Error only when getting
+                        // authenticated timestamps.
+                        final Throwable validationFailCause = e.getCause();
+                        if (validationFailCause instanceof CertificateNotYetValidException ||
+                                validationFailCause instanceof CertificateExpiredException) {
+                            return;
+                        }
+                        throw e;
+                    }
+                }
+            };
+
+            URLConnection urlConnection = networkForResolv.openConnection(url);
+            SSLContext sslContext = SSLContext.getInstance("SSL");
+            sslContext.init(null, new TrustManager[] { customTm }, null);
+
+            if (urlConnection instanceof HttpsURLConnection) {
+                HttpsURLConnection httpsUrlConnection = (HttpsURLConnection) urlConnection;
+                // change the SSLSocketFactory to use custom trust manager
+                httpsUrlConnection.setSSLSocketFactory(sslContext.getSocketFactory());
+                httpsUrlConnection.setConnectTimeout(timeout);
+                httpsUrlConnection.setRequestProperty("Accept-Charset", "UTF-8");
+                final long requestTime = System.currentTimeMillis();
+                final long requestTicks = SystemClock.elapsedRealtime();
+                // implicitly fires GET request.
+                httpsUrlConnection.getInputStream();
+                long transmitTime = urlConnection.getDate();
+                // http servers dont log originate/receive time (imprecise offset).
+                long receiveTime = urlConnection.getDate();
+                final long responseTicks = SystemClock.elapsedRealtime();
+                final long responseTime = requestTime + (responseTicks - requestTicks);
+                long roundTripTime = responseTicks - requestTicks - (transmitTime - receiveTime);
+                long clockOffset = ((receiveTime - requestTime) + (transmitTime - responseTime))/2;
+                if (DBG) {
+                    Log.d(TAG, "https method -- round trip: " + roundTripTime + "ms, " +
+                            "clock offset: " + clockOffset + "ms");
+                }
+                EventLogTags.writeNtpSuccess(url.toString(), roundTripTime, clockOffset);
+                // save our results - use the times on this side of the network latency
+                // (response rather than request time)
+                mNtpTime = responseTime + clockOffset;
+                mNtpTimeReference = responseTicks;
+                mRoundTripTime = roundTripTime;
+                httpsUrlConnection.disconnect();
+            } else {
+                EventLogTags.writeNtpFailure(url.toString(), "did not receive HttpsURLConnection from Android Network");
+                if (DBG) Log.d(TAG, "request time failed: did not receive HttpsURLConnection from Android Network");
+                return false;
+            }
+        } catch (Exception e) {
+            EventLogTags.writeNtpFailure(url.toString(), e.toString());
+            if (DBG) Log.d(TAG, "request time failed: " + e);
+            return false;
+        } finally {
+            TrafficStats.setThreadStatsTag(oldTag);
+        }
         return true;
     }
 
@@ -211,6 +347,14 @@ public class SntpClient {
     @UnsupportedAppUsage
     public long getRoundTripTime() {
         return mRoundTripTime;
+    }
+
+    /**
+     * Sets the ntp mode
+     */
+    @UnsupportedAppUsage
+    public void setNtpMode(String mode) {
+        mNtpMode = mode;
     }
 
     private static void checkValidServerReply(

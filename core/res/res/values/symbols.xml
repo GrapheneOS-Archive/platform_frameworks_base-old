@@ -487,6 +487,7 @@
   <java-symbol type="integer" name="config_ntpRetry" />
   <java-symbol type="integer" name="config_ntpThreshold" />
   <java-symbol type="integer" name="config_ntpTimeout" />
+  <java-symbol type="bool" name="config_nitzTimeUpdate" />
   <java-symbol type="integer" name="config_shortPressOnPowerBehavior" />
   <java-symbol type="integer" name="config_toastDefaultGravity" />
   <java-symbol type="integer" name="config_triplePressOnPowerBehavior" />
@@ -742,6 +743,8 @@
   <java-symbol type="string" name="config_forceVoiceInteractionServicePackage" />
   <java-symbol type="string" name="config_mms_user_agent" />
   <java-symbol type="string" name="config_mms_user_agent_profile_url" />
+  <java-symbol type="string" name="config_ntpMode" />
+  <java-symbol type="string" name="config_httpsTimeServer" />
   <java-symbol type="string" name="config_ntpServer" />
   <java-symbol type="string" name="config_useragentprofile_url" />
   <java-symbol type="string" name="config_wifi_p2p_device_type" />

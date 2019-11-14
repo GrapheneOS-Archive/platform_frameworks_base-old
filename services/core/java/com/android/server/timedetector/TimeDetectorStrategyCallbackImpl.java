@@ -46,6 +46,9 @@ public final class TimeDetectorStrategyCallbackImpl implements TimeDetectorStrat
      */
     private final int mSystemClockUpdateThresholdMillis;
 
+    // Toggle for nitz time update, should not affect timezone discovery since codepath for system clock is touched only.
+    private final boolean mNitzTimeUpdate;
+
     @NonNull private final Context mContext;
     @NonNull private final ContentResolver mContentResolver;
     @NonNull private final PowerManager.WakeLock mWakeLock;
@@ -64,6 +67,10 @@ public final class TimeDetectorStrategyCallbackImpl implements TimeDetectorStrat
         mSystemClockUpdateThresholdMillis =
                 SystemProperties.getInt("ro.sys.time_detector_update_diff",
                         SYSTEM_CLOCK_UPDATE_THRESHOLD_MILLIS_DEFAULT);
+
+        mNitzTimeUpdate = mContext.getResources().getBoolean(
+                com.android.internal.R.bool.config_nitzTimeUpdate);
+
     }
 
     @Override
@@ -74,7 +81,7 @@ public final class TimeDetectorStrategyCallbackImpl implements TimeDetectorStrat
     @Override
     public boolean isTimeDetectionEnabled() {
         try {
-            return Settings.Global.getInt(mContentResolver, Settings.Global.AUTO_TIME) != 0;
+            return (Settings.Global.getInt(mContentResolver, Settings.Global.AUTO_TIME) != 0 && mNitzTimeUpdate);
         } catch (Settings.SettingNotFoundException snfe) {
             return true;
         }
