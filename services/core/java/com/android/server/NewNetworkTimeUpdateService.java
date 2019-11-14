@@ -115,7 +115,6 @@ public class NewNetworkTimeUpdateService extends Binder implements NetworkTimeUp
                 com.android.internal.R.integer.config_ntpRetry);
         mTimeErrorThresholdMs = mContext.getResources().getInteger(
                 com.android.internal.R.integer.config_ntpThreshold);
-
         mWakeLock = context.getSystemService(PowerManager.class).newWakeLock(
                 PowerManager.PARTIAL_WAKE_LOCK, TAG);
     }
