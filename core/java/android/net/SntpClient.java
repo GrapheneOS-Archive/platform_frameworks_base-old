@@ -29,7 +29,10 @@ import com.android.internal.util.TrafficStatsConstants;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
 import java.net.UnknownHostException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.Duration;
@@ -37,6 +40,34 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.Random;
 import java.util.function.Supplier;
+
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
+
+import java.security.cert.X509Certificate;
+
+import java.io.InputStream;
+import java.math.BigInteger;
+import java.util.Date;
+import java.util.Set;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateExpiredException;
+import java.security.cert.CertificateNotYetValidException;
+import java.security.GeneralSecurityException;
+import java.security.InvalidKeyException;
+import java.security.KeyStore;
+import java.security.Principal;
+import java.security.PublicKey;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.SignatureException;
+
+import static android.os.Build.TIME;
 
 /**
  * {@hide}
@@ -87,6 +118,9 @@ public class SntpClient {
     // The round trip (network) time in milliseconds
     private long mRoundTripTime;
 
+    // SntpClient mode (http/ntp)
+    private String mNtpMode = "ntp";
+
     private static class InvalidServerReplyException extends Exception {
         public InvalidServerReplyException(String message) {
             super(message);
@@ -118,13 +152,30 @@ public class SntpClient {
     public boolean requestTime(String host, int port, int timeout, Network network) {
         final Network networkForResolv = network.getPrivateDnsBypassingCopy();
         try {
+            switch (mNtpMode) {
+                case "https":
+                    URL url = new URL(host);
+                    return requestHttpTime(url, timeout, network);
+                case "ntp":
+                    final InetAddress[] addresses = networkForResolv.getAllByName(host);
+                    for (int i = 0; i < addresses.length; i++) {
+                        if (requestTime(addresses[i], port, timeout, networkForResolv)) {
+                            return true;
+                        }
+                    }
+                    break;
+                default:
+                    EventLogTags.writeNtpFailure(host, "unknown protocol " + mNtpMode + " provided");
+                    if (DBG) Log.d(TAG, "request time failed, wrong protocol");
+                    return false;
+            }
             final InetAddress[] addresses = networkForResolv.getAllByName(host);
             for (int i = 0; i < addresses.length; i++) {
                 if (requestTime(addresses[i], port, timeout, networkForResolv)) {
                     return true;
                 }
             }
-        } catch (UnknownHostException e) {
+        } catch (UnknownHostException|MalformedURLException e) {
             Log.w(TAG, "Unknown host: " + host);
             EventLogTags.writeNtpFailure(host, e.toString());
         }
@@ -192,7 +243,7 @@ public class SntpClient {
             EventLogTags.writeNtpSuccess(
                     address.toString(), roundTripTimeMillis, clockOffsetMillis);
             if (DBG) {
-                Log.d(TAG, "round trip: " + roundTripTimeMillis + "ms, "
+                Log.d(TAG, "default method -- round trip: " + roundTripTimeMillis + "ms, "
                         + "clock offset: " + clockOffsetMillis + "ms");
             }
 
@@ -236,6 +287,258 @@ public class SntpClient {
         return Duration64.between(clientRequestTimestamp, serverReceiveTimestamp)
                 .plus(Duration64.between(clientResponseTimestamp, serverTransmitTimestamp))
                 .dividedBy(2);
+    }
+
+    private boolean requestHttpTime(URL url, int timeout, Network network) {
+        final int oldTag = TrafficStats.getAndSetThreadStatsTag(
+                TrafficStatsConstants.TAG_SYSTEM_NTP);
+        final Network networkForResolv = network.getPrivateDnsBypassingCopy();
+        try {
+            TrustManagerFactory tmf = TrustManagerFactory
+                .getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            tmf.init((KeyStore) null);
+
+            X509TrustManager x509Tm = null;
+            for (TrustManager tm : tmf.getTrustManagers()) {
+                if (tm instanceof X509TrustManager) {
+                    x509Tm = (X509TrustManager) tm;
+                    break;
+                }
+            }
+
+            final X509TrustManager finalTm = x509Tm;
+            X509TrustManager customTm = new X509TrustManager() {
+
+                // custom eternal certificate class that ignores expired SSL certificates
+                // adapted from https://gist.github.com/divergentdave/9a68d820e3610513bd4fcdc4ae5f91a1
+                class TimeLeewayCertificate extends X509Certificate {
+                    private final X509Certificate originalCertificate;
+
+                    public TimeLeewayCertificate(X509Certificate originalCertificate) {
+                        this.originalCertificate = originalCertificate;
+                    }
+
+                    @Override
+                    public void checkValidity() throws CertificateExpiredException, CertificateNotYetValidException {
+                        // Ignore notBefore/notAfter
+                        checkValidity(new Date());
+                    }
+
+                    @Override
+                    public void checkValidity(Date date) throws CertificateExpiredException, CertificateNotYetValidException {
+                        // expiration must be set after OS build date
+                        if (getNotAfter().compareTo(new Date(TIME)) < 0) {
+                            throw new CertificateExpiredException("Certificate expired at "
+                                    + getNotAfter().toString() + " (compared to " + date.toString() + ")");
+                        }
+                    }
+
+                    @Override
+                    public int getVersion() {
+                        return originalCertificate.getVersion();
+                    }
+
+                    @Override
+                    public BigInteger getSerialNumber() {
+                        return originalCertificate.getSerialNumber();
+                    }
+
+                    @Override
+                    public Principal getIssuerDN() {
+                        return originalCertificate.getIssuerDN();
+                    }
+
+                    @Override
+                    public Principal getSubjectDN() {
+                        return originalCertificate.getSubjectDN();
+                    }
+
+                    @Override
+                    public Date getNotBefore() {
+                        return originalCertificate.getNotBefore();
+                    }
+
+                    @Override
+                    public Date getNotAfter() {
+                        return originalCertificate.getNotAfter();
+                    }
+
+                    @Override
+                    public byte[] getTBSCertificate() throws CertificateEncodingException {
+                        return originalCertificate.getTBSCertificate();
+                    }
+
+                    @Override
+                    public byte[] getSignature() {
+                        return originalCertificate.getSignature();
+                    }
+
+                    @Override
+                    public String getSigAlgName() {
+                        return originalCertificate.getSigAlgName();
+                    }
+
+                    @Override
+                    public String getSigAlgOID() {
+                        return originalCertificate.getSigAlgOID();
+                    }
+
+                    @Override
+                    public byte[] getSigAlgParams() {
+                        return originalCertificate.getSigAlgParams();
+                    }
+
+                    @Override
+                    public boolean[] getIssuerUniqueID() {
+                        return originalCertificate.getIssuerUniqueID();
+                    }
+
+                    @Override
+                    public boolean[] getSubjectUniqueID() {
+                        return originalCertificate.getSubjectUniqueID();
+                    }
+
+                    @Override
+                    public boolean[] getKeyUsage() {
+                        return originalCertificate.getKeyUsage();
+                    }
+
+                    @Override
+                    public int getBasicConstraints() {
+                        return originalCertificate.getBasicConstraints();
+                    }
+
+                    @Override
+                    public byte[] getEncoded() throws CertificateEncodingException {
+                        return originalCertificate.getEncoded();
+                    }
+
+                    @Override
+                    public void verify(PublicKey key) throws CertificateException,
+                           NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException, SignatureException
+                    {
+                        originalCertificate.verify(key);
+                    }
+
+                    @Override
+                    public void verify(PublicKey key, String sigProvider) throws CertificateException,
+                           NoSuchAlgorithmException, InvalidKeyException, NoSuchProviderException, SignatureException
+                    {
+                        originalCertificate.verify(key, sigProvider);
+                    }
+
+                    @Override
+                    public String toString() {
+                        return originalCertificate.toString();
+                    }
+
+                    @Override
+                    public PublicKey getPublicKey() {
+                        return originalCertificate.getPublicKey();
+                    }
+
+                    @Override
+                    public Set<String> getCriticalExtensionOIDs() {
+                        return originalCertificate.getCriticalExtensionOIDs();
+                    }
+
+                    @Override
+                    public byte[] getExtensionValue(String oid) {
+                        return originalCertificate.getExtensionValue(oid);
+                    }
+
+                    @Override
+                    public Set<String> getNonCriticalExtensionOIDs() {
+                        return originalCertificate.getNonCriticalExtensionOIDs();
+                    }
+
+                    @Override
+                    public boolean hasUnsupportedCriticalExtension() {
+                        return originalCertificate.hasUnsupportedCriticalExtension();
+                    }
+                }
+
+                @Override
+                public X509Certificate[] getAcceptedIssuers() {
+                    return finalTm.getAcceptedIssuers();
+                }
+
+                @Override
+                public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+                    // replace the top-level certificate with a certificate validation routine that
+                    // ignores expired certificates due to clock drift.
+                    X509Certificate[] timeLeewayChain = new X509Certificate[chain.length];
+                    for (int i = 0; i < chain.length; i++) {
+                        timeLeewayChain[i] = new TimeLeewayCertificate(chain[i]);
+                    }
+                    finalTm.checkServerTrusted(timeLeewayChain, authType);
+                }
+
+                @Override
+                public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
+                    // never gets used, so default to stock.
+                    finalTm.checkClientTrusted(chain, authType);
+                }
+            };
+
+            SSLContext sslContext = SSLContext.getInstance("SSL");
+            sslContext.init(null, new TrustManager[] { customTm }, null);
+            SSLSocketFactory socketFactory = sslContext.getSocketFactory();
+            HttpsURLConnection connection = (HttpsURLConnection) networkForResolv.openConnection(url);
+            try {
+                connection.setSSLSocketFactory(socketFactory);
+                connection.setConnectTimeout(timeout);
+                connection.setReadTimeout(timeout);
+                connection.getInputStream().close();
+
+                connection = (HttpsURLConnection) networkForResolv.openConnection(url);
+                connection.setSSLSocketFactory(socketFactory);
+                connection.setConnectTimeout(timeout);
+                connection.setReadTimeout(timeout);
+                connection.setRequestProperty("Connection", "close");
+
+                final long requestTime = System.currentTimeMillis();
+                final long requestTicks = SystemClock.elapsedRealtime();
+                connection.getInputStream();
+                long serverTime;
+                try {
+                    serverTime = Long.parseLong(connection.getHeaderField("X-Time"));
+                } catch (final NumberFormatException e) {
+                    Log.w(TAG, "https method received response without X-Time header resulting in low precision");
+                    serverTime = connection.getDate();
+                }
+                final long responseTicks = SystemClock.elapsedRealtime();
+                final long roundTripTime = responseTicks - requestTicks;
+                final long responseTime = requestTime + roundTripTime;
+                final long clockOffset = ((serverTime - requestTime) + (serverTime - responseTime)) / 2;
+                if (DBG) {
+                    Log.d(TAG, "https method -- round trip: " + roundTripTime + "ms, " +
+                            "clock offset: " + clockOffset + "ms");
+                }
+                if (serverTime < TIME) {
+                    throw new GeneralSecurityException("https method received timestamp before BUILD unix time, rejecting");
+                }
+                EventLogTags.writeNtpSuccess(url.toString(), roundTripTime, clockOffset);
+                // save our results - use the times on this side of the network latency
+                // (response rather than request time)
+                mClockOffset = clockOffset;
+                mNtpTime = responseTime + clockOffset;
+                mNtpTimeReference = responseTicks;
+                mRoundTripTime = roundTripTime;
+            } finally {
+                connection.disconnect();
+            }
+        } catch (Exception e) {
+            EventLogTags.writeNtpFailure(url.toString(), e.toString());
+            Log.e(TAG, "request time failed: " + e.toString());
+            if (DBG) {
+                e.printStackTrace();
+            }
+            return false;
+        } finally {
+            TrafficStats.setThreadStatsTag(oldTag);
+        }
+        return true;
     }
 
     @Deprecated
@@ -282,6 +585,13 @@ public class SntpClient {
     @UnsupportedAppUsage
     public long getRoundTripTime() {
         return mRoundTripTime;
+    }
+
+    /**
+     * Sets the ntp mode
+     */
+    public void setNtpMode(String mode) {
+        mNtpMode = mode;
     }
 
     private static void checkValidServerReply(
