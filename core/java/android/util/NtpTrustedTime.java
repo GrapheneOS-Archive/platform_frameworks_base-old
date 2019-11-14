@@ -210,6 +210,7 @@ public class NtpTrustedTime implements TrustedTime {
 
             if (LOGD) Log.d(TAG, "forceRefresh() from cache miss");
             final SntpClient client = new SntpClient();
+            client.setNtpMode(connectionInfo.getNtpMode());
             final String serverName = connectionInfo.getServer();
             final int port = connectionInfo.getPort();
             final int timeoutMillis = connectionInfo.getTimeoutMillis();
@@ -316,11 +317,13 @@ public class NtpTrustedTime implements TrustedTime {
         @NonNull private final String mServer;
         private final int mPort;
         private final int mTimeoutMillis;
+        private final String mNtpMode;
 
-        NtpConnectionInfo(@NonNull String server, int port, int timeoutMillis) {
+        NtpConnectionInfo(@NonNull String server, int port, int timeoutMillis, @NonNull String ntpMode) {
             mServer = Objects.requireNonNull(server);
             mPort = port;
             mTimeoutMillis = timeoutMillis;
+            mNtpMode = ntpMode;
         }
 
         @NonNull
@@ -331,6 +334,11 @@ public class NtpTrustedTime implements TrustedTime {
         @NonNull
         public int getPort() {
             return mPort;
+        }
+
+        @NonNull
+        public String getNtpMode() {
+            return mNtpMode;
         }
 
         int getTimeoutMillis() {
@@ -353,16 +361,31 @@ public class NtpTrustedTime implements TrustedTime {
 
         final Resources res = mContext.getResources();
 
+        String ntpMode = Settings.Global.getString(resolver, Settings.Global.NTP_MODE);
+        if (ntpMode == null) {
+            ntpMode = res.getString(com.android.internal.R.string.config_ntpMode);
+        }
+
         final String hostname;
         if (mHostnameForTests != null) {
             hostname = mHostnameForTests;
         } else {
+            String globalSettingKey;
+            int resConfigId;
+            if ("https".equals(ntpMode)) {
+                globalSettingKey = Settings.Global.HTTPS_TIME_SERVER;
+                resConfigId = com.android.internal.R.string.config_httpsTimeServer;
+            } else {
+                globalSettingKey = Settings.Global.NTP_SERVER;
+                resConfigId = com.android.internal.R.string.config_ntpServer;
+            }
+
             String serverGlobalSetting =
-                    Settings.Global.getString(resolver, Settings.Global.NTP_SERVER);
+                    Settings.Global.getString(resolver, globalSettingKey);
             if (serverGlobalSetting != null) {
                 hostname = serverGlobalSetting;
             } else {
-                hostname = res.getString(com.android.internal.R.string.config_ntpServer);
+                hostname = res.getString(resConfigId);
             }
         }
 
@@ -383,7 +406,7 @@ public class NtpTrustedTime implements TrustedTime {
                     resolver, Settings.Global.NTP_TIMEOUT, defaultTimeoutMillis);
         }
         return TextUtils.isEmpty(hostname) ? null :
-            new NtpConnectionInfo(hostname, port, timeoutMillis);
+            new NtpConnectionInfo(hostname, port, timeoutMillis, ntpMode);
     }
 
     /** Prints debug information. */
