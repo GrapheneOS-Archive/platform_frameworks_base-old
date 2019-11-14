@@ -108,7 +108,6 @@ public class NtpTrustedTime implements TrustedTime {
     private final Supplier<ConnectivityManager> mConnectivityManagerSupplier =
             new Supplier<ConnectivityManager>() {
         private ConnectivityManager mConnectivityManager;
-
         @Nullable
         @Override
         public synchronized ConnectivityManager get() {
@@ -159,9 +158,9 @@ public class NtpTrustedTime implements TrustedTime {
                 if (LOGD) Log.d(TAG, "forceRefresh: no connectivity");
                 return false;
             }
-
             if (LOGD) Log.d(TAG, "forceRefresh() from cache miss");
             final SntpClient client = new SntpClient();
+            client.setNtpMode(connectionInfo.getNtpMode());
             final String serverName = connectionInfo.getServer();
             final int timeoutMillis = connectionInfo.getTimeoutMillis();
             if (client.requestTime(serverName, timeoutMillis, network)) {
@@ -259,15 +258,28 @@ public class NtpTrustedTime implements TrustedTime {
 
         @NonNull private final String mServer;
         private final int mTimeoutMillis;
+        private final String mNtpMode;
 
         NtpConnectionInfo(@NonNull String server, int timeoutMillis) {
             mServer = Objects.requireNonNull(server);
             mTimeoutMillis = timeoutMillis;
+            mNtpMode = "ntp";
+        }
+
+        NtpConnectionInfo(@NonNull String server, int timeoutMillis, @NonNull String ntpMode) {
+            mServer = Objects.requireNonNull(server);
+            mTimeoutMillis = timeoutMillis;
+            mNtpMode = ntpMode;
         }
 
         @NonNull
         public String getServer() {
             return mServer;
+        }
+
+        @NonNull
+        public String getNtpMode() {
+            return mNtpMode;
         }
 
         int getTimeoutMillis() {
@@ -280,17 +292,36 @@ public class NtpTrustedTime implements TrustedTime {
         final ContentResolver resolver = mContext.getContentResolver();
 
         final Resources res = mContext.getResources();
-        final String defaultServer = res.getString(
-                com.android.internal.R.string.config_ntpServer);
-        final int defaultTimeoutMillis = res.getInteger(
-                com.android.internal.R.integer.config_ntpTimeout);
+        final String defaultNtpMode = res.getString(
+                com.android.internal.R.string.config_ntpMode);
+        final String ntpMode =
+                Settings.Global.getString(resolver, Settings.Global.NTP_MODE) != null ?
+                Settings.Global.getString(resolver, Settings.Global.NTP_MODE) :
+                defaultNtpMode;
 
-        final String secureServer = Settings.Global.getString(
-                resolver, Settings.Global.NTP_SERVER);
+        String defaultServer;
+        String secureServer;
+
+        int defaultTimeoutMillis = res.getInteger(
+                com.android.internal.R.integer.config_ntpTimeout);
         final int timeoutMillis = Settings.Global.getInt(
                 resolver, Settings.Global.NTP_TIMEOUT, defaultTimeoutMillis);
 
+        switch(ntpMode) {
+            case "https":
+                defaultServer = res.getString(
+                        com.android.internal.R.string.config_httpsTimeServer);
+                secureServer = Settings.Global.getString(
+                        resolver, Settings.Global.HTTPS_TIME_SERVER);
+                break;
+            default:
+                defaultServer = res.getString(
+                        com.android.internal.R.string.config_ntpServer);
+                secureServer = Settings.Global.getString(
+                        resolver, Settings.Global.NTP_SERVER);
+                break;
+        }
         final String server = secureServer != null ? secureServer : defaultServer;
-        return TextUtils.isEmpty(server) ? null : new NtpConnectionInfo(server, timeoutMillis);
+        return TextUtils.isEmpty(server) ? null : new NtpConnectionInfo(server, timeoutMillis, ntpMode);
     }
 }
