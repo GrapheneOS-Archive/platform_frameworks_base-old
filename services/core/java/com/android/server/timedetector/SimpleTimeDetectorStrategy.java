@@ -120,7 +120,7 @@ public final class SimpleTimeDetectorStrategy implements TimeDetectorStrategy {
         mLastSystemClockTimeSendNetworkBroadcast = sendNetworkBroadcast;
 
         if (!mCallback.isTimeDetectionEnabled()) {
-            Slog.d(TAG, "setSystemClockIfRequired: Time detection is not enabled. time=" + time);
+            Slog.d(TAG, "setSystemClockIfRequired: Time detection or config_nitzTimeUpdate is not enabled. time=" + time);
             return;
         }
 
