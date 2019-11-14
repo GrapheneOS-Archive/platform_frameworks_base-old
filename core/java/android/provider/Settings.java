@@ -5178,6 +5178,7 @@ public final class Settings {
             MOVED_TO_GLOBAL.add(Settings.Global.NITZ_UPDATE_SPACING);
             MOVED_TO_GLOBAL.add(Settings.Global.NTP_SERVER);
             MOVED_TO_GLOBAL.add(Settings.Global.NTP_TIMEOUT);
+            MOVED_TO_GLOBAL.add(Settings.Global.NTP_MODE);
             MOVED_TO_GLOBAL.add(Settings.Global.PDP_WATCHDOG_ERROR_POLL_COUNT);
             MOVED_TO_GLOBAL.add(Settings.Global.PDP_WATCHDOG_LONG_POLL_INTERVAL_MS);
             MOVED_TO_GLOBAL.add(Settings.Global.PDP_WATCHDOG_MAX_PDP_RESET_FAIL_COUNT);
@@ -10253,6 +10254,11 @@ public final class Settings {
 
        /** Preferred NTP server. {@hide} */
        public static final String NTP_SERVER = "ntp_server";
+       /** Preferred HTTPS time server. {@hide} */
+       public static final String HTTPS_TIME_SERVER = "https_time_server";
+       /** Prefered method to get NTP. {@hide} */
+       public static final String NTP_MODE = "ntp_mode";
+
        /** Timeout in milliseconds to wait for NTP server. {@hide} */
        public static final String NTP_TIMEOUT = "ntp_timeout";
 
