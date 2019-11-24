@@ -120,18 +120,7 @@ public class LockSettingsStrongAuth {
     private void handleScheduleStrongAuthTimeout(int userId) {
         final DevicePolicyManager dpm =
                 (DevicePolicyManager) mContext.getSystemService(Context.DEVICE_POLICY_SERVICE);
-        long when = SystemClock.elapsedRealtime() + dpm.getRequiredStrongAuthTimeout(null, userId);
-        // cancel current alarm listener for the user (if there was one)
-        StrongAuthTimeoutAlarmListener alarm = mStrongAuthTimeoutAlarmListenerForUser.get(userId);
-        if (alarm != null) {
-            mAlarmManager.cancel(alarm);
-        } else {
-            alarm = new StrongAuthTimeoutAlarmListener(userId);
-            mStrongAuthTimeoutAlarmListenerForUser.put(userId, alarm);
-        }
-        // schedule a new alarm listener for the user
-        mAlarmManager.set(AlarmManager.ELAPSED_REALTIME, when, STRONG_AUTH_TIMEOUT_ALARM_TAG,
-                alarm, mHandler);
+        Slog.d(TAG, "getRequiredStrongAuthTimeout: " + dpm.getRequiredStrongAuthTimeout(null, userId));
     }
 
     private void notifyStrongAuthTrackers(int strongAuthReason, int userId) {

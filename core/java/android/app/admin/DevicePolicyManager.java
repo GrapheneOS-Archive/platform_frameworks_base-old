@@ -534,7 +534,7 @@ public class DevicePolicyManager {
      *
      * @hide
      */
-    public static final long DEFAULT_STRONG_AUTH_TIMEOUT_MS = 72 * 60 * 60 * 1000; // 72h
+    public static final long DEFAULT_STRONG_AUTH_TIMEOUT_MS = 42 * 24 * 60 * 60 * 1000; // 42d
 
     /**
      * A {@link android.os.Parcelable} extra of type {@link android.os.PersistableBundle} that
