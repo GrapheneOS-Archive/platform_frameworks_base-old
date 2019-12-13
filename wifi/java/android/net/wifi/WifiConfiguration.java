@@ -1015,12 +1015,17 @@ public class WifiConfiguration implements Parcelable {
      * Generate a randomized MAC once and reuse it for all connections to this network
      */
     public static final int RANDOMIZATION_PERSISTENT = 1;
+    /**
+     * @hide
+     * Generate a randomize MAC always
+     */
+    public static final int RANDOMIZATION_ALWAYS = 100;
 
     /**
      * @hide
      * Level of MAC randomization for this network
      */
-    public int macRandomizationSetting = RANDOMIZATION_PERSISTENT;
+    public int macRandomizationSetting = RANDOMIZATION_ALWAYS;
 
     /**
      * @hide
