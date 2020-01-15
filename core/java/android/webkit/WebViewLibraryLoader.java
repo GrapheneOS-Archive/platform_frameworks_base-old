@@ -160,15 +160,15 @@ public class WebViewLibraryLoader {
         int numRelros = 0;
 
         if (Build.SUPPORTED_32_BIT_ABIS.length > 0) {
-            if (DEBUG) Log.v(LOGTAG, "Create 32 bit relro");
-            createRelroFile(false /* is64Bit */, packageName, libraryFileName);
-            numRelros++;
+            //if (DEBUG) Log.v(LOGTAG, "Create 32 bit relro");
+            //createRelroFile(false /* is64Bit */, packageName, libraryFileName);
+            //numRelros++;
         }
 
         if (Build.SUPPORTED_64_BIT_ABIS.length > 0) {
-            if (DEBUG) Log.v(LOGTAG, "Create 64 bit relro");
-            createRelroFile(true /* is64Bit */, packageName, libraryFileName);
-            numRelros++;
+            //if (DEBUG) Log.v(LOGTAG, "Create 64 bit relro");
+            //createRelroFile(true /* is64Bit */, packageName, libraryFileName);
+            //numRelros++;
         }
         return numRelros;
     }
