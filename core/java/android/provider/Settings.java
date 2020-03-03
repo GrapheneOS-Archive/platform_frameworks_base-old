@@ -3394,13 +3394,6 @@ public final class Settings {
             "lock_pattern_tactile_feedback_enabled";
 
         /**
-         * Whether to scramble a pin unlock layout
-         * @hide
-         */
-        public static final String SCRAMBLE_PIN_LAYOUT =
-            "lockscreen_scramble_pin_layout";
-
-        /**
          * A formatted string of the next alarm that is set, or the empty string
          * if there is no alarm set.
          *
@@ -9000,6 +8993,13 @@ public final class Settings {
         public static final String TAP_GESTURE = "tap_gesture";
 
         private static final Validator TAP_GESTURE_VALIDATOR = BOOLEAN_VALIDATOR;
+
+        /**
+         * Whether to scramble a pin unlock layout
+         * @hide
+         */
+        public static final String SCRAMBLE_PIN_LAYOUT =
+            "lockscreen_scramble_pin_layout";
 
         /**
          * This are the settings to be backed up.
