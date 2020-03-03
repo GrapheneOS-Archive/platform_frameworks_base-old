@@ -2434,6 +2434,9 @@ public class WifiConfiguration implements Parcelable {
             recentFailure.setAssociationStatus(source.recentFailure.getAssociationStatus());
             mRandomizedMacAddress = source.mRandomizedMacAddress;
             macRandomizationSetting = source.macRandomizationSetting;
+            if (macRandomizationSetting == 0) {
+                macRandomizationSetting = RANDOMIZATION_ALWAYS;
+            }
             requirePMF = source.requirePMF;
             updateIdentifier = source.updateIdentifier;
         }
@@ -2579,6 +2582,9 @@ public class WifiConfiguration implements Parcelable {
                 config.recentFailure.setAssociationStatus(in.readInt());
                 config.mRandomizedMacAddress = in.readParcelable(null);
                 config.macRandomizationSetting = in.readInt();
+                if (config.macRandomizationSetting == 0) {
+                    config.macRandomizationSetting = RANDOMIZATION_ALWAYS;
+                }
                 config.osu = in.readInt() != 0;
                 return config;
             }
