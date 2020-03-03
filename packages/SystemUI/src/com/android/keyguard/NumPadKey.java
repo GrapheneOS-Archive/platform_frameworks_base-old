@@ -16,6 +16,7 @@
 
 package com.android.keyguard;
 
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.os.PowerManager;
@@ -113,8 +114,8 @@ public class NumPadKey extends ViewGroup {
     }
 
     private void updateText() {
-        boolean scramblePin = Settings.System.getInt(getContext().getContentResolver(),
-                Settings.System.SCRAMBLE_PIN_LAYOUT, 0) == 1;
+        boolean scramblePin = Settings.Secure. getIntForUser(mContext.getContentResolver(),
+                Settings.Secure.SCRAMBLE_PIN_LAYOUT, 0, ActivityManager.getCurrentUser()) == 1;
         if (mDigit >= 0) {
             mDigitText.setText(Integer.toString(mDigit));
             if (sKlondike == null) {
