@@ -1019,7 +1019,7 @@ public class WifiConfiguration implements Parcelable {
      * @hide
      * Generate a randomize MAC always
      */
-    public static final int RANDOMIZATION_ALWAYS = 0;
+    public static final int RANDOMIZATION_ALWAYS = 100;
 
     /**
      * @hide
