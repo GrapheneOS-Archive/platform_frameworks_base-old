@@ -510,7 +510,7 @@ public class Vpn {
             mAlwaysOn = false;
         }
 
-        mLockdown = (mAlwaysOn && lockdown);
+        mLockdown = lockdown;
         mLockdownWhitelist = (mLockdown && lockdownWhitelist != null)
                 ? Collections.unmodifiableList(new ArrayList<>(lockdownWhitelist))
                 : Collections.emptyList();
@@ -557,7 +557,7 @@ public class Vpn {
             mSystemServices.settingsSecurePutStringForUser(Settings.Secure.ALWAYS_ON_VPN_APP,
                     getAlwaysOnPackage(), mUserHandle);
             mSystemServices.settingsSecurePutIntForUser(Settings.Secure.ALWAYS_ON_VPN_LOCKDOWN,
-                    (mAlwaysOn && mLockdown ? 1 : 0), mUserHandle);
+                    (mLockdown ? 1 : 0), mUserHandle);
             mSystemServices.settingsSecurePutStringForUser(
                     Settings.Secure.ALWAYS_ON_VPN_LOCKDOWN_WHITELIST,
                     String.join(",", mLockdownWhitelist), mUserHandle);
@@ -576,7 +576,7 @@ public class Vpn {
             final String alwaysOnPackage = mSystemServices.settingsSecureGetStringForUser(
                     Settings.Secure.ALWAYS_ON_VPN_APP, mUserHandle);
             final boolean alwaysOnLockdown = mSystemServices.settingsSecureGetIntForUser(
-                    Settings.Secure.ALWAYS_ON_VPN_LOCKDOWN, 0 /*default*/, mUserHandle) != 0;
+                    Settings.Secure.ALWAYS_ON_VPN_LOCKDOWN, 1 /*default*/, mUserHandle) != 0;
             final String whitelistString = mSystemServices.settingsSecureGetStringForUser(
                     Settings.Secure.ALWAYS_ON_VPN_LOCKDOWN_WHITELIST, mUserHandle);
             final List<String> whitelistedPackages = TextUtils.isEmpty(whitelistString)
