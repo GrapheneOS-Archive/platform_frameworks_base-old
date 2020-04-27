@@ -8325,6 +8325,12 @@ public final class Settings {
         public static final String FLASHLIGHT_ENABLED = "flashlight_enabled";
 
         /**
+         * Whether or not fingerprint unlock is allowed on Keyguard.
+         * @hide
+         */
+        public static final String FINGERPRINT_UNLOCK_KEYGUARD_ENABLED = "fingerprint_unlock_keyguard_enabled";
+
+        /**
          * Whether or not face unlock is allowed on Keyguard.
          * @hide
          */
