@@ -265,7 +265,14 @@ public abstract class NtpTrustedTime implements TrustedTime {
 
     /** Forces a refresh using the default network. */
     @UnsupportedAppUsage(maxTargetSdk = Build.VERSION_CODES.R, trackingBug = 170729553)
-    public boolean forceRefresh() {
+    public final boolean forceRefresh() {
+        final ContentResolver resolver = getContext().getContentResolver();
+
+        if (Settings.Global.getInt(resolver, Settings.Global.AUTO_TIME, 1) == 0) {
+            Log.d(TAG, "forceRefresh: nitzTimeUpdate disabled bailing early");
+            return false;
+        }
+
         synchronized (this) {
             Network network = getDefaultNetwork();
             if (network == null) {
@@ -739,5 +746,14 @@ public abstract class NtpTrustedTime implements TrustedTime {
             }
             return (int) longValue;
         }
+
+        @NonNull
+        @Override
+        protected Context getContext() {
+            return mContext;
+        }
     }
+
+    @NonNull
+    protected abstract Context getContext();
 }
