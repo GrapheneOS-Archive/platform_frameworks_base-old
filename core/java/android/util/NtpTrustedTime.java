@@ -140,6 +140,15 @@ public class NtpTrustedTime implements TrustedTime {
     @UnsupportedAppUsage
     public boolean forceRefresh() {
         synchronized (this) {
+            final ContentResolver resolver = mContext.getContentResolver();
+
+            final boolean networkPollTime = Settings.Global.getInt(resolver,
+                    Settings.Global.AUTO_TIME, 1) != 0;
+            if (!networkPollTime) {
+                Log.d(TAG, "forceRefresh: nitzTimeUpdate disabled bailing early");
+                return false;
+            }
+
             NtpConnectionInfo connectionInfo = getNtpConnectionInfo();
             if (connectionInfo == null) {
                 // missing server config, so no trusted time available
