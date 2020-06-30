@@ -179,6 +179,13 @@ public class NtpTrustedTime implements TrustedTime {
     @UnsupportedAppUsage(maxTargetSdk = Build.VERSION_CODES.R, trackingBug = 170729553)
     public boolean forceRefresh() {
         synchronized (this) {
+            final ContentResolver resolver = mContext.getContentResolver();
+
+            if (Settings.Global.getInt(resolver, Settings.Global.AUTO_TIME, 1) == 0) {
+                Log.d(TAG, "forceRefresh: nitzTimeUpdate disabled bailing early");
+                return false;
+            }
+
             NtpConnectionInfo connectionInfo = getNtpConnectionInfo();
             if (connectionInfo == null) {
                 // missing server config, so no NTP time available
