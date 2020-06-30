@@ -121,6 +121,15 @@ public class NtpTrustedTime implements TrustedTime {
             return false;
         }
 
+        final ContentResolver resolver = sContext.getContentResolver();
+
+        final boolean networkPollTime = Settings.Global.getInt(resolver,
+                Settings.Global.AUTO_TIME, 1) != 0;
+        if (!networkPollTime) {
+            Log.d(TAG, "nitzTimeUpdate disabled, bailing early from forceRefresh()");
+            return false;
+        }
+
         // We can't do this at initialization time: ConnectivityService might not be running yet.
         synchronized (this) {
             if (mCM == null) {
