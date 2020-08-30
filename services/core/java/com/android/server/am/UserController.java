@@ -55,6 +55,7 @@ import android.content.Intent;
 import android.content.pm.IPackageManager;
 import android.content.pm.PackageManager;
 import android.content.pm.UserInfo;
+import android.provider.Settings;
 import android.os.BatteryStats;
 import android.os.Binder;
 import android.os.Build;
@@ -283,8 +284,17 @@ class UserController implements Handler.Callback {
         mHandler.post(() -> {
             finishUserBoot(uss);
             startProfiles();
-            synchronized (mLock) {
-                stopRunningUsersLU(mMaxRunningUsers);
+
+            final boolean shouldStopRunningUsersIfOverLimit = Settings.Global.getInt(
+                    mInjector.getContext().getContentResolver(),
+                    Settings.Global.RUNNING_USERS_LIMIT_ENABLED, 1) != 0;
+
+            if (shouldStopRunningUsersIfOverLimit) {
+                synchronized (mLock) {
+                    stopRunningUsersLU(mMaxRunningUsers);
+                }
+            } else {
+                Slog.d(TAG, "Not checking if number of running users is over the limit");
             }
         });
     }

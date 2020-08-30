@@ -10566,6 +10566,12 @@ public final class Settings {
         public static final String USER_SWITCHER_ENABLED = "user_switcher_enabled";
 
         /**
+         * Whether or not the number of running users is limited.
+         * @hide
+         */
+        public static final String RUNNING_USERS_LIMIT_ENABLED = "running_users_limit_enabled";
+
+        /**
          * Webview Data reduction proxy key.
          * @hide
          */
