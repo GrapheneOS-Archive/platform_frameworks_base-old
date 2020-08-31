@@ -416,6 +416,22 @@ public class Vpn {
      * @param lockdown whether to prevent all traffic outside of a VPN.
      */
     public synchronized void setLockdown(boolean lockdown) {
+        // Save the always-on state, since this is expected to be called
+        // for changing the lockdown/always-on setting.
+        setLockdown(lockdown, true);
+    }
+
+    /**
+     * Does the same as {@link #setLockdown(boolean)}, but allow for prevention of saving the
+     * always-on state. When users are stopped, lockdown is turned off; this originally
+     * called saveAlwaysOnPackage with mLockdown == false into Settings.Secure, overriding
+     * what was saved before. Therefore, we need to provide a way to not call setAlwaysOnPackage
+     * for that case (GrapheneOS/os_issue_tracker#213).
+     *
+     * @param lockdown whether to prevent all traffic outside of a VPN.
+     * @param saveAlwaysOnState whether to save the always-on state.
+     */
+    private synchronized void setLockdown(boolean lockdown, boolean saveAlwaysOnState) {
         enforceControlPermissionOrInternalCaller();
 
         setVpnForcedLocked(lockdown);
@@ -423,7 +439,7 @@ public class Vpn {
 
         // Update app lockdown setting if it changed. Legacy VPN lockdown status is controlled by
         // LockdownVpnTracker.isEnabled() which keeps track of its own state.
-        if (mAlwaysOn) {
+        if (mAlwaysOn && saveAlwaysOnState) {
             saveAlwaysOnPackage();
         }
     }
@@ -1466,8 +1482,9 @@ public class Vpn {
      * Called when the user associated with this VPN has just been stopped.
      */
     public synchronized void onUserStopped() {
-        // Switch off networking lockdown (if it was enabled)
-        setLockdown(false);
+        // Switch off networking lockdown (if it was enabled), but don't
+        // override the saved always-on state with mLockdown == false.
+        setLockdown(false, false);
         mAlwaysOn = false;
 
         // Quit any active connections
