@@ -635,8 +635,27 @@ class UserController implements Handler.Callback {
             Slog.w(TAG, msg);
             throw new SecurityException(msg);
         }
-        if (userId < 0 || userId == UserHandle.USER_SYSTEM) {
-            throw new IllegalArgumentException("Can't stop system user " + userId);
+        if (userId < 0) {
+            throw new IllegalArgumentException("Can't stop user " + userId);
+        }
+        if (userId == UserHandle.USER_SYSTEM) {
+            if (isCurrentUserLU(UserHandle.USER_SYSTEM) && keyEvictedCallback == null) {
+                // Logging out of the system user, so if we don't start up USER_SYSTEM again,
+                // then the phone will be a blank screen.
+                keyEvictedCallback = new KeyEvictedCallback() {
+                    @Override
+                    public void keyEvicted(@UserIdInt int userId) {
+                        Slog.d(TAG, "DEBUG: System user key evicted; starting up again.");
+                        // Start the user up and bring to the foreground.
+                        // Post to the same handler that this callback is called from to ensure the
+                        // user cleanup is complete before restarting.
+                        mHandler.post(() -> UserController.this.startUser(userId, true));
+                    }
+                };
+            } else {
+                // If keyEvictedCallback not null, then we're not logging out.
+                throw new IllegalArgumentException("Can't stop system user " + userId);
+            }
         }
         enforceShellRestriction(UserManager.DISALLOW_DEBUGGING_FEATURES, userId);
         synchronized (mLock) {
@@ -651,9 +670,6 @@ class UserController implements Handler.Callback {
     @GuardedBy("mLock")
     private int stopUsersLU(final int userId, boolean force,
             final IStopUserCallback stopUserCallback, KeyEvictedCallback keyEvictedCallback) {
-        if (userId == UserHandle.USER_SYSTEM) {
-            return USER_OP_ERROR_IS_SYSTEM;
-        }
         if (isCurrentUserLU(userId)) {
             return USER_OP_IS_CURRENT;
         }

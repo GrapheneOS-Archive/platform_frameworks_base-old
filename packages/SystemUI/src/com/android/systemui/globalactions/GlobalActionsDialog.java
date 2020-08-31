@@ -457,8 +457,7 @@ public class GlobalActionsDialog implements DialogInterface.OnDismissListener,
         // Logout is meaningless if not secure. Logging out system user isn't supported
         // at the moment, as the system user has no where to go after logging out and there
         // are many things to test.
-        return mKeyguardManager.isDeviceSecure(userId)
-                && getCurrentUser().id != UserHandle.USER_SYSTEM;
+        return mKeyguardManager.isDeviceSecure(userId);
     }
 
     @Override
