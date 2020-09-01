@@ -155,20 +155,6 @@ class UserController implements Handler.Callback {
     // when it never calls back.
     private static final int USER_SWITCH_CALLBACKS_TIMEOUT_MS = 5 * 1000;
 
-    // For logging out of the system user and having it start up again in the foreground after.
-    private final KeyEvictedCallback START_SYSTEM_USER_FOREGROUND_KEY_EVICTED_CALLBACK =
-            new KeyEvictedCallback() {
-                @Override
-                public void keyEvicted(int userId) {
-                    Slog.d(TAG, "user 0 key evicted; starting up again.");
-                    // Start the system user back up and bring to the foreground.
-                    // Post to the same handler that this callback is called from to ensure the
-                    // user cleanup is complete before restarting.
-                    mHandler.post(() -> UserController.this.startUser(
-                            UserHandle.USER_SYSTEM, true));
-                }
-            };
-
     /**
      * Maximum number of users we allow to be running at a time, including system user.
      *
@@ -710,20 +696,8 @@ class UserController implements Handler.Callback {
             Slog.w(TAG, msg);
             throw new SecurityException(msg);
         }
-        if (userId < 0) {
-            throw new IllegalArgumentException("Can't stop user " + userId);
-        }
-        if (userId == UserHandle.USER_SYSTEM) {
-            // Allow logging out of the system user.
-            // When logging out, stopUser is expected to be called from the
-            // ActivityManagerService with a null keyEvictedCallback.
-            if (isCurrentUserLU(UserHandle.USER_SYSTEM) && keyEvictedCallback == null) {
-                // If we don't start up USER_SYSTEM again,
-                // then the phone will be a blank screen after logging out.
-                keyEvictedCallback = START_SYSTEM_USER_FOREGROUND_KEY_EVICTED_CALLBACK;
-            } else {
-                throw new IllegalArgumentException("Can't stop system user " + userId);
-            }
+        if (userId < 0 || userId == UserHandle.USER_SYSTEM) {
+            throw new IllegalArgumentException("Can't stop system user " + userId);
         }
         enforceShellRestriction(UserManager.DISALLOW_DEBUGGING_FEATURES, userId);
         synchronized (mLock) {
@@ -738,27 +712,15 @@ class UserController implements Handler.Callback {
     @GuardedBy("mLock")
     private int stopUsersLU(final int userId, boolean force,
             final IStopUserCallback stopUserCallback, KeyEvictedCallback keyEvictedCallback) {
-        // If trying to stop system user, verify that there must
-        // be the right KeyEvictedCallback, or else the user will be locked out.
-        if (userId == UserHandle.USER_SYSTEM
-                && keyEvictedCallback != START_SYSTEM_USER_FOREGROUND_KEY_EVICTED_CALLBACK) {
+        if (userId == UserHandle.USER_SYSTEM) {
             return USER_OP_ERROR_IS_SYSTEM;
         }
         if (isCurrentUserLU(userId)) {
-            // If logging out of system user, the current user will be the system user,
-            // since we assume system user has no users to switch to.
-            if (userId != UserHandle.USER_SYSTEM) {
-                return USER_OP_IS_CURRENT;
-            }
+            return USER_OP_IS_CURRENT;
         }
         int[] usersToStop = getUsersToStopLU(userId);
         // If one of related users is system or current, no related users should be stopped
         for (int i = 0; i < usersToStop.length; i++) {
-            if (UserHandle.USER_SYSTEM == userId) {
-                // Skip checking if trying to logout of system user.
-                break;
-            }
-
             int relatedUserId = usersToStop[i];
             if ((UserHandle.USER_SYSTEM == relatedUserId) || isCurrentUserLU(relatedUserId)) {
                 if (DEBUG_MU) Slog.i(TAG, "stopUsersLocked cannot stop related user "
@@ -773,7 +735,7 @@ class UserController implements Handler.Callback {
                 return USER_OP_ERROR_RELATED_USERS_CANNOT_STOP;
             }
         }
-        if (DEBUG_MU || true) Slog.i(TAG, "stopUsersLocked usersToStop=" + Arrays.toString(usersToStop));
+        if (DEBUG_MU) Slog.i(TAG, "stopUsersLocked usersToStop=" + Arrays.toString(usersToStop));
         for (int userIdToStop : usersToStop) {
             stopSingleUserLU(userIdToStop,
                     userIdToStop == userId ? stopUserCallback : null,
