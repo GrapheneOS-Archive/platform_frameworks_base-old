@@ -389,8 +389,7 @@ public class GlobalActionsDialog implements DialogInterface.OnDismissListener,
             } else if (GLOBAL_ACTION_KEY_SCREENSHOT.equals(actionKey)) {
                 mItems.add(new ScreenshotAction());
             } else if (GLOBAL_ACTION_KEY_LOGOUT.equals(actionKey)) {
-                if (mDevicePolicyManager.isLogoutEnabled()
-                        && getCurrentUser().id != UserHandle.USER_SYSTEM) {
+                if (shouldDisplayLogout()) {
                     mItems.add(new LogoutAction());
                     mHasLogoutButton = true;
                 }
@@ -451,6 +450,15 @@ public class GlobalActionsDialog implements DialogInterface.OnDismissListener,
         int state = mLockPatternUtils.getStrongAuthForUser(userId);
         return (state == STRONG_AUTH_NOT_REQUIRED
                 || state == SOME_AUTH_REQUIRED_AFTER_USER_REQUEST);
+    }
+
+    private boolean shouldDisplayLogout() {
+        int userId = getCurrentUser().id;
+        // Logout is meaningless if not secure. Logging out system user isn't supported
+        // at the moment, as the system user has no where to go after logging out and there
+        // are many things to test.
+        return mKeyguardManager.isDeviceSecure(userId)
+                && getCurrentUser().id != UserHandle.USER_SYSTEM;
     }
 
     @Override
