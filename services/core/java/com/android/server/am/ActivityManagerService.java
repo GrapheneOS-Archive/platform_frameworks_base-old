@@ -17578,6 +17578,15 @@ public class ActivityManagerService extends IActivityManager.Stub
         return mUserController.stopUser(userId, force, callback, null /* keyEvictedCallback */);
     }
 
+    /**
+     * Restarts the system user if it is the current user. Used to logout and evict
+     * the system user's credential keys.
+     */
+    @Override
+    public int restartSystemUserInForegroundIfCurrent() {
+        return mUserController.restartSystemUserInForegroundIfCurrent(null);
+    }
+
     @Override
     public UserInfo getCurrentUser() {
         return mUserController.getCurrentUser();

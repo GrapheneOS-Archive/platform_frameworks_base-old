@@ -638,6 +638,67 @@ class UserController implements Handler.Callback {
         });
     }
 
+    /**
+     * Follows the flow stopUsers -> stopUsersLU -> stopSingleUserLU, but with all the
+     * checks around UserHandle.USER_SYSTEM removed.
+     *
+     * The {@link #stopUser(int, boolean, IStopUserCallback, KeyEvictedCallback)} and
+     * {@link #stopUsersLU(int, boolean, IStopUserCallback, KeyEvictedCallback)} methods
+     * are combined here. The {@link #stopSingleUserLU(int, IStopUserCallback, KeyEvictedCallback)}
+     * method is called as is.
+     *
+     * Used to logout and evict the system user's credential keys via the logout button.
+     */
+    int restartSystemUserInForegroundIfCurrent(final IStopUserCallback stopUserCallback) {
+        // Start of {@link #stopUser(int, boolean, IStopUserCallback, KeyEvictedCallback)} code
+
+        // Permission checks from stopUser
+        if (mInjector.checkCallingPermission(INTERACT_ACROSS_USERS_FULL)
+                != PackageManager.PERMISSION_GRANTED) {
+            String msg = "Permission Denial: switchUser() from pid="
+                    + Binder.getCallingPid()
+                    + ", uid=" + Binder.getCallingUid()
+                    + " requires " + INTERACT_ACROSS_USERS_FULL;
+            Slog.w(TAG, msg);
+            throw new SecurityException(msg);
+        }
+        enforceShellRestriction(UserManager.DISALLOW_DEBUGGING_FEATURES, UserHandle.USER_SYSTEM);
+
+        synchronized (mLock) {
+            // Start of {@link #stopUsersLU(int, boolean, IStopUserCallback, KeyEvictedCallback)}
+            if (!isCurrentUserLU(UserHandle.USER_SYSTEM)) {
+                // Someone else is the current user; this doesn't count as
+                // a logout button press.
+                return USER_OP_ERROR_IS_SYSTEM;
+            }
+
+            final KeyEvictedCallback keyEvictedCallback = new KeyEvictedCallback() {
+                @Override
+                public void keyEvicted(int userId) {
+                    Slog.d(TAG, "user 0 key evicted; starting up again.");
+                    // Start the system user back up and bring to the foreground.
+                    // Post to the same handler that this callback is called from to ensure the
+                    // user cleanup is complete before restarting.
+                    mHandler.post(() -> UserController.this.startUser(
+                            UserHandle.USER_SYSTEM, true));
+                }
+            };
+
+            // There might be a work profile to stop.
+            final int[] usersToStop = getUsersToStopLU(UserHandle.USER_SYSTEM);
+            if (DEBUG_MU) Slog.i(TAG, "logoutSystemUser usersToStop="
+                    + Arrays.toString(usersToStop));
+
+            for (int userIdToStop : usersToStop) {
+                // stopSingleUserLU doesn't check if it's system user, so no need to rewrite it.
+                stopSingleUserLU(userIdToStop,
+                        userIdToStop == UserHandle.USER_SYSTEM ? stopUserCallback : null,
+                        userIdToStop == UserHandle.USER_SYSTEM ? keyEvictedCallback : null);
+            }
+            return USER_OP_SUCCESS;
+        }
+    }
+
     int stopUser(final int userId, final boolean force, final IStopUserCallback stopUserCallback,
             KeyEvictedCallback keyEvictedCallback) {
         if (mInjector.checkCallingPermission(INTERACT_ACROSS_USERS_FULL)

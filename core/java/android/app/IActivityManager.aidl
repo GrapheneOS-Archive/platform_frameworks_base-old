@@ -344,6 +344,8 @@ interface IActivityManager {
     @UnsupportedAppUsage
     int stopUser(int userid, boolean force, in IStopUserCallback callback);
     @UnsupportedAppUsage
+    int restartSystemUserInForegroundIfCurrent();
+    @UnsupportedAppUsage
     void registerUserSwitchObserver(in IUserSwitchObserver observer, in String name);
     void unregisterUserSwitchObserver(in IUserSwitchObserver observer);
     int[] getRunningUserIds();
