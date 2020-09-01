@@ -645,8 +645,8 @@ class UserController implements Handler.Callback {
                 keyEvictedCallback = new KeyEvictedCallback() {
                     @Override
                     public void keyEvicted(@UserIdInt int userId) {
-                        Slog.d(TAG, "DEBUG: System user key evicted; starting up again.");
-                        // Start the user up and bring to the foreground.
+                        Slog.d(TAG, "user 0 key evicted; starting up again.");
+                        // Start the system user back up and bring to the foreground.
                         // Post to the same handler that this callback is called from to ensure the
                         // user cleanup is complete before restarting.
                         mHandler.post(() -> UserController.this.startUser(userId, true));
@@ -671,7 +671,11 @@ class UserController implements Handler.Callback {
     private int stopUsersLU(final int userId, boolean force,
             final IStopUserCallback stopUserCallback, KeyEvictedCallback keyEvictedCallback) {
         if (isCurrentUserLU(userId)) {
-            return USER_OP_IS_CURRENT;
+            // Allow logging out of the system user, but verify that there must
+            // be a KeyEvictedCallback, or else the user will be locked out.
+            if (userId != UserHandle.USER_SYSTEM || keyEvictedCallback == null) {
+                return USER_OP_IS_CURRENT;
+            }
         }
         int[] usersToStop = getUsersToStopLU(userId);
         // If one of related users is system or current, no related users should be stopped
