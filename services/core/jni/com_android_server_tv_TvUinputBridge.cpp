@@ -534,7 +534,7 @@ static void nativeClear(JNIEnv* env, jclass clazz, jlong ptr) {
  * JNI registration
  */
 
-static JNINativeMethod gUinputBridgeMethods[] = {
+static const JNINativeMethod gUinputBridgeMethods[] = {
         {"nativeOpen", "(Ljava/lang/String;Ljava/lang/String;III)J", (void*)nativeOpen},
         {"nativeGamepadOpen", "(Ljava/lang/String;Ljava/lang/String;)J", (void*)nativeGamepadOpen},
         {"nativeClose", "(J)V", (void*)nativeClose},
