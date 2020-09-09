@@ -182,7 +182,7 @@ static void android_view_DisplayListCanvas_drawWebViewFunctor(CRITICAL_JNI_PARAM
 
 const char* const kClassPathName = "android/graphics/RecordingCanvas";
 
-static JNINativeMethod gMethods[] = {
+static const JNINativeMethod gMethods[] = {
 
     // ------------ @FastNative ------------------
 
