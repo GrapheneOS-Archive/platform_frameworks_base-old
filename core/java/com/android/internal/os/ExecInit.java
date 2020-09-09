@@ -33,7 +33,7 @@ public class ExecInit {
 
         // Mimic system Zygote preloading.
         ZygoteInit.preload(new TimingsTraceLog("ExecInitTiming",
-                Trace.TRACE_TAG_DALVIK), false);
+                Trace.TRACE_TAG_DALVIK));
 
         // Launch the application.
         String[] runtimeArgs = new String[args.length - 1];
