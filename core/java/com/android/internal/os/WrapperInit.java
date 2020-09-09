@@ -185,7 +185,7 @@ public class WrapperInit {
      *       This is acceptable here as failure will leave the wrapped app with strictly less
      *       capabilities, which may make it crash, but not exceed its allowances.
      */
-    public static void preserveCapabilities() {
+    private static void preserveCapabilities() {
         StructCapUserHeader header = new StructCapUserHeader(
                 OsConstants._LINUX_CAPABILITY_VERSION_3, 0);
         StructCapUserData[] data;
