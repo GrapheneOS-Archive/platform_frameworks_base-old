@@ -40,6 +40,7 @@ import com.android.systemui.qs.SecureSetting;
 import com.android.systemui.qs.logging.QSLogger;
 import com.android.systemui.qs.tileimpl.QSTileImpl;
 import com.android.systemui.statusbar.policy.BatteryController;
+import com.android.systemui.statusbar.policy.KeyguardStateController;
 import com.android.systemui.util.settings.SecureSettings;
 
 import javax.inject.Inject;
@@ -50,6 +51,9 @@ public class BatterySaverTile extends QSTileImpl<BooleanState> implements
     private final BatteryController mBatteryController;
     @VisibleForTesting
     protected final SecureSetting mSetting;
+
+    private final ActivityStarter mActivityStarter;
+    private final KeyguardStateController mKeyguard;
 
     private int mLevel;
     private boolean mPowerSave;
@@ -67,6 +71,7 @@ public class BatterySaverTile extends QSTileImpl<BooleanState> implements
             MetricsLogger metricsLogger,
             StatusBarStateController statusBarStateController,
             ActivityStarter activityStarter,
+            KeyguardStateController keyguardStateController,
             QSLogger qsLogger,
             BatteryController batteryController,
             SecureSettings secureSettings
@@ -88,6 +93,16 @@ public class BatterySaverTile extends QSTileImpl<BooleanState> implements
                 handleRefreshState(null);
             }
         };
+
+        mActivityStarter = activityStarter;
+        mKeyguard = keyguardStateController;
+        final KeyguardStateController.Callback callback = new KeyguardStateController.Callback() {
+            @Override
+            public void onKeyguardShowingChanged() {
+                refreshState();
+            }
+        };
+        mKeyguard.observe(this, callback);
     }
 
     @Override
@@ -125,6 +140,13 @@ public class BatterySaverTile extends QSTileImpl<BooleanState> implements
     @Override
     protected void handleClick(@Nullable View view) {
         if (getState().state == Tile.STATE_UNAVAILABLE) {
+            return;
+        }
+        if (mKeyguard.isMethodSecure() && mKeyguard.isShowing()) {
+            mActivityStarter.postQSRunnableDismissingKeyguard(() -> {
+                mHost.openPanels();
+                mBatteryController.setPowerSaveMode(!mPowerSave);
+            });
             return;
         }
         mBatteryController.setPowerSaveMode(!mPowerSave);
