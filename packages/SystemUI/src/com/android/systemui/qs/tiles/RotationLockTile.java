@@ -40,6 +40,7 @@ import com.android.systemui.plugins.statusbar.StatusBarStateController;
 import com.android.systemui.qs.QSHost;
 import com.android.systemui.qs.logging.QSLogger;
 import com.android.systemui.qs.tileimpl.QSTileImpl;
+import com.android.systemui.statusbar.policy.KeyguardStateController;
 import com.android.systemui.statusbar.policy.RotationLockController;
 import com.android.systemui.statusbar.policy.RotationLockController.RotationLockControllerCallback;
 
@@ -51,6 +52,9 @@ public class RotationLockTile extends QSTileImpl<BooleanState> {
     private final Icon mIcon = ResourceIcon.get(com.android.internal.R.drawable.ic_qs_auto_rotate);
     private final RotationLockController mController;
 
+    private final ActivityStarter mActivityStarter;
+    private final KeyguardStateController mKeyguard;
+
     @Inject
     public RotationLockTile(
             QSHost host,
@@ -60,6 +64,7 @@ public class RotationLockTile extends QSTileImpl<BooleanState> {
             MetricsLogger metricsLogger,
             StatusBarStateController statusBarStateController,
             ActivityStarter activityStarter,
+            KeyguardStateController keyguardStateController,
             QSLogger qsLogger,
             RotationLockController rotationLockController
     ) {
@@ -67,6 +72,16 @@ public class RotationLockTile extends QSTileImpl<BooleanState> {
                 statusBarStateController, activityStarter, qsLogger);
         mController = rotationLockController;
         mController.observe(this, mCallback);
+
+        mActivityStarter = activityStarter;
+        mKeyguard = keyguardStateController;
+        final KeyguardStateController.Callback callback = new KeyguardStateController.Callback() {
+            @Override
+            public void onKeyguardShowingChanged() {
+                refreshState();
+            }
+        };
+        mKeyguard.observe(this, callback);
     }
 
     @Override
@@ -79,11 +94,22 @@ public class RotationLockTile extends QSTileImpl<BooleanState> {
         return new Intent(Settings.ACTION_AUTO_ROTATE_SETTINGS);
     }
 
-    @Override
-    protected void handleClick(@Nullable View view) {
+    protected void handleClickInner(@Nullable View view) {
         final boolean newState = !mState.value;
         mController.setRotationLocked(!newState);
         refreshState(newState);
+    }
+
+    @Override
+    protected void handleClick() {
+        if (mKeyguard.isMethodSecure() && mKeyguard.isShowing()) {
+            mActivityStarter.postQSRunnableDismissingKeyguard(() -> {
+                mHost.openPanels();
+                handleClickInner();
+            });
+            return;
+        }
+        handleClickInner();
     }
 
     @Override
