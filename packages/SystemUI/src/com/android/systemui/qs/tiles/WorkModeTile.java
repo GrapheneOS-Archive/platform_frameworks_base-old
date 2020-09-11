@@ -39,6 +39,7 @@ import com.android.systemui.qs.QSHost;
 import com.android.systemui.qs.logging.QSLogger;
 import com.android.systemui.qs.tileimpl.QSTileImpl;
 import com.android.systemui.statusbar.phone.ManagedProfileController;
+import com.android.systemui.statusbar.policy.KeyguardStateController;
 
 import javax.inject.Inject;
 
@@ -49,6 +50,9 @@ public class WorkModeTile extends QSTileImpl<BooleanState> implements
 
     private final ManagedProfileController mProfileController;
 
+    private final ActivityStarter mActivityStarter;
+    private final KeyguardStateController mKeyguard;
+
     @Inject
     public WorkModeTile(
             QSHost host,
@@ -58,6 +62,7 @@ public class WorkModeTile extends QSTileImpl<BooleanState> implements
             MetricsLogger metricsLogger,
             StatusBarStateController statusBarStateController,
             ActivityStarter activityStarter,
+            KeyguardStateController keyguardStateController,
             QSLogger qsLogger,
             ManagedProfileController managedProfileController
     ) {
@@ -65,6 +70,16 @@ public class WorkModeTile extends QSTileImpl<BooleanState> implements
                 statusBarStateController, activityStarter, qsLogger);
         mProfileController = managedProfileController;
         mProfileController.observe(getLifecycle(), this);
+
+        mActivityStarter = activityStarter;
+        mKeyguard = keyguardStateController;
+        final KeyguardStateController.Callback callback = new KeyguardStateController.Callback() {
+            @Override
+            public void onKeyguardShowingChanged() {
+                refreshState();
+            }
+        };
+        mKeyguard.observe(this, callback);
     }
 
     @Override
@@ -79,6 +94,13 @@ public class WorkModeTile extends QSTileImpl<BooleanState> implements
 
     @Override
     public void handleClick(@Nullable View view) {
+        if (mKeyguard.isMethodSecure() && mKeyguard.isShowing()) {
+            mActivityStarter.postQSRunnableDismissingKeyguard(() -> {
+                mHost.openPanels();
+                mProfileController.setWorkModeEnabled(!mState.value);
+            });
+            return;
+        }
         mProfileController.setWorkModeEnabled(!mState.value);
     }
 
