@@ -48,6 +48,7 @@ import com.android.systemui.qs.GlobalSetting;
 import com.android.systemui.qs.QSHost;
 import com.android.systemui.qs.logging.QSLogger;
 import com.android.systemui.qs.tileimpl.QSTileImpl;
+import com.android.systemui.statusbar.policy.KeyguardStateController;
 
 import javax.inject.Inject;
 
@@ -60,6 +61,8 @@ public class AirplaneModeTile extends QSTileImpl<BooleanState> {
     private final BroadcastDispatcher mBroadcastDispatcher;
     private final Lazy<ConnectivityManager> mLazyConnectivityManager;
 
+    private final KeyguardStateController mKeyguard;
+
     private boolean mListening;
 
     @Inject
@@ -71,6 +74,7 @@ public class AirplaneModeTile extends QSTileImpl<BooleanState> {
             MetricsLogger metricsLogger,
             StatusBarStateController statusBarStateController,
             ActivityStarter activityStarter,
+            KeyguardStateController keyguardStateController,
             QSLogger qsLogger,
             BroadcastDispatcher broadcastDispatcher,
             Lazy<ConnectivityManager> lazyConnectivityManager
@@ -87,6 +91,15 @@ public class AirplaneModeTile extends QSTileImpl<BooleanState> {
                 handleRefreshState(value);
             }
         };
+
+        mKeyguard = keyguardStateController;
+        final KeyguardStateController.Callback callback = new KeyguardStateController.Callback() {
+            @Override
+            public void onKeyguardShowingChanged() {
+                refreshState();
+            }
+        };
+        mKeyguard.observe(this, callback);
     }
 
     @Override
@@ -94,8 +107,7 @@ public class AirplaneModeTile extends QSTileImpl<BooleanState> {
         return new BooleanState();
     }
 
-    @Override
-    public void handleClick(@Nullable View view) {
+    public void handleClickInner(@Nullable View view) {
         boolean airplaneModeEnabled = mState.value;
         MetricsLogger.action(mContext, getMetricsCategory(), !airplaneModeEnabled);
         if (!airplaneModeEnabled && TelephonyProperties.in_ecm_mode().orElse(false)) {
@@ -104,6 +116,18 @@ public class AirplaneModeTile extends QSTileImpl<BooleanState> {
             return;
         }
         setEnabled(!airplaneModeEnabled);
+    }
+
+    @Override
+    public void handleClick() {
+        if (mKeyguard.isMethodSecure() && mKeyguard.isShowing()) {
+            mActivityStarter.postQSRunnableDismissingKeyguard(() -> {
+                mHost.openPanels();
+                handleClickInner();
+            });
+            return;
+        }
+        handleClickInner();
     }
 
     private void setEnabled(boolean enabled) {
