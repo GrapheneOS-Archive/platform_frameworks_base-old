@@ -1525,7 +1525,8 @@ public class PermissionManagerService extends IPermissionManager.Stub {
             // their permissions as always granted runtime ones since we need
             // to keep the review required permission flag per user while an
             // install permission's state is shared across all users.
-            if (pkg.getTargetSdkVersion() < Build.VERSION_CODES.M && bp.isRuntime()) {
+            if (pkg.getTargetSdkVersion() < Build.VERSION_CODES.M && bp.isRuntime() &&
+                    !isSpecialRuntimePermission(permName)) {
                 return;
             }
 
@@ -1568,7 +1569,8 @@ public class PermissionManagerService extends IPermissionManager.Stub {
                             + " for package " + packageName);
                 }
 
-                if (pkg.getTargetSdkVersion() < Build.VERSION_CODES.M) {
+                if (pkg.getTargetSdkVersion() < Build.VERSION_CODES.M &&
+                    !isSpecialRuntimePermission(permName)) {
                     Slog.w(TAG, "Cannot grant runtime permission to a legacy app");
                     return;
                 }
@@ -1693,7 +1695,8 @@ public class PermissionManagerService extends IPermissionManager.Stub {
             // their permissions as always granted runtime ones since we need
             // to keep the review required permission flag per user while an
             // install permission's state is shared across all users.
-            if (pkg.getTargetSdkVersion() < Build.VERSION_CODES.M && bp.isRuntime()) {
+            if (pkg.getTargetSdkVersion() < Build.VERSION_CODES.M && bp.isRuntime() &&
+                    !isSpecialRuntimePermission(permName)) {
                 return;
             }
 
@@ -1878,7 +1881,7 @@ public class PermissionManagerService extends IPermissionManager.Stub {
             // permission as requiring a review as this is the initial state.
             final int uid = mPackageManagerInt.getPackageUid(packageName, 0, userId);
             final int targetSdk = mPackageManagerInt.getUidTargetSdkVersion(uid);
-            final int flags = (targetSdk < Build.VERSION_CODES.M && isRuntimePermission)
+            final int flags = (targetSdk < Build.VERSION_CODES.M && isRuntimePermission && !isSpecialRuntimePermission(permName))
                     ? FLAG_PERMISSION_REVIEW_REQUIRED | FLAG_PERMISSION_REVOKED_COMPAT
                     : 0;
 
@@ -1898,7 +1901,8 @@ public class PermissionManagerService extends IPermissionManager.Stub {
 
             // If this permission was granted by default or role, make sure it is.
             if ((oldFlags & FLAG_PERMISSION_GRANTED_BY_DEFAULT) != 0
-                    || (oldFlags & FLAG_PERMISSION_GRANTED_BY_ROLE) != 0) {
+                    || (oldFlags & FLAG_PERMISSION_GRANTED_BY_ROLE) != 0
+                    || isSpecialRuntimePermission(permName)) {
                 // PermissionPolicyService will handle the app op for runtime permissions later.
                 grantRuntimePermissionInternal(packageName, permName, false,
                         Process.SYSTEM_UID, userId, delayingPermCallback);
@@ -2587,6 +2591,10 @@ public class PermissionManagerService extends IPermissionManager.Stub {
         }
     }
 
+    public static boolean isSpecialRuntimePermission(final String permission) {
+        return false;
+    }
+
     /**
      * Restore the permission state for a package.
      *
@@ -2682,6 +2690,8 @@ public class PermissionManagerService extends IPermissionManager.Stub {
         synchronized (mLock) {
             for (final int userId : userIds) {
                 final UserPermissionState userState = mState.getOrCreateUserState(userId);
+                // "replace" parameter is set to true even when the app is first installed
+                final boolean uidStateWasPresent = userState.getUidState(ps.getAppId()) != null;
                 final UidPermissionState uidState = userState.getOrCreateUidState(ps.getAppId());
 
                 if (uidState.isMissing()) {
@@ -2717,7 +2727,7 @@ public class PermissionManagerService extends IPermissionManager.Stub {
                                         FLAG_PERMISSION_RESTRICTION_UPGRADE_EXEMPT,
                                         FLAG_PERMISSION_RESTRICTION_UPGRADE_EXEMPT);
                             }
-                            if (targetSdkVersion < Build.VERSION_CODES.M) {
+                            if (targetSdkVersion < Build.VERSION_CODES.M && !isSpecialRuntimePermission(permissionName)) {
                                 uidState.updatePermissionFlags(permission,
                                         PackageManager.FLAG_PERMISSION_REVIEW_REQUIRED
                                                 | PackageManager.FLAG_PERMISSION_REVOKED_COMPAT,
@@ -2843,7 +2853,7 @@ public class PermissionManagerService extends IPermissionManager.Stub {
         //                continue;
         //            }
 
-                    if (bp.isRuntimeOnly() && !appSupportsRuntimePermissions) {
+                    if (bp.isRuntimeOnly() && !appSupportsRuntimePermissions && !isSpecialRuntimePermission(bp.getName())) {
                         if (DEBUG_PERMISSIONS) {
                             Log.i(TAG, "Denying runtime-only permission " + bp.getName()
                                     + " for package " + friendlyName);
@@ -2922,7 +2932,7 @@ public class PermissionManagerService extends IPermissionManager.Stub {
                         boolean restrictionApplied = (origState.getPermissionFlags(
                                 bp.getName()) & FLAG_PERMISSION_APPLY_RESTRICTION) != 0;
 
-                        if (appSupportsRuntimePermissions) {
+                        if (appSupportsRuntimePermissions || isSpecialRuntimePermission(bp.getName())) {
                             // If hard restricted we don't allow holding it
                             if (permissionPolicyInitialized && hardRestricted) {
                                 if (!restrictionExempt) {
@@ -2966,6 +2976,16 @@ public class PermissionManagerService extends IPermissionManager.Stub {
                                     }
                                 }
                             }
+
+                            if (isSpecialRuntimePermission(permName) &&
+                                    origPermState == null &&
+                                    // don't grant special runtime permission after update,
+                                    // unless app comes from the system image
+                                    (!uidStateWasPresent || ps.isSystem())) {
+                                if (uidState.grantPermission(bp)) {
+                                    wasChanged = true;
+                                }
+                            }
                         } else {
                             if (origPermState == null) {
                                 // New permission
@@ -3000,7 +3020,7 @@ public class PermissionManagerService extends IPermissionManager.Stub {
                                 if (restrictionApplied) {
                                     flags &= ~FLAG_PERMISSION_APPLY_RESTRICTION;
                                     // Dropping restriction on a legacy app implies a review
-                                    if (!appSupportsRuntimePermissions) {
+                                    if (!appSupportsRuntimePermissions && !isSpecialRuntimePermission(bp.getName())) {
                                         flags |= FLAG_PERMISSION_REVIEW_REQUIRED;
                                     }
                                     wasChanged = true;
@@ -3803,7 +3823,7 @@ public class PermissionManagerService extends IPermissionManager.Stub {
             if (shouldGrantPermission) {
                 final int flags = getPermissionFlagsInternal(pkg.getPackageName(), permission,
                         myUid, userId);
-                if (supportsRuntimePermissions) {
+                if (supportsRuntimePermissions || isSpecialRuntimePermission(permission)) {
                     // Installer cannot change immutable permissions.
                     if ((flags & immutableFlags) == 0) {
                         grantRuntimePermissionInternal(pkg.getPackageName(), permission, false,
