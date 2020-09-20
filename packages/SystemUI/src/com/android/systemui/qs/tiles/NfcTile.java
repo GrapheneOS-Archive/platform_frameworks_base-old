@@ -137,8 +137,7 @@ public class NfcTile extends QSTileImpl<BooleanState> {
         state.state = getAdapter() == null
                 ? Tile.STATE_UNAVAILABLE
                 : state.value ? Tile.STATE_ACTIVE : Tile.STATE_INACTIVE;
-        state.icon = ResourceIcon.get(
-                state.value ? R.drawable.ic_qs_nfc_enabled : R.drawable.ic_qs_nfc_disabled);
+        state.icon = ResourceIcon.get(R.drawable.ic_qs_nfc_enabled);
         state.label = mContext.getString(R.string.quick_settings_nfc_label);
         state.expandedAccessibilityClassName = Switch.class.getName();
         state.contentDescription = state.label;
