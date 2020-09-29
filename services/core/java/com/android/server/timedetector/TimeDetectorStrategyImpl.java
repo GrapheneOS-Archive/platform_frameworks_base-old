@@ -46,7 +46,7 @@ import java.lang.annotation.RetentionPolicy;
  */
 public final class TimeDetectorStrategyImpl implements TimeDetectorStrategy {
 
-    private static final boolean DBG = false;
+    private static final boolean DBG = true;
     private static final String LOG_TAG = "SimpleTimeDetectorStrategy";
 
     /** A score value used to indicate "no score", either due to validation failure or age. */
@@ -141,7 +141,7 @@ public final class TimeDetectorStrategyImpl implements TimeDetectorStrategy {
 
     @Override
     public synchronized void suggestNetworkTime(@NonNull NetworkTimeSuggestion timeSuggestion) {
-        if (!validateSuggestionTime(timeSuggestion.getUtcTime(), timeSuggestion)) {
+        if (timeSuggestion == null || !validateSuggestionTime(timeSuggestion.getUtcTime(), timeSuggestion)) {
             return;
         }
 
@@ -165,6 +165,11 @@ public final class TimeDetectorStrategyImpl implements TimeDetectorStrategy {
 
     @Override
     public synchronized void suggestTelephonyTime(@NonNull TelephonyTimeSuggestion timeSuggestion) {
+        // is config_nitzUpdate is set to false, we disallow telephony time suggestions.
+        if (!mCallback.isNITZTimeDetectionEnabled()) {
+            return;
+        }
+
         // Empty time suggestion means that telephony network connectivity has been lost.
         // The passage of time is relentless, and we don't expect our users to use a time machine,
         // so we can continue relying on previous suggestions when we lose connectivity. This is
@@ -304,16 +309,17 @@ public final class TimeDetectorStrategyImpl implements TimeDetectorStrategy {
         // Android devices currently prioritize any telephony over network signals. There are
         // carrier compliance tests that would need to be changed before we could ignore NITZ or
         // prefer NTP generally. This check is cheap on devices without telephony hardware.
-        TelephonyTimeSuggestion bestTelephonySuggestion = findBestTelephonySuggestion();
-        if (bestTelephonySuggestion != null) {
-            final TimestampedValue<Long> newUtcTime = bestTelephonySuggestion.getUtcTime();
-            String cause = "Found good telephony suggestion."
-                    + ", bestTelephonySuggestion=" + bestTelephonySuggestion
-                    + ", detectionReason=" + detectionReason;
-            setSystemClockIfRequired(ORIGIN_TELEPHONY, newUtcTime, cause);
-            return;
+        if (mCallback.isNITZTimeDetectionEnabled()) {
+            TelephonyTimeSuggestion bestTelephonySuggestion = findBestTelephonySuggestion();
+            if (bestTelephonySuggestion != null) {
+                final TimestampedValue<Long> newUtcTime = bestTelephonySuggestion.getUtcTime();
+                String cause = "Found good telephony suggestion."
+                        + ", bestTelephonySuggestion=" + bestTelephonySuggestion
+                        + ", detectionReason=" + detectionReason;
+                setSystemClockIfRequired(ORIGIN_TELEPHONY, newUtcTime, cause);
+                return;
+            }
         }
-
         // There is no good telephony suggestion, try network.
         NetworkTimeSuggestion networkSuggestion = findLatestValidNetworkSuggestion();
         if (networkSuggestion != null) {
