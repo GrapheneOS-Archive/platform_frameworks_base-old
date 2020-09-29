@@ -50,6 +50,7 @@ final class EnvironmentImpl implements TimeDetectorStrategyImpl.Environment {
     @NonNull private final PowerManager.WakeLock mWakeLock;
     @NonNull private final AlarmManager mAlarmManager;
     @NonNull private final UserManager mUserManager;
+    @NonNull private final boolean mNitzTimeDetectionToggle;
 
     // @NonNull after setConfigChangeListener() is called.
     @GuardedBy("this")
@@ -85,6 +86,9 @@ final class EnvironmentImpl implements TimeDetectorStrategyImpl.Environment {
         mServiceConfigAccessor.addListener(
                 () -> mHandler.post(
                         EnvironmentImpl.this::handleAutoTimeDetectionChangedOnHandlerThread));
+        mNitzTimeDetectionToggle =
+            mContext.getResources().getBoolean(
+                    com.android.internal.R.bool.config_nitzTimeUpdate);
     }
 
     /** Internal method for handling the auto time setting being changed. */
@@ -134,6 +138,11 @@ final class EnvironmentImpl implements TimeDetectorStrategyImpl.Environment {
                 .setUserConfigAllowed(isUserConfigAllowed(userId))
                 .setAutoDetectionEnabled(isAutoTimeDetectionEnabled())
                 .build();
+    }
+
+    @Override
+    public boolean isNITZTimeDetectionEnabled() {
+        return mNitzTimeDetectionToggle;
     }
 
     @Override
