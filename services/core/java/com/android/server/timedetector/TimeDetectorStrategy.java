@@ -58,6 +58,9 @@ public interface TimeDetectorStrategy {
         /** Returns true if automatic time detection is enabled. */
         boolean isAutoTimeDetectionEnabled();
 
+        /** Returns true if NITZ time updates is enabled. */
+        boolean isNITZTimeDetectionEnabled();
+
         /** Acquire a suitable wake lock. Must be followed by {@link #releaseWakeLock()} */
         void acquireWakeLock();
 
