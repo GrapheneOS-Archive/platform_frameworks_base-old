@@ -2212,6 +2212,8 @@
     <integer name="config_ntpPollingInterval">86400000</integer>
     <!-- Try-again polling interval in milliseconds, in case the network request failed -->
     <integer name="config_ntpPollingIntervalShorter">60000</integer>
+    <!-- Toggle to update timestamp using NITZ -->
+    <bool name="config_nitzTimeUpdate">false</bool>
     <!-- Number of times to try again with the shorter interval, before backing
          off until the normal polling interval. A value < 0 indicates infinite. -->
     <integer name="config_ntpRetry">3</integer>

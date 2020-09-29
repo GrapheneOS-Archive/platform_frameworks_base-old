@@ -453,6 +453,7 @@
   <java-symbol type="integer" name="config_ntpPollingIntervalShorter" />
   <java-symbol type="integer" name="config_ntpRetry" />
   <java-symbol type="integer" name="config_ntpTimeout" />
+  <java-symbol type="bool" name="config_nitzTimeUpdate" />
   <java-symbol type="integer" name="config_shortPressOnPowerBehavior" />
   <java-symbol type="integer" name="config_toastDefaultGravity" />
   <java-symbol type="integer" name="config_triplePressOnPowerBehavior" />
