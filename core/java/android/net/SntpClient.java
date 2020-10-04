@@ -42,6 +42,8 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 
+import static android.os.Build.TIME;
+
 /**
  * {@hide}
  *
@@ -292,6 +294,10 @@ public class SntpClient {
                 if (DBG) {
                     Log.d(TAG, "https method -- round trip: " + roundTripTime + "ms, " +
                             "clock offset: " + clockOffset + "ms");
+                }
+                if (receiveTime < TIME) {
+                    Log.w(TAG, "https method received timestamp before BUILD unix time, rejecting");
+                    return false;
                 }
                 EventLogTags.writeNtpSuccess(url.toString(), roundTripTime, clockOffset);
                 // save our results - use the times on this side of the network latency
