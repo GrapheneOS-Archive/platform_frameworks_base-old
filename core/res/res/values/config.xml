@@ -2782,6 +2782,7 @@
         <item>restart</item>
         <item>logout</item>
         <item>bugreport</item>
+        <item>screenshot</item>
     </string-array>
 
     <!-- Number of milliseconds to hold a wake lock to ensure that drawing is fully
