@@ -1166,7 +1166,7 @@ public class DevicePolicyManagerService extends BaseIDevicePolicyManager {
         boolean requireAutoTime = false; // Can only be set by a device owner.
         boolean forceEphemeralUsers = false; // Can only be set by a device owner.
         boolean isNetworkLoggingEnabled = false; // Can only be set by a device owner.
-        boolean isLogoutEnabled = false; // Can only be set by a device owner.
+        boolean isLogoutEnabled = true; // Can only be set by a device owner.
 
         // one notification after enabling + one more after reboots
         static final int DEF_MAXIMUM_NETWORK_LOGGING_NOTIFICATIONS_SHOWN = 2;
@@ -15116,11 +15116,11 @@ public class DevicePolicyManagerService extends BaseIDevicePolicyManager {
     @Override
     public boolean isLogoutEnabled() {
         if (!mHasFeature) {
-            return false;
+            return true;
         }
         synchronized (getLockObject()) {
             ActiveAdmin deviceOwner = getDeviceOwnerAdminLocked();
-            return (deviceOwner != null) && deviceOwner.isLogoutEnabled;
+            return (deviceOwner == null) || deviceOwner.isLogoutEnabled;
         }
     }
 
