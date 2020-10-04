@@ -2773,6 +2773,7 @@ public class SettingsProvider extends ContentProvider {
             // Upgrade the settings to the latest version.
             UpgradeController upgrader = new UpgradeController(userId);
             upgrader.upgradeIfNeededLocked();
+            upgrader.upgradeGrapheneOsSettingsIfNeededLocked();
             return true;
         }
 
@@ -3119,6 +3120,7 @@ public class SettingsProvider extends ContentProvider {
                         // Upgrade to the latest version.
                         UpgradeController upgrader = new UpgradeController(userId);
                         upgrader.upgradeIfNeededLocked();
+                        upgrader.upgradeGrapheneOsSettingsIfNeededLocked();
 
                         // Drop from memory if not a running user.
                         if (!mUserManager.isUserRunning(new UserHandle(userId))) {
@@ -3515,6 +3517,8 @@ public class SettingsProvider extends ContentProvider {
         private final class UpgradeController {
             private static final int SETTINGS_VERSION = 191;
 
+            private static final int GRAPHENEOS_SETTINGS_VERSION = 0;
+
             private final int mUserId;
 
             public UpgradeController(int userId) {
@@ -3578,6 +3582,22 @@ public class SettingsProvider extends ContentProvider {
                 systemSettings.setVersionLocked(newVersion);
             }
 
+            /**
+             * If needed, upgrade the GrapheneOS-related settings. These upgrades are independent of
+             * the normal settings upgrades. This is done to reduce incompatibilities with upstream
+             * changes in settings versions.
+             */
+            public void upgradeGrapheneOsSettingsIfNeededLocked() {
+                final int oldVersion = getGrapheneOsSettingsVersionLocked(mUserId);
+                final int newVersion = GRAPHENEOS_SETTINGS_VERSION;
+
+                if (oldVersion == newVersion) {
+                    return;
+                }
+                onUpgradeGrapheneOsSettingsLocked(mUserId, oldVersion, newVersion);
+                setGrapheneOsSettingsVersionLocked(mUserId, newVersion);
+            }
+
             private SettingsState getGlobalSettingsLocked() {
                 return getSettingsLocked(SETTINGS_TYPE_GLOBAL, UserHandle.USER_SYSTEM);
             }
@@ -3592,6 +3612,96 @@ public class SettingsProvider extends ContentProvider {
 
             private SettingsState getSystemSettingsLocked(int userId) {
                 return getSettingsLocked(SETTINGS_TYPE_SYSTEM, userId);
+            }
+
+            private void setGrapheneOsSettingsVersionLocked(int userId, int version) {
+                getSecureSettingsLocked(userId).insertSettingOverrideableByRestoreLocked(
+                        Settings.Secure.GRAPHENEOS_SETTINGS_VERSION, version + "",
+                        null /* tag */, false /* makeDefault */,
+                        SettingsState.SYSTEM_PACKAGE_NAME);
+            }
+
+            /**
+             * Gets the version of the GrapheneOS-specific settings.
+             * This is done to reduce incompatibilities with upstream changes in settings versions.
+             *
+             * The normal settings version is stored as an XML attribute, but this does it by
+             * storing it in Settings.Secure.
+             *
+             * @return The current version
+             */
+            private int getGrapheneOsSettingsVersionLocked(int userId) {
+                final int startingVersion = 0;
+
+                // The version of all settings for a user is the same (all users have secure).
+                final SettingsState secureSettings = getSecureSettingsLocked(userId);
+                final Setting currentSetting = secureSettings.getSettingLocked(
+                        Secure.GRAPHENEOS_SETTINGS_VERSION);
+
+                if (currentSetting.isNull()) {
+                    secureSettings.insertSettingOverrideableByRestoreLocked(
+                            Settings.Secure.GRAPHENEOS_SETTINGS_VERSION, startingVersion + "",
+                            null /* tag */, true /* makeDefault */,
+                            SettingsState.SYSTEM_PACKAGE_NAME);
+
+                    return startingVersion;
+                } else {
+                    try {
+                        return Integer.parseInt(currentSetting.getValue());
+                    } catch (NumberFormatException e) {
+                        // remove the setting in case it is not a valid integer
+                        Slog.w(LOG_TAG,
+                                "Failed to parse integer value of GRAPHENEOS_SETTINGS_VERSION"
+                                + " restarting version", e);
+                        secureSettings.deleteSettingLocked(
+                                Settings.Secure.GRAPHENEOS_SETTINGS_VERSION);
+                        return startingVersion;
+                    }
+                }
+            }
+
+            /**
+             * You must perform all necessary mutations to bring the GrapheneOS-related settings
+             * for this user from the old to the new version. When you add a new upgrade step you
+             * *must* update GRAPHENEOS_SETTINGS_VERSION (the constant field).
+             *
+             * <p>
+             * All settings modifications should be made through
+             * {@link SettingsState#insertSettingOverrideableByRestoreLocked(String, String, String,
+             * boolean, String)} so that restore can override those values if needed.
+             *
+             * See {@link #onUpgradeLocked(int, int, int)} for more details and examples.
+             */
+            private int onUpgradeGrapheneOsSettingsLocked(int userId, int oldVersion,
+                    int newVersion) {
+                if (DEBUG) {
+                    Slog.w(LOG_TAG, "Upgrading GrapheneOS settings for user: " + userId
+                            + " from version: " + oldVersion + " to version: " + newVersion);
+                }
+
+                int currentVersion = oldVersion;
+
+                // TODO: Add settings here
+                if (currentVersion != GRAPHENEOS_SETTINGS_VERSION) {
+                    currentVersion = GRAPHENEOS_SETTINGS_VERSION;
+                }
+
+                // vXXX: Add new settings above this point. Make sure when adding that
+                // GRAPHENEOS_SETTINGS_VERSION (the constant field in UpgradeController,
+                // not Settings.Secure) is updated.
+
+                if (currentVersion != newVersion) {
+                    Slog.wtf(LOG_TAG, "warning: upgrading settings database to version "
+                                    + newVersion + " left it at "
+                                    + currentVersion
+                                    + " instead; this is probably a bug."
+                                    + "Did you update GRAPHENEOS_SETTINGS_VERSION?",
+                            new Throwable());
+                    if (DEBUG) {
+                        throw new RuntimeException("db upgrade error");
+                    }
+                }
+                return currentVersion;
             }
 
             /**
@@ -4883,6 +4993,8 @@ public class SettingsProvider extends ContentProvider {
                 }
 
                 // vXXX: Add new settings above this point.
+                // Note: For GrapheneOS settings, don't add migrations here.
+                // See onUpgradeGrapheneOsSettingsLocked.
 
                 if (currentVersion != newVersion) {
                     Slog.wtf("SettingsProvider", "warning: upgrading settings database to version "

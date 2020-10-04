@@ -5877,6 +5877,15 @@ public final class Settings {
         }
 
         /**
+         * The current version for GrapheneOS settings.
+         *
+         * Type: int
+         *
+         * @hide
+         */
+        public static final String GRAPHENEOS_SETTINGS_VERSION = "grapheneos_settings_version";
+
+        /**
          * Control whether to enable adaptive sleep mode.
          * @hide
          */
