@@ -1168,4 +1168,13 @@ public final class Zygote {
      * we failed to determine the level.
      */
     public static native int nativeCurrentTaggingLevel();
+
+    /**
+     * Used on GrapheneOS to set up runtime flags
+     *
+     * @param runtimeFlags flags to be passed to the native method
+     *
+     * @hide
+     */
+    public static native void nativeHandleRuntimeFlags(int runtimeFlags);
 }
