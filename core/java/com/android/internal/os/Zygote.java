@@ -1456,4 +1456,13 @@ public final class Zygote {
         }
         return runtimeFlags;
     }
+
+    /**
+     * Used on GrapheneOS to set up runtime flags
+     *
+     * @param runtimeFlags flags to be passed to the native method
+     *
+     * @hide
+     */
+    public static native void nativeHandleRuntimeFlags(int runtimeFlags);
 }
