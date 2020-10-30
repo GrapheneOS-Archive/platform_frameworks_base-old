@@ -1097,4 +1097,15 @@ public final class Zygote {
      * fully-feature Memory Tagging, rather than the static Tagged Pointers.
      */
     public static native boolean nativeSupportsTaggedPointers();
+
+    /**
+     * Used on GrapheneOS to set up runtime flags
+     * Without this pointer tagging is enforced for all processes and leads to crashes
+     * Also needed to set gwp asan flags correctly on 32-bit
+     *
+     * @param runtimeFlags flags to be passed to the native method to set up tbi
+     *
+     * @hide
+     */
+    public static native void nativeHandleRuntimeFlags(int runtimeFlags);
 }
