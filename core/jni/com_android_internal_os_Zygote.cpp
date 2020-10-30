@@ -1721,6 +1721,80 @@ static void BindMountStorageDirs(JNIEnv* env, jobjectArray pkg_data_info_list,
   }
 }
 
+static void HandleRuntimeFlags(JNIEnv* env, jint& runtime_flags, const char* process_name, const char* nice_name_ptr) {
+    // Set process properties to enable debugging if required.
+    if ((runtime_flags & RuntimeFlags::DEBUG_ENABLE_JDWP) != 0) {
+        EnableDebugger();
+    }
+    if ((runtime_flags & RuntimeFlags::PROFILE_FROM_SHELL) != 0) {
+        // simpleperf needs the process to be dumpable to profile it.
+        if (prctl(PR_SET_DUMPABLE, 1, 0, 0, 0) == -1) {
+            ALOGE("prctl(PR_SET_DUMPABLE) failed: %s", strerror(errno));
+            RuntimeAbort(env, __LINE__, "prctl(PR_SET_DUMPABLE, 1) failed");
+        }
+    }
+
+    HeapTaggingLevel heap_tagging_level;
+    switch (runtime_flags & RuntimeFlags::MEMORY_TAG_LEVEL_MASK) {
+        case RuntimeFlags::MEMORY_TAG_LEVEL_TBI:
+            heap_tagging_level = M_HEAP_TAGGING_LEVEL_TBI;
+            break;
+        case RuntimeFlags::MEMORY_TAG_LEVEL_ASYNC:
+            heap_tagging_level = M_HEAP_TAGGING_LEVEL_ASYNC;
+            break;
+        case RuntimeFlags::MEMORY_TAG_LEVEL_SYNC:
+            heap_tagging_level = M_HEAP_TAGGING_LEVEL_SYNC;
+            break;
+        default:
+            heap_tagging_level = M_HEAP_TAGGING_LEVEL_NONE;
+            break;
+    }
+    mallopt(M_BIONIC_SET_HEAP_TAGGING_LEVEL, heap_tagging_level);
+
+    // Now that we've used the flag, clear it so that we don't pass unknown flags to the ART
+    // runtime.
+    runtime_flags &= ~RuntimeFlags::MEMORY_TAG_LEVEL_MASK;
+
+    // Avoid heap zero initialization for applications without MTE. Zero init may
+    // cause app compat problems, use more memory, or reduce performance. While it
+    // would be nice to have them for apps, we will have to wait until they are
+    // proven out, have more efficient hardware, and/or apply them only to new
+    // applications.
+    if (!(runtime_flags & RuntimeFlags::NATIVE_HEAP_ZERO_INIT_ENABLED)) {
+        mallopt(M_BIONIC_ZERO_INIT, 0);
+    }
+
+    // Now that we've used the flag, clear it so that we don't pass unknown flags to the ART
+    // runtime.
+    runtime_flags &= ~RuntimeFlags::NATIVE_HEAP_ZERO_INIT_ENABLED;
+
+    if (process_name == nullptr) {
+        process_name = "zygote";
+    }
+
+    android_mallopt_gwp_asan_options_t gwp_asan_options;
+    // The system server doesn't have its nice name set by the time SpecializeCommon is called.
+    gwp_asan_options.program_name = nice_name_ptr ?: process_name;
+    switch (runtime_flags & RuntimeFlags::GWP_ASAN_LEVEL_MASK) {
+        default:
+        case RuntimeFlags::GWP_ASAN_LEVEL_NEVER:
+            gwp_asan_options.desire = Action::DONT_TURN_ON_UNLESS_OVERRIDDEN;
+            android_mallopt(M_INITIALIZE_GWP_ASAN, &gwp_asan_options, sizeof(gwp_asan_options));
+            break;
+        case RuntimeFlags::GWP_ASAN_LEVEL_ALWAYS:
+            gwp_asan_options.desire = Action::TURN_ON_FOR_APP;
+            android_mallopt(M_INITIALIZE_GWP_ASAN, &gwp_asan_options, sizeof(gwp_asan_options));
+            break;
+        case RuntimeFlags::GWP_ASAN_LEVEL_LOTTERY:
+            gwp_asan_options.desire = Action::TURN_ON_WITH_SAMPLING;
+            android_mallopt(M_INITIALIZE_GWP_ASAN, &gwp_asan_options, sizeof(gwp_asan_options));
+            break;
+    }
+    // Now that we've used the flag, clear it so that we don't pass unknown flags to the ART
+    // runtime.
+    runtime_flags &= ~RuntimeFlags::GWP_ASAN_LEVEL_MASK;
+}
+
 // Utility routine to specialize a zygote child process.
 static void SpecializeCommon(JNIEnv* env, uid_t uid, gid_t gid, jintArray gids, jint runtime_flags,
                              jobjectArray rlimits, jlong permitted_capabilities,
@@ -1860,74 +1934,9 @@ static void SpecializeCommon(JNIEnv* env, uid_t uid, gid_t gid, jintArray gids, 
         }
     }
 
-    // Set process properties to enable debugging if required.
-    if ((runtime_flags & RuntimeFlags::DEBUG_ENABLE_JDWP) != 0) {
-        EnableDebugger();
-    }
-    if ((runtime_flags & RuntimeFlags::PROFILE_FROM_SHELL) != 0) {
-        // simpleperf needs the process to be dumpable to profile it.
-        if (prctl(PR_SET_DUMPABLE, 1, 0, 0, 0) == -1) {
-            ALOGE("prctl(PR_SET_DUMPABLE) failed: %s", strerror(errno));
-            RuntimeAbort(env, __LINE__, "prctl(PR_SET_DUMPABLE, 1) failed");
-        }
-    }
-
-    HeapTaggingLevel heap_tagging_level;
-    switch (runtime_flags & RuntimeFlags::MEMORY_TAG_LEVEL_MASK) {
-        case RuntimeFlags::MEMORY_TAG_LEVEL_TBI:
-            heap_tagging_level = M_HEAP_TAGGING_LEVEL_TBI;
-            break;
-        case RuntimeFlags::MEMORY_TAG_LEVEL_ASYNC:
-            heap_tagging_level = M_HEAP_TAGGING_LEVEL_ASYNC;
-            break;
-        case RuntimeFlags::MEMORY_TAG_LEVEL_SYNC:
-            heap_tagging_level = M_HEAP_TAGGING_LEVEL_SYNC;
-            break;
-        default:
-            heap_tagging_level = M_HEAP_TAGGING_LEVEL_NONE;
-            break;
-    }
-    mallopt(M_BIONIC_SET_HEAP_TAGGING_LEVEL, heap_tagging_level);
-
-    // Now that we've used the flag, clear it so that we don't pass unknown flags to the ART
-    // runtime.
-    runtime_flags &= ~RuntimeFlags::MEMORY_TAG_LEVEL_MASK;
-
-    // Avoid heap zero initialization for applications without MTE. Zero init may
-    // cause app compat problems, use more memory, or reduce performance. While it
-    // would be nice to have them for apps, we will have to wait until they are
-    // proven out, have more efficient hardware, and/or apply them only to new
-    // applications.
-    if (!(runtime_flags & RuntimeFlags::NATIVE_HEAP_ZERO_INIT_ENABLED)) {
-        mallopt(M_BIONIC_ZERO_INIT, 0);
-    }
-
-    // Now that we've used the flag, clear it so that we don't pass unknown flags to the ART
-    // runtime.
-    runtime_flags &= ~RuntimeFlags::NATIVE_HEAP_ZERO_INIT_ENABLED;
-
     const char* nice_name_ptr = nice_name.has_value() ? nice_name.value().c_str() : nullptr;
-    android_mallopt_gwp_asan_options_t gwp_asan_options;
-    // The system server doesn't have its nice name set by the time SpecializeCommon is called.
-    gwp_asan_options.program_name = nice_name_ptr ?: process_name;
-    switch (runtime_flags & RuntimeFlags::GWP_ASAN_LEVEL_MASK) {
-        default:
-        case RuntimeFlags::GWP_ASAN_LEVEL_NEVER:
-            gwp_asan_options.desire = Action::DONT_TURN_ON_UNLESS_OVERRIDDEN;
-            android_mallopt(M_INITIALIZE_GWP_ASAN, &gwp_asan_options, sizeof(gwp_asan_options));
-            break;
-        case RuntimeFlags::GWP_ASAN_LEVEL_ALWAYS:
-            gwp_asan_options.desire = Action::TURN_ON_FOR_APP;
-            android_mallopt(M_INITIALIZE_GWP_ASAN, &gwp_asan_options, sizeof(gwp_asan_options));
-            break;
-        case RuntimeFlags::GWP_ASAN_LEVEL_LOTTERY:
-            gwp_asan_options.desire = Action::TURN_ON_WITH_SAMPLING;
-            android_mallopt(M_INITIALIZE_GWP_ASAN, &gwp_asan_options, sizeof(gwp_asan_options));
-            break;
-    }
-    // Now that we've used the flag, clear it so that we don't pass unknown flags to the ART
-    // runtime.
-    runtime_flags &= ~RuntimeFlags::GWP_ASAN_LEVEL_MASK;
+
+    HandleRuntimeFlags(env, runtime_flags, process_name, nice_name_ptr);
 
     SetCapabilities(permitted_capabilities, effective_capabilities, permitted_capabilities,
                     fail_fn);
@@ -2821,6 +2830,10 @@ static void com_android_internal_os_Zygote_nativeAllowFilesOpenedByPreload(JNIEn
     gPreloadFdsExtracted = true;
 }
 
+static void nativeHandleRuntimeFlagsWrapper(JNIEnv* env, jclass, jint runtime_flags) {
+    HandleRuntimeFlags(env, runtime_flags, nullptr, nullptr);
+}
+
 static const JNINativeMethod gMethods[] = {
         {"nativeForkAndSpecialize",
          "(II[II[[IILjava/lang/String;Ljava/lang/String;[I[IZLjava/lang/String;Ljava/lang/"
@@ -2873,6 +2886,7 @@ static const JNINativeMethod gMethods[] = {
          (void*)com_android_internal_os_Zygote_nativeMarkOpenedFilesBeforePreload},
         {"nativeAllowFilesOpenedByPreload", "()V",
          (void*)com_android_internal_os_Zygote_nativeAllowFilesOpenedByPreload},
+        {"nativeHandleRuntimeFlags", "(I)V", (void*)nativeHandleRuntimeFlagsWrapper},
 };
 
 int register_com_android_internal_os_Zygote(JNIEnv* env) {
