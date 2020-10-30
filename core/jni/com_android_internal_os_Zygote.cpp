@@ -1599,6 +1599,46 @@ static void BindMountStorageDirs(JNIEnv* env, jobjectArray pkg_data_info_list,
   }
 }
 
+static void HandleRuntimeFlags(JNIEnv* env, jint& runtime_flags) {
+  // Set process properties to enable debugging if required.
+  if ((runtime_flags & RuntimeFlags::DEBUG_ENABLE_JDWP) != 0) {
+    EnableDebugger();
+  }
+  if ((runtime_flags & RuntimeFlags::PROFILE_FROM_SHELL) != 0) {
+    // simpleperf needs the process to be dumpable to profile it.
+    if (prctl(PR_SET_DUMPABLE, 1, 0, 0, 0) == -1) {
+      ALOGE("prctl(PR_SET_DUMPABLE) failed: %s", strerror(errno));
+      RuntimeAbort(env, __LINE__, "prctl(PR_SET_DUMPABLE, 1) failed");
+    }
+  }
+
+  HeapTaggingLevel heap_tagging_level;
+  switch (runtime_flags & RuntimeFlags::MEMORY_TAG_LEVEL_MASK) {
+    case RuntimeFlags::MEMORY_TAG_LEVEL_TBI:
+      heap_tagging_level = M_HEAP_TAGGING_LEVEL_TBI;
+      break;
+    default:
+      heap_tagging_level = M_HEAP_TAGGING_LEVEL_NONE;
+  }
+  android_mallopt(M_SET_HEAP_TAGGING_LEVEL, &heap_tagging_level, sizeof(heap_tagging_level));
+  // Now that we've used the flag, clear it so that we don't pass unknown flags to the ART runtime.
+  runtime_flags &= ~RuntimeFlags::MEMORY_TAG_LEVEL_MASK;
+
+  bool forceEnableGwpAsan = false;
+  switch (runtime_flags & RuntimeFlags::GWP_ASAN_LEVEL_MASK) {
+      default:
+      case RuntimeFlags::GWP_ASAN_LEVEL_NEVER:
+          break;
+      case RuntimeFlags::GWP_ASAN_LEVEL_ALWAYS:
+          forceEnableGwpAsan = true;
+          [[fallthrough]];
+      case RuntimeFlags::GWP_ASAN_LEVEL_LOTTERY:
+          android_mallopt(M_INITIALIZE_GWP_ASAN, &forceEnableGwpAsan, sizeof(forceEnableGwpAsan));
+  }
+  // Now that we've used the flag, clear it so that we don't pass unknown flags to the ART runtime.
+  runtime_flags &= ~RuntimeFlags::GWP_ASAN_LEVEL_MASK;
+}
+
 // Utility routine to specialize a zygote child process.
 static void SpecializeCommon(JNIEnv* env, uid_t uid, gid_t gid, jintArray gids,
                              jint runtime_flags, jobjectArray rlimits,
@@ -1716,43 +1756,7 @@ static void SpecializeCommon(JNIEnv* env, uid_t uid, gid_t gid, jintArray gids,
     }
   }
 
-  // Set process properties to enable debugging if required.
-  if ((runtime_flags & RuntimeFlags::DEBUG_ENABLE_JDWP) != 0) {
-    EnableDebugger();
-  }
-  if ((runtime_flags & RuntimeFlags::PROFILE_FROM_SHELL) != 0) {
-    // simpleperf needs the process to be dumpable to profile it.
-    if (prctl(PR_SET_DUMPABLE, 1, 0, 0, 0) == -1) {
-      ALOGE("prctl(PR_SET_DUMPABLE) failed: %s", strerror(errno));
-      RuntimeAbort(env, __LINE__, "prctl(PR_SET_DUMPABLE, 1) failed");
-    }
-  }
-
-  HeapTaggingLevel heap_tagging_level;
-  switch (runtime_flags & RuntimeFlags::MEMORY_TAG_LEVEL_MASK) {
-    case RuntimeFlags::MEMORY_TAG_LEVEL_TBI:
-      heap_tagging_level = M_HEAP_TAGGING_LEVEL_TBI;
-      break;
-    default:
-      heap_tagging_level = M_HEAP_TAGGING_LEVEL_NONE;
-  }
-  android_mallopt(M_SET_HEAP_TAGGING_LEVEL, &heap_tagging_level, sizeof(heap_tagging_level));
-  // Now that we've used the flag, clear it so that we don't pass unknown flags to the ART runtime.
-  runtime_flags &= ~RuntimeFlags::MEMORY_TAG_LEVEL_MASK;
-
-  bool forceEnableGwpAsan = false;
-  switch (runtime_flags & RuntimeFlags::GWP_ASAN_LEVEL_MASK) {
-      default:
-      case RuntimeFlags::GWP_ASAN_LEVEL_NEVER:
-          break;
-      case RuntimeFlags::GWP_ASAN_LEVEL_ALWAYS:
-          forceEnableGwpAsan = true;
-          [[fallthrough]];
-      case RuntimeFlags::GWP_ASAN_LEVEL_LOTTERY:
-          android_mallopt(M_INITIALIZE_GWP_ASAN, &forceEnableGwpAsan, sizeof(forceEnableGwpAsan));
-  }
-  // Now that we've used the flag, clear it so that we don't pass unknown flags to the ART runtime.
-  runtime_flags &= ~RuntimeFlags::GWP_ASAN_LEVEL_MASK;
+  HandleRuntimeFlags(env, runtime_flags);
 
   if (NeedsNoRandomizeWorkaround()) {
     // Work around ARM kernel ASLR lossage (http://b/5817320).
@@ -2441,6 +2445,10 @@ static jboolean com_android_internal_os_Zygote_nativeSupportsTaggedPointers(JNIE
 #endif
 }
 
+static void nativeHandleRuntimeFlagsWrapper(JNIEnv* env, jclass, jint runtime_flags) {
+    HandleRuntimeFlags(env, runtime_flags);
+}
+
 static const JNINativeMethod gMethods[] = {
         {"nativeForkAndSpecialize",
          "(II[II[[IILjava/lang/String;Ljava/lang/String;[I[IZLjava/lang/String;Ljava/lang/"
@@ -2478,6 +2486,7 @@ static const JNINativeMethod gMethods[] = {
          (void*)com_android_internal_os_Zygote_nativeParseSigChld},
         {"nativeSupportsTaggedPointers", "()Z",
          (void*)com_android_internal_os_Zygote_nativeSupportsTaggedPointers},
+        {"nativeHandleRuntimeFlags", "(I)V", (void*)nativeHandleRuntimeFlagsWrapper},
 };
 
 int register_com_android_internal_os_Zygote(JNIEnv* env) {
