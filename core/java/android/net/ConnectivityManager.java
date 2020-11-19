@@ -814,6 +814,9 @@ public class ConnectivityManager {
      */
     public static final String PRIVATE_DNS_DEFAULT_MODE_FALLBACK = PRIVATE_DNS_MODE_OPPORTUNISTIC;
 
+    public static final String CAPTIVE_PORTAL_MODE_GOOGLE = "google";
+    public static final String CAPTIVE_PORTAL_MODE_GRAPHENE = "graphene";
+
     @UnsupportedAppUsage(maxTargetSdk = Build.VERSION_CODES.P, trackingBug = 130143562)
     private final IConnectivityManager mService;
     /**
