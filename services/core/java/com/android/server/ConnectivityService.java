@@ -276,6 +276,10 @@ public class ConnectivityService extends IConnectivityManager.Stub
      */
     private static final String DEFAULT_CAPTIVE_PORTAL_HTTP_URL =
             "http://connectivitycheck.gstatic.com/generate_204";
+    private static final String GRAPHENEOS_CAPTIVE_PORTAL_HTTP_URL =
+            "http://connectivitycheck.grapheneos.org/generate_204";
+    private static final String GRAPHENEOS_CAPTIVE_PORTAL_HTTPS_URL =
+            "https://connectivitycheck.grapheneos.org/generate_204";
 
     // TODO: create better separation between radio types and network types
 
@@ -968,10 +972,13 @@ public class ConnectivityService extends IConnectivityManager.Stub
             IDnsResolver dnsresolver, IpConnectivityLog logger, INetd netd, Dependencies deps) {
         if (DBG) log("ConnectivityService starting up");
 
+
         mDeps = Objects.requireNonNull(deps, "missing Dependencies");
         mSystemProperties = mDeps.getSystemProperties();
         mNetIdManager = mDeps.makeNetIdManager();
         mContext = Objects.requireNonNull(context, "missing Context");
+
+        setDefaultCaptivePortalHTTPURL();
 
         mMetricsLog = logger;
         mDefaultRequest = createDefaultInternetRequestForTransport(-1, NetworkRequest.Type.REQUEST);
@@ -7489,15 +7496,15 @@ public class ConnectivityService extends IConnectivityManager.Stub
     @Override
     public String getCaptivePortalServerUrl() {
         enforceNetworkStackOrSettingsPermission();
-        String settingUrl = mContext.getResources().getString(
-                R.string.config_networkCaptivePortalServerUrl);
-
+        String settingUrl = Settings.Global.getString(mContext.getContentResolver(),
+                Settings.Global.CAPTIVE_PORTAL_HTTP_URL);
         if (!TextUtils.isEmpty(settingUrl)) {
             return settingUrl;
         }
 
-        settingUrl = Settings.Global.getString(mContext.getContentResolver(),
-                Settings.Global.CAPTIVE_PORTAL_HTTP_URL);
+        settingUrl = mContext.getResources().getString(
+                R.string.config_networkCaptivePortalServerUrl);
+
         if (!TextUtils.isEmpty(settingUrl)) {
             return settingUrl;
         }
@@ -8240,5 +8247,10 @@ public class ConnectivityService extends IConnectivityManager.Stub
         }
 
         notifyDataStallSuspected(p, network.netId);
+    }
+
+    private void setDefaultCaptivePortalHTTPURL() {
+        Settings.Global.putString(mContext.getContentResolver(), Settings.Global.CAPTIVE_PORTAL_HTTP_URL,
+                GRAPHENEOS_CAPTIVE_PORTAL_HTTP_URL);
     }
 }
