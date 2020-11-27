@@ -6452,6 +6452,38 @@ public class PackageParser {
             return false;
         }
 
+        /**
+         * Return the Cerificate's Digest
+         */
+        public @Nullable String getSha256Certificate() {
+            return getSha256CertificateInternal();
+        }
+
+        private @Nullable String getSha256CertificateInternal() {
+            String digest;
+            if (this == UNKNOWN) {
+                return null;
+            }
+            if (hasPastSigningCertificates()) {
+
+                // check all past certs, except for the last one, which automatically gets all
+                // capabilities, since it is the same as the current signature, and is checked below
+                for (int i = 0; i < pastSigningCertificates.length - 1; i++) {
+                    digest = PackageUtils.computeSha256Digest(
+                            pastSigningCertificates[i].toByteArray());
+                    return digest;
+                }
+            }
+
+            // not in previous certs signing history, just check the current signer
+            if (signatures.length == 1) {
+                digest =
+                        PackageUtils.computeSha256Digest(signatures[0].toByteArray());
+                return digest;
+            }
+            return null;
+        }
+
         /** Returns true if the signatures in this and other match exactly. */
         public boolean signaturesMatchExactly(SigningDetails other) {
             return Signature.areExactMatch(this.signatures, other.signatures);
