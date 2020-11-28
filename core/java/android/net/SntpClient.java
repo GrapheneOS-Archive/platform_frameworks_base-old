@@ -276,37 +276,40 @@ public class SntpClient {
 
             if (urlConnection instanceof HttpsURLConnection) {
                 HttpsURLConnection httpsUrlConnection = (HttpsURLConnection) urlConnection;
-                // change the SSLSocketFactory to use custom trust manager
-                httpsUrlConnection.setSSLSocketFactory(sslContext.getSocketFactory());
-                httpsUrlConnection.setConnectTimeout(timeout);
-                httpsUrlConnection.setReadTimeout(timeout);
-                httpsUrlConnection.setRequestProperty("Accept-Charset", "UTF-8");
-                final long requestTime = System.currentTimeMillis();
-                final long requestTicks = SystemClock.elapsedRealtime();
-                // implicitly fires GET request.
-                httpsUrlConnection.getInputStream();
-                long transmitTime = urlConnection.getDate();
-                // http servers dont log originate/receive time (imprecise offset).
-                long receiveTime = urlConnection.getDate();
-                final long responseTicks = SystemClock.elapsedRealtime();
-                final long responseTime = requestTime + (responseTicks - requestTicks);
-                long roundTripTime = responseTicks - requestTicks - (transmitTime - receiveTime);
-                long clockOffset = ((receiveTime - requestTime) + (transmitTime - responseTime))/2;
-                if (DBG) {
-                    Log.d(TAG, "https method -- round trip: " + roundTripTime + "ms, " +
-                            "clock offset: " + clockOffset + "ms");
+                try {
+                    // change the SSLSocketFactory to use custom trust manager
+                    httpsUrlConnection.setSSLSocketFactory(sslContext.getSocketFactory());
+                    httpsUrlConnection.setConnectTimeout(timeout);
+                    httpsUrlConnection.setReadTimeout(timeout);
+                    httpsUrlConnection.setRequestProperty("Accept-Charset", "UTF-8");
+                    final long requestTime = System.currentTimeMillis();
+                    final long requestTicks = SystemClock.elapsedRealtime();
+                    // implicitly fires GET request.
+                    httpsUrlConnection.getInputStream();
+                    long transmitTime = urlConnection.getDate();
+                    // http servers dont log originate/receive time (imprecise offset).
+                    long receiveTime = urlConnection.getDate();
+                    final long responseTicks = SystemClock.elapsedRealtime();
+                    final long responseTime = requestTime + (responseTicks - requestTicks);
+                    long roundTripTime = responseTicks - requestTicks - (transmitTime - receiveTime);
+                    long clockOffset = ((receiveTime - requestTime) + (transmitTime - responseTime))/2;
+                    if (DBG) {
+                        Log.d(TAG, "https method -- round trip: " + roundTripTime + "ms, " +
+                                "clock offset: " + clockOffset + "ms");
+                    }
+                    if (receiveTime < TIME) {
+                        Log.w(TAG, "https method received timestamp before BUILD unix time, rejecting");
+                        return false;
+                    }
+                    EventLogTags.writeNtpSuccess(url.toString(), roundTripTime, clockOffset);
+                    // save our results - use the times on this side of the network latency
+                    // (response rather than request time)
+                    mNtpTime = responseTime + clockOffset;
+                    mNtpTimeReference = responseTicks;
+                    mRoundTripTime = roundTripTime;
+                } finally {
+                    httpsUrlConnection.disconnect();
                 }
-                if (receiveTime < TIME) {
-                    Log.w(TAG, "https method received timestamp before BUILD unix time, rejecting");
-                    return false;
-                }
-                EventLogTags.writeNtpSuccess(url.toString(), roundTripTime, clockOffset);
-                // save our results - use the times on this side of the network latency
-                // (response rather than request time)
-                mNtpTime = responseTime + clockOffset;
-                mNtpTimeReference = responseTicks;
-                mRoundTripTime = roundTripTime;
-                httpsUrlConnection.disconnect();
             } else {
                 EventLogTags.writeNtpFailure(url.toString(), "did not receive HttpsURLConnection from Android Network");
                 if (DBG) Log.d(TAG, "request time failed: did not receive HttpsURLConnection from Android Network");
