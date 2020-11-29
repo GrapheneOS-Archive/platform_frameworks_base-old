@@ -281,7 +281,6 @@ public class SntpClient {
                     httpsUrlConnection.setSSLSocketFactory(sslContext.getSocketFactory());
                     httpsUrlConnection.setConnectTimeout(timeout);
                     httpsUrlConnection.setReadTimeout(timeout);
-                    httpsUrlConnection.setRequestProperty("Accept-Charset", "UTF-8");
                     final long requestTime = System.currentTimeMillis();
                     final long requestTicks = SystemClock.elapsedRealtime();
                     // implicitly fires GET request.
