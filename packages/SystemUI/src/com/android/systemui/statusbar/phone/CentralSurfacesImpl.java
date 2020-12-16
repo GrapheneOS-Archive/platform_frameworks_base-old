@@ -3734,6 +3734,7 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
 
         mScrimController.setExpansionAffectsAlpha(!unlocking);
 
+        mLaunchingAffordance = true;
         boolean launchingAffordanceWithPreview = mLaunchingAffordance;
         mScrimController.setLaunchingAffordanceWithPreview(launchingAffordanceWithPreview);
 
