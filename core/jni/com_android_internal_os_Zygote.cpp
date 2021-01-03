@@ -1600,6 +1600,27 @@ static void BindMountStorageDirs(JNIEnv* env, jobjectArray pkg_data_info_list,
 }
 
 static void HandleRuntimeFlags(JNIEnv* env, jint& runtime_flags) {
+  // The "dumpable" flag of a process, which controls core dump generation, is
+  // overwritten by the value in /proc/sys/fs/suid_dumpable when the effective
+  // user or group ID changes. See proc(5) for possible values. In most cases,
+  // the value is 0, so core dumps are disabled for zygote children. However,
+  // when running in a Chrome OS container, the value is already set to 2,
+  // which allows the external crash reporter to collect all core dumps. Since
+  // only system crashes are interested, core dump is disabled for app
+  // processes. This also ensures compliance with CTS.
+  int dumpable = prctl(PR_GET_DUMPABLE);
+  if (dumpable == -1) {
+    ALOGE("prctl(PR_GET_DUMPABLE) failed: %s", strerror(errno));
+    RuntimeAbort(env, __LINE__, "prctl(PR_GET_DUMPABLE) failed");
+  }
+
+  if (dumpable == 2 && uid >= AID_APP) {
+    if (prctl(PR_SET_DUMPABLE, 0, 0, 0, 0) == -1) {
+      ALOGE("prctl(PR_SET_DUMPABLE, 0) failed: %s", strerror(errno));
+      RuntimeAbort(env, __LINE__, "prctl(PR_SET_DUMPABLE, 0) failed");
+    }
+  }
+
   // Set process properties to enable debugging if required.
   if ((runtime_flags & RuntimeFlags::DEBUG_ENABLE_JDWP) != 0) {
     EnableDebugger();
@@ -1733,27 +1754,6 @@ static void SpecializeCommon(JNIEnv* env, uid_t uid, gid_t gid, jintArray gids,
 
   if (setresuid(uid, uid, uid) == -1) {
     fail_fn(CREATE_ERROR("setresuid(%d) failed: %s", uid, strerror(errno)));
-  }
-
-  // The "dumpable" flag of a process, which controls core dump generation, is
-  // overwritten by the value in /proc/sys/fs/suid_dumpable when the effective
-  // user or group ID changes. See proc(5) for possible values. In most cases,
-  // the value is 0, so core dumps are disabled for zygote children. However,
-  // when running in a Chrome OS container, the value is already set to 2,
-  // which allows the external crash reporter to collect all core dumps. Since
-  // only system crashes are interested, core dump is disabled for app
-  // processes. This also ensures compliance with CTS.
-  int dumpable = prctl(PR_GET_DUMPABLE);
-  if (dumpable == -1) {
-    ALOGE("prctl(PR_GET_DUMPABLE) failed: %s", strerror(errno));
-    RuntimeAbort(env, __LINE__, "prctl(PR_GET_DUMPABLE) failed");
-  }
-
-  if (dumpable == 2 && uid >= AID_APP) {
-    if (prctl(PR_SET_DUMPABLE, 0, 0, 0, 0) == -1) {
-      ALOGE("prctl(PR_SET_DUMPABLE, 0) failed: %s", strerror(errno));
-      RuntimeAbort(env, __LINE__, "prctl(PR_SET_DUMPABLE, 0) failed");
-    }
   }
 
   HandleRuntimeFlags(env, runtime_flags);
