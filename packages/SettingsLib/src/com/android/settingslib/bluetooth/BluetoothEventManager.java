@@ -307,7 +307,6 @@ public class BluetoothEventManager {
             BluetoothTimeoutReceiver.setTimeoutAlarm(context,
                     mStarted ? 0 : Settings.Global.getLong(context.getContentResolver(),
                             Settings.Global.BLUETOOTH_OFF_TIMEOUT, 0));
-
         }
     }
 
