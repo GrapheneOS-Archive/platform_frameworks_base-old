@@ -57,8 +57,9 @@ public class BluetoothTimeoutReceiver extends BroadcastReceiver {
         }
         if (bluetoothAdapter != null) {
             if (bluetoothAdapter.getState() == BluetoothAdapter.STATE_ON &&
-                    bluetoothAdapter.getConnectionState() == BluetoothAdapter.STATE_DISCONNECTED)
+                    bluetoothAdapter.getConnectionState() == BluetoothAdapter.STATE_DISCONNECTED) {
                 bluetoothAdapter.disable();
+            }
         } else {
             Log.e(TAG, "bluetoothAdapter is NULL!!");
         }
