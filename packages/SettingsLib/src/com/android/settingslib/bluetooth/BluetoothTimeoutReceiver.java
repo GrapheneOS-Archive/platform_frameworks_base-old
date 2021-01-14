@@ -44,8 +44,9 @@ public class BluetoothTimeoutReceiver extends BroadcastReceiver {
             alarmTime = System.currentTimeMillis() + alarmTime;
             Log.d(TAG, "setTimeoutAlarm(): alarmTime = " + new Date(alarmTime));
             alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, alarmTime, pending);
-        } else
+        } else {
             alarmManager.cancel(pending);
+        }
     }
 
     @Override
