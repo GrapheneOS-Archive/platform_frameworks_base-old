@@ -453,6 +453,7 @@ public class SntpClient {
                 } catch (Exception e) {
                     Log.e(TAG, "request https time failed: " + e.toString());
                     if (DBG) e.printStackTrace();
+                    return false;
                 } finally {
                     httpsUrlConnection.disconnect();
                 }
