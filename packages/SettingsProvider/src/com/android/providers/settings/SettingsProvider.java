@@ -4882,33 +4882,6 @@ public class SettingsProvider extends ContentProvider {
                     currentVersion = 191;
                 }
 
-                if (currentVersion == 183) {
-                    // Version 184: Update default Backup app to Seedvault
-                    final SettingsState secureSettings = getSecureSettingsLocked(userId);
-                    Setting currentBackupTransportSetting = secureSettings.getSettingLocked(
-                            Secure.BACKUP_TRANSPORT);
-                    if (currentBackupTransportSetting.isDefaultFromSystem()) {
-                        secureSettings.insertSettingLocked(
-                                Settings.Secure.BACKUP_TRANSPORT,
-                                getContext().getResources().getString(
-                                        R.string.def_backup_transport),
-                                null, true,
-                                SettingsState.SYSTEM_PACKAGE_NAME);
-                    }
-
-                    Setting currentBackupEnabledSetting = secureSettings.getSettingLocked(
-                            Secure.BACKUP_ENABLED);
-                    if (currentBackupEnabledSetting.isDefaultFromSystem()) {
-                        secureSettings.insertSettingLocked(
-                                Settings.Secure.BACKUP_ENABLED,
-                                getContext().getResources().getBoolean(
-                                        R.bool.def_backup_enabled)? "1" : "0",
-                                null, true,
-                                SettingsState.SYSTEM_PACKAGE_NAME);
-                    }
-                    currentVersion = 184;
-                }
-
                 // vXXX: Add new settings above this point.
 
                 if (currentVersion != newVersion) {
