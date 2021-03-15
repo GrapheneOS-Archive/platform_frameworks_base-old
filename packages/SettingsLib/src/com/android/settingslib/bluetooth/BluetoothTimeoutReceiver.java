@@ -44,8 +44,9 @@ public class BluetoothTimeoutReceiver extends BroadcastReceiver {
             alarmTime = System.currentTimeMillis() + alarmTime;
             Log.d(TAG, "setTimeoutAlarm(): alarmTime = " + new Date(alarmTime));
             alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, alarmTime, pending);
-        } else
+        } else {
             alarmManager.cancel(pending);
+        }
     }
 
     @Override
@@ -56,8 +57,9 @@ public class BluetoothTimeoutReceiver extends BroadcastReceiver {
         }
         if (bluetoothAdapter != null) {
             if (bluetoothAdapter.getState() == BluetoothAdapter.STATE_ON &&
-                    bluetoothAdapter.getConnectionState() == BluetoothAdapter.STATE_DISCONNECTED)
+                    bluetoothAdapter.getConnectionState() == BluetoothAdapter.STATE_DISCONNECTED) {
                 bluetoothAdapter.disable();
+            }
         } else {
             Log.e(TAG, "bluetoothAdapter is NULL!!");
         }
