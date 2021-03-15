@@ -285,10 +285,11 @@ public class BluetoothEventManager {
             }
             // Inform CachedDeviceManager that the adapter state has changed
             mDeviceManager.onBluetoothStateChanged(state);
-            if (state == BluetoothAdapter.STATE_ON)
+            if (state == BluetoothAdapter.STATE_ON) {
                 BluetoothTimeoutReceiver.setTimeoutAlarm(context,
                         Settings.Global.getLong(context.getContentResolver(),
                                 Settings.Global.BLUETOOTH_OFF_TIMEOUT, 0));
+            }
         }
     }
 
