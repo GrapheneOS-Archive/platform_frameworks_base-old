@@ -657,6 +657,9 @@
     <!-- For tether entitlement recheck-->
     <protected-broadcast
         android:name="com.android.server.connectivity.tethering.PROVISIONING_RECHECK_ALARM" />
+
+    <!-- For Bluetooth automatic turn off functionality-->
+    <protected-broadcast android:name="android.bluetooth.intent.TIMEOUT" />
     <!-- ====================================================================== -->
     <!--                          RUNTIME PERMISSIONS                           -->
     <!-- ====================================================================== -->
