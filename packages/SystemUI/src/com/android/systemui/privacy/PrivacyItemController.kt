@@ -86,7 +86,7 @@ class PrivacyItemController @Inject constructor(
 
     private fun isMicCameraEnabled(): Boolean {
         return deviceConfigProxy.getBoolean(DeviceConfig.NAMESPACE_PRIVACY,
-                MIC_CAMERA, false)
+                MIC_CAMERA, true)
     }
 
     private var currentUserIds = emptyList<Int>()
@@ -123,7 +123,7 @@ class PrivacyItemController @Inject constructor(
                     }
 
                     if (properties.keyset.contains(MIC_CAMERA)) {
-                        micCameraAvailable = properties.getBoolean(MIC_CAMERA, false)
+                        micCameraAvailable = properties.getBoolean(MIC_CAMERA, true)
                         callbacks.forEach { it.get()?.onFlagMicCameraChanged(micCameraAvailable) }
                     }
                     internalUiExecutor.updateListeningState()
