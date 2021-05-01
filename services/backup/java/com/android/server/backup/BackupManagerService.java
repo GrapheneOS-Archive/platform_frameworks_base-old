@@ -296,7 +296,7 @@ public class BackupManagerService extends IBackupManager.Stub {
         }
 
         return userId == UserHandle.USER_SYSTEM
-                || getActivatedFileForNonSystemUser(userId).exists();
+                || RandomAccessFileUtils.readBoolean(getActivatedFileForNonSystemUser(userId), true);
     }
 
     protected Context getContext() {
