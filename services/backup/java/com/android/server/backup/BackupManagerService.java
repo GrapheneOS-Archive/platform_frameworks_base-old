@@ -291,12 +291,7 @@ public class BackupManagerService extends IBackupManager.Stub {
      * file exists.
      */
     private boolean isBackupActivatedForUser(int userId) {
-        if (getSuppressFileForSystemUser().exists()) {
-            return false;
-        }
-
-        return userId == UserHandle.USER_SYSTEM
-                || getActivatedFileForNonSystemUser(userId).exists();
+        return !getSuppressFileForSystemUser().exists();
     }
 
     protected Context getContext() {
