@@ -443,9 +443,7 @@ class MediaDataManager(
         val app = builder.loadHeaderAppName()
 
         // App Icon
-        // TODO: Look into why context is not for the right user. If current user is a secondary
-        //  user, context.userId is still 0, not the id of the current user.
-        val smallIconDrawable: Drawable? = sbn.notification.smallIcon.loadDrawable(context)
+        val smallIconDrawable: Drawable = sbn.notification.smallIcon.loadDrawable(context)
 
         // Song name
         var song: CharSequence? = metadata?.getString(MediaMetadata.METADATA_KEY_DISPLAY_TITLE)
