@@ -2042,7 +2042,7 @@
     <!-- Remote server that can provide NTP responses. -->
     <string translatable="false" name="config_ntpServer">time.android.com</string>
     <!-- Remote server that can provide HTTPS time responses -->
-    <string translatable="false" name="config_httpsTimeServer">https://time.grapheneos.org</string>
+    <string translatable="false" name="config_httpsTimeServer">https://time.grapheneos.org/generate_204</string>
     <!-- Normal polling frequency in milliseconds -->
     <integer name="config_ntpPollingInterval">86400000</integer>
     <!-- Try-again polling interval in milliseconds, in case the network request failed -->
