@@ -874,8 +874,7 @@ public class BiometricService extends SystemService {
             mEnabledOnKeyguardCallbacks.add(new EnabledOnKeyguardCallback(callback));
             try {
                 callback.onChanged(BiometricSourceType.FINGERPRINT,
-                        mSettingObserver.getFingerprintEnabledOnKeyguard(),
-                        UserHandle.getCallingUserId());
+                        mSettingObserver.getFingerprintEnabledOnKeyguard(), callingUserId);
                 callback.onChanged(BiometricSourceType.FACE,
                         mSettingObserver.getFaceEnabledOnKeyguard(), callingUserId);
             } catch (RemoteException e) {
