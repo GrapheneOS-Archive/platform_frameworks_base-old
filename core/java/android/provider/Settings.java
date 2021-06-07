@@ -14440,6 +14440,13 @@ public final class Settings {
          */
         public static final String NR_NSA_TRACKING_SCREEN_OFF_MODE =
                 "nr_nsa_tracking_screen_off_mode";
+
+        /**
+         * Whether to automatically reboot the device after a user defined timeout
+         *
+         * @hide
+         */
+        public static final String SETTINGS_REBOOT_AFTER_TIMEOUT = "settings_reboot_after_timeout";
     }
 
     /**
