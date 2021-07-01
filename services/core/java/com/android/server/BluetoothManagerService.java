@@ -21,6 +21,7 @@ import static android.os.UserHandle.USER_SYSTEM;
 
 import android.Manifest;
 import android.app.ActivityManager;
+import android.app.AlarmManager;
 import android.app.AppGlobals;
 import android.app.AppOpsManager;
 import android.bluetooth.BluetoothAdapter;
@@ -512,6 +513,74 @@ class BluetoothManagerService extends IBluetoothManager.Stub {
             Slog.w(TAG, "Unable to resolve SystemUI's UID.");
         }
         mSystemUiUid = systemUiUid;
+
+        IntentFilter btFilter = new IntentFilter();
+        btFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
+        btFilter.addAction(BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED);
+        btFilter.addAction(BluetoothAdapter.ACTION_LOCAL_NAME_CHANGED);
+        context.registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context broadcastContext, Intent intent) {
+                listenForTimeout(context);
+            }
+        }, btFilter);
+
+        context.getContentResolver().registerContentObserver(
+                Settings.Global.getUriFor(Settings.Global.BLUETOOTH_OFF_TIMEOUT),
+                false,
+                new ContentObserver(new Handler(context.getMainLooper())) {
+                    @Override
+                    public void onChange(boolean selfChange) {
+                        super.onChange(selfChange);
+                        listenForTimeout(context);
+                    }
+                });
+    }
+
+    private static final AlarmManager.OnAlarmListener listener = () -> {
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (isBtDisconnected() && bluetoothAdapter != null) {
+            bluetoothAdapter.disable();
+        }
+    };
+
+    // IF device is still connected cancel timeout for now and wait for disconnected signal
+    private void listenForTimeout(Context context) {
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        if (isTimeoutEnabled(context) && isBtDisconnected() && isBtTurnedOn()) {
+            final long timeout = SystemClock.elapsedRealtime() + timeout(context);
+            alarmManager.cancel(listener);
+            alarmManager.setExact(
+                    AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                    timeout,
+                    "BT Idle Timeout",
+                    listener,
+                    new Handler(context.getMainLooper())
+            );
+        } else {
+            alarmManager.cancel(listener);
+        }
+    }
+
+    private static boolean isBtDisconnected() {
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        return bluetoothAdapter != null && bluetoothAdapter.getState() == BluetoothAdapter.STATE_ON &&
+                bluetoothAdapter.getConnectionState() == BluetoothAdapter.STATE_DISCONNECTED;
+    }
+
+    private boolean isBtTurnedOn() {
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        return bluetoothAdapter != null && bluetoothAdapter.getState() == BluetoothAdapter.STATE_ON;
+    }
+
+    private static long timeout(Context context) {
+        return Settings.Global.getLong(context.getContentResolver(),
+                Settings.Global.BLUETOOTH_OFF_TIMEOUT, 0);
+    }
+
+    /** Zero is default and means disabled */
+    private static boolean isTimeoutEnabled(Context context) {
+        return 0 != timeout(context);
     }
 
     /**
