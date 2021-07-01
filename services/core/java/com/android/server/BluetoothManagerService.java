@@ -29,6 +29,7 @@ import android.annotation.RequiresPermission;
 import android.annotation.SuppressLint;
 import android.annotation.NonNull;
 import android.app.ActivityManager;
+import android.app.AlarmManager;
 import android.app.AppGlobals;
 import android.app.AppOpsManager;
 import android.app.BroadcastOptions;
@@ -555,6 +556,81 @@ class BluetoothManagerService extends IBluetoothManager.Stub {
             Slog.w(TAG, "Unable to resolve SystemUI's UID.");
         }
         mSystemUiUid = systemUiUid;
+
+        /*
+        * System sends ACTION_STATE_CHANGED broadcast soon as any state
+        * changes. what it means in action is we don't have to take care if
+        * device reboot while BT has not been turned off automatically.
+        *
+        * A word of warning though it does not check if device as been
+        * unlocked or not what it means in real life is if you have sometime
+        * like tile ble tracker configured it will turn off BT. As result tile
+        * tracking will fail because of auto timeout. this behaviour can be
+        * changed with UserManager.isUnlocked()
+        * */
+        IntentFilter btFilter = new IntentFilter();
+        btFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
+        btFilter.addAction(BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED);
+        btFilter.addAction(BluetoothAdapter.ACTION_LOCAL_NAME_CHANGED);
+        context.registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context broadcastContext, Intent intent) {
+                reconfigureBtTimeoutListener();
+            }
+        }, btFilter);
+
+        context.getContentResolver().registerContentObserver(
+                Settings.Global.getUriFor(Settings.Global.BLUETOOTH_OFF_TIMEOUT),
+                false,
+                new ContentObserver(new Handler(context.getMainLooper())) {
+                    @Override
+                    public void onChange(boolean selfChange) {
+                        super.onChange(selfChange);
+                        reconfigureBtTimeoutListener();
+                    }
+                });
+    }
+
+    private static final AlarmManager.OnAlarmListener listener = () -> {
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (isBtOnAndDisconnected() && bluetoothAdapter != null) {
+            bluetoothAdapter.disable();
+        }
+    };
+
+    // If device is still connected cancel timeout for now and wait for disconnected signal
+    private void reconfigureBtTimeoutListener() {
+        AlarmManager alarmManager = (AlarmManager) mContext.getSystemService(Context.ALARM_SERVICE);
+        if (isTimeoutEnabled(mContext) && isBtOnAndDisconnected()) {
+            final long timeout = SystemClock.elapsedRealtime() + btTimeoutDurationInMilli(mContext);
+            alarmManager.cancel(listener);
+            alarmManager.setExact(
+                    AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                    timeout,
+                    "BT Idle Timeout",
+                    listener,
+                    new Handler(mContext.getMainLooper())
+            );
+        } else {
+            alarmManager.cancel(listener);
+        }
+    }
+
+    private static boolean isBtOnAndDisconnected() {
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        return bluetoothAdapter != null && bluetoothAdapter.getState() == BluetoothAdapter.STATE_ON
+                && bluetoothAdapter.getState() == BluetoothAdapter.STATE_ON &&
+                bluetoothAdapter.getConnectionState() == BluetoothAdapter.STATE_DISCONNECTED;
+    }
+
+    private static long btTimeoutDurationInMilli(Context context) {
+        return Settings.Global.getLong(context.getContentResolver(),
+                Settings.Global.BLUETOOTH_OFF_TIMEOUT, 0);
+    }
+
+    /** Zero is default and means disabled */
+    private static boolean isTimeoutEnabled(Context context) {
+        return 0 != btTimeoutDurationInMilli(context);
     }
 
     /**
