@@ -106,8 +106,10 @@ import android.net.TrafficStats;
 import android.net.netstats.provider.INetworkStatsProvider;
 import android.net.netstats.provider.INetworkStatsProviderCallback;
 import android.net.netstats.provider.NetworkStatsProvider;
+import android.net.wifi.WifiManager;
 import android.os.BestClock;
 import android.os.Binder;
+import android.os.Bundle;
 import android.os.DropBoxManager;
 import android.os.Environment;
 import android.os.Handler;
@@ -438,6 +440,53 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
         mHandler = new NetworkStatsHandler(handlerThread.getLooper());
         mNetworkStatsSubscriptionsMonitor = deps.makeSubscriptionsMonitor(mContext,
                 new HandlerExecutor(mHandler), this);
+        // NETWORK_STATE_CHANGED_ACTION is not a sticky broadcast receiver
+        // so by default wifi should be off if not get connected within timeout.
+        maybeRescheduleWifiAutoOff(false);
+        context.registerReceiver(
+                new BroadcastReceiver() {
+                    @Override
+                    public void onReceive(Context context, Intent intent) {
+                        Bundle bundle = intent.getExtras();
+                        NetworkInfo networkInfo = bundle.getParcelable(WifiManager.EXTRA_NETWORK_INFO);
+                        maybeRescheduleWifiAutoOff(networkInfo != null && networkInfo.isConnected());
+                    }
+                }, new IntentFilter(WifiManager.NETWORK_STATE_CHANGED_ACTION)
+        );
+    }
+
+    private final AlarmManager.OnAlarmListener listener = this::turnOffWifi;
+    private void turnOffWifi() {
+        WifiManager wifiManager = (WifiManager) mContext.getSystemService(Context.WIFI_SERVICE);
+        if (isWiFiAutoTurnOffEnabled() && wifiManager.isWifiEnabled()) {
+            wifiManager.setWifiEnabled(false);
+        }
+    }
+
+    private void maybeRescheduleWifiAutoOff(boolean isConnected) {
+        if (isWiFiAutoTurnOffEnabled() && !isConnected) {
+            final long timeout = SystemClock.elapsedRealtime() + timeout();
+            mAlarmManager.cancel(listener);
+            mAlarmManager.setExact(
+                    AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                    timeout,
+                    "Wi-Fi Idle Timeout",
+                    listener,
+                    new Handler(mContext.getMainLooper())
+            );
+        } else {
+            mAlarmManager.cancel(listener);
+        }
+    }
+
+    private long timeout() {
+        return Settings.Global.getLong(mContext.getContentResolver(),
+                Global.WIFI_OFF_TIMEOUT, 0);
+    }
+
+    /** Zero is default and means disabled */
+    private boolean isWiFiAutoTurnOffEnabled() {
+        return 0 != timeout();
     }
 
     /**
