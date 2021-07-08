@@ -1,4 +1,12 @@
 // Signature format: 2.0
+package android.app.compat.gms {
+
+  public final class GmsCompat {
+    method public static boolean isEnabled();
+  }
+
+}
+
 package android.os {
 
   public class StatsServiceManager {
