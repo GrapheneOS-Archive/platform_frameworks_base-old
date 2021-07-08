@@ -22,6 +22,7 @@ import static android.os.StrictMode.vmIncorrectContextUseEnabled;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.content.AutofillOptions;
 import android.content.BroadcastReceiver;
@@ -88,6 +89,7 @@ import android.view.DisplayAdjustments;
 import android.view.autofill.AutofillManager.AutofillClient;
 
 import com.android.internal.annotations.GuardedBy;
+import com.android.internal.gmscompat.GmsHooks;
 import com.android.internal.util.Preconditions;
 
 import dalvik.system.BlockGuard;
@@ -1666,6 +1668,10 @@ class ContextImpl extends Context {
 
     @Override
     public ComponentName startService(Intent service) {
+        if (GmsCompat.isEnabled()) {
+            return GmsHooks.startService(this, service);
+        }
+
         warnIfCallingFromSystemProcess();
         return startServiceCommon(service, false, mUser);
     }
