@@ -32,6 +32,7 @@ import android.annotation.SuppressLint;
 import android.annotation.SystemApi;
 import android.annotation.SystemService;
 import android.app.ActivityManager;
+import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.content.Context;
 import android.content.pm.ParceledListSlice;
@@ -1432,6 +1433,10 @@ public class WifiManager {
     @NonNull
     public List<Pair<WifiConfiguration, Map<Integer, List<ScanResult>>>> getAllMatchingWifiConfigs(
             @NonNull List<ScanResult> scanResults) {
+        if (GmsCompat.isEnabled()) {
+            return Collections.emptyList();
+        }
+
         List<Pair<WifiConfiguration, Map<Integer, List<ScanResult>>>> configs = new ArrayList<>();
         try {
             Map<String, Map<Integer, List<ScanResult>>> results =
@@ -1504,6 +1509,10 @@ public class WifiManager {
     @NonNull
     public Map<OsuProvider, List<ScanResult>> getMatchingOsuProviders(
             @Nullable List<ScanResult> scanResults) {
+        if (GmsCompat.isEnabled()) {
+            return Collections.emptyMap();
+        }
+
         if (scanResults == null) {
             return new HashMap<>();
         }
@@ -1534,6 +1543,10 @@ public class WifiManager {
     @NonNull
     public Map<OsuProvider, PasspointConfiguration> getMatchingPasspointConfigsForOsuProviders(
             @NonNull Set<OsuProvider> osuProviders) {
+        if (GmsCompat.isEnabled()) {
+            return Collections.emptyMap();
+        }
+
         try {
             return mService.getMatchingPasspointConfigsForOsuProviders(
                     new ArrayList<>(osuProviders));
@@ -4989,6 +5002,10 @@ public class WifiManager {
             android.Manifest.permission.NETWORK_SETUP_WIZARD
     })
     public Network getCurrentNetwork() {
+        if (GmsCompat.isEnabled()) {
+            return null;
+        }
+
         try {
             return mService.getCurrentNetwork();
         } catch (RemoteException e) {
