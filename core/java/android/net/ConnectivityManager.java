@@ -28,6 +28,7 @@ import android.annotation.SystemApi;
 import android.annotation.SystemService;
 import android.annotation.TestApi;
 import android.app.PendingIntent;
+import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.content.Context;
 import android.content.Intent;
@@ -2413,6 +2414,10 @@ public class ConnectivityManager {
     @RequiresPermission(anyOf = {android.Manifest.permission.TETHER_PRIVILEGED,
             android.Manifest.permission.WRITE_SETTINGS})
     public boolean isTetheringSupported() {
+        if (GmsCompat.isEnabled()) {
+            return false;
+        }
+
         return mTetheringManager.isTetheringSupported();
     }
 
