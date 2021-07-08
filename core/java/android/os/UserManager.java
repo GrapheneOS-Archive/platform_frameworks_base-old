@@ -35,6 +35,7 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.PropertyInvalidatedCache;
 import android.app.admin.DevicePolicyManager;
+import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.content.ComponentName;
 import android.content.Context;
@@ -56,6 +57,7 @@ import android.util.AndroidException;
 import android.view.WindowManager.LayoutParams;
 
 import com.android.internal.R;
+import com.android.internal.gmscompat.GmsHooks;
 import com.android.internal.os.RoSystemProperties;
 import com.android.internal.util.FrameworkStatsLog;
 
@@ -2030,6 +2032,10 @@ public class UserManager {
     @RequiresPermission(anyOf = {Manifest.permission.MANAGE_USERS,
             Manifest.permission.CREATE_USERS})
     public boolean isGuestUser(@UserIdInt int userId) {
+        if (GmsCompat.isEnabled()) {
+            return false;
+        }
+
         UserInfo user = getUserInfo(userId);
         return user != null && user.isGuest();
     }
@@ -2044,6 +2050,10 @@ public class UserManager {
     @RequiresPermission(anyOf = {Manifest.permission.MANAGE_USERS,
             Manifest.permission.CREATE_USERS})
     public boolean isGuestUser() {
+        if (GmsCompat.isEnabled()) {
+            return false;
+        }
+
         UserInfo user = getUserInfo(UserHandle.myUserId());
         return user != null && user.isGuest();
     }
@@ -3169,6 +3179,10 @@ public class UserManager {
      */
     @RequiresPermission(android.Manifest.permission.MANAGE_USERS)
     public int getUserCount() {
+        if (GmsCompat.isEnabled()) {
+            return 1;
+        }
+
         List<UserInfo> users = getUsers();
         return users != null ? users.size() : 1;
     }
@@ -3244,6 +3258,10 @@ public class UserManager {
     @SystemApi
     @RequiresPermission(android.Manifest.permission.MANAGE_USERS)
     public long[] getSerialNumbersOfUsers(boolean excludeDying) {
+        if (GmsCompat.isEnabled()) {
+            return GmsHooks.getSerialNumbersOfUsers(this);
+        }
+
         List<UserInfo> users = getUsers(excludeDying);
         long[] result = new long[users.size()];
         for (int i = 0; i < result.length; i++) {
@@ -3560,6 +3578,10 @@ public class UserManager {
     @UnsupportedAppUsage
     @RequiresPermission(android.Manifest.permission.MANAGE_USERS)
     public UserInfo getProfileParent(@UserIdInt int userId) {
+        if (GmsCompat.isEnabled()) {
+            return null;
+        }
+
         try {
             return mService.getProfileParent(userId);
         } catch (RemoteException re) {
@@ -3579,6 +3601,10 @@ public class UserManager {
     @SystemApi
     @RequiresPermission(android.Manifest.permission.MANAGE_USERS)
     public @Nullable UserHandle getProfileParent(@NonNull UserHandle user) {
+        if (GmsCompat.isEnabled()) {
+            return null;
+        }
+
         UserInfo info = getProfileParent(user.getIdentifier());
 
         if (info == null) {

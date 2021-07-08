@@ -16,6 +16,9 @@
 
 package com.android.internal.gmscompat;
 
+import android.annotation.SuppressLint;
+import android.app.ActivityThread;
+import android.app.Application;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -25,7 +28,17 @@ import android.app.compat.gms.GmsCompat;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.SharedLibraryInfo;
+import android.os.Build;
+import android.os.Process;
+import android.os.UserManager;
+import android.provider.Settings;
 import android.util.Log;
+import android.webkit.WebView;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * API shims for Google Play Services compatibility. Hooks that are more complicated than a simple
@@ -43,6 +56,7 @@ public final class GmsHooks {
 
     // Static only
     private GmsHooks() { }
+
 
     /*
      * Foreground service notifications to keep GMS services alive
@@ -100,5 +114,77 @@ public final class GmsHooks {
     // NotificationManager#deleteNotificationChannel(String)
     public static boolean skipDeleteNotificationChannel(String channelId) {
         return GmsCompat.isEnabled() && FGS_CHANNEL_ID.equals(channelId);
+    }
+
+
+    /**
+     * API shims
+     */
+
+    // Report a single user on the system
+    // UserManager#getSerialNumbersOfUsers(boolean)
+    public static long[] getSerialNumbersOfUsers(UserManager userManager) {
+        return new long[] { userManager.getSerialNumberForUser(Process.myUserHandle()) };
+    }
+
+    // Current user is always active
+    // ActivityManager#getCurrentUser()
+    public static int getCurrentUser() {
+        return Process.myUserHandle().getIdentifier();
+    }
+
+    /**
+     * Use the per-app SSAID as a random serial number for SafetyNet. This doesn't necessarily make
+     * pass, but at least it retusn a valid "failed" response and stops spamming device key
+     * requests.
+     *
+     * This isn't a privacy risk because all unprivileged apps already have access to random SSAIDs.
+     */
+    // Build#getSerial()
+    @SuppressLint("HardwareIds")
+    public static String getSerial() {
+        Application app = ActivityThread.currentApplication();
+        if (app == null) {
+            return Build.UNKNOWN;
+        }
+
+        String ssaid = Settings.Secure.getString(app.getContentResolver(),
+                Settings.Secure.ANDROID_ID);
+        String serial = ssaid.toUpperCase();
+        Log.d(TAG, "Generating serial number from SSAID: " + serial);
+        return serial;
+    }
+
+    // Report no shared libraries
+    // ApplicationPackageManager#getSharedLibrariesAsUser(int, int)
+    public static List<SharedLibraryInfo> getSharedLibrariesAsUser() {
+        // TODO: Report standard Pixel libraries to fix GCam installation?
+        return Collections.emptyList();
+    }
+
+    // Only get package info for current user
+    // ApplicationPackageManager#getPackageInfo(VersionedPackage, int)
+    // ApplicationPackageManager#getPackageInfoAsUser(String, int, int)
+    public static int getPackageInfoFlags(int flags) {
+        if (!GmsCompat.isEnabled()) {
+            return flags;
+        }
+
+        // Remove MATCH_ANY_USER flag to avoid permission denial
+        return flags & ~PackageManager.MATCH_ANY_USER;
+    }
+
+    // Fix RuntimeException: Using WebView from more than one process at once with the same data
+    // directory is not supported. https://crbug.com/558377
+    // Instrumentation#newApplication(ClassLoader, String, Context)
+    public static void initApplicationBeforeOnCreate(Application app) {
+        if (!GmsCompat.isEnabled() || app == null) {
+            return;
+        }
+
+        String processName = Application.getProcessName();
+        if (!app.getPackageName().equals(processName)) {
+            WebView.setDataDirectorySuffix("process-shim--" + processName);
+        }
     }
 }

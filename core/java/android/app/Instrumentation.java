@@ -57,6 +57,8 @@ import android.view.WindowManagerGlobal;
 
 import com.android.internal.content.ReferrerIntent;
 
+import com.android.internal.gmscompat.GmsHooks;
+
 import java.io.File;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -1189,6 +1191,7 @@ public class Instrumentation {
      * @param app The application being created.
      */
     public void callApplicationOnCreate(Application app) {
+        GmsHooks.initApplicationBeforeOnCreate(app);
         app.onCreate();
     }
     
