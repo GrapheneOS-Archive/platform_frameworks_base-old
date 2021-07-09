@@ -87,6 +87,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.database.ContentObserver;
 import android.net.DataUsageRequest;
 import android.net.INetworkManagementEventObserver;
 import android.net.INetworkStatsService;
@@ -441,9 +442,6 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
         mHandler = new NetworkStatsHandler(handlerThread.getLooper());
         mNetworkStatsSubscriptionsMonitor = deps.makeSubscriptionsMonitor(mContext,
                 new HandlerExecutor(mHandler), this);
-        // NETWORK_STATE_CHANGED_ACTION is not a sticky broadcast receiver
-        // so by default wifi should be off if not get connected within timeout.
-        maybeRescheduleWifiAutoOff(false);
 
         IntentFilter wifiFilter = new IntentFilter();
         wifiFilter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
@@ -456,10 +454,9 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
                         if (WifiManager.NETWORK_STATE_CHANGED_ACTION.equals(intent.getAction())) {
                             Bundle bundle = intent.getExtras();
                             NetworkInfo networkInfo = bundle.getParcelable(WifiManager.EXTRA_NETWORK_INFO);
-                            maybeRescheduleWifiAutoOff(networkInfo != null && networkInfo.isConnected());
-                        } else if (WifiManager.WIFI_STATE_CHANGED_ACTION.equals(intent.getAction())){
-                            maybeRescheduleWifiAutoOff(isWifiConnected());
+                            isWifiConnected = networkInfo != null && networkInfo.isConnected();
                         }
+                        maybeRescheduleWifiAutoOff();
                     }
                 }, wifiFilter
         );
@@ -471,28 +468,23 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
                     @Override
                     public void onChange(boolean selfChange) {
                         super.onChange(selfChange);
-                        maybeRescheduleWifiAutoOff(isWifiConnected());
+                        maybeRescheduleWifiAutoOff();
                     }
                 });
     }
 
+    private static boolean isWifiConnected = false;
     private final AlarmManager.OnAlarmListener listener = this::turnOffWifi;
     private void turnOffWifi() {
         WifiManager wifiManager = (WifiManager) mContext.getSystemService(Context.WIFI_SERVICE);
-        if (isWifiAutoTurnOffEnabled() && wifiManager.isWifiEnabled()) {
+        if (isWifiAutoTurnOffEnabled(mContext) && wifiManager.isWifiEnabled()) {
             wifiManager.setWifiEnabled(false);
         }
     }
 
-    private boolean isWifiConnected() {
-        WifiManager wifiManager = (WifiManager) mContext.getSystemService(Context.WIFI_SERVICE);
-        return wifiManager.getConnectionInfo() != null &&
-                wifiManager.getConnectionInfo().getSupplicantState() == SupplicantState.COMPLETED;
-    }
-
-    private void maybeRescheduleWifiAutoOff(boolean isConnected) {
-        if (isWifiAutoTurnOffEnabled() && !isConnected) {
-            final long timeout = SystemClock.elapsedRealtime() + timeout();
+    private void maybeRescheduleWifiAutoOff() {
+        if (isWifiAutoTurnOffEnabled(mContext) && !isWifiConnected) {
+            final long timeout = SystemClock.elapsedRealtime() + timeout(mContext);
             mAlarmManager.cancel(listener);
             mAlarmManager.setExact(
                     AlarmManager.ELAPSED_REALTIME_WAKEUP,
@@ -506,14 +498,14 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
         }
     }
 
-    private static long timeout() {
+    private static long timeout(Context mContext) {
         return Settings.Global.getLong(mContext.getContentResolver(),
                 Global.WIFI_OFF_TIMEOUT, 0);
     }
 
     /** Zero is default and means disabled */
-    private static boolean isWifiAutoTurnOffEnabled() {
-        return 0 != timeout();
+    private static boolean isWifiAutoTurnOffEnabled(Context mContext) {
+        return 0 != timeout(mContext);
     }
 
     /**
