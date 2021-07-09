@@ -89,6 +89,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import com.android.settingslib.bluetooth.BluetoothTimeoutReceiver;
+
 class BluetoothManagerService extends IBluetoothManager.Stub {
     private static final String TAG = "BluetoothManagerService";
     private static final boolean DBG = true;
@@ -512,6 +514,33 @@ class BluetoothManagerService extends IBluetoothManager.Stub {
             Slog.w(TAG, "Unable to resolve SystemUI's UID.");
         }
         mSystemUiUid = systemUiUid;
+
+
+        IntentFilter btFilter = new IntentFilter();
+        btFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
+        btFilter.addAction(BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED);
+        btFilter.addAction(BluetoothAdapter.ACTION_LOCAL_NAME_CHANGED);
+        context.registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context broadcastContext, Intent intent) {
+                BluetoothTimeoutReceiver.setTimeoutAlarm(mContext,
+                        Settings.Global.getInt(mContext.getContentResolver(),
+                        Settings.Global.BLUETOOTH_OFF_TIMEOUT, 0));
+            }
+        }, btFilter);
+
+        context.getContentResolver().registerContentObserver(
+                Settings.Global.getUriFor(Settings.Global.BLUETOOTH_OFF_TIMEOUT),
+                false,
+                new ContentObserver(new Handler(context.getMainLooper())) {
+                    @Override
+                    public void onChange(boolean selfChange) {
+                        super.onChange(selfChange);
+                        BluetoothTimeoutReceiver.setTimeoutAlarm(mContext,
+                                Settings.Global.getInt(mContext.getContentResolver(),
+                                Settings.Global.BLUETOOTH_OFF_TIMEOUT, 0));
+                    }
+                });
     }
 
     /**
