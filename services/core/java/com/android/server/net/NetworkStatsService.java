@@ -104,6 +104,7 @@ import android.net.NetworkStatsHistory;
 import android.net.NetworkTemplate;
 import android.net.TrafficStats;
 import android.net.netstats.provider.INetworkStatsProvider;
+import android.net.wifi.SupplicantState;
 import android.net.netstats.provider.INetworkStatsProviderCallback;
 import android.net.netstats.provider.NetworkStatsProvider;
 import android.net.wifi.WifiManager;
@@ -443,15 +444,24 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
         // NETWORK_STATE_CHANGED_ACTION is not a sticky broadcast receiver
         // so by default wifi should be off if not get connected within timeout.
         maybeRescheduleWifiAutoOff(false);
+        
+        IntentFilter wifiFilter = new IntentFilter();
+        wifiFilter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
+        wifiFilter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
+        
         context.registerReceiver(
                 new BroadcastReceiver() {
                     @Override
                     public void onReceive(Context context, Intent intent) {
-                        Bundle bundle = intent.getExtras();
-                        NetworkInfo networkInfo = bundle.getParcelable(WifiManager.EXTRA_NETWORK_INFO);
-                        maybeRescheduleWifiAutoOff(networkInfo != null && networkInfo.isConnected());
+                         if(WifiManager.NETWORK_STATE_CHANGED_ACTION.equals(intent.getAction())) {
+                            Bundle bundle = intent.getExtras();
+                            NetworkInfo networkInfo = bundle.getParcelable(WifiManager.EXTRA_NETWORK_INFO);
+                            maybeRescheduleWifiAutoOff(networkInfo != null && networkInfo.isConnected());
+                        }else if(WifiManager.WIFI_STATE_CHANGED_ACTION.equals(intent.getAction())){
+                            maybeRescheduleWifiAutoOff(isWifiConnected());
+                        }
                     }
-                }, new IntentFilter(WifiManager.NETWORK_STATE_CHANGED_ACTION)
+                }, wifiFilter
         );
     }
 
@@ -463,6 +473,12 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
         }
     }
 
+    private boolean isWifiConnected(){
+        WifiManager wifiManager = (WifiManager) mContext.getSystemService(Context.WIFI_SERVICE);
+        return wifiManager.getConnectionInfo() != null &&
+                wifiManager.getConnectionInfo().getSupplicantState() == SupplicantState.COMPLETED;
+    }
+    
     private void maybeRescheduleWifiAutoOff(boolean isConnected) {
         if (isWiFiAutoTurnOffEnabled() && !isConnected) {
             final long timeout = SystemClock.elapsedRealtime() + timeout();
