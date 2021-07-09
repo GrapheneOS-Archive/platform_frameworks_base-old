@@ -23,6 +23,7 @@ import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.os.SystemClock;
 import android.util.Log;
 
 import java.util.Date;
@@ -34,6 +35,7 @@ public class BluetoothTimeoutReceiver extends BroadcastReceiver {
 
     public static void setTimeoutAlarm(Context context, long alarmTime) {
         Intent intent = new Intent(INTENT_TIMEOUT);
+        intent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND);
         intent.setClassName("com.android.settings", "com.android.settingslib.bluetooth.BluetoothTimeoutReceiver");
         PendingIntent pending = PendingIntent.getBroadcast(
                 context, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
@@ -41,9 +43,9 @@ public class BluetoothTimeoutReceiver extends BroadcastReceiver {
                 (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 
         if (alarmTime != 0) {
-            alarmTime = System.currentTimeMillis() + alarmTime;
+            alarmTime = SystemClock.elapsedRealtime() + alarmTime;
             Log.d(TAG, "setTimeoutAlarm(): alarmTime = " + new Date(alarmTime));
-            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, alarmTime, pending);
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.ELAPSED_REALTIME_WAKEUP, alarmTime, pending);
         } else {
             alarmManager.cancel(pending);
         }
