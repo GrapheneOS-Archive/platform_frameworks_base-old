@@ -2528,6 +2528,9 @@ public class ParsingPackageUtils {
             if (pkg.getTargetSdkVersion() >= npi.sdkVersion) {
                 break;
             }
+            if (npi.targetPackage != null && !pkg.getPackageName().equals(npi.targetPackage)) {
+                continue;
+            }
             if (!pkg.getRequestedPermissions().contains(npi.name)) {
                 if (newPermsMsg == null) {
                     newPermsMsg = new StringBuilder(128);
