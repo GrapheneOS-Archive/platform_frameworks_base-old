@@ -17,6 +17,7 @@
 package com.android.server.compat;
 
 import android.annotation.Nullable;
+import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.ChangeId;
 import android.compat.annotation.EnabledAfter;
 import android.content.pm.ApplicationInfo;
@@ -141,6 +142,9 @@ public final class CompatChange extends CompatibilityChangeInfo {
     boolean isEnabled(ApplicationInfo app) {
         if (mPackageOverrides != null && mPackageOverrides.containsKey(app.packageName)) {
             return mPackageOverrides.get(app.packageName);
+        }
+        if (GmsCompat.isChangeEnabled(this, app)) {
+            return true;
         }
         if (getDisabled()) {
             return false;
