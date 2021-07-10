@@ -97,7 +97,7 @@ public final class GmsCompat {
     }
 
     /**
-     * Check whether the given app is part of the Google Play Services family.
+     * Check whether the given app is unprivileged and part of the Google Play Services family.
      *
      * @hide
      */
@@ -122,10 +122,9 @@ public final class GmsCompat {
     }
 
     /** @hide */
-    // CompatChange#isEnabled(ApplicationInfo)
-    public static boolean isChangeEnabled(CompatibilityChangeInfo change, ApplicationInfo app) {
+    public static boolean isGmsApp(ApplicationInfo app) {
         // Privileged GMS doesn't need any compatibility changes
-        if (change.getId() != GMS_UNPRIVILEGED_COMPAT || app.isSystemApp()) {
+        if (app.isSystemApp()) {
             return false;
         }
 
@@ -146,5 +145,11 @@ public final class GmsCompat {
                 pkg.signingInfo.getApkContentsSigners() :
                 pkg.signingInfo.getSigningCertificateHistory();
         return isGmsApp(app.packageName, signatures);
+    }
+
+    /** @hide */
+    // CompatChange#isEnabled(ApplicationInfo)
+    public static boolean isChangeEnabled(CompatibilityChangeInfo change, ApplicationInfo app) {
+        return change.getId() == GMS_UNPRIVILEGED_COMPAT && isGmsApp(app);
     }
 }
