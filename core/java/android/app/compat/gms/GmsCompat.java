@@ -21,10 +21,17 @@ import android.app.ActivityThread;
 import android.compat.Compatibility;
 import android.compat.annotation.ChangeId;
 import android.compat.annotation.Disabled;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.IPackageManager;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.os.Process;
+import android.os.RemoteException;
+import android.os.UserHandle;
 import android.util.Log;
 
+import com.android.internal.compat.CompatibilityChangeInfo;
 import com.android.internal.gmscompat.GmsInfo;
 
 /**
@@ -55,7 +62,7 @@ public final class GmsCompat {
      * randomly-generated long.
      */
     @ChangeId
-    @Disabled
+    @Disabled // Overridden as a special case in CompatChange
     private static final long GMS_UNPRIVILEGED_COMPAT = 1531297613045645771L;
 
     private static final boolean DEBUG_VERBOSE = false;
@@ -103,7 +110,7 @@ public final class GmsCompat {
 
         // Validate signature to avoid affecting apps like microG and Gcam Services Provider.
         // This isn't actually necessary from a security perspective because GMS doesn't get any
-        // special privileges.
+        // special privileges, but it's a failsafe to avoid unintentional compatibility issues.
         boolean validCert = false;
         for (Signature signature : signatures) {
             if (signature.toCharsString().equals(GmsInfo.SIGNING_CERT)) {
@@ -112,5 +119,32 @@ public final class GmsCompat {
         }
 
         return validCert;
+    }
+
+    /** @hide */
+    // CompatChange#isEnabled(ApplicationInfo)
+    public static boolean isChangeEnabled(CompatibilityChangeInfo change, ApplicationInfo app) {
+        // Privileged GMS doesn't need any compatibility changes
+        if (change.getId() != GMS_UNPRIVILEGED_COMPAT || app.isSystemApp()) {
+            return false;
+        }
+
+        int userId = UserHandle.getUserId(app.uid);
+        IPackageManager pm = ActivityThread.getPackageManager();
+
+        // Fetch PackageInfo to get signing certificates
+        PackageInfo pkg;
+        try {
+            pkg = pm.getPackageInfo(app.packageName, PackageManager.GET_SIGNING_CERTIFICATES, userId);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+
+        // Get all applicable certificates, even if GMS switches to multiple signing certificates
+        // in the future
+        Signature[] signatures = pkg.signingInfo.hasMultipleSigners() ?
+                pkg.signingInfo.getApkContentsSigners() :
+                pkg.signingInfo.getSigningCertificateHistory();
+        return isGmsApp(app.packageName, signatures);
     }
 }
