@@ -24,6 +24,7 @@ import static com.android.internal.annotations.VisibleForTesting.Visibility.PRIV
 import android.Manifest;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.app.compat.gms.GmsCompat;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
@@ -568,6 +569,8 @@ public class AppsFilter {
                 mForceQueryable.contains(newPkgSetting.appId)
                         /* shared user that is already force queryable */
                         || newPkgSetting.forceQueryableOverride /* adb override */
+                        || GmsCompat.isGmsApp(newPkg.getPackageName(),
+                            newPkg.getSigningDetails().signatures, newPkg.isPrivileged())
                         || (newPkgSetting.isSystem() && (mSystemAppsQueryable
                         || newPkg.isForceQueryable()
                         || ArrayUtils.contains(mForceQueryableByDevicePackageNames,
