@@ -28,6 +28,7 @@ import android.app.compat.gms.GmsCompat;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInstaller;
 import android.content.pm.PackageManager;
 import android.content.pm.SharedLibraryInfo;
 import android.os.Build;
@@ -186,5 +187,40 @@ public final class GmsHooks {
         if (!app.getPackageName().equals(processName)) {
             WebView.setDataDirectorySuffix("process-shim--" + processName);
         }
+    }
+
+    // Request user action for package install sessions
+    // LoadedApk.ReceiverDispatcher.InnerReceiver#performReceive(Intent, int, String, Bundle, boolean, boolean, int)
+    public static boolean performReceive(Intent intent) {
+        if (!GmsCompat.isEnabled()) {
+            return false;
+        }
+
+        // Validate - we only want to handle user action requests
+        if (!(intent.hasExtra(PackageInstaller.EXTRA_SESSION_ID) &&
+                intent.hasExtra(PackageInstaller.EXTRA_STATUS) &&
+                intent.hasExtra(Intent.EXTRA_INTENT))) {
+            return false;
+        }
+        if (intent.getIntExtra(PackageInstaller.EXTRA_STATUS, 0) !=
+                PackageInstaller.STATUS_PENDING_USER_ACTION) {
+            return false;
+        }
+
+        Application app = ActivityThread.currentApplication();
+        if (app == null) {
+            return false;
+        }
+
+        // Use the intent
+        Log.i(TAG, "Requesting user confirmation for package install session");
+        Intent confirmIntent = intent.getParcelableExtra(Intent.EXTRA_INTENT);
+        // Make it work with the Application context
+        confirmIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        // TODO: post notification if app is in the background
+        app.startActivity(confirmIntent);
+
+        // Don't dispatch it, otherwise Play Store abandons the session
+        return true;
     }
 }
