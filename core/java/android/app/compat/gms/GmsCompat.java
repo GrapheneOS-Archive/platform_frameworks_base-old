@@ -101,7 +101,12 @@ public final class GmsCompat {
      *
      * @hide
      */
-    public static boolean isGmsApp(String packageName, Signature[] signatures) {
+    public static boolean isGmsApp(String packageName, Signature[] signatures, boolean isPrivileged) {
+        // Privileged GMS doesn't need any compatibility changes
+        if (isPrivileged) {
+            return false;
+        }
+
         if (!GmsInfo.PACKAGE_GMS.equals(packageName) &&
                 !GmsInfo.PACKAGE_GSF.equals(packageName) &&
                 !GmsInfo.PACKAGE_PLAY_STORE.equals(packageName)) {
@@ -123,11 +128,6 @@ public final class GmsCompat {
 
     /** @hide */
     public static boolean isGmsApp(ApplicationInfo app) {
-        // Privileged GMS doesn't need any compatibility changes
-        if (app.isSystemApp()) {
-            return false;
-        }
-
         int userId = UserHandle.getUserId(app.uid);
         IPackageManager pm = ActivityThread.getPackageManager();
 
@@ -144,7 +144,7 @@ public final class GmsCompat {
         Signature[] signatures = pkg.signingInfo.hasMultipleSigners() ?
                 pkg.signingInfo.getApkContentsSigners() :
                 pkg.signingInfo.getSigningCertificateHistory();
-        return isGmsApp(app.packageName, signatures);
+        return isGmsApp(app.packageName, signatures, app.isPrivilegedApp());
     }
 
     /** @hide */
