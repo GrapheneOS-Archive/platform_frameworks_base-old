@@ -74,7 +74,9 @@ public final class GmsHooks {
     // Post notification on foreground service start
     // ActivityThread#handleCreateService(CreateServiceData)
     public static void attachService(Service service) {
-        if (!GmsCompat.isEnabled()) {
+        // Isolated processes (e.g. WebView) don't have access to NotificationManager. They don't
+        // need a foreground notification anyway, so bail out early.
+        if (!GmsCompat.isEnabled() || Process.isIsolated()) {
             return;
         }
 
