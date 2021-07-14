@@ -105,7 +105,6 @@ import android.net.NetworkStatsHistory;
 import android.net.NetworkTemplate;
 import android.net.TrafficStats;
 import android.net.netstats.provider.INetworkStatsProvider;
-import android.net.wifi.SupplicantState;
 import android.net.netstats.provider.INetworkStatsProviderCallback;
 import android.net.netstats.provider.NetworkStatsProvider;
 import android.net.wifi.WifiManager;
@@ -456,7 +455,7 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
                             NetworkInfo networkInfo = bundle.getParcelable(WifiManager.EXTRA_NETWORK_INFO);
                             isWifiConnected = networkInfo != null && networkInfo.isConnected();
                         }
-                        maybeRescheduleWifiAutoOff();
+                        reconfigureWiFiTimeoutListener();
                     }
                 }, wifiFilter
         );
@@ -468,23 +467,28 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
                     @Override
                     public void onChange(boolean selfChange) {
                         super.onChange(selfChange);
-                        maybeRescheduleWifiAutoOff();
+                        reconfigureWiFiTimeoutListener();
                     }
                 });
     }
 
     private static boolean isWifiConnected = false;
     private final AlarmManager.OnAlarmListener listener = this::turnOffWifi;
+
     private void turnOffWifi() {
         WifiManager wifiManager = (WifiManager) mContext.getSystemService(Context.WIFI_SERVICE);
-        if (isWifiAutoTurnOffEnabled(mContext) && wifiManager.isWifiEnabled()) {
+        if (isWifiTimeoutEnabled(mContext) && wifiManager.isWifiEnabled()) {
+            /*
+            setWifiEnabled(enabled) is deprecated, though AOSP
+            still uses it internally and system apps/service is exempted.
+            */
             wifiManager.setWifiEnabled(false);
         }
     }
 
-    private void maybeRescheduleWifiAutoOff() {
-        if (isWifiAutoTurnOffEnabled(mContext) && !isWifiConnected) {
-            final long timeout = SystemClock.elapsedRealtime() + timeout(mContext);
+    private void reconfigureWiFiTimeoutListener() {
+        if (isWifiTimeoutEnabled(mContext) && !isWifiConnected) {
+            final long timeout = SystemClock.elapsedRealtime() + wifiTimeoutDurationInMilli(mContext);
             mAlarmManager.cancel(listener);
             mAlarmManager.setExact(
                     AlarmManager.ELAPSED_REALTIME_WAKEUP,
@@ -498,14 +502,14 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
         }
     }
 
-    private static long timeout(Context mContext) {
+    private static long wifiTimeoutDurationInMilli(Context mContext) {
         return Settings.Global.getLong(mContext.getContentResolver(),
                 Global.WIFI_OFF_TIMEOUT, 0);
     }
 
     /** Zero is default and means disabled */
-    private static boolean isWifiAutoTurnOffEnabled(Context mContext) {
-        return 0 != timeout(mContext);
+    private static boolean isWifiTimeoutEnabled(Context mContext) {
+        return 0 != wifiTimeoutDurationInMilli(mContext);
     }
 
     /**
