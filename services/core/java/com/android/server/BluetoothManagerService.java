@@ -514,6 +514,16 @@ class BluetoothManagerService extends IBluetoothManager.Stub {
         }
         mSystemUiUid = systemUiUid;
 
+        /*
+        * System sends ACTION_STATE_CHANGED broadcast soon as any state changes.
+        * what it means in action is we don't have to take care
+        * if device reboot while BT has not been turned off automatically.
+        *
+        * A word of warning though it does not check if device as been unlocked or not
+        * what it means in real life is if you have sometime like tile ble tracker configured
+        * it will turn off BT. As result tile tracking will fail because of auto timeout.
+        *  this behaviour can be changed with UserManager.isUnlocked()
+        * */
         IntentFilter btFilter = new IntentFilter();
         btFilter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
         btFilter.addAction(BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED);
@@ -521,7 +531,7 @@ class BluetoothManagerService extends IBluetoothManager.Stub {
         context.registerReceiver(new BroadcastReceiver() {
             @Override
             public void onReceive(Context broadcastContext, Intent intent) {
-                listenForTimeout(context);
+                reconfigureBtTimeoutListener();
             }
         }, btFilter);
 
@@ -532,55 +542,51 @@ class BluetoothManagerService extends IBluetoothManager.Stub {
                     @Override
                     public void onChange(boolean selfChange) {
                         super.onChange(selfChange);
-                        listenForTimeout(context);
+                        reconfigureBtTimeoutListener();
                     }
                 });
     }
 
     private static final AlarmManager.OnAlarmListener listener = () -> {
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (isBtDisconnected() && bluetoothAdapter != null) {
+        if (isBtOnAndDisconnected() && bluetoothAdapter != null) {
             bluetoothAdapter.disable();
         }
     };
 
-    // IF device is still connected cancel timeout for now and wait for disconnected signal
-    private void listenForTimeout(Context context) {
-        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-        if (isTimeoutEnabled(context) && isBtDisconnected() && isBtTurnedOn()) {
-            final long timeout = SystemClock.elapsedRealtime() + timeout(context);
+    //If device is still connected cancel timeout for now and wait for disconnected signal
+    private void reconfigureBtTimeoutListener() {
+        AlarmManager alarmManager = (AlarmManager) mContext.getSystemService(Context.ALARM_SERVICE);
+        if (isTimeoutEnabled(mContext) && isBtOnAndDisconnected()) {
+            final long timeout = SystemClock.elapsedRealtime() + btTimeoutDurationInMilli(mContext);
             alarmManager.cancel(listener);
             alarmManager.setExact(
                     AlarmManager.ELAPSED_REALTIME_WAKEUP,
                     timeout,
                     "BT Idle Timeout",
                     listener,
-                    new Handler(context.getMainLooper())
+                    new Handler(mContext.getMainLooper())
             );
         } else {
             alarmManager.cancel(listener);
         }
     }
 
-    private static boolean isBtDisconnected() {
+    private static boolean isBtOnAndDisconnected() {
         BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        return bluetoothAdapter != null && bluetoothAdapter.getState() == BluetoothAdapter.STATE_ON &&
+        return bluetoothAdapter != null && bluetoothAdapter.getState() == BluetoothAdapter.STATE_ON
+                && bluetoothAdapter.getState() == BluetoothAdapter.STATE_ON &&
                 bluetoothAdapter.getConnectionState() == BluetoothAdapter.STATE_DISCONNECTED;
     }
 
-    private boolean isBtTurnedOn() {
-        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-        return bluetoothAdapter != null && bluetoothAdapter.getState() == BluetoothAdapter.STATE_ON;
-    }
-
-    private static long timeout(Context context) {
+    private static long btTimeoutDurationInMilli(Context context) {
         return Settings.Global.getLong(context.getContentResolver(),
                 Settings.Global.BLUETOOTH_OFF_TIMEOUT, 0);
     }
 
     /** Zero is default and means disabled */
     private static boolean isTimeoutEnabled(Context context) {
-        return 0 != timeout(context);
+        return 0 != btTimeoutDurationInMilli(context);
     }
 
     /**
