@@ -3542,6 +3542,11 @@
     <!-- Message of notification shown when serial console is enabled. [CHAR LIMIT=NONE] -->
     <string name="console_running_notification_message">Performance is impacted. To disable, check bootloader.</string>
 
+    <!-- Title of notification shown when bootloader debug policy is enabled. [CHAR LIMIT=NONE] -->
+    <string name="debug_policy_enabled_notification_title">Bootloader debug policy is enabled</string>
+    <!-- Message of notification shown when bootloader debug policy is enabled. [CHAR LIMIT=NONE] -->
+    <string name="debug_policy_enabled_notification_message">Device security may be affected.</string>
+
     <!-- Title of notification shown when contaminant is detected on the USB port. [CHAR LIMIT=NONE] -->
     <string name="usb_contaminant_detected_title">Liquid or debris in USB port</string>
     <!-- Message of notification shown when contaminant is detected on the USB port. [CHAR LIMIT=NONE] -->
