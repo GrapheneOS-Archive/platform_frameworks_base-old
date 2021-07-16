@@ -431,6 +431,7 @@ import libcore.util.EmptyArray;
 
 import java.io.File;
 import java.io.FileDescriptor;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -452,6 +453,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -5197,8 +5199,27 @@ public class ActivityManagerService extends IActivityManager.Stub
         t.traceEnd();
     }
 
+    private static boolean isUartEnabled() {
+        // console=null should be set in the kernel cmdline when UART is off
+        final String console_string = "console=null";
+        boolean isEnabled = false;
+        try (Scanner sc = new Scanner(new FileInputStream("/proc/cmdline"))) {
+            StringBuilder scOutput = new StringBuilder();
+            while (sc.hasNextLine()){
+                scOutput.append(sc.nextLine());
+            }
+            isEnabled = !scOutput.toString().contains(console_string);
+        } catch (IOException ignored) {}
+        // This check will only work on userdebug and eng builds due
+        // to the console service not being present on user builds.
+        if (SystemProperties.get("init.svc.console").equals("running")) {
+            isEnabled = true;
+        }
+        return isEnabled;
+    }
+
     private void showConsoleNotificationIfActive() {
-        if (!SystemProperties.get("init.svc.console").equals("running")) {
+        if (!isUartEnabled()) {
             return;
         }
         String title = mContext
