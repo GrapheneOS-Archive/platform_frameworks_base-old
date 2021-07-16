@@ -4768,6 +4768,8 @@ public class ActivityManagerService extends IActivityManager.Stub
         }
         // UART is on if init's console service is running, send a warning notification.
         showConsoleNotificationIfActive();
+        // Debug policy is on if androidboot.dp_info is set in kernel cmdline, send a warning notification.
+        showDebugPolicyNotificationIfActive();
 
         t.traceEnd();
     }
@@ -4789,6 +4791,54 @@ public class ActivityManagerService extends IActivityManager.Stub
             isEnabled = true;
         }
         return isEnabled;
+    }
+
+    private static Boolean isDebugPolicyEnabled()
+    {
+        // androidboot.dp_info_a or androidboot.dp_info_b should never be set in
+        // the kernel cmdline when debug policy is disabled.
+        final String debugpolicy_string = "androidboot.dp_info";
+        boolean isEnabled = false;
+        try (Scanner sc = new Scanner(new FileInputStream("/proc/cmdline"))) {
+            StringBuilder scOutput = new StringBuilder();
+            while(sc.hasNextLine()){
+                scOutput.append(sc.nextLine());
+            }
+            isEnabled = scOutput.toString().contains(debugpolicy_string);
+        } catch (IOException ignored) {
+        }
+
+        return isEnabled;
+    }
+
+    private void showDebugPolicyNotificationIfActive() {
+        if (!isDebugPolicyEnabled()) {
+            return;
+        }
+        String title = mContext
+                .getString(com.android.internal.R.string.debug_policy_enabled_notification_title);
+        String message = mContext
+                .getString(com.android.internal.R.string.debug_policy_enabled_notification_message);
+        Notification notification =
+                new Notification.Builder(mContext, SystemNotificationChannels.DEVELOPER)
+                        .setSmallIcon(com.android.internal.R.drawable.stat_sys_adb)
+                        .setWhen(0)
+                        .setOngoing(true)
+                        .setTicker(title)
+                        .setDefaults(0)  // please be quiet
+                        .setColor(mContext.getColor(
+                                com.android.internal.R.color
+                                        .system_notification_accent_color))
+                        .setContentTitle(title)
+                        .setContentText(message)
+                        .setVisibility(Notification.VISIBILITY_PUBLIC)
+                        .build();
+
+        NotificationManager notificationManager =
+                mContext.getSystemService(NotificationManager.class);
+        notificationManager.notifyAsUser(
+                null, SystemMessage.NOTE_DEBUG_POLICY_ENABLED, notification, UserHandle.ALL);
+
     }
 
     private void showConsoleNotificationIfActive() {
