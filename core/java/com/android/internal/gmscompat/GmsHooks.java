@@ -38,6 +38,7 @@ public final class GmsHooks {
 
     // Foreground service notifications
     private static final String FGS_CHANNEL_ID = "service_shim";
+    private static final int FGS_NOTIFICATION_ID = 529977835;
     private static boolean fgsChannelCreated = false;
 
     // Static only
@@ -77,12 +78,6 @@ public final class GmsHooks {
             return;
         }
 
-        // Shorten name for display
-        String serviceName = service.getClass().getName()
-                .replace("com.google.android.gms.", "c.g.a.g.")
-                .replace("com.google.android.", "c.g.a.")
-                .replace("com.google.", "c.g.");
-
         // Channel
         createFgsChannel(service);
         // Notification
@@ -90,12 +85,12 @@ public final class GmsHooks {
                 PendingIntent.FLAG_IMMUTABLE);
         Notification notification = new Notification.Builder(service, FGS_CHANNEL_ID)
                 .setSmallIcon(service.getApplicationInfo().icon)
-                .setContentTitle(serviceName)
+                .setContentTitle(service.getApplicationInfo().loadLabel(service.getPackageManager()))
                 .setContentIntent(pi)
                 .build();
 
         Log.d(TAG, "Posting notification for service: " + service.getClass().getName());
-        service.startForeground(serviceName.hashCode(), notification);
+        service.startForeground(FGS_NOTIFICATION_ID, notification);
     }
 
     // GMS tries to clean up its own notification channels periodically.
