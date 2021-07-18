@@ -26,6 +26,7 @@ import android.content.pm.IPackageManager;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
+import android.os.Binder;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.UserHandle;
@@ -133,10 +134,13 @@ public final class GmsCompat {
 
         // Fetch PackageInfo to get signing certificates
         PackageInfo pkg;
+        long token = Binder.clearCallingIdentity();
         try {
             pkg = pm.getPackageInfo(app.packageName, PackageManager.GET_SIGNING_CERTIFICATES, userId);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
+        } finally {
+            Binder.restoreCallingIdentity(token);
         }
 
         // Get all applicable certificates, even if GMS switches to multiple signing certificates
