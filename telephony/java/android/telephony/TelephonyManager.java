@@ -13321,6 +13321,10 @@ public class TelephonyManager {
     @RequiresPermission(android.Manifest.permission.READ_PRIVILEGED_PHONE_STATE)
     @SystemApi
     public boolean isIccLockEnabled() {
+        if (GmsCompat.isEnabled()) {
+            return false;
+        }
+
         try {
             ITelephony telephony = getITelephony();
             if (telephony != null) {
