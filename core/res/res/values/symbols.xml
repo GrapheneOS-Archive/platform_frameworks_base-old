@@ -3458,7 +3458,10 @@
   <java-symbol type="string" name="foreground_service_apps_in_background" />
   <java-symbol type="string" name="foreground_service_tap_for_details" />
   <java-symbol type="string" name="foreground_service_multiple_separator" />
-  <java-symbol type="string" name="foreground_service_gms_shim_category" />
+
+  <java-symbol type="string" name="foreground_service_gmscompat_group" />
+  <java-symbol type="string" name="foreground_service_gmscompat_channel" />
+  <java-symbol type="string" name="foreground_service_gmscompat_description" />
 
   <java-symbol type="bool" name="config_enableCredentialFactoryResetProtection" />
 
