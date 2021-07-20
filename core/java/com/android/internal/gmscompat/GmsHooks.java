@@ -21,6 +21,7 @@ import android.app.ActivityThread;
 import android.app.Application;
 import android.app.Notification;
 import android.app.NotificationChannel;
+import android.app.NotificationChannelGroup;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -38,6 +39,8 @@ import android.provider.Settings;
 import android.util.Log;
 import android.webkit.WebView;
 
+import com.android.internal.R;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -51,7 +54,8 @@ public final class GmsHooks {
     private static final String TAG = "GmsCompat/Hooks";
 
     // Foreground service notifications
-    private static final String FGS_CHANNEL_ID = "service_shim";
+    private static final String FGS_GROUP_ID = "gmscompat_fgs_group";
+    private static final String FGS_CHANNEL_ID = "gmscompat_fgs_channel";
     private static final int FGS_NOTIFICATION_ID = 529977835;
     private static boolean fgsChannelCreated = false;
 
@@ -77,10 +81,16 @@ public final class GmsHooks {
         NotificationManager notificationManager = (NotificationManager)
                 service.getSystemService(Context.NOTIFICATION_SERVICE);
 
-        CharSequence name = service.getText(
-                com.android.internal.R.string.foreground_service_gms_shim_category);
+        NotificationChannelGroup group = new NotificationChannelGroup(FGS_GROUP_ID,
+                service.getText(R.string.foreground_service_gmscompat_group));
+        notificationManager.createNotificationChannelGroup(group);
+
+        CharSequence name = service.getText(R.string.foreground_service_gmscompat_channel);
         NotificationChannel channel = new NotificationChannel(FGS_CHANNEL_ID, name,
                 NotificationManager.IMPORTANCE_LOW);
+        channel.setGroup(FGS_GROUP_ID);
+        channel.setDescription(service.getString(R.string.foreground_service_gmscompat_description));
+        channel.setShowBadge(false);
         notificationManager.createNotificationChannel(channel);
 
         fgsChannelCreated = true;
