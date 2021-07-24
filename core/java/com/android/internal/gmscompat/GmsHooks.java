@@ -81,6 +81,7 @@ public final class GmsHooks {
                 com.android.internal.R.string.foreground_service_gms_shim_category);
         NotificationChannel channel = new NotificationChannel(FGS_CHANNEL_ID, name,
                 NotificationManager.IMPORTANCE_LOW);
+        channel.setShowBadge(false);
         notificationManager.createNotificationChannel(channel);
 
         fgsChannelCreated = true;
