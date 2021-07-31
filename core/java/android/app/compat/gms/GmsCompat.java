@@ -66,12 +66,20 @@ public final class GmsCompat {
     @Disabled // Overridden as a special case in CompatChange
     private static final long GMS_UNPRIVILEGED_COMPAT = 1531297613045645771L;
 
+    /**
+     * Whether to enable hooks for this app to load Dynamite modules from unprivileged GMS.
+     * This is for CLIENT apps, not GMS itself.
+     */
+    @ChangeId
+    @Disabled // Overridden as a special case in CompatChange
+    private static final long GMS_UNPRIVILEGED_DYNAMITE_CLIENT = 7528921493777479941L;
+
     private static final boolean DEBUG_VERBOSE = false;
 
     // Static only
     private GmsCompat() { }
 
-    private static void logEnabled(boolean enabled) {
+    private static void logEnabled(String changeName, boolean enabled) {
         if (!DEBUG_VERBOSE) {
             return;
         }
@@ -81,11 +89,11 @@ public final class GmsCompat {
             pkg = (Process.myUid() == Process.SYSTEM_UID) ? "system_server" : "[unknown]";
         }
 
-        Log.d(TAG, "Enabled for " + pkg + " (" + Process.myPid() + "): " + enabled);
+        Log.d(TAG, changeName + " enabled for " + pkg + " (" + Process.myPid() + ") = " + enabled);
     }
 
-    public static boolean isEnabled() {
-        boolean enabled = Compatibility.isChangeEnabled(GMS_UNPRIVILEGED_COMPAT);
+    private static boolean isChangeEnabled(String changeName, long changeId) {
+        boolean enabled = Compatibility.isChangeEnabled(changeId);
 
         // Compatibility changes aren't available in the system process, but this should never be
         // enabled for it.
@@ -93,8 +101,17 @@ public final class GmsCompat {
             enabled = false;
         }
 
-        logEnabled(enabled);
+        logEnabled(changeName, enabled);
         return enabled;
+    }
+
+    public static boolean isEnabled() {
+        return isChangeEnabled("GMS_UNPRIVILEGED_COMPAT", GMS_UNPRIVILEGED_COMPAT);
+    }
+
+    /** @hide */
+    public static boolean isDynamiteClient() {
+        return isChangeEnabled("GMS_UNPRIVILEGED_DYNAMITE_CLIENT", GMS_UNPRIVILEGED_DYNAMITE_CLIENT);
     }
 
     /**
@@ -151,9 +168,32 @@ public final class GmsCompat {
         return isGmsApp(app.packageName, signatures, app.isPrivilegedApp());
     }
 
+    private static boolean isGmsInstalled(ApplicationInfo relatedApp) {
+        int userId = UserHandle.getUserId(relatedApp.uid);
+        IPackageManager pm = ActivityThread.getPackageManager();
+
+        ApplicationInfo gmsApp;
+        try {
+            gmsApp = pm.getApplicationInfo(GmsInfo.PACKAGE_GMS, 0, userId);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+
+        // Check signature to avoid breaking microG's implementation of Dynamite
+        return gmsApp != null && isGmsApp(gmsApp);
+    }
+
     /** @hide */
     // CompatChange#isEnabled(ApplicationInfo)
     public static boolean isChangeEnabled(CompatibilityChangeInfo change, ApplicationInfo app) {
-        return change.getId() == GMS_UNPRIVILEGED_COMPAT && isGmsApp(app);
+        if (change.getId() == GMS_UNPRIVILEGED_COMPAT) {
+            return isGmsApp(app);
+        } else if (change.getId() == GMS_UNPRIVILEGED_DYNAMITE_CLIENT) {
+            // Client apps can't be GMS itself, but GMS must be installed in the same user
+            return !(GmsInfo.PACKAGE_GMS.equals(app.packageName) && isGmsApp(app)) &&
+                    isGmsInstalled(app);
+        } else {
+            return false;
+        }
     }
 }
