@@ -34,6 +34,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.SharedLibraryInfo;
 import android.os.Build;
 import android.os.Process;
+import android.os.UserHandle;
 import android.os.UserManager;
 import android.provider.Settings;
 import android.util.Log;
@@ -239,5 +240,12 @@ public final class GmsHooks {
 
         // Don't dispatch it, otherwise Play Store abandons the session
         return true;
+    }
+
+    // Redirect cross-user interactions to current user
+    // ContextImpl#sendOrderedBroadcastAsUser
+    // ContextImpl#sendBroadcastAsUser
+    public static UserHandle getUserHandle(UserHandle user) {
+        return GmsCompat.isEnabled() ? Process.myUserHandle() : user;
     }
 }
