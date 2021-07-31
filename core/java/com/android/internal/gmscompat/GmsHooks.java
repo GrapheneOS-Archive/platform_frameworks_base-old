@@ -49,7 +49,7 @@ import java.util.List;
  * @hide
  */
 public final class GmsHooks {
-    private static final String TAG = "GmsHooks";
+    private static final String TAG = "GmsCompat/Hooks";
 
     // Foreground service notifications
     private static final String FGS_CHANNEL_ID = "service_shim";

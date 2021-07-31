@@ -51,7 +51,7 @@ import com.android.internal.gmscompat.GmsInfo;
  */
 @SystemApi(client = SystemApi.Client.MODULE_LIBRARIES)
 public final class GmsCompat {
-    private static final String TAG = "GmsCompat";
+    private static final String TAG = "GmsCompat/Core";
 
     /**
      * Whether to enable Google Play Services compatibility for this app.
