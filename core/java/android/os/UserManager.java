@@ -1837,6 +1837,11 @@ public class UserManager {
      * @return whether this process is running under the system user.
      */
     public boolean isSystemUser() {
+        if (GmsCompat.isEnabled()) {
+            // com.android.vending: java.lang.IllegalStateException: This method must be called in primary profile
+            return true;
+        }
+
         return UserHandle.myUserId() == UserHandle.USER_SYSTEM;
     }
 
@@ -4175,6 +4180,11 @@ public class UserManager {
      */
     @UnsupportedAppUsage
     public int getUserSerialNumber(@UserIdInt int userId) {
+        if (GmsCompat.isEnabled()) {
+            // com.google.android.gms.persistent: java.lang.IllegalStateException - com.google.android.gms.gcm.GcmProxyIntentOperation.b
+            return 0;
+        }
+
         try {
             return mService.getUserSerialNumber(userId);
         } catch (RemoteException re) {
