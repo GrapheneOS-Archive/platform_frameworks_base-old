@@ -4519,6 +4519,14 @@ public class TelephonyManager {
                          mContext.getAttributionTag());
         } catch (RemoteException ex) {
         } catch (NullPointerException ex) {
+        } catch (SecurityException ex) {
+            if (GmsCompat.isEnabled()) {
+                // Google Play Services settings -> Account services -> Google Pay -> Add a payment method
+                // com.google.android.gms: java.lang.SecurityException: getLine1NumberForDisplay: Neither user 1010142 nor current process has android.permission.READ_PHONE_STATE, android.permission.READ_SMS, or android.permission.READ_PHONE_NUMBERS
+                return null;
+            } else {
+                throw ex;
+            }
         }
         if (number != null) {
             return number;
