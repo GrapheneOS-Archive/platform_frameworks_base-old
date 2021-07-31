@@ -73,23 +73,23 @@ public final class GmsHooks {
         return context.startForegroundService(service);
     }
 
-    private static void createFgsChannel(Service service) {
+    private static void createFgsChannel(Context context) {
         if (fgsChannelCreated) {
             return;
         }
 
         NotificationManager notificationManager = (NotificationManager)
-                service.getSystemService(Context.NOTIFICATION_SERVICE);
+                context.getSystemService(Context.NOTIFICATION_SERVICE);
 
         NotificationChannelGroup group = new NotificationChannelGroup(FGS_GROUP_ID,
-                service.getText(R.string.foreground_service_gmscompat_group));
+                context.getText(R.string.foreground_service_gmscompat_group));
         notificationManager.createNotificationChannelGroup(group);
 
-        CharSequence name = service.getText(R.string.foreground_service_gmscompat_channel);
+        CharSequence name = context.getText(R.string.foreground_service_gmscompat_channel);
         NotificationChannel channel = new NotificationChannel(FGS_CHANNEL_ID, name,
                 NotificationManager.IMPORTANCE_LOW);
         channel.setGroup(FGS_GROUP_ID);
-        channel.setDescription(service.getString(R.string.foreground_service_gmscompat_description));
+        channel.setDescription(context.getString(R.string.foreground_service_gmscompat_channel_desc));
         channel.setShowBadge(false);
         notificationManager.createNotificationChannel(channel);
 
@@ -107,12 +107,19 @@ public final class GmsHooks {
 
         // Channel
         createFgsChannel(service);
+
+        // Intent: notification channel settings
+        Intent intent = new Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS);
+        intent.putExtra(Settings.EXTRA_APP_PACKAGE, service.getPackageName());
+        intent.putExtra(Settings.EXTRA_CHANNEL_ID, FGS_CHANNEL_ID);
+        PendingIntent pi = PendingIntent.getActivity(service, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+
         // Notification
-        PendingIntent pi = PendingIntent.getActivity(service, 100, new Intent(),
-                PendingIntent.FLAG_IMMUTABLE);
+        CharSequence appName = service.getApplicationInfo().loadLabel(service.getPackageManager());
         Notification notification = new Notification.Builder(service, FGS_CHANNEL_ID)
                 .setSmallIcon(service.getApplicationInfo().icon)
-                .setContentTitle(service.getApplicationInfo().loadLabel(service.getPackageManager()))
+                .setContentTitle(service.getString(R.string.app_running_notification_title, appName))
+                .setContentText(service.getText(R.string.foreground_service_gmscompat_notif_desc))
                 .setContentIntent(pi)
                 .build();
 
