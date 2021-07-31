@@ -26,6 +26,7 @@ import android.annotation.RequiresPermission;
 import android.annotation.SystemApi;
 import android.annotation.SystemService;
 import android.annotation.TestApi;
+import android.app.compat.gms.GmsCompat;
 import android.app.usage.UsageStatsManager;
 import android.compat.Compatibility;
 import android.compat.annotation.ChangeId;
@@ -7965,6 +7966,10 @@ public class AppOpsManager {
      */
     public int startOpNoThrow(int op, int uid, @NonNull String packageName,
             boolean startIfModeDefault, @Nullable String attributionTag, @Nullable String message) {
+        if (GmsCompat.isEnabled() && uid != Process.myUid()) {
+            return MODE_ALLOWED;
+        }
+
         try {
             collectNoteOpCallsForValidation(op);
             int collectionMode = getNotedOpCollectionMode(uid, packageName, op);
