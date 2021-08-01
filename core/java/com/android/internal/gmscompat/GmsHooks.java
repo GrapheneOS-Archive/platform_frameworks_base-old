@@ -41,6 +41,7 @@ import android.util.Log;
 import android.webkit.WebView;
 
 import com.android.internal.R;
+import com.android.internal.gmscompat.dynamite.GmsDynamiteHooks;
 
 import java.util.Collections;
 import java.util.List;
@@ -197,13 +198,19 @@ public final class GmsHooks {
     // directory is not supported. https://crbug.com/558377
     // Instrumentation#newApplication(ClassLoader, String, Context)
     public static void initApplicationBeforeOnCreate(Application app) {
-        if (!GmsCompat.isEnabled() || app == null) {
+        if (app == null) {
             return;
         }
 
-        String processName = Application.getProcessName();
-        if (!app.getPackageName().equals(processName)) {
-            WebView.setDataDirectorySuffix("process-shim--" + processName);
+        if (GmsCompat.isEnabled()) {
+            String processName = Application.getProcessName();
+            if (!app.getPackageName().equals(processName)) {
+                WebView.setDataDirectorySuffix("process-shim--" + processName);
+            }
+
+            GmsDynamiteHooks.initGmsServerApp(app);
+        } else if (GmsCompat.isDynamiteClient()) {
+            GmsDynamiteHooks.initClientApp();
         }
     }
 
