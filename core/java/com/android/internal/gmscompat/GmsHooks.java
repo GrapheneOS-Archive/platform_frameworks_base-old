@@ -198,10 +198,6 @@ public final class GmsHooks {
     // directory is not supported. https://crbug.com/558377
     // Instrumentation#newApplication(ClassLoader, String, Context)
     public static void initApplicationBeforeOnCreate(Application app) {
-        if (app == null) {
-            return;
-        }
-
         if (GmsCompat.isEnabled()) {
             String processName = Application.getProcessName();
             if (!app.getPackageName().equals(processName)) {
