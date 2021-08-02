@@ -52,6 +52,7 @@ import com.android.internal.gmscompat.GmsInfo;
 @SystemApi(client = SystemApi.Client.MODULE_LIBRARIES)
 public final class GmsCompat {
     private static final String TAG = "GmsCompat/Core";
+    private static final boolean DEBUG_VERBOSE = false;
 
     /**
      * Whether to enable Google Play Services compatibility for this app.
@@ -74,10 +75,21 @@ public final class GmsCompat {
     @Disabled // Overridden as a special case in CompatChange
     private static final long GMS_UNPRIVILEGED_DYNAMITE_CLIENT = 7528921493777479941L;
 
-    private static final boolean DEBUG_VERBOSE = false;
+    // Some hooks are in (potentially) hot paths, so cache the change enable states.
+    private static volatile boolean isGmsCompatEnabled = false;
+    private static volatile boolean isDynamiteClientEnabled = false;
 
     // Static only
     private GmsCompat() { }
+
+    public static boolean isEnabled() {
+        return isGmsCompatEnabled;
+    }
+
+    /** @hide */
+    public static boolean isDynamiteClient() {
+        return isDynamiteClientEnabled;
+    }
 
     private static void logEnabled(String changeName, boolean enabled) {
         if (!DEBUG_VERBOSE) {
@@ -105,13 +117,14 @@ public final class GmsCompat {
         return enabled;
     }
 
-    public static boolean isEnabled() {
-        return isChangeEnabled("GMS_UNPRIVILEGED_COMPAT", GMS_UNPRIVILEGED_COMPAT);
-    }
-
-    /** @hide */
-    public static boolean isDynamiteClient() {
-        return isChangeEnabled("GMS_UNPRIVILEGED_DYNAMITE_CLIENT", GMS_UNPRIVILEGED_DYNAMITE_CLIENT);
+    /**
+     * Must be called to initialize the compatibility change enable states before any hooks run.
+     *
+     * @hide
+     */
+    public static void initChangeEnableStates() {
+        isGmsCompatEnabled = isChangeEnabled("GMS_UNPRIVILEGED_COMPAT", GMS_UNPRIVILEGED_COMPAT);
+        isDynamiteClientEnabled = isChangeEnabled("GMS_UNPRIVILEGED_DYNAMITE_CLIENT", GMS_UNPRIVILEGED_DYNAMITE_CLIENT);
     }
 
     /**
