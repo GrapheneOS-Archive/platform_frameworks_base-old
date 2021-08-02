@@ -18,6 +18,7 @@ package com.android.internal.gmscompat.dynamite;
 
 import android.app.ActivityThread;
 import android.app.Application;
+import android.app.compat.gms.GmsCompat;
 import android.content.Context;
 import android.content.res.ApkAssets;
 import android.os.ParcelFileDescriptor;
@@ -49,8 +50,6 @@ import java.util.stream.Collectors;
  * @hide
  */
 public final class GmsDynamiteHooks {
-    // Some hooks can be considered hot paths, so cache the enabled state.
-    private static volatile boolean isClient = false;
     // Created lazily because most apps don't use Dynamite modules
     private static DynamiteContext clientContext = null;
 
@@ -67,8 +66,6 @@ public final class GmsDynamiteHooks {
     }
 
     public static void initClientApp() {
-        isClient = true;
-
         // Install hooks (requires libcore changes)
         DexPathList.postConstructorBufferHook = GmsDynamiteHooks::getDexPathListBuffers;
         File.lastModifiedHook = GmsDynamiteHooks::getFileLastModified;
@@ -89,7 +86,7 @@ public final class GmsDynamiteHooks {
     // For Android assets and resources
     // ApkAssets#loadFromPath(String, int)
     public static ApkAssets loadAssetsFromPath(String path, int flags) throws IOException {
-        if (!isClient) {
+        if (!GmsCompat.isDynamiteClient()) {
             return null;
         }
 
@@ -105,7 +102,7 @@ public final class GmsDynamiteHooks {
     // For Java code
     // DexPathList(ClassLoader, String, String, File, boolean)
     private static ByteBuffer[] getDexPathListBuffers(DexPathList pathList) {
-        if (!isClient) {
+        if (!GmsCompat.isDynamiteClient()) {
             return null;
         }
 
@@ -130,7 +127,7 @@ public final class GmsDynamiteHooks {
     // To fix false-positive "Module APK has been modified" check
     // File#lastModified()
     private static Long getFileLastModified(File file) {
-        if (!isClient) {
+        if (!GmsCompat.isDynamiteClient()) {
             return null;
         }
 
@@ -156,7 +153,7 @@ public final class GmsDynamiteHooks {
 
     // To start the module loading process and map native library paths to fd from remote
     public static String mapRemoteLibraryPaths(String librarySearchPath) {
-        if (!isClient || librarySearchPath == null) {
+        if (!GmsCompat.isDynamiteClient() || librarySearchPath == null) {
             return librarySearchPath;
         }
 
