@@ -70,8 +70,7 @@ public final class FileProxyService extends IFileProxyService.Stub {
             }
 
             // World-readable or world-executable, depending on type
-            boolean isDir = new File(nodePath).isDirectory();
-            int permBit = isDir ? OsConstants.S_IXOTH : OsConstants.S_IROTH;
+            int permBit = OsConstants.S_ISDIR(mode) ? OsConstants.S_IXOTH : OsConstants.S_IROTH;
             if ((mode & permBit) == 0) {
                 throw new SecurityException("Node " + nodePath + " in path " + rawPath + " is not world-readable");
             }
