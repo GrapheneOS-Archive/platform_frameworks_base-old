@@ -48,7 +48,8 @@ public final class FileProxyProvider extends BroadcastReceiver {
         }
 
         if (service == null) {
-            service = new FileProxyService(context);
+            // The service is a singleton, so use the application context to prevent memory leaks.
+            service = new FileProxyService(context.getApplicationContext());
         }
 
         Intent reply = new Intent(ACTION_RESPONSE);
