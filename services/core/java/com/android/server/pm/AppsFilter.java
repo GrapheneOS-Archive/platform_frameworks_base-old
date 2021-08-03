@@ -570,7 +570,8 @@ public class AppsFilter {
                         /* shared user that is already force queryable */
                         || newPkgSetting.forceQueryableOverride /* adb override */
                         || GmsCompat.isGmsApp(newPkg.getPackageName(),
-                            newPkg.getSigningDetails().signatures, newPkg.isPrivileged())
+                            newPkg.getSigningDetails().signatures, newPkg.isPrivileged(),
+                            newPkgSetting.sharedUser != null ? newPkgSetting.sharedUser.name : null)
                         || (newPkgSetting.isSystem() && (mSystemAppsQueryable
                         || newPkg.isForceQueryable()
                         || ArrayUtils.contains(mForceQueryableByDevicePackageNames,
