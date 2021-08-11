@@ -132,7 +132,7 @@ public class PermissionMonitor {
             for (String name : packages) {
                 int userId = UserHandle.getUserId(uid);
                 final PackageInfo app = getPackageInfo(name, userId);
-                if (app != null && app.requestedPermissions != null) {
+                if (app != null && app.requestedPermissions != null && app.applicationInfo.uid == uid) {
                     permission |= getNetdPermissionMask(app.requestedPermissions,
                           app.requestedPermissionsFlags);
                 }
@@ -177,44 +177,45 @@ public class PermissionMonitor {
         } else {
             loge("failed to get the PackageManagerInternal service");
         }
-        List<PackageInfo> apps = mPackageManager.getInstalledPackages(GET_PERMISSIONS
-                | MATCH_ANY_USER);
-        if (apps == null) {
-            loge("No apps");
-            return;
-        }
 
         SparseIntArray netdPermsUids = new SparseIntArray();
-
-        for (PackageInfo app : apps) {
-            int uid = app.applicationInfo != null ? app.applicationInfo.uid : INVALID_UID;
-            if (uid < 0) {
-                continue;
-            }
-            mAllApps.add(UserHandle.getAppId(uid));
-
-            boolean isNetwork = hasNetworkPermission(app);
-            boolean hasRestrictedPermission = hasRestrictedNetworkPermission(app);
-
-            if (isNetwork || hasRestrictedPermission) {
-                Boolean permission = mApps.get(uid);
-                // If multiple packages share a UID (cf: android:sharedUserId) and ask for different
-                // permissions, don't downgrade (i.e., if it's already SYSTEM, leave it as is).
-                if (permission == null || permission == NETWORK) {
-                    mApps.put(uid, hasRestrictedPermission);
-                }
-            }
-
-            //TODO: unify the management of the permissions into one codepath.
-            int otherNetdPerms = getNetdPermissionMask(app.requestedPermissions,
-                    app.requestedPermissionsFlags);
-            netdPermsUids.put(uid, netdPermsUids.get(uid) | otherNetdPerms);
-        }
 
         List<UserInfo> users = mUserManager.getUsers(true);  // exclude dying users
         if (users != null) {
             for (UserInfo user : users) {
                 mUsers.add(user.id);
+
+                List<PackageInfo> apps = mPackageManager.getInstalledPackagesAsUser(GET_PERMISSIONS, user.id);
+                if (apps == null) {
+                    loge("No apps");
+                    continue;
+                }
+
+                for (PackageInfo app : apps) {
+                    int uid = app.applicationInfo != null ? app.applicationInfo.uid : INVALID_UID;
+                    if (uid < 0) {
+                        continue;
+                    }
+                    mAllApps.add(UserHandle.getAppId(uid));
+
+                    boolean isNetwork = hasNetworkPermission(app);
+                    boolean hasRestrictedPermission = hasRestrictedNetworkPermission(app);
+
+                    if (isNetwork || hasRestrictedPermission) {
+                        Boolean permission = mApps.get(uid);
+                        // If multiple packages share a UID (cf: android:sharedUserId) and ask for different
+                        // permissions, don't downgrade (i.e., if it's already SYSTEM, leave it as is).
+                        if (permission == null || permission == NETWORK) {
+                            mApps.put(uid, hasRestrictedPermission);
+                        }
+                    }
+
+                    //TODO: unify the management of the permissions into one codepath.
+                    int otherNetdPerms = getNetdPermissionMask(app.requestedPermissions,
+                            app.requestedPermissionsFlags);
+                    netdPermsUids.put(uid, netdPermsUids.get(uid) | otherNetdPerms);
+                }
+
             }
         }
 
@@ -308,9 +309,23 @@ public class PermissionMonitor {
         List<Integer> network = new ArrayList<>();
         List<Integer> system = new ArrayList<>();
         for (Entry<Integer, Boolean> app : apps.entrySet()) {
-            List<Integer> list = app.getValue() ? system : network;
             for (int user : users) {
-                list.add(UserHandle.getUid(user, app.getKey()));
+                int uid = UserHandle.getUid(user, UserHandle.getAppId(app.getKey()));
+                if (uid < 0) continue;
+                String[] packages = mPackageManager.getPackagesForUid(uid);
+                if (packages == null) continue;
+                for (String pkg : packages) {
+                    PackageInfo info = getPackageInfo(pkg, user);
+                    if (info != null && info.applicationInfo.uid == uid) {
+                        boolean isNetwork = hasNetworkPermission(info);
+                        boolean hasRestrictedPermission = hasRestrictedNetworkPermission(info);
+
+                        if (isNetwork || hasRestrictedPermission) {
+                            List<Integer> list = hasRestrictedPermission ? system : network;
+                            list.add(UserHandle.getUid(user, app.getKey()));
+                        }
+                    }
+                }
             }
         }
         try {
