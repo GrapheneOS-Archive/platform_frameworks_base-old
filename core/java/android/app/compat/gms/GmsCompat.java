@@ -132,20 +132,15 @@ public final class GmsCompat {
      *
      * @hide
      */
-    public static boolean isGmsApp(String packageName, Signature[] signatures, boolean isPrivileged,
-            String sharedUserId) {
+    public static boolean isGmsApp(String packageName, Signature[] signatures, boolean isPrivileged) {
         // Privileged GMS doesn't need any compatibility changes
         if (isPrivileged) {
             return false;
         }
 
-        if (GmsInfo.PACKAGE_GMS.equals(packageName) || GmsInfo.PACKAGE_GSF.equals(packageName)) {
-            // Check the shared user ID to avoid affecting microG with a spoofed signature. This is a
-            // reliable indicator because apps can't change their shared user ID after shipping with it.
-            if (!GmsInfo.SHARED_USER_ID.equals(sharedUserId)) {
-                return false;
-            }
-        } else if (!GmsInfo.PACKAGE_PLAY_STORE.equals(packageName)) {
+        if (!GmsInfo.PACKAGE_GMS.equals(packageName) &&
+                !GmsInfo.PACKAGE_GSF.equals(packageName) &&
+                !GmsInfo.PACKAGE_PLAY_STORE.equals(packageName)) {
             return false;
         }
 
@@ -183,7 +178,7 @@ public final class GmsCompat {
         Signature[] signatures = pkg.signingInfo.hasMultipleSigners() ?
                 pkg.signingInfo.getApkContentsSigners() :
                 pkg.signingInfo.getSigningCertificateHistory();
-        return isGmsApp(app.packageName, signatures, app.isPrivilegedApp(), pkg.sharedUserId);
+        return isGmsApp(app.packageName, signatures, app.isPrivilegedApp());
     }
 
     private static boolean isGmsInstalled(ApplicationInfo relatedApp) {
