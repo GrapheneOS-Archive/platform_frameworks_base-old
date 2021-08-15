@@ -14463,7 +14463,7 @@ public final class Settings {
          *
          * @hide
          */
-        public static final String SETTINGS_REBOOT_AFTER_TIMEOUT = "settings_reboot_after_timeout";
+        public static final String SETTINGS_REBOOT_AFTER_TIMEOUT = "reboot_after_timeout";
     }
 
     /**

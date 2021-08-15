@@ -4882,6 +4882,13 @@ public class SettingsProvider extends ContentProvider {
                     currentVersion = 191;
                 }
 
+                public static final String OLD_TIMEOUT_STRING = "settings_reboot_after_timeout";
+                final long timeoutVal = Settings.Global.getLong(mContext.getContentResolver(), OLD_TIMEOUT_STRING, 0);
+                if (timeoutVal != 0) {
+                    Settings.Global.putLong(mContext.getContentResolver(), OLD_TIMEOUT_STRING, 0);
+                    Settings.Global.putLong(mContext.getContentResolver(), Settings.Global.SETTINGS_REBOOT_AFTER_TIMEOUT, timeoutVal);
+                }
+
                 // vXXX: Add new settings above this point.
 
                 if (currentVersion != newVersion) {
