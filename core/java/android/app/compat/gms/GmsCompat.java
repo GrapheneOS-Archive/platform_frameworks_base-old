@@ -108,8 +108,9 @@ public final class GmsCompat {
         boolean enabled = Compatibility.isChangeEnabled(changeId);
 
         // Compatibility changes aren't available in the system process, but this should never be
-        // enabled for it.
-        if (Process.myUid() == Process.SYSTEM_UID) {
+        // enabled for it or other core "android" system processes (such as the android:ui process
+        // used for chooser and resolver activities).
+        if (UserHandle.getAppId(Process.myUid()) == Process.SYSTEM_UID) {
             enabled = false;
         }
 
