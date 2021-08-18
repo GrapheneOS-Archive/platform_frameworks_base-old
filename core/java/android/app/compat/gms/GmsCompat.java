@@ -128,13 +128,23 @@ public final class GmsCompat {
         isDynamiteClientEnabled = isChangeEnabled("GMS_UNPRIVILEGED_DYNAMITE_CLIENT", GMS_UNPRIVILEGED_DYNAMITE_CLIENT);
     }
 
+    private static boolean validateCerts(Signature[] signatures) {
+        for (Signature signature : signatures) {
+            if (signature.toCharsString().equals(GmsInfo.SIGNING_CERT)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
      * Check whether the given app is unprivileged and part of the Google Play Services family.
      *
      * @hide
      */
-    public static boolean isGmsApp(String packageName, Signature[] signatures, boolean isPrivileged,
-            String sharedUserId) {
+    public static boolean isGmsApp(String packageName, Signature[] signatures,
+            Signature[] signatures2, boolean isPrivileged, String sharedUserId) {
         // Privileged GMS doesn't need any compatibility changes
         if (isPrivileged) {
             return false;
@@ -153,11 +163,13 @@ public final class GmsCompat {
         // Validate signature to avoid affecting apps like microG and Gcam Services Provider.
         // This isn't actually necessary from a security perspective because GMS doesn't get any
         // special privileges, but it's a failsafe to avoid unintentional compatibility issues.
-        boolean validCert = false;
-        for (Signature signature : signatures) {
-            if (signature.toCharsString().equals(GmsInfo.SIGNING_CERT)) {
-                validCert = true;
-            }
+        boolean validCert = validateCerts(signatures);
+
+        // Try past signing certificates if necessary. We iterate through two separate arrays here
+        // instead of concatenating them beforehand because this method gets called for every
+        // package on the system at boot, and thus needs to be efficient.
+        if (!validCert && signatures2 != null) {
+            validCert = validateCerts(signatures2);
         }
 
         return validCert;
@@ -184,7 +196,7 @@ public final class GmsCompat {
         Signature[] signatures = pkg.signingInfo.hasMultipleSigners() ?
                 pkg.signingInfo.getApkContentsSigners() :
                 pkg.signingInfo.getSigningCertificateHistory();
-        return isGmsApp(app.packageName, signatures, app.isPrivilegedApp(), pkg.sharedUserId);
+        return isGmsApp(app.packageName, signatures, null, app.isPrivilegedApp(), pkg.sharedUserId);
     }
 
     private static boolean isGmsInstalled(ApplicationInfo relatedApp) {
