@@ -565,13 +565,16 @@ public class AppsFilter {
             mQueriesViaComponentRequireRecompute = true;
         }
 
+        final boolean isGmsApp = GmsCompat.isGmsApp(newPkg.getPackageName(),
+                newPkg.getSigningDetails().signatures,
+                newPkg.getSigningDetails().pastSigningCertificates,
+                newPkg.isPrivileged(),
+                newPkgSetting.sharedUser != null ? newPkgSetting.sharedUser.name : null);
         final boolean newIsForceQueryable =
                 mForceQueryable.contains(newPkgSetting.appId)
                         /* shared user that is already force queryable */
                         || newPkgSetting.forceQueryableOverride /* adb override */
-                        || GmsCompat.isGmsApp(newPkg.getPackageName(),
-                            newPkg.getSigningDetails().signatures, newPkg.isPrivileged(),
-                            newPkgSetting.sharedUser != null ? newPkgSetting.sharedUser.name : null)
+                        || isGmsApp
                         || (newPkgSetting.isSystem() && (mSystemAppsQueryable
                         || newPkg.isForceQueryable()
                         || ArrayUtils.contains(mForceQueryableByDevicePackageNames,
