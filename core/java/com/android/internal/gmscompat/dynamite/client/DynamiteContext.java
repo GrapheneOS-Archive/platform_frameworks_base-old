@@ -21,6 +21,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
@@ -30,6 +31,8 @@ import android.util.Log;
 import com.android.internal.gmscompat.GmsInfo;
 import com.android.internal.gmscompat.dynamite.server.FileProxyProvider;
 import com.android.internal.gmscompat.dynamite.server.IFileProxyService;
+
+import java.io.File;
 
 /** @hide */
 public final class DynamiteContext {
@@ -53,10 +56,10 @@ public final class DynamiteContext {
     public DynamiteContext(Context context) {
         this.context = context;
 
-        // Use our own context and replace the package name to avoid ApkAssets recursion when
-        // lazy-creating a DynamiteContext in the ApkAssets hook
-        this.gmsDataPrefix = context.createDeviceProtectedStorageContext().getDataDir().getPath()
-                .replace(context.getPackageName(), GmsInfo.PACKAGE_GMS) + "/";
+        // Get data directory path without using package context or current data dir, since not all
+        // packages have data directories and package context causes recursion in ApkAssets
+        File userDe = Environment.getDataUserDeDirectory(null, context.getUserId());
+        gmsDataPrefix = userDe.getPath() + '/' + GmsInfo.PACKAGE_GMS + '/';
     }
 
     public ModuleLoadState getState() {
