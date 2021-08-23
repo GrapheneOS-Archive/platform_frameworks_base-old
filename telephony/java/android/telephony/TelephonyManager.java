@@ -6073,6 +6073,12 @@ public class TelephonyManager {
             android.Manifest.permission.MODIFY_PHONE_STATE})
     public void requestCellInfoUpdate(@NonNull WorkSource workSource,
             @NonNull @CallbackExecutor Executor executor, @NonNull CellInfoCallback callback) {
+        if (GmsCompat.isEnabled()) {
+            // attribute power consumption to Play services instead of blaming the app using it
+            requestCellInfoUpdate(executor, callback);
+            return;
+        }
+
         try {
             ITelephony telephony = getITelephony();
             if (telephony == null) return;
