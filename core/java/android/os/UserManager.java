@@ -2499,6 +2499,10 @@ public class UserManager {
             Manifest.permission.CREATE_USERS})
     public boolean hasBaseUserRestriction(@UserRestrictionKey @NonNull String restrictionKey,
             @NonNull UserHandle userHandle) {
+        if (GmsCompat.isEnabled()) {
+            // cannot ignore restrictions set by device policy
+            return hasUserRestriction(restrictionKey, userHandle);
+        }
         try {
             return mService.hasBaseUserRestriction(restrictionKey, userHandle.getIdentifier());
         } catch (RemoteException re) {
