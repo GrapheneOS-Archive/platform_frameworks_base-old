@@ -56,6 +56,7 @@ import android.os.SELinux;
 import android.os.SystemClock;
 import android.os.UserHandle;
 import android.os.UserManager;
+import android.provider.Settings;
 import android.util.EventLog;
 import android.util.Slog;
 import android.util.SparseBooleanArray;
@@ -977,7 +978,7 @@ public class FingerprintService extends BiometricServiceBase {
     protected int getLockoutMode() {
         final int currentUser = ActivityManager.getCurrentUser();
         final int failedAttempts = mFailedAttempts.get(currentUser, 0);
-        if (failedAttempts >= MAX_FAILED_ATTEMPTS_LOCKOUT_PERMANENT) {
+        if (failedAttempts >= Settings.Global.getInt(getContext().getContentResolver(), Settings.Global.MAX_BIOMETRIC_ATTEMPTS, MAX_FAILED_ATTEMPTS_LOCKOUT_PERMANENT)) {
             return AuthenticationClient.LOCKOUT_PERMANENT;
         } else if (failedAttempts > 0
                 && !mTimedLockoutCleared.get(currentUser, false)
