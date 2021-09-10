@@ -24,6 +24,7 @@ import android.annotation.RequiresPermission;
 import android.annotation.SdkConstant;
 import android.annotation.SdkConstant.SdkConstantType;
 import android.annotation.SystemService;
+import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.content.Context;
 import android.util.Log;
@@ -374,6 +375,10 @@ public class DropBoxManager {
      */
     @RequiresPermission(allOf = { READ_LOGS, PACKAGE_USAGE_STATS })
     public @Nullable Entry getNextEntry(String tag, long msec) {
+        if (GmsCompat.isEnabled()) {
+            return null;
+        }
+
         try {
             return mService.getNextEntry(tag, msec, mContext.getOpPackageName());
         } catch (SecurityException e) {
