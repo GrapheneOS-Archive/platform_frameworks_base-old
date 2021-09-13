@@ -2061,6 +2061,10 @@ public class TelephonyManager {
     @SuppressAutoDoc // No support for device / profile owner or carrier privileges (b/72967236).
     @RequiresPermission(android.Manifest.permission.READ_PRIVILEGED_PHONE_STATE)
     public String getImei(int slotIndex) {
+        if (GmsCompat.isEnabled()) {
+            return null;
+        }
+
         ITelephony telephony = getITelephony();
         if (telephony == null) return null;
 
