@@ -178,7 +178,7 @@ public final class GmsHooks {
     // Report no shared libraries
     // ApplicationPackageManager#getSharedLibrariesAsUser(int, int)
     public static List<SharedLibraryInfo> getSharedLibrariesAsUser() {
-        // TODO: Report standard Pixel libraries to fix GCam installation?
+        // TODO: Report standard Pixel libraries?
         return Collections.emptyList();
     }
 
