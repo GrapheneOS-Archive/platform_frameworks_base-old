@@ -173,8 +173,10 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.IPackageManager;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.pm.PackageManagerInternal;
 import android.content.pm.UserInfo;
 import android.content.res.Resources;
 import android.database.ContentObserver;
@@ -274,6 +276,7 @@ import com.android.server.LocalServices;
 import com.android.server.ServiceThread;
 import com.android.server.SystemConfig;
 import com.android.server.connectivity.MultipathPolicyTracker;
+import com.android.server.pm.permission.PermissionManagerServiceInternal;
 import com.android.server.usage.AppStandbyInternal;
 import com.android.server.usage.AppStandbyInternal.AppIdleStateChangeListener;
 
@@ -764,6 +767,15 @@ public class NetworkPolicyManagerService extends INetworkPolicyManager.Stub {
     public void bindConnectivityManager() {
         mConnManager = Objects.requireNonNull(mContext.getSystemService(ConnectivityManager.class),
                 "missing ConnectivityManager");
+
+        // Listen for permission changes and forward to ConnectivityService
+        PermissionManagerServiceInternal pm = LocalServices.getService(
+                PermissionManagerServiceInternal.class);
+        PackageManagerInternal pmi = LocalServices.getService(PackageManagerInternal.class);
+        pm.addOnRuntimePermissionStateChangedListener((packageName, userId) -> {
+            int uid = pmi.getPackageUid(packageName, PackageManager.GET_PERMISSIONS, userId);
+            mConnManager.onPackagePermissionChanged(uid);
+        });
     }
 
     @GuardedBy("mUidRulesFirstLock")
