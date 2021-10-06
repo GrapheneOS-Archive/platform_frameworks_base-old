@@ -54,6 +54,7 @@ import com.android.systemui.qs.tileimpl.QSTileImpl;
 import com.android.systemui.qs.tiles.dialog.bluetooth.BluetoothTileDialogViewModel;
 import com.android.systemui.res.R;
 import com.android.systemui.statusbar.policy.BluetoothController;
+import com.android.systemui.statusbar.policy.KeyguardStateController;
 
 import java.util.List;
 import java.util.concurrent.Executor;
@@ -61,7 +62,7 @@ import java.util.concurrent.Executor;
 import javax.inject.Inject;
 
 /** Quick settings tile: Bluetooth **/
-public class BluetoothTile extends QSTileImpl<BooleanState> {
+public class BluetoothTile extends SecureQSTile<BooleanState> {
 
     public static final String TILE_SPEC = "bt";
 
@@ -92,10 +93,11 @@ public class BluetoothTile extends QSTileImpl<BooleanState> {
             QSLogger qsLogger,
             BluetoothController bluetoothController,
             FeatureFlags featureFlags,
-            BluetoothTileDialogViewModel dialogViewModel
+            BluetoothTileDialogViewModel dialogViewModel,
+            KeyguardStateController keyguardStateController
     ) {
         super(host, uiEventLogger, backgroundLooper, mainHandler, falsingManager, metricsLogger,
-                statusBarStateController, activityStarter, qsLogger);
+                statusBarStateController, activityStarter, qsLogger, keyguardStateController);
         mController = bluetoothController;
         mController.observe(getLifecycle(), mCallback);
         mExecutor = new HandlerExecutor(mainHandler);
@@ -109,7 +111,11 @@ public class BluetoothTile extends QSTileImpl<BooleanState> {
     }
 
     @Override
-    protected void handleClick(@Nullable View view) {
+    protected void handleClick(@Nullable View view, boolean keyguardShowing) {
+        if (checkKeyguard(view, keyguardShowing)) {
+            return;
+        }
+
         if (mFeatureFlags.isEnabled(Flags.BLUETOOTH_QS_TILE_DIALOG)) {
             mDialogViewModel.showDialog(mContext, view);
         } else {
