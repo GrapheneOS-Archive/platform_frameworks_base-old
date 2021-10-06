@@ -52,6 +52,7 @@ import com.android.systemui.qs.QSHost;
 import com.android.systemui.qs.logging.QSLogger;
 import com.android.systemui.qs.tileimpl.QSIconViewImpl;
 import com.android.systemui.qs.tileimpl.QSTileImpl;
+import com.android.systemui.statusbar.policy.KeyguardStateController;
 import com.android.systemui.statusbar.policy.NetworkController;
 import com.android.systemui.statusbar.policy.NetworkController.AccessPointController;
 import com.android.systemui.statusbar.policy.NetworkController.SignalCallback;
@@ -64,7 +65,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 /** Quick settings tile: Wifi **/
-public class WifiTile extends QSTileImpl<SignalState> {
+public class WifiTile extends SecureQSTile<SignalState> {
     private static final Intent WIFI_SETTINGS = new Intent(Settings.ACTION_WIFI_SETTINGS);
 
     protected final NetworkController mController;
@@ -86,10 +87,11 @@ public class WifiTile extends QSTileImpl<SignalState> {
             ActivityStarter activityStarter,
             QSLogger qsLogger,
             NetworkController networkController,
-            AccessPointController accessPointController
+            AccessPointController accessPointController,
+            KeyguardStateController keyguardStateController
     ) {
         super(host, backgroundLooper, mainHandler, falsingManager, metricsLogger,
-                statusBarStateController, activityStarter, qsLogger);
+                statusBarStateController, activityStarter, qsLogger, keyguardStateController);
         mController = networkController;
         mWifiController = accessPointController;
         mDetailAdapter = (WifiDetailAdapter) createDetailAdapter();
@@ -132,7 +134,11 @@ public class WifiTile extends QSTileImpl<SignalState> {
     }
 
     @Override
-    protected void handleClick(@Nullable View view) {
+    protected void handleClick(@Nullable View view, boolean keyguardShowing) {
+        if (checkKeyguard(view, keyguardShowing)) {
+            return;
+        }
+
         // Secondary clicks are header clicks, just toggle.
         mState.copyTo(mStateBeforeClick);
         boolean wifiEnabled = mState.value;
