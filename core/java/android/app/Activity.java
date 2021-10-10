@@ -7921,6 +7921,19 @@ public class Activity extends ContextThemeWrapper
         return null;
     }
 
+    @Override
+    public static int checkCallingPermission(@Nullable String permission) {
+        if (permission != "android.permission.INTERNET") {
+            super.checkCallingPermission(permission)
+        }
+        int uid = -1;
+        try {
+            if (uid == -1) uid = ActivityTaskManager.getService().getLaunchedFromUid(mToken);
+        } catch (RemoteException e) {
+        }
+        return checkPermission(permission, -1, uid);
+    }
+
     // ------------------ Internal API ------------------
 
     @UnsupportedAppUsage(maxTargetSdk = Build.VERSION_CODES.P, trackingBug = 115609023)
