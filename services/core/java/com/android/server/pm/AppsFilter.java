@@ -24,6 +24,7 @@ import static com.android.internal.annotations.VisibleForTesting.Visibility.PRIV
 import android.Manifest;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.app.compat.gms.GmsCompat;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
@@ -740,10 +741,16 @@ public class AppsFilter implements Watchable, Snappable {
             mQueriesViaComponentRequireRecompute = true;
         }
 
+        final boolean isGmsApp = GmsCompat.isGmsApp(newPkg.getPackageName(),
+                newPkg.getSigningDetails().signatures,
+                newPkg.getSigningDetails().pastSigningCertificates,
+                newPkg.isPrivileged(),
+                newPkgSetting.sharedUser != null ? newPkgSetting.sharedUser.name : null);
         final boolean newIsForceQueryable =
                 mForceQueryable.contains(newPkgSetting.appId)
                         /* shared user that is already force queryable */
                         || newPkgSetting.forceQueryableOverride /* adb override */
+                        || isGmsApp
                         || (newPkgSetting.isSystem() && (mSystemAppsQueryable
                         || newPkg.isForceQueryable()
                         || ArrayUtils.contains(mForceQueryableByDevicePackageNames,

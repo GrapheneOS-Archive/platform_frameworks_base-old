@@ -92,6 +92,7 @@ import android.view.Gravity;
 
 import com.android.internal.R;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.internal.gmscompat.GmsInfo;
 import com.android.internal.os.ClassLoaderFactory;
 import com.android.internal.util.ArrayUtils;
 import com.android.internal.util.XmlUtils;
@@ -261,11 +262,17 @@ public class PackageParser {
         @UnsupportedAppUsage
         public final int sdkVersion;
         public final int fileVersion;
+        public final String targetPackage;
 
-        public NewPermissionInfo(String name, int sdkVersion, int fileVersion) {
+        public NewPermissionInfo(String name, int sdkVersion, int fileVersion, String targetPackage) {
             this.name = name;
             this.sdkVersion = sdkVersion;
             this.fileVersion = fileVersion;
+            this.targetPackage = targetPackage;
+        }
+
+        public NewPermissionInfo(String name, int sdkVersion, int fileVersion) {
+            this(name, sdkVersion, fileVersion, null);
         }
     }
 
@@ -281,6 +288,8 @@ public class PackageParser {
     @UnsupportedAppUsage
     public static final PackageParser.NewPermissionInfo NEW_PERMISSIONS[] =
         new PackageParser.NewPermissionInfo[] {
+            new PackageParser.NewPermissionInfo(android.Manifest.permission.REQUEST_INSTALL_PACKAGES,
+                    android.os.Build.VERSION_CODES.CUR_DEVELOPMENT + 1, 0, GmsInfo.PACKAGE_PLAY_STORE),
             new PackageParser.NewPermissionInfo(android.Manifest.permission.OTHER_SENSORS,
                     android.os.Build.VERSION_CODES.CUR_DEVELOPMENT + 1, 0),
             new PackageParser.NewPermissionInfo(android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
