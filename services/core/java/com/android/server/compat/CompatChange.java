@@ -22,6 +22,7 @@ import static android.app.compat.PackageOverride.VALUE_UNDEFINED;
 
 import android.annotation.Nullable;
 import android.app.compat.PackageOverride;
+import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.ChangeId;
 import android.compat.annotation.Disabled;
 import android.compat.annotation.EnabledSince;
@@ -246,6 +247,9 @@ public final class CompatChange extends CompatibilityChangeInfo {
         }
         if (mEvaluatedOverrides.containsKey(app.packageName)) {
             return mEvaluatedOverrides.get(app.packageName);
+        }
+        if (GmsCompat.isChangeEnabled(this, app)) {
+            return true;
         }
         if (getDisabled()) {
             return false;
