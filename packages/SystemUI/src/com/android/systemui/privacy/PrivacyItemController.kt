@@ -63,7 +63,7 @@ class PrivacyItemController @Inject constructor(
     val micCameraAvailable
         get() = privacyConfig.micCameraAvailable
     val locationAvailable
-        get() = privacyConfig.locationAvailable
+        get() = true
     val allIndicatorsAvailable
         get() = micCameraAvailable && locationAvailable && privacyConfig.mediaProjectionAvailable
 
