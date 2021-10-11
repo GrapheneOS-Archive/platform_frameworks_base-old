@@ -764,6 +764,20 @@
     <string name="foreground_service_multiple_separator"><xliff:g id="left_side">%1$s</xliff:g>,
         <xliff:g id="right_side">%2$s</xliff:g></string>
 
+    <!-- Name for foreground service notification channel group created by GmsCompat  -->
+    <string name="foreground_service_gmscompat_group">Compatibility</string>
+
+    <!-- Name for foreground service notification channel created by GmsCompat  -->
+    <string name="foreground_service_gmscompat_channel">Services</string>
+
+    <!-- Description for foreground service notification channel created by GmsCompat  -->
+    <string name="foreground_service_gmscompat_channel_desc">These notifications are created by the
+        Google Play Services compatibility layer in order to keep services running in the
+        background.\n\nDisable this category to hide the unnecessary notifications.</string>
+
+    <!-- Description for foreground service notifications created by GmsCompat  -->
+    <string name="foreground_service_gmscompat_notif_desc">Tap to hide</string>
+
     <!-- Displayed to the user to tell them that they have started up the phone in "safe mode" -->
     <string name="safeMode">Safe mode</string>
 
