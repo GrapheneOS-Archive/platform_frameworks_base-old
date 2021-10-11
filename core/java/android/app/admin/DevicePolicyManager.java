@@ -40,6 +40,7 @@ import android.app.Activity;
 import android.app.IServiceConnection;
 import android.app.KeyguardManager;
 import android.app.admin.SecurityLog.SecurityEvent;
+import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.content.ComponentName;
 import android.content.Context;
@@ -7879,6 +7880,10 @@ public class DevicePolicyManager {
             android.Manifest.permission.MANAGE_PROFILE_AND_DEVICE_OWNERS,
     })
     public ComponentName getDeviceOwnerComponentOnAnyUser() {
+        if (GmsCompat.isEnabled()) {
+            return null;
+        }
+
         return getDeviceOwnerComponentInner(/* callingUserOnly =*/ false);
     }
 
@@ -8013,6 +8018,10 @@ public class DevicePolicyManager {
     @SystemApi
     @RequiresPermission(android.Manifest.permission.MANAGE_USERS)
     public String getDeviceOwnerNameOnAnyUser() {
+        if (GmsCompat.isEnabled()) {
+            return null;
+        }
+
         throwIfParentInstance("getDeviceOwnerNameOnAnyUser");
         if (mService != null) {
             try {
@@ -8403,6 +8412,10 @@ public class DevicePolicyManager {
     @SystemApi
     @RequiresPermission(android.Manifest.permission.MANAGE_USERS)
     public @Nullable String getProfileOwnerNameAsUser(int userId) throws IllegalArgumentException {
+        if (GmsCompat.isEnabled()) {
+            return null;
+        }
+
         throwIfParentInstance("getProfileOwnerNameAsUser");
         if (mService != null) {
             try {
@@ -12100,6 +12113,10 @@ public class DevicePolicyManager {
     @SystemApi
     @RequiresPermission(android.Manifest.permission.MANAGE_USERS)
     public boolean isDeviceProvisioned() {
+        if (GmsCompat.isEnabled()) {
+            return true;
+        }
+
         try {
             return mService.isDeviceProvisioned();
         } catch (RemoteException re) {
