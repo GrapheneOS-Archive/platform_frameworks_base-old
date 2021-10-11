@@ -37,6 +37,7 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.PropertyInvalidatedCache;
 import android.app.admin.DevicePolicyManager;
+import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.content.ComponentName;
 import android.content.Context;
@@ -58,6 +59,7 @@ import android.util.ArraySet;
 import android.view.WindowManager.LayoutParams;
 
 import com.android.internal.R;
+import com.android.internal.gmscompat.GmsHooks;
 import com.android.internal.os.RoSystemProperties;
 import com.android.internal.util.FrameworkStatsLog;
 
@@ -1970,6 +1972,11 @@ public class UserManager {
      * @return whether this process is running under the system user.
      */
     public boolean isSystemUser() {
+        if (GmsCompat.isEnabled()) {
+            // com.android.vending: java.lang.IllegalStateException: This method must be called in primary profile
+            return true;
+        }
+
         return UserHandle.myUserId() == UserHandle.USER_SYSTEM;
     }
 
@@ -2198,6 +2205,10 @@ public class UserManager {
     @RequiresPermission(anyOf = {Manifest.permission.MANAGE_USERS,
             Manifest.permission.CREATE_USERS})
     public boolean isGuestUser(@UserIdInt int userId) {
+        if (GmsCompat.isEnabled()) {
+            return false;
+        }
+
         UserInfo user = getUserInfo(userId);
         return user != null && user.isGuest();
     }
@@ -2212,6 +2223,10 @@ public class UserManager {
     @RequiresPermission(anyOf = {Manifest.permission.MANAGE_USERS,
             Manifest.permission.CREATE_USERS})
     public boolean isGuestUser() {
+        if (GmsCompat.isEnabled()) {
+            return false;
+        }
+
         UserInfo user = getUserInfo(UserHandle.myUserId());
         return user != null && user.isGuest();
     }
@@ -2691,6 +2706,11 @@ public class UserManager {
             Manifest.permission.CREATE_USERS})
     public boolean hasBaseUserRestriction(@UserRestrictionKey @NonNull String restrictionKey,
             @NonNull UserHandle userHandle) {
+        if (GmsCompat.isEnabled()) {
+            // Can't ignore device policy restrictions without permission
+            return hasUserRestriction(restrictionKey, userHandle);
+        }
+
         try {
             return mService.hasBaseUserRestriction(restrictionKey, userHandle.getIdentifier());
         } catch (RemoteException re) {
@@ -3408,6 +3428,10 @@ public class UserManager {
             android.Manifest.permission.CREATE_USERS
     })
     public int getUserCount() {
+        if (GmsCompat.isEnabled()) {
+            return 1;
+        }
+
         List<UserInfo> users = getUsers();
         return users != null ? users.size() : 1;
     }
@@ -3530,6 +3554,10 @@ public class UserManager {
             android.Manifest.permission.CREATE_USERS
     })
     public long[] getSerialNumbersOfUsers(boolean excludeDying) {
+        if (GmsCompat.isEnabled()) {
+            return GmsHooks.getSerialNumbersOfUsers(this);
+        }
+
         List<UserInfo> users = getUsers(/* excludePartial= */ true, excludeDying,
                 /* excludePreCreated= */ true);
         long[] result = new long[users.size()];
@@ -3857,6 +3885,10 @@ public class UserManager {
             android.Manifest.permission.INTERACT_ACROSS_USERS
     })
     public UserInfo getProfileParent(@UserIdInt int userId) {
+        if (GmsCompat.isEnabled()) {
+            return null;
+        }
+
         try {
             return mService.getProfileParent(userId);
         } catch (RemoteException re) {
@@ -3879,6 +3911,10 @@ public class UserManager {
             android.Manifest.permission.INTERACT_ACROSS_USERS
     })
     public @Nullable UserHandle getProfileParent(@NonNull UserHandle user) {
+        if (GmsCompat.isEnabled()) {
+            return null;
+        }
+
         UserInfo info = getProfileParent(user.getIdentifier());
 
         if (info == null) {
@@ -4496,6 +4532,11 @@ public class UserManager {
      */
     @UnsupportedAppUsage
     public int getUserSerialNumber(@UserIdInt int userId) {
+        if (GmsCompat.isEnabled()) {
+            // com.google.android.gms.persistent: java.lang.IllegalStateException - com.google.android.gms.gcm.GcmProxyIntentOperation.b
+            return 0;
+        }
+
         try {
             return mService.getUserSerialNumber(userId);
         } catch (RemoteException re) {
