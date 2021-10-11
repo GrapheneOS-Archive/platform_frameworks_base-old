@@ -5776,7 +5776,7 @@
     <!-- @hide @SystemApi Allows a logical component within an application to
          temporarily renounce a set of otherwise granted permissions. -->
     <permission android:name="android.permission.RENOUNCE_PERMISSIONS"
-                android:protectionLevel="signature|privileged" />
+                android:protectionLevel="normal" />
 
     <!-- Allows an application to read nearby streaming policy. The policy allows the device
          to stream its notifications and apps to nearby devices.

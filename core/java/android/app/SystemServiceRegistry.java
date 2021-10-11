@@ -26,6 +26,7 @@ import android.app.admin.DevicePolicyManager;
 import android.app.admin.IDevicePolicyManager;
 import android.app.appsearch.AppSearchManagerFrameworkInitializer;
 import android.app.blob.BlobStoreManagerFrameworkInitializer;
+import android.app.compat.gms.GmsCompat;
 import android.app.contentsuggestions.ContentSuggestionsManager;
 import android.app.contentsuggestions.IContentSuggestionsManager;
 import android.app.job.JobSchedulerFrameworkInitializer;
@@ -1404,6 +1405,10 @@ public final class SystemServiceRegistry {
                     @Override
                     public AppIntegrityManager createService(ContextImpl ctx)
                             throws ServiceNotFoundException {
+                        if (GmsCompat.isEnabled()) {
+                            return new AppIntegrityManager(null);
+                        }
+
                         IBinder b = ServiceManager.getServiceOrThrow(Context.APP_INTEGRITY_SERVICE);
                         return new AppIntegrityManager(IAppIntegrityManager.Stub.asInterface(b));
                     }});

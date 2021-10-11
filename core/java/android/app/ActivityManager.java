@@ -32,6 +32,7 @@ import android.annotation.SystemApi;
 import android.annotation.SystemService;
 import android.annotation.TestApi;
 import android.annotation.UserIdInt;
+import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.ChangeId;
 import android.compat.annotation.EnabledSince;
 import android.compat.annotation.UnsupportedAppUsage;
@@ -83,6 +84,7 @@ import android.window.TaskSnapshot;
 
 import com.android.internal.app.LocalePicker;
 import com.android.internal.app.procstats.ProcessStats;
+import com.android.internal.gmscompat.GmsHooks;
 import com.android.internal.os.RoSystemProperties;
 import com.android.internal.os.TransferPipe;
 import com.android.internal.util.FastPrintWriter;
@@ -4032,6 +4034,10 @@ public class ActivityManager {
             "android.permission.INTERACT_ACROSS_USERS_FULL"
     })
     public static int getCurrentUser() {
+        if (GmsCompat.isEnabled()) {
+            return GmsHooks.getCurrentUser();
+        }
+
         try {
             return getService().getCurrentUserId();
         } catch (RemoteException e) {
