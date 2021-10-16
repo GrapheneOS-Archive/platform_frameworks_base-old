@@ -621,6 +621,10 @@ public final class DeviceConfig {
     @SystemApi
     @RequiresPermission(READ_DEVICE_CONFIG)
     public static String getProperty(@NonNull String namespace, @NonNull String name) {
+        if (GmsCompat.isEnabled()) {
+            return null;
+        }
+
         // Fetch all properties for the namespace at once and cache them in the local process, so we
         // incur the cost of the IPC less often. Lookups happen much more frequently than updates,
         // and we want to optimize the former.
