@@ -286,6 +286,9 @@
 
     <uses-permission android:name="android.permission.READ_PEOPLE_DATA" />
 
+    <!-- Permission to allow rebooting the device after a user configurable amount of time -->
+    <uses-permission android:name="android.permission.REBOOT" />
+
     <protected-broadcast android:name="com.android.settingslib.action.REGISTER_SLICE_RECEIVER" />
     <protected-broadcast android:name="com.android.settingslib.action.UNREGISTER_SLICE_RECEIVER" />
     <protected-broadcast android:name="com.android.settings.flashlight.action.FLASHLIGHT_CHANGED" />
