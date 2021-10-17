@@ -16174,6 +16174,13 @@ public final class Settings {
          * @hide
          */
         public static final String RESTRICTED_NETWORKING_MODE = "restricted_networking_mode";
+
+        /**
+         * Whether to automatically reboot the device after a user defined timeout
+         *
+         * @hide
+         */
+        public static final String SETTINGS_REBOOT_AFTER_TIMEOUT = "settings_reboot_after_timeout";
     }
 
     /**
