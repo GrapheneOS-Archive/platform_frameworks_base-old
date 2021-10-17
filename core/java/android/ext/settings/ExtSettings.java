@@ -15,6 +15,9 @@ public class ExtSettings {
     public static final BoolSetting AUTO_GRANT_OTHER_SENSORS_PERMISSION = new BoolSetting(
             Setting.Scope.PER_USER, "auto_grant_OTHER_SENSORS_perm", true);
 
+    public static final IntSetting AUTO_REBOOT_TIMEOUT = new IntSetting(
+            Setting.Scope.GLOBAL, "settings_reboot_after_timeout", 0);
+
     private ExtSettings() {}
 
     // used for making settings defined in this class unreadable by third-party apps
