@@ -5224,6 +5224,18 @@ public class SettingsProvider extends ContentProvider {
                                 true /* makeDefault */,
                                 SettingsState.SYSTEM_PACKAGE_NAME);
                     }
+                    // Migrate legacy fingerprint keyguard toggle to new unified
+                    // biometric api toggle
+                    final Setting oldFingerSetting = secureSettings.getSettingLocked("fingerprint_unlock_keyguard_enabled");
+                    if (!oldFingerSetting.isNull()) {
+                        secureSettings.insertSettingLocked(
+                                Secure.BIOMETRIC_KEYGUARD_ENABLED,
+                                oldFingerSetting.getValue(),
+                                null,
+                                false,
+                                SettingsState.SYSTEM_PACKAGE_NAME);
+                        secureSettings.deleteSettingLocked("fingerprint_unlock_keyguard_enabled");
+                    }
                     currentVersion = 204;
                 }
 
