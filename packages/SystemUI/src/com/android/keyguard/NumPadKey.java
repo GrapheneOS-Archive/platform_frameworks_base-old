@@ -117,12 +117,14 @@ public class NumPadKey extends ViewGroup {
         mKlondikeText = (TextView) findViewById(R.id.klondike_text);
 
         updateText();
-        a = context.obtainStyledAttributes(attrs, android.R.styleable.View);
-        if (!a.hasValueOrEmpty(android.R.styleable.View_background)) {
-            setBackground(mContext.getDrawable(R.drawable.ripple_drawable_pin));
+
+        Drawable background = getBackground();
+        if (background instanceof RippleDrawable) {
+            mAnimator = new NumPadAnimator(context, (RippleDrawable) background,
+                    R.style.NumPadKey);
+        } else {
+            mAnimator = null;
         }
-        a.recycle();
-        setContentDescription(mDigitText.getText().toString());
     }
 
     private void updateText() {
@@ -143,6 +145,12 @@ public class NumPadKey extends ViewGroup {
                 }
             }
         }
+	setContentDescription(mDigitText.getText().toString());
+    }
+
+    public void setDigit(int digit) {
+        mDigit = digit;
+        updateText();
     }
 
     @Override
@@ -162,10 +170,6 @@ public class NumPadKey extends ViewGroup {
         mKlondikeText.setTextColor(klondikeColor);
 
         if (mAnimator != null) mAnimator.reloadColors(getContext());
-    }
-    public void setDigit(int digit) {
-        mDigit = digit;
-        updateText();
     }
 
     @Override
