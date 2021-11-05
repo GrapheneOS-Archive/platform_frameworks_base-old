@@ -642,7 +642,7 @@
 
     <!-- package name of a built-in camera app to use to restrict implicit intent resolution
          when the double-press power gesture is used. Ignored if empty. -->
-    <string translatable="false" name="config_cameraGesturePackage"></string>
+    <string translatable="false" name="config_cameraGesturePackage">app.grapheneos.camera</string>
 
     <!-- Determines whether to allow the nav bar handle to be forced to be opaque. -->
     <bool name="allow_force_nav_bar_handle_opaque">true</bool>
