@@ -8782,7 +8782,7 @@ public class AppOpsManager {
             boolean startIfModeDefault, @Nullable String attributionTag, @Nullable String message,
             @AttributionFlags int attributionFlags, int attributionChainId) {
         if (GmsCompat.isEnabled() && uid != Process.myUid()) {
-            return noteProxyOpNoThrow(op, packageName, uid, attributionTag, message);
+            return startProxyOpNoThrow(opToPublicName(op), uid, packageName, attributionTag, message);
         }
 
         try {
@@ -9009,6 +9009,7 @@ public class AppOpsManager {
     public void finishOp(IBinder token, int op, int uid, @NonNull String packageName,
             @Nullable String attributionTag) {
         if (GmsCompat.isEnabled() && uid != Process.myUid()) {
+            finishProxyOp(opToPublicName(op), uid, packageName, attributionTag);
             return;
         }
 
