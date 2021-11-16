@@ -122,6 +122,7 @@ import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.Immutable;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.gmscompat.GmsHooks;
+import com.android.internal.gmscompat.PlayStoreHooks;
 import com.android.internal.os.SomeArgs;
 import com.android.internal.util.UserIcons;
 
@@ -2513,6 +2514,10 @@ public class ApplicationPackageManager extends PackageManager {
     @Override
     @UnsupportedAppUsage
     public void deletePackage(String packageName, IPackageDeleteObserver observer, int flags) {
+        if (GmsCompat.isPlayStore()) {
+            PlayStoreHooks.deletePackage(mContext, this, packageName, observer, flags);
+            return;
+        }
         deletePackageAsUser(packageName, observer, flags, getUserId());
     }
 
