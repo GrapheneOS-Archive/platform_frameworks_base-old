@@ -18,6 +18,7 @@ package android.app.compat.gms;
 
 import android.annotation.SystemApi;
 import android.app.ActivityThread;
+import android.app.Application;
 import android.compat.Compatibility;
 import android.compat.annotation.ChangeId;
 import android.compat.annotation.Disabled;
@@ -76,8 +77,10 @@ public final class GmsCompat {
     private static final long GMS_UNPRIVILEGED_DYNAMITE_CLIENT = 7528921493777479941L;
 
     // Some hooks are in (potentially) hot paths, so cache the change enable states.
-    private static volatile boolean isGmsCompatEnabled = false;
-    private static volatile boolean isDynamiteClientEnabled = false;
+    // no need to declare these fields as volatile, they are written when app has only the main thread
+    private static boolean isGmsCompatEnabled;
+    private static boolean isDynamiteClientEnabled;
+    private static boolean isPlayStore;
 
     // Static only
     private GmsCompat() { }
@@ -89,6 +92,11 @@ public final class GmsCompat {
     /** @hide */
     public static boolean isDynamiteClient() {
         return isDynamiteClientEnabled;
+    }
+
+    /** @hide */
+    public static boolean isPlayStore() {
+        return isPlayStore;
     }
 
     private static void logEnabled(String changeName, boolean enabled) {
@@ -123,9 +131,13 @@ public final class GmsCompat {
      *
      * @hide
      */
-    public static void initChangeEnableStates() {
+    public static void initChangeEnableStates(Application app) {
         isGmsCompatEnabled = isChangeEnabled("GMS_UNPRIVILEGED_COMPAT", GMS_UNPRIVILEGED_COMPAT);
         isDynamiteClientEnabled = isChangeEnabled("GMS_UNPRIVILEGED_DYNAMITE_CLIENT", GMS_UNPRIVILEGED_DYNAMITE_CLIENT);
+        if (isGmsCompatEnabled) {
+            // certificate is already checked if isGmsCompatEnabled is set
+            isPlayStore = GmsInfo.PACKAGE_PLAY_STORE.equals(app.getPackageName());
+        }
     }
 
     private static boolean validateCerts(Signature[] signatures) {
