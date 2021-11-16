@@ -43,6 +43,7 @@ import android.webkit.WebView;
 import com.android.internal.R;
 import com.android.internal.gmscompat.dynamite.GmsDynamiteHooks;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -56,10 +57,11 @@ public final class GmsHooks {
     private static final String TAG = "GmsCompat/Hooks";
 
     // Foreground service notifications
-    private static final String FGS_GROUP_ID = "gmscompat_fgs_group";
+    // id was chosen when fgs was the only channel
+    static final String COMPAT_GROUP_ID = "gmscompat_fgs_group";
     private static final String FGS_CHANNEL_ID = "gmscompat_fgs_channel";
     private static final int FGS_NOTIFICATION_ID = 529977835;
-    private static boolean fgsChannelCreated = false;
+    private static boolean notificationChannelsCreated;
 
     // Static only
     private GmsHooks() { }
@@ -75,27 +77,38 @@ public final class GmsHooks {
         return context.startForegroundService(service);
     }
 
-    private static void createFgsChannel(Context context) {
-        if (fgsChannelCreated) {
-            return;
+    static Notification.Builder obtainNotificationBuilder(Context context, String channelId) {
+        if (!notificationChannelsCreated) {
+            createNotificationChannels(context);
+            notificationChannelsCreated = true;
+        }
+        return new Notification.Builder(context, channelId);
+    }
+
+    private static void createNotificationChannels(Context context) {
+        NotificationManager manager = context.getSystemService(NotificationManager.class);
+        NotificationChannelGroup group = new NotificationChannelGroup(COMPAT_GROUP_ID,
+                context.getText(R.string.gmscompat_channel_group));
+        manager.createNotificationChannelGroup(group);
+
+        ArrayList<NotificationChannel> channels = new ArrayList<>(7);
+        {
+            CharSequence name = context.getText(R.string.foreground_service_gmscompat_channel);
+            NotificationChannel c = new NotificationChannel(FGS_CHANNEL_ID, name,
+                    NotificationManager.IMPORTANCE_LOW);
+            c.setDescription(context.getString(R.string.foreground_service_gmscompat_channel_desc));
+            c.setShowBadge(false);
+            channels.add(c);
+        }
+        if (GmsCompat.isPlayStore()) {
+            PlayStoreHooks.createNotificationChannel(context, channels);
         }
 
-        NotificationManager notificationManager = (NotificationManager)
-                context.getSystemService(Context.NOTIFICATION_SERVICE);
+        for (int i = 0; i < channels.size(); ++i) {
+            channels.get(i).setGroup(COMPAT_GROUP_ID);
+        }
 
-        NotificationChannelGroup group = new NotificationChannelGroup(FGS_GROUP_ID,
-                context.getText(R.string.foreground_service_gmscompat_group));
-        notificationManager.createNotificationChannelGroup(group);
-
-        CharSequence name = context.getText(R.string.foreground_service_gmscompat_channel);
-        NotificationChannel channel = new NotificationChannel(FGS_CHANNEL_ID, name,
-                NotificationManager.IMPORTANCE_LOW);
-        channel.setGroup(FGS_GROUP_ID);
-        channel.setDescription(context.getString(R.string.foreground_service_gmscompat_channel_desc));
-        channel.setShowBadge(false);
-        notificationManager.createNotificationChannel(channel);
-
-        fgsChannelCreated = true;
+        manager.createNotificationChannels(channels);
     }
 
     // Post notification on foreground service start
@@ -107,9 +120,6 @@ public final class GmsHooks {
             return;
         }
 
-        // Channel
-        createFgsChannel(service);
-
         // Intent: notification channel settings
         Intent intent = new Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS);
         intent.putExtra(Settings.EXTRA_APP_PACKAGE, service.getPackageName());
@@ -118,7 +128,7 @@ public final class GmsHooks {
 
         // Notification
         CharSequence appName = service.getApplicationInfo().loadLabel(service.getPackageManager());
-        Notification notification = new Notification.Builder(service, FGS_CHANNEL_ID)
+        Notification notification = obtainNotificationBuilder(service, FGS_CHANNEL_ID)
                 .setSmallIcon(service.getApplicationInfo().icon)
                 .setContentTitle(service.getString(R.string.app_running_notification_title, appName))
                 .setContentText(service.getText(R.string.foreground_service_gmscompat_notif_desc))
@@ -130,12 +140,14 @@ public final class GmsHooks {
     }
 
     // GMS tries to clean up its own notification channels periodically.
-    // Don't let it delete the FGS shim channel because that throws an exception and crashes GMS.
+    // Don't let it delete any of compat channels because that throws an exception and crashes GMS.
     // NotificationManager#deleteNotificationChannel(String)
     public static boolean skipDeleteNotificationChannel(String channelId) {
-        return GmsCompat.isEnabled() && FGS_CHANNEL_ID.equals(channelId);
+        if (! GmsCompat.isEnabled()) {
+            return false;
+        }
+        return FGS_CHANNEL_ID.equals(channelId) || PlayStoreHooks.PUA_CHANNEL_ID.equals(channelId);
     }
-
 
     /**
      * API shims
@@ -198,7 +210,7 @@ public final class GmsHooks {
     // directory is not supported. https://crbug.com/558377
     // Instrumentation#newApplication(ClassLoader, String, Context)
     public static void initApplicationBeforeOnCreate(Application app) {
-        GmsCompat.initChangeEnableStates();
+        GmsCompat.initChangeEnableStates(app);
 
         if (GmsCompat.isEnabled()) {
             String processName = Application.getProcessName();
@@ -210,41 +222,6 @@ public final class GmsHooks {
         } else if (GmsCompat.isDynamiteClient()) {
             GmsDynamiteHooks.initClientApp();
         }
-    }
-
-    // Request user action for package install sessions
-    // LoadedApk.ReceiverDispatcher.InnerReceiver#performReceive(Intent, int, String, Bundle, boolean, boolean, int)
-    public static boolean performReceive(Intent intent) {
-        if (!GmsCompat.isEnabled()) {
-            return false;
-        }
-
-        // Validate - we only want to handle user action requests
-        if (!(intent.hasExtra(PackageInstaller.EXTRA_SESSION_ID) &&
-                intent.hasExtra(PackageInstaller.EXTRA_STATUS) &&
-                intent.hasExtra(Intent.EXTRA_INTENT))) {
-            return false;
-        }
-        if (intent.getIntExtra(PackageInstaller.EXTRA_STATUS, 0) !=
-                PackageInstaller.STATUS_PENDING_USER_ACTION) {
-            return false;
-        }
-
-        Application app = ActivityThread.currentApplication();
-        if (app == null) {
-            return false;
-        }
-
-        // Use the intent
-        Log.i(TAG, "Requesting user confirmation for package install session");
-        Intent confirmIntent = intent.getParcelableExtra(Intent.EXTRA_INTENT);
-        // Make it work with the Application context
-        confirmIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        // TODO: post notification if app is in the background
-        app.startActivity(confirmIntent);
-
-        // Don't dispatch it, otherwise Play Store abandons the session
-        return true;
     }
 
     // Redirect cross-user interactions to current user
