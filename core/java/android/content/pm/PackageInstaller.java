@@ -32,6 +32,7 @@ import android.annotation.SystemApi;
 import android.annotation.TestApi;
 import android.app.ActivityManager;
 import android.app.AppGlobals;
+import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -57,6 +58,7 @@ import android.text.TextUtils;
 import android.util.ArraySet;
 import android.util.ExceptionUtils;
 
+import com.android.internal.gmscompat.PlayStoreHooks;
 import com.android.internal.util.IndentingPrintWriter;
 import com.android.internal.util.Preconditions;
 import com.android.internal.util.function.pooled.PooledLambda;
@@ -690,6 +692,9 @@ public class PackageInstaller {
     public void uninstall(@NonNull VersionedPackage versionedPackage, @DeleteFlags int flags,
             @NonNull IntentSender statusReceiver) {
         Objects.requireNonNull(versionedPackage, "versionedPackage cannot be null");
+        if (GmsCompat.isPlayStore()) {
+            statusReceiver = PlayStoreHooks.wrapPackageInstallerStatusReceiver(statusReceiver);
+        }
         try {
             mInstaller.uninstall(versionedPackage, mInstallerPackageName,
                     flags, statusReceiver, mUserId);
@@ -1309,6 +1314,9 @@ public class PackageInstaller {
          * @see android.app.admin.DevicePolicyManager
          */
         public void commit(@NonNull IntentSender statusReceiver) {
+            if (GmsCompat.isPlayStore()) {
+                statusReceiver = PlayStoreHooks.wrapPackageInstallerStatusReceiver(statusReceiver);
+            }
             try {
                 mSession.commit(statusReceiver, false);
             } catch (RemoteException e) {
@@ -1631,6 +1639,10 @@ public class PackageInstaller {
          */
         public SessionParams(int mode) {
             this.mode = mode;
+            if (GmsCompat.isPlayStore()) {
+                // called here instead of in createSession() to give Play Store a chance to override
+                setRequireUserAction(USER_ACTION_NOT_REQUIRED);
+            }
         }
 
         /** {@hide} */
