@@ -143,7 +143,7 @@ public final class GmsHooks {
     // Don't let it delete any of compat channels because that throws an exception and crashes GMS.
     // NotificationManager#deleteNotificationChannel(String)
     public static boolean skipDeleteNotificationChannel(String channelId) {
-        if (! GmsCompat.isEnabled()) {
+        if (!GmsCompat.isEnabled()) {
             return false;
         }
         return FGS_CHANNEL_ID.equals(channelId) || PlayStoreHooks.PUA_CHANNEL_ID.equals(channelId);
