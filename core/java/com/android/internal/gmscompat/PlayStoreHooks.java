@@ -94,7 +94,7 @@ public final class PlayStoreHooks {
 
         public void onReceive(Context br_context, Intent intent) {
             String statusKey = PackageInstaller.EXTRA_STATUS;
-            if (! intent.hasExtra(statusKey)) {
+            if (!intent.hasExtra(statusKey)) {
                 throw new IllegalStateException("no EXTRA_STATUS in intent " + intent);
             }
             int status = intent.getIntExtra(statusKey, 0);
