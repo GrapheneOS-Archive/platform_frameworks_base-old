@@ -2564,6 +2564,10 @@ public class ApplicationPackageManager extends PackageManager {
     @Override
     public void freeStorageAndNotify(String volumeUuid, long idealStorageSize,
             IPackageDataObserver observer) {
+        if (GmsCompat.isPlayStore()) {
+            PlayStoreHooks.freeStorageAndNotify(mContext, volumeUuid, idealStorageSize, observer);
+            return;
+        }
         try {
             mPM.freeStorageAndNotify(volumeUuid, idealStorageSize, 0, observer);
         } catch (RemoteException e) {
