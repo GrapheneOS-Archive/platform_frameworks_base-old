@@ -24,18 +24,24 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.IntentSender;
+import android.content.pm.IPackageDataObserver;
 import android.content.pm.IPackageDeleteObserver;
 import android.content.pm.PackageInstaller;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Process;
 import android.os.RemoteException;
+import android.os.storage.StorageManager;
+import android.provider.Downloads;
 
 import com.android.internal.R;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -211,6 +217,47 @@ public final class PlayStoreHooks {
                 target.packageDeleted(packageName, status);
             } catch (RemoteException e) {
                 throw e.rethrowAsRuntimeException();
+            }
+        }
+    }
+
+    // Called during self-update sequence because PackageManager requires
+    // the restricted CLEAR_APP_CACHE permission
+    // ApplicationPackageManager#freeStorageAndNotify(String, long, IPackageDataObserver)
+    public static void freeStorageAndNotify(Context context, String volumeUuid, long idealStorageSize,
+            IPackageDataObserver observer) {
+        if (volumeUuid != null) {
+            throw new IllegalStateException("unexpected volumeUuid " + volumeUuid);
+        }
+        StorageManager sm = context.getSystemService(StorageManager.class);
+        boolean success = false;
+        try {
+            sm.allocateBytes(StorageManager.UUID_DEFAULT, idealStorageSize);
+            success = true;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            // same behavior as PackageManagerService#freeStorageAndNotify()
+            String packageName = null;
+            observer.onRemoveCompleted(packageName, success);
+        } catch (RemoteException e) {
+            throw e.rethrowAsRuntimeException();
+        }
+    }
+
+    // Called during self-update sequence
+    // ContentResolver#insert(Uri, ContentValues, Bundle)
+    public static void filterContentValues(Uri url, ContentValues values) {
+        if (values != null && "content://downloads/my_downloads".equals(url.toString())) {
+            // gated by the restricted ACCESS_DOWNLOAD_MANAGER_ADVANCED permission
+            String otherUid = Downloads.Impl.COLUMN_OTHER_UID;
+            if (values.containsKey(otherUid)) {
+                int v = values.getAsInteger(otherUid).intValue();
+                if (v != 1000) {
+                    throw new IllegalStateException("unexpected COLUMN_OTHER_UID " + v);
+                }
+                values.remove(otherUid);
             }
         }
     }
