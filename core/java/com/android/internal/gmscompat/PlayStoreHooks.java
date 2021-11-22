@@ -126,6 +126,7 @@ public final class PlayStoreHooks {
                         .setSmallIcon(context.getApplicationInfo().icon)
                         .setContentTitle(context.getText(R.string.gmscompat_notif_channel_action_required))
                         .setContentIntent(pi)
+                        .setOngoing(true)
                         .setAutoCancel(true)
                         .build();
 
