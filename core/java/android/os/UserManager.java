@@ -2527,6 +2527,9 @@ public class UserManager {
     @RequiresPermission(anyOf = {Manifest.permission.MANAGE_USERS,
             Manifest.permission.INTERACT_ACROSS_USERS}, conditional = true)
     public boolean isUserUnlocked(@UserIdInt int userId) {
+        if (GmsCompat.isEnabled()) {
+            return mIsUserUnlockedCache.query(mUserId);
+        }
         return mIsUserUnlockedCache.query(userId);
     }
 
