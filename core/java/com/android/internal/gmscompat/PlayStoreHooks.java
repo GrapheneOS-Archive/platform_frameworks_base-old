@@ -16,7 +16,6 @@
 
 package com.android.internal.gmscompat;
 
-import android.app.ActivityManager;
 import android.app.ActivityThread;
 import android.app.IActivityManager;
 import android.app.Notification;
@@ -43,11 +42,8 @@ import com.android.internal.R;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
-
-import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
 
 public final class PlayStoreHooks {
 
@@ -109,9 +105,9 @@ public final class PlayStoreHooks {
                 Intent confirmationIntent = intent.getParcelableExtra(Intent.EXTRA_INTENT);
                 confirmationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-                boolean foreground = isForeground(Process.myUid(), Process.myPid());
-
-                if (foreground) {
+                // there is no public API that I'm aware of (as of API 31)
+                // that would allow to *reliably* find this out
+                if (ActivityThread.currentActivityThread().hasAtLeastOneResumedActivity()) {
                     context.startActivity(confirmationIntent);
                 } else {
                     // allow multiple PUA notifications
@@ -145,25 +141,6 @@ public final class PlayStoreHooks {
                 e.printStackTrace();
             }
         }
-    }
-
-    static boolean isForeground(int uid, int pid) {
-        final List<ActivityManager.RunningAppProcessInfo> procs;
-        try {
-            // returns only processes that belong to the current app
-            procs = ActivityManager.getService().getRunningAppProcesses();
-            Objects.requireNonNull(procs);
-        } catch (RemoteException e) {
-            throw e.rethrowAsRuntimeException();
-        }
-        for (int i = 0; i < procs.size(); i++) {
-            ActivityManager.RunningAppProcessInfo proc = procs.get(i);
-            if (proc.pid == pid && proc.uid == uid
-                    && proc.importance == IMPORTANCE_FOREGROUND) {
-                return true;
-            }
-        }
-        return false;
     }
 
     // Request user action to uninstall a package
