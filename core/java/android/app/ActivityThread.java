@@ -7934,4 +7934,15 @@ public final class ActivityThread extends ClientTransactionHandler
     private native void nPurgePendingResources();
     private native void nDumpGraphicsInfo(FileDescriptor fd);
     private native void nInitZygoteChildHeapProfiling();
+
+    public boolean hasAtLeastOneResumedActivity() {
+        synchronized (mResourcesManager) {
+            for (int i = 0; i < mActivities.size(); ++i) {
+                if (mActivities.valueAt(i).getLifecycleState() == ActivityLifecycleItem.ON_RESUME) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }
