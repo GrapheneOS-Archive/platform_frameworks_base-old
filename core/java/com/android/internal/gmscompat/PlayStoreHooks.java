@@ -191,6 +191,15 @@ public final class PlayStoreHooks {
             }
 
             int status = intent.getIntExtra(statusKey, 0);
+            if (status != PackageManager.DELETE_SUCCEEDED) {
+                // Play Store doesn't expect uninstallation to fail and ends up in an inconsistent UI state,
+                // which requires user-initiated "Force stop" as a workaround
+                // Most likely cause of a failure is accidental rejection of the second confirmation prompt:
+                // Play Store shows its own confirmation UI before PackageInstaller confirmation UI
+                // is shown. It is unlikely that the user deliberately accepted the first prompt and
+                // rejected the second one
+                System.exit(1);
+            }
             try {
                 target.packageDeleted(packageName, status);
             } catch (RemoteException e) {
