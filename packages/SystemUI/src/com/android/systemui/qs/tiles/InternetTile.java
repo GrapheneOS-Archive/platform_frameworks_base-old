@@ -52,6 +52,7 @@ import com.android.systemui.qs.QSHost;
 import com.android.systemui.qs.logging.QSLogger;
 import com.android.systemui.qs.tileimpl.QSTileImpl;
 import com.android.systemui.qs.tiles.dialog.InternetDialogFactory;
+import com.android.systemui.statusbar.policy.KeyguardStateController;
 import com.android.systemui.statusbar.policy.NetworkController;
 import com.android.systemui.statusbar.policy.NetworkController.AccessPointController;
 import com.android.systemui.statusbar.policy.NetworkController.IconState;
@@ -66,7 +67,7 @@ import java.io.PrintWriter;
 import javax.inject.Inject;
 
 /** Quick settings tile: Internet **/
-public class InternetTile extends QSTileImpl<SignalState> {
+public class InternetTile extends SecureQSTile<SignalState> {
     private static final Intent WIFI_SETTINGS = new Intent(Settings.ACTION_WIFI_SETTINGS);
 
     protected final NetworkController mController;
@@ -91,10 +92,11 @@ public class InternetTile extends QSTileImpl<SignalState> {
             QSLogger qsLogger,
             NetworkController networkController,
             AccessPointController accessPointController,
-            InternetDialogFactory internetDialogFactory
+            InternetDialogFactory internetDialogFactory,
+            KeyguardStateController keyguardStateController
     ) {
         super(host, backgroundLooper, mainHandler, falsingManager, metricsLogger,
-                statusBarStateController, activityStarter, qsLogger);
+                statusBarStateController, activityStarter, qsLogger, keyguardStateController);
         mInternetDialogFactory = internetDialogFactory;
         mHandler = mainHandler;
         mController = networkController;
@@ -121,7 +123,10 @@ public class InternetTile extends QSTileImpl<SignalState> {
     }
 
     @Override
-    protected void handleClick(@Nullable View view) {
+    protected void handleClick(@Nullable View view, boolean keyguardShowing) {
+        if (checkKeyguard(view, keyguardShowing)) {
+            return;
+        }
         mHandler.post(() -> mInternetDialogFactory.create(true,
                 mAccessPointController.canConfigMobileData(),
                 mAccessPointController.canConfigWifi()));
