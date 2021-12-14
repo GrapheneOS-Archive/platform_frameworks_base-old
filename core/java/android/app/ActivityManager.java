@@ -3373,7 +3373,11 @@ public class ActivityManager {
      */
     public List<RunningAppProcessInfo> getRunningAppProcesses() {
         try {
-            return getService().getRunningAppProcesses();
+            List<RunningAppProcessInfo> res = getService().getRunningAppProcesses();
+            if (GmsCompat.isPlayServices()) {
+                res = GmsHooks.addRecentlyBoundPids(mContext, res);
+            }
+            return res;
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
