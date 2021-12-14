@@ -20,11 +20,13 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.SystemApi;
 import android.app.AppOpsManager;
+import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.util.ExceptionUtils;
 import android.util.Log;
 import android.util.Slog;
 
+import com.android.internal.gmscompat.GmsHooks;
 import com.android.internal.os.BinderCallHeavyHitterWatcher;
 import com.android.internal.os.BinderCallHeavyHitterWatcher.BinderCallHeavyHitterListener;
 import com.android.internal.os.BinderInternal;
@@ -1131,6 +1133,8 @@ public class Binder implements IBinder {
         sWorkSourceProvider = workSourceProvider;
     }
 
+    private volatile int mPreviousUid;
+
     // Entry point from android_util_Binder.cpp's onTransact
     @UnsupportedAppUsage
     private boolean execTransact(int code, long dataObj, long replyObj,
@@ -1138,6 +1142,13 @@ public class Binder implements IBinder {
         // At that point, the parcel request headers haven't been parsed so we do not know what
         // WorkSource the caller has set. Use calling uid as the default.
         final int callingUid = Binder.getCallingUid();
+        if (GmsCompat.isPlayServices()) {
+            if (callingUid >= Process.FIRST_APPLICATION_UID && callingUid != mPreviousUid) {
+                // harmless race
+                mPreviousUid = callingUid;
+                GmsHooks.onBinderTransaction(Binder.getCallingPid(), callingUid);
+            }
+        }
         final long origWorkSource = ThreadLocalWorkSource.setUid(callingUid);
         try {
             return execTransactInternal(code, dataObj, replyObj, flags, callingUid);
