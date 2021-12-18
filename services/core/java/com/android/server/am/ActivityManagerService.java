@@ -4768,6 +4768,8 @@ public class ActivityManagerService extends IActivityManager.Stub
         }
         // UART is on if init's console service is running, send a warning notification.
         showConsoleNotificationIfActive();
+        // FIPS device encryption is on if androidboot.fstab_suffix=gs101-fips is set in kernel cmdline, send a warning notification.
+        showGs101FipsEnabledNotificationIfActive();
 
         t.traceEnd();
     }
@@ -4789,6 +4791,53 @@ public class ActivityManagerService extends IActivityManager.Stub
             isEnabled = true;
         }
         return isEnabled;
+    }
+
+    private static Boolean isGs101FipsEnabled() {
+        // androidboot.fstab_suffix=gs101-fips in kernel cmdline indicates that
+        // the FIPS partition is enabled
+        final String gs101_fips_string = "androidboot.fstab_suffix=gs101-fips";
+        boolean isEnabled = false;
+        try (Scanner sc = new Scanner(new FileInputStream("/proc/cmdline"))) {
+            StringBuilder scOutput = new StringBuilder();
+            while(sc.hasNextLine()) {
+                scOutput.append(sc.nextLine());
+            }
+            isEnabled = scOutput.toString().contains(gs101_fips_string);
+        } catch (IOException ignored) {
+        }
+
+        return isEnabled;
+    }
+
+    private void showGs101FipsEnabledNotificationIfActive() {
+        if (!isGs101FipsEnabled()) {
+            return;
+        }
+        String title = mContext
+                .getString(com.android.internal.R.string.fips_gs101_enabled_notification_title);
+        String message = mContext
+                .getString(com.android.internal.R.string.fips_gs101_enabled_notification_message);
+        Notification notification =
+                new Notification.Builder(mContext, SystemNotificationChannels.DEVELOPER)
+                        .setSmallIcon(com.android.internal.R.drawable.stat_sys_adb)
+                        .setWhen(0)
+                        .setOngoing(true)
+                        .setTicker(title)
+                        .setDefaults(0)  // please be quiet
+                        .setColor(mContext.getColor(
+                                com.android.internal.R.color
+                                        .system_notification_accent_color))
+                        .setContentTitle(title)
+                        .setContentText(message)
+                        .setVisibility(Notification.VISIBILITY_PUBLIC)
+                        .build();
+
+        NotificationManager notificationManager =
+                mContext.getSystemService(NotificationManager.class);
+        notificationManager.notifyAsUser(
+                null, SystemMessage.NOTE_GS101_FIPS_ENABLED, notification, UserHandle.ALL);
+
     }
 
     private void showConsoleNotificationIfActive() {
