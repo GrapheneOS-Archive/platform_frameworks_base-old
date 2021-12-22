@@ -294,6 +294,8 @@ public class PackageParser {
                     android.os.Build.VERSION_CODES.CUR_DEVELOPMENT + 1, 0, GmsInfo.PACKAGE_PLAY_STORE),
             new PackageParser.NewPermissionInfo(android.Manifest.permission.UPDATE_PACKAGES_WITHOUT_USER_ACTION,
                     android.os.Build.VERSION_CODES.CUR_DEVELOPMENT + 1, 0, GmsInfo.PACKAGE_PLAY_STORE),
+            new PackageParser.NewPermissionInfo(android.Manifest.permission.BLUETOOTH_SCAN,
+                    android.os.Build.VERSION_CODES.CUR_DEVELOPMENT + 1, 0, GmsInfo.PACKAGE_GMS),
             new PackageParser.NewPermissionInfo(android.Manifest.permission.OTHER_SENSORS,
                     android.os.Build.VERSION_CODES.CUR_DEVELOPMENT + 1, 0),
             new PackageParser.NewPermissionInfo(android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
