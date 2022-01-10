@@ -2338,6 +2338,12 @@ public class AccountManagerService
 
         @Override
         public void run() throws RemoteException {
+            if ("com.google".equals(mAccount.type)) {
+                Bundle result = new Bundle();
+                result.putBoolean(AccountManager.KEY_BOOLEAN_RESULT, true);
+                onResult(result);
+                return;
+            }
             mAuthenticator.getAccountRemovalAllowed(this, mAccount);
         }
 
