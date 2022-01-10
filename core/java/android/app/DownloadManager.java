@@ -16,6 +16,7 @@
 
 package android.app;
 
+import android.Manifest;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.RequiresPermission;
@@ -31,6 +32,7 @@ import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.CursorWrapper;
 import android.database.DatabaseUtils;
@@ -1115,6 +1117,12 @@ public class DownloadManager {
      * calls related to this download.
      */
     public long enqueue(Request request) {
+        // don't crash apps that expect INTERNET permission to be always granted
+        Context ctx = ActivityThread.currentApplication();
+        if (ctx != null && ctx.checkSelfPermission(Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED) {
+            // invalid id (DownloadProvider uses SQLite and returns a row id)
+            return -1;
+        }
         ContentValues values = request.toContentValues(mPackageName);
         Uri downloadUri = mResolver.insert(Downloads.Impl.CONTENT_URI, values);
         long id = Long.parseLong(downloadUri.getLastPathSegment());
