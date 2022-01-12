@@ -1142,7 +1142,7 @@ public class Binder implements IBinder {
         // At that point, the parcel request headers haven't been parsed so we do not know what
         // WorkSource the caller has set. Use calling uid as the default.
         final int callingUid = Binder.getCallingUid();
-        if (GmsCompat.isPlayServices()) {
+        if (GmsCompat.isEnabled()) {
             if (callingUid >= Process.FIRST_APPLICATION_UID && callingUid != mPreviousUid) {
                 // harmless race
                 mPreviousUid = callingUid;
