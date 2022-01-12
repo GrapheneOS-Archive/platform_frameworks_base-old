@@ -3374,7 +3374,7 @@ public class ActivityManager {
     public List<RunningAppProcessInfo> getRunningAppProcesses() {
         try {
             List<RunningAppProcessInfo> res = getService().getRunningAppProcesses();
-            if (GmsCompat.isPlayServices()) {
+            if (GmsCompat.isEnabled()) {
                 res = GmsHooks.addRecentlyBoundPids(mContext, res);
             }
             return res;
