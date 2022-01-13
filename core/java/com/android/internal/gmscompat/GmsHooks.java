@@ -190,13 +190,6 @@ public final class GmsHooks {
         return serial;
     }
 
-    // Report no shared libraries
-    // ApplicationPackageManager#getSharedLibrariesAsUser(int, int)
-    public static List<SharedLibraryInfo> getSharedLibrariesAsUser() {
-        // TODO: Report standard Pixel libraries?
-        return Collections.emptyList();
-    }
-
     // Only get package info for current user
     // ApplicationPackageManager#getPackageInfo(VersionedPackage, int)
     // ApplicationPackageManager#getPackageInfoAsUser(String, int, int)
