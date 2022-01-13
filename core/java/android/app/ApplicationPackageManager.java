@@ -579,6 +579,10 @@ public class ApplicationPackageManager extends PackageManager {
     /** @hide */
     @Override
     public @NonNull List<SharedLibraryInfo> getSharedLibraries(int flags) {
+        if (GmsCompat.isEnabled()) {
+            // MATCH_ANY_USER requires privileged INTERACT_ACROSS_USERS permission
+            flags &= ~MATCH_ANY_USER;
+        }
         return getSharedLibrariesAsUser(flags, getUserId());
     }
 
@@ -586,10 +590,6 @@ public class ApplicationPackageManager extends PackageManager {
     @Override
     @SuppressWarnings("unchecked")
     public @NonNull List<SharedLibraryInfo> getSharedLibrariesAsUser(int flags, int userId) {
-        if (GmsCompat.isEnabled()) {
-            return GmsHooks.getSharedLibrariesAsUser();
-        }
-
         try {
             ParceledListSlice<SharedLibraryInfo> sharedLibs = mPM.getSharedLibraries(
                     mContext.getOpPackageName(), flags, userId);
