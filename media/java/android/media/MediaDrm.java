@@ -24,9 +24,11 @@ import android.annotation.StringDef;
 import android.app.ActivityThread;
 import android.app.Application;
 import android.compat.annotation.UnsupportedAppUsage;
+import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
+import android.Manifest;
 import android.media.metrics.LogSessionId;
 import android.os.Handler;
 import android.os.HandlerExecutor;
@@ -44,6 +46,7 @@ import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
@@ -2178,7 +2181,26 @@ public final class MediaDrm implements AutoCloseable {
      * Standard fields names are {@link #PROPERTY_DEVICE_UNIQUE_ID}
      */
     @NonNull
-    public native byte[] getPropertyByteArray(String propertyName);
+    private native byte[] getPropertyByteArrayNative(@NonNull String propertyName);
+
+    @NonNull
+    public byte[] getPropertyByteArray(String propertyName) {
+        if (PROPERTY_DEVICE_UNIQUE_ID.equals(propertyName) && !MediaDRMFingerprintingAllowed()) {
+            return new byte[32];
+        }
+        return getPropertyByteArrayNative(propertyName);
+    }
+
+    private static boolean MediaDRMFingerprintingAllowed() {
+        boolean result = false;
+        Application application = ActivityThread.currentApplication();
+        if (application != null) {
+            result = application.checkSelfPermission(Manifest.permission.MEDIADRM_IDENTIFIER)
+                    == PackageManager.PERMISSION_GRANTED;
+        }
+        return result;
+    }
+
 
     /**
     * Set a MediaDrm byte array property value, given the property name string

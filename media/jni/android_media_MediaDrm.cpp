@@ -2136,7 +2136,7 @@ static const JNINativeMethod gMethods[] = {
     { "getPropertyString", "(Ljava/lang/String;)Ljava/lang/String;",
       (void *)android_media_MediaDrm_getPropertyString },
 
-    { "getPropertyByteArray", "(Ljava/lang/String;)[B",
+    { "getPropertyByteArrayNative", "(Ljava/lang/String;)[B",
       (void *)android_media_MediaDrm_getPropertyByteArray },
 
     { "setPropertyString", "(Ljava/lang/String;Ljava/lang/String;)V",
