@@ -863,6 +863,11 @@
     <!-- Description of a category of application permissions, listed so the user can choose whether they want to allow the application to do this. -->
     <string name="permgroupdesc_network">access the network</string>
 
+    <!-- Title of a category of application permissions, listed so the user can choose whether they want to allow the application to do this. -->
+    <string name="permgrouplab_mediadrmIdentifier">MediaDRM Identifier</string>
+    <!-- Description of a category of application permissions, listed so the user can choose whether they want to allow the application to do this. -->
+    <string name="permgroupdesc_mediadrmIdentifier">access unique non-resettable device DRM identifier</string>
+
     <!-- Title for the capability of an accessibility service to retrieve window content. -->
     <string name="capability_title_canRetrieveWindowContent">Retrieve window content</string>
     <!-- Description for the capability of an accessibility service to retrieve window content. -->
@@ -1192,6 +1197,11 @@
     <!-- Description of the sensors permission, listed so the user can decide whether to allow the application to access data from sensors. [CHAR LIMIT=NONE] -->
     <string name="permdesc_otherSensors" product="default">Allows the app to access data from sensors
     monitoring orientation, movement, vibration (including low frequency sound) and environmental data</string>
+
+    <!-- Title of the sensors permission, listed so the user can decide whether to allow the application to access sensor data. [CHAR LIMIT=80] -->
+    <string name="permlab_mediadrmIdentifier">access unique non resettable DRM device specific identifier</string>
+    <!-- Description of the sensors permission, listed so the user can decide whether to allow the application to access data from sensors. [CHAR LIMIT=NONE] -->
+    <string name="permdesc_mediadrmIdentifier" product="default">Allows the app to fingerprint the device using the MediaDRM API to produce a non resettable device specific identifier.</string>
 
     <!-- Title of an application permission, listed so the user can choose whether they want to allow the application to do this. -->
     <string name="permlab_readCalendar">Read calendar events and details</string>

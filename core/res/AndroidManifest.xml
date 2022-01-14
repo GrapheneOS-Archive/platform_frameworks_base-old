@@ -1497,6 +1497,18 @@
         android:description="@string/permdesc_otherSensors"
         android:protectionLevel="dangerous" />
 
+    <permission-group android:name="android.permission-group.MEDIADRM_IDENTIFIER"
+        android:icon="@drawable/perm_group_location"
+        android:label="@string/permgrouplab_mediadrmIdentifier"
+        android:description="@string/permgroupdesc_mediadrmIdentifier"
+        android:priority="1000" />
+
+    <permission android:name="android.permission.MEDIADRM_IDENTIFIER"
+        android:permissionGroup="android.permission-group.UNDEFINED"
+        android:label="@string/permlab_mediadrmIdentifier"
+        android:description="@string/permdesc_mediadrmIdentifier"
+        android:protectionLevel="dangerous" />
+
     <!-- ====================================================================== -->
     <!-- REMOVED PERMISSIONS                                                    -->
     <!-- ====================================================================== -->
