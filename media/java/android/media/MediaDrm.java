@@ -33,6 +33,7 @@ import android.os.HandlerExecutor;
 import android.os.Looper;
 import android.os.Parcel;
 import android.os.PersistableBundle;
+import android.provider.Settings;
 import android.util.Log;
 
 import dalvik.system.CloseGuard;
@@ -289,9 +290,12 @@ public final class MediaDrm implements AutoCloseable {
         /* Native setup requires a weak reference to our object.
          * It's easier to create it here than in C++.
          */
+        String androidId = Settings.Secure.getString(
+                    ActivityThread.currentApplication().getContentResolver(),
+                    Settings.Secure.ANDROID_ID);
         mAppPackageName = ActivityThread.currentOpPackageName();
         native_setup(new WeakReference<MediaDrm>(this),
-                getByteArrayFromUUID(uuid), mAppPackageName);
+                getByteArrayFromUUID(uuid), (mAppPackageName + androidId));
 
         mCloseGuard.open("release");
     }
