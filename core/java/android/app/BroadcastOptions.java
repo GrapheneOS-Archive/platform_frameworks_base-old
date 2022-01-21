@@ -21,6 +21,7 @@ import android.annotation.Nullable;
 import android.annotation.RequiresPermission;
 import android.annotation.SystemApi;
 import android.annotation.TestApi;
+import android.app.compat.gms.GmsCompat;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.PowerExemptionManager;
@@ -167,6 +168,11 @@ public class BroadcastOptions {
             android.Manifest.permission.START_FOREGROUND_SERVICES_FROM_BACKGROUND})
     public void setTemporaryAppAllowlist(long duration, @TempAllowListType int type,
             @ReasonCode int reasonCode, @Nullable String reason) {
+        if (GmsCompat.isEnabled()) {
+            // otherwise, broadcasts (e.g. location updates via PendingIntent) from GMS fail
+            // due to lack of any of these privileged permission
+            return;
+        }
         mTemporaryAppAllowlistDuration = duration;
         mTemporaryAppAllowlistType = type;
         mTemporaryAppAllowlistReasonCode = reasonCode;
