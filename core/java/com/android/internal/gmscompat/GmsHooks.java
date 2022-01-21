@@ -28,10 +28,11 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.app.compat.gms.GmsCompat;
 import android.content.ComponentName;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.pm.SharedLibraryInfo;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Process;
 import android.os.SystemClock;
@@ -47,7 +48,6 @@ import com.android.internal.gmscompat.dynamite.GmsDynamiteHooks;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -202,8 +202,6 @@ public final class GmsHooks {
         return flags & ~PackageManager.MATCH_ANY_USER;
     }
 
-    // Fix RuntimeException: Using WebView from more than one process at once with the same data
-    // directory is not supported. https://crbug.com/558377
     // Instrumentation#newApplication(ClassLoader, String, Context)
     public static void initApplicationBeforeOnCreate(Application app) {
         GmsCompat.initChangeEnableStates(app);
@@ -211,10 +209,22 @@ public final class GmsHooks {
         if (GmsCompat.isEnabled()) {
             String processName = Application.getProcessName();
             if (!app.getPackageName().equals(processName)) {
+                // Fix RuntimeException: Using WebView from more than one process at once with the same data
+                // directory is not supported. https://crbug.com/558377
                 WebView.setDataDirectorySuffix("process-shim--" + processName);
             }
-
-            GmsDynamiteHooks.initGmsServerApp(app);
+            if (GmsCompat.isPlayServices()) {
+                GmsDynamiteHooks.initGmsServerApp(app);
+            } else if (GmsInfo.PACKAGE_GSF.equals(app.getPackageName()) && "com.google.process.gapps".equals(processName)) {
+                ContentValues cv = new ContentValues();
+                cv.put("name", "network_location_opt_in");
+                cv.put("value", "1");
+                // location services are severely restricted unless this value is set:
+                // network location is fully disabled, GPS works only for clients that
+                // have ACCESS_FINE_LOCATION permission and have set PRIORITY_HIGH_ACCURACY
+                // in their LocationRequest to GMS
+                app.getContentResolver().insert(Uri.parse("content://com.google.settings/partner"), cv);
+            }
         } else if (GmsCompat.isDynamiteClient()) {
             GmsDynamiteHooks.initClientApp();
         }
