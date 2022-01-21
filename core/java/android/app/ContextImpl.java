@@ -71,6 +71,7 @@ import android.os.FileUtils;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.Parcel;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.StrictMode;
@@ -96,6 +97,7 @@ import android.window.WindowTokenClient;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.gmscompat.GmsHooks;
+import com.android.internal.gmscompat.GmsInfo;
 import com.android.internal.util.Preconditions;
 
 import dalvik.system.BlockGuard;
@@ -1978,6 +1980,9 @@ class ContextImpl extends Context {
             throw new RuntimeException("Not supported in system context");
         }
         validateServiceIntent(service);
+        if (GmsInfo.PACKAGE_GMS.equals(service.getPackage()) && !GmsCompat.isEnabled()) {
+            Parcel.enableBinderRedirectionCheck();
+        }
         try {
             IBinder token = getActivityToken();
             if (token == null && (flags&BIND_AUTO_CREATE) == 0 && mPackageInfo != null
