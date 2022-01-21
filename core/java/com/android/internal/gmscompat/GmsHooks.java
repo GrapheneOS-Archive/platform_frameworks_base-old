@@ -28,10 +28,11 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.app.compat.gms.GmsCompat;
 import android.content.ComponentName;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.pm.SharedLibraryInfo;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Process;
 import android.os.SystemClock;
@@ -47,7 +48,6 @@ import com.android.internal.gmscompat.dynamite.GmsDynamiteHooks;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -202,8 +202,6 @@ public final class GmsHooks {
         return flags & ~PackageManager.MATCH_ANY_USER;
     }
 
-    // Fix RuntimeException: Using WebView from more than one process at once with the same data
-    // directory is not supported. https://crbug.com/558377
     // Instrumentation#newApplication(ClassLoader, String, Context)
     public static void initApplicationBeforeOnCreate(Application app) {
         GmsCompat.initChangeEnableStates(app);
@@ -211,6 +209,8 @@ public final class GmsHooks {
         if (GmsCompat.isEnabled()) {
             String processName = Application.getProcessName();
             if (!app.getPackageName().equals(processName)) {
+                // Fix RuntimeException: Using WebView from more than one process at once with the same data
+                // directory is not supported. https://crbug.com/558377
                 WebView.setDataDirectorySuffix("process-shim--" + processName);
             }
 
