@@ -913,9 +913,12 @@ public class AlarmManager {
             long intervalMillis, int flags, PendingIntent operation, final OnAlarmListener listener,
             String listenerTag, Executor targetExecutor, WorkSource workSource,
             AlarmClockInfo alarmClock) {
-        if (GmsCompat.isEnabled() && windowMillis == WINDOW_EXACT &&
-                !canScheduleExactAlarms()) {
-            windowMillis = WINDOW_HEURISTIC;
+        if (GmsCompat.isEnabled()) {
+            if (windowMillis == WINDOW_EXACT && !canScheduleExactAlarms()) {
+                windowMillis = WINDOW_HEURISTIC;
+            }
+            // non-null WorkSource requires privileged UPDATE_DEVICE_STATS permission
+            workSource = null;
         }
 
         if (triggerAtMillis < 0) {
