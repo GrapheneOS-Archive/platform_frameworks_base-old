@@ -52,6 +52,7 @@ import android.util.SparseSetArray;
 import com.android.internal.R;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.internal.gmscompat.GmsCompatApp;
 import com.android.internal.util.ArrayUtils;
 import com.android.internal.util.function.QuadFunction;
 import com.android.server.FgThread;
@@ -751,6 +752,7 @@ public class AppsFilter implements Watchable, Snappable {
                         /* shared user that is already force queryable */
                         || newPkgSetting.forceQueryableOverride /* adb override */
                         || isGmsApp
+                        || GmsCompatApp.PKG_NAME.equals(newPkg.getPackageName())
                         || (newPkgSetting.isSystem() && (mSystemAppsQueryable
                         || newPkg.isForceQueryable()
                         || ArrayUtils.contains(mForceQueryableByDevicePackageNames,

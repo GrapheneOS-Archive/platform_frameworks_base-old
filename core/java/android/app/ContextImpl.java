@@ -1823,10 +1823,6 @@ class ContextImpl extends Context {
 
     @Override
     public ComponentName startService(Intent service) {
-        if (GmsCompat.isEnabled()) {
-            return GmsHooks.startService(this, service);
-        }
-
         warnIfCallingFromSystemProcess();
         return startServiceCommon(service, false, mUser);
     }
