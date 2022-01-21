@@ -229,8 +229,12 @@ public class NetworkScoreManager {
     /** @hide */
     public NetworkScoreManager(Context context) throws ServiceNotFoundException {
         mContext = context;
-        mService = INetworkScoreService.Stub
-                .asInterface(ServiceManager.getServiceOrThrow(Context.NETWORK_SCORE_SERVICE));
+        if (GmsCompat.isEnabled()) {
+            mService = null;
+        } else {
+            mService = INetworkScoreService.Stub
+                    .asInterface(ServiceManager.getServiceOrThrow(Context.NETWORK_SCORE_SERVICE));
+        }
     }
 
     /**
@@ -249,7 +253,7 @@ public class NetworkScoreManager {
                                  android.Manifest.permission.REQUEST_NETWORK_SCORES})
     public String getActiveScorerPackage() {
         if (GmsCompat.isEnabled()) {
-            return null;
+            return mContext.getPackageName();
         }
 
         try {
@@ -306,6 +310,9 @@ public class NetworkScoreManager {
      */
     @RequiresPermission(android.Manifest.permission.SCORE_NETWORKS)
     public boolean updateScores(@NonNull ScoredNetwork[] networks) throws SecurityException {
+        if (GmsCompat.isEnabled()) {
+            return true;
+        }
         try {
             return mService.updateScores(networks);
         } catch (RemoteException e) {
@@ -329,6 +336,9 @@ public class NetworkScoreManager {
     @RequiresPermission(anyOf = {android.Manifest.permission.SCORE_NETWORKS,
                                  android.Manifest.permission.REQUEST_NETWORK_SCORES})
     public boolean clearScores() throws SecurityException {
+        if (GmsCompat.isEnabled()) {
+            return true;
+        }
         try {
             return mService.clearScores();
         } catch (RemoteException e) {
@@ -453,10 +463,6 @@ public class NetworkScoreManager {
     @RequiresPermission(android.Manifest.permission.REQUEST_NETWORK_SCORES)
     public void registerNetworkScoreCache(int networkType, INetworkScoreCache scoreCache,
             @ScoreUpdateFilter int filterType) {
-        if (GmsCompat.isEnabled()) {
-            return;
-        }
-
         try {
             mService.registerNetworkScoreCache(networkType, scoreCache, filterType);
         } catch (RemoteException e) {
@@ -476,10 +482,6 @@ public class NetworkScoreManager {
      */
     @RequiresPermission(android.Manifest.permission.REQUEST_NETWORK_SCORES)
     public void unregisterNetworkScoreCache(int networkType, INetworkScoreCache scoreCache) {
-        if (GmsCompat.isEnabled()) {
-            return;
-        }
-
         try {
             mService.unregisterNetworkScoreCache(networkType, scoreCache);
         } catch (RemoteException e) {

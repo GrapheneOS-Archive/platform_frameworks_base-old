@@ -2076,6 +2076,14 @@ class ContextImpl extends Context {
 
     @Override
     public Object getSystemService(String name) {
+        if (GmsCompat.isEnabled()) {
+            switch (name) {
+                case Context.CONTEXTHUB_SERVICE:
+                case Context.WIFI_SCANNING_SERVICE:
+                    // these privileged services are null-checked by GMS
+                    return null;
+            }
+        }
         if (vmIncorrectContextUseEnabled()) {
             // Check incorrect Context usage.
             if (WINDOW_SERVICE.equals(name) && !isUiContext()) {
