@@ -4291,6 +4291,10 @@ public class ActivityManager {
      */
     @UnsupportedAppUsage
     public boolean isUserRunning(int userId) {
+        if (GmsCompat.isEnabled()) {
+            // GMS sees only the current user
+            return true;
+        }
         try {
             return getService().isUserRunning(userId, 0);
         } catch (RemoteException e) {
