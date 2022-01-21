@@ -37,7 +37,7 @@ import com.android.internal.compat.CompatibilityChangeInfo;
 import com.android.internal.gmscompat.GmsInfo;
 
 /**
- * This class provides helpers for Google Play Services compatibility. It allows the following apps
+ * This class provides helpers for Google Play compatibility. It allows the following apps
  * to work as regular, unprivileged user apps:
  *     - Google Play Services (Google Mobile Services, aka "GMS")
  *     - Google Services Framework
