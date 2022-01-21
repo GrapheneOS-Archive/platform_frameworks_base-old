@@ -26,7 +26,6 @@ import android.annotation.SystemApi;
 import android.annotation.SystemService;
 import android.app.ActivityThread;
 import android.app.PendingIntent;
-import android.app.compat.gms.GmsCompat;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -474,10 +473,6 @@ public final class ContextHubManager {
             android.Manifest.permission.ACCESS_CONTEXT_HUB
     })
     @NonNull public List<ContextHubInfo> getContextHubs() {
-        if (GmsCompat.isEnabled()) {
-            return Collections.emptyList();
-        }
-
         try {
             return mService.getContextHubs();
         } catch (RemoteException e) {
@@ -1068,11 +1063,6 @@ public final class ContextHubManager {
         mMainLooper = mainLooper;
         mService = IContextHubService.Stub.asInterface(
                 ServiceManager.getServiceOrThrow(Context.CONTEXTHUB_SERVICE));
-
-        if (GmsCompat.isEnabled()) {
-            return;
-        }
-
         try {
             mService.registerCallback(mClientCallback);
         } catch (RemoteException e) {
