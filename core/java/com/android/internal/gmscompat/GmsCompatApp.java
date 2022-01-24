@@ -17,21 +17,54 @@
 package com.android.internal.gmscompat;
 
 import android.content.Context;
-import android.content.Intent;
+import android.os.Binder;
+import android.os.Bundle;
+import android.os.IBinder;
+import android.os.RemoteException;
+import android.util.Log;
 
 public final class GmsCompatApp {
-    private static final String TAG = "GmsCompat/App";
-
+    private static final String TAG = "GmsCompat/GCA";
     public static final String PKG_NAME = "app.grapheneos.gmscompat";
+    private static final String KEY_BINDER = "binder";
+
+    // needed to establish bidirectional IBinder.linkToDeath()
+    @SuppressWarnings("FieldCanBeLocal")
+    private static Binder localBinder;
+    @SuppressWarnings("FieldCanBeLocal")
+    private static IBinder remoteBinder;
 
     private GmsCompatApp() {}
 
-    // this service binds to Play Services and Play Store, thereby raising their priority and
-    // allowing them to start their own services
-    static void startPersistentFgService(Context ctx) {
-        Intent i = new Intent(ctx.getPackageName());
-        i.setClassName(PKG_NAME,
-            PKG_NAME + ".PersistentFgService");
-        ctx.startForegroundService(i);
+    static IBinder connect(Context ctx) {
+        Binder local = new Binder();
+        localBinder = local;
+        Bundle extras = new Bundle();
+        extras.putBinder(KEY_BINDER, local);
+
+        Bundle res = null;
+        String provider = PKG_NAME + ".BinderProvider";
+        try {
+            res = ctx.getContentResolver().call(provider, ctx.getPackageName(), null, extras);
+        } catch (Throwable t) {
+            Log.e(TAG, "call to " + provider + " failed", t);
+            System.exit(1);
+        }
+        IBinder b = res.getBinder(KEY_BINDER);
+        try {
+            b.linkToDeath(new DeathRecipient(), 0);
+        } catch (RemoteException e) {
+            Log.e(TAG, PKG_NAME + " already died", e);
+            System.exit(1);
+        }
+        remoteBinder = b;
+        return b;
+    }
+
+    static class DeathRecipient implements IBinder.DeathRecipient {
+        public void binderDied() {
+            Log.e(TAG, PKG_NAME + " died");
+            System.exit(1);
+        }
     }
 }
