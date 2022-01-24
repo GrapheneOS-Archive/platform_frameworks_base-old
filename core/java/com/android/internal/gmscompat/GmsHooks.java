@@ -163,16 +163,6 @@ public final class GmsHooks {
             }
             if (GmsCompat.isPlayServices()) {
                 GmsDynamiteHooks.initGmsServerApp(app);
-
-                if ("com.google.android.gms.persistent".equals(processName)) {
-                    // BOOT_COMPLETED receiver runs in this process
-                    GmsCompatApp.startPersistentFgService(app);
-                }
-            } else if (GmsCompat.isPlayStore()) {
-                if (GmsInfo.PACKAGE_PLAY_STORE.equals(processName)) {
-                    // BOOT_COMPLETED receiver runs in this process
-                    GmsCompatApp.startPersistentFgService(app);
-                }
             } else if (GmsInfo.PACKAGE_GSF.equals(app.getPackageName()) && "com.google.process.gapps".equals(processName)) {
                 ContentValues cv = new ContentValues();
                 cv.put("name", "network_location_opt_in");
@@ -182,6 +172,11 @@ public final class GmsHooks {
                 // have ACCESS_FINE_LOCATION permission and have set PRIORITY_HIGH_ACCURACY
                 // in their LocationRequest to GMS
                 app.getContentResolver().insert(Uri.parse("content://com.google.settings/partner"), cv);
+            }
+            if (!Process.isIsolated()) {
+                GmsCompatApp.connect(app);
+            } else {
+                Log.d(TAG, "initApplicationBeforeOnCreate: isolated process " + Application.getProcessName());
             }
         } else if (GmsCompat.isDynamiteClient()) {
             GmsDynamiteHooks.initClientApp();
