@@ -32,7 +32,6 @@ import android.content.res.XmlResourceParser;
 import android.os.Build;
 
 import com.android.internal.R;
-import com.android.internal.gmscompat.GmsInfo;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -91,11 +90,6 @@ public class ParsedServiceUtils {
                     R.styleable.AndroidManifestService_foregroundServiceType,
                     ServiceInfo.FOREGROUND_SERVICE_TYPE_NONE);
 
-            if (GmsInfo.PACKAGE_GMS.equals(packageName)) {
-                if (service.getName().startsWith("com.google.android.location")) {
-                    service.foregroundServiceType |= ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION;
-                }
-            }
             service.flags |= flag(ServiceInfo.FLAG_STOP_WITH_TASK,
                     R.styleable.AndroidManifestService_stopWithTask, sa)
                     | flag(ServiceInfo.FLAG_ISOLATED_PROCESS,
