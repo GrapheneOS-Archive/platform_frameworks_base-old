@@ -152,7 +152,7 @@ public final class GmsHooks {
 
     // Instrumentation#newApplication(ClassLoader, String, Context)
     public static void initApplicationBeforeOnCreate(Application app) {
-        GmsCompat.initChangeEnableStates(app);
+        GmsCompat.maybeEnable(app);
 
         if (GmsCompat.isEnabled()) {
             String processName = Application.getProcessName();
