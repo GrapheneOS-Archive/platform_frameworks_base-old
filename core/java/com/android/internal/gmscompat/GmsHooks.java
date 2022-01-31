@@ -25,10 +25,8 @@ import android.app.NotificationChannel;
 import android.app.NotificationChannelGroup;
 import android.app.NotificationManager;
 import android.app.compat.gms.GmsCompat;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Process;
 import android.os.SystemClock;
@@ -152,7 +150,7 @@ public final class GmsHooks {
 
     // Instrumentation#newApplication(ClassLoader, String, Context)
     public static void initApplicationBeforeOnCreate(Application app) {
-        GmsCompat.initChangeEnableStates(app);
+        GmsCompat.maybeEnable(app);
 
         if (GmsCompat.isEnabled()) {
             String processName = Application.getProcessName();
