@@ -1152,12 +1152,15 @@ public class Binder implements IBinder {
         // WorkSource the caller has set. Use calling uid as the default.
         final int callingUid = Binder.getCallingUid();
         if (GmsCompat.isEnabled()) {
-            if (callingUid >= Process.FIRST_APPLICATION_UID && callingUid != mPreviousUid) {
+            if (callingUid != mPreviousUid) {
                 // harmless race
                 mPreviousUid = callingUid;
-                GmsHooks.onBinderTransaction(Binder.getCallingPid(), callingUid);
+                if (Process.isApplicationUid(callingUid)) {
+                    GmsHooks.onBinderTransaction(Binder.getCallingPid(), callingUid);
+                }
             }
         }
+
         final long origWorkSource = ThreadLocalWorkSource.setUid(callingUid);
         try {
             return execTransactInternal(code, dataObj, replyObj, flags, callingUid);
