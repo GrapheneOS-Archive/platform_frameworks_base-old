@@ -32,8 +32,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Process;
 import android.os.SystemClock;
-import android.os.UserHandle;
-import android.os.UserManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.util.SparseArray;
@@ -106,18 +104,6 @@ public final class GmsHooks {
      * API shims
      */
 
-    // Report a single user on the system
-    // UserManager#getSerialNumbersOfUsers(boolean)
-    public static long[] getSerialNumbersOfUsers(UserManager userManager) {
-        return new long[] { userManager.getSerialNumberForUser(Process.myUserHandle()) };
-    }
-
-    // Current user is always active
-    // ActivityManager#getCurrentUser()
-    public static int getCurrentUser() {
-        return Process.myUserHandle().getIdentifier();
-    }
-
     /**
      * Use the per-app SSAID as a random serial number for SafetyNet. This doesn't necessarily make
      * pass, but at least it retusn a valid "failed" response and stops spamming device key
@@ -175,13 +161,6 @@ public final class GmsHooks {
         } else if (GmsCompat.isDynamiteClient()) {
             GmsDynamiteHooks.initClientApp();
         }
-    }
-
-    // Redirect cross-user interactions to current user
-    // ContextImpl#sendOrderedBroadcastAsUser
-    // ContextImpl#sendBroadcastAsUser
-    public static UserHandle getUserHandle(UserHandle user) {
-        return GmsCompat.isEnabled() ? Process.myUserHandle() : user;
     }
 
     static class RecentBinderPid implements Comparable<RecentBinderPid> {
