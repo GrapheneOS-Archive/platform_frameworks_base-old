@@ -2077,6 +2077,8 @@ class ContextImpl extends Context {
                 case Context.CONTEXTHUB_SERVICE:
                 case Context.WIFI_SCANNING_SERVICE:
                 case Context.APP_INTEGRITY_SERVICE:
+                // used for factory reset protection
+                case Context.PERSISTENT_DATA_BLOCK_SERVICE:
                     // these privileged services are null-checked by GMS
                     return null;
             }
