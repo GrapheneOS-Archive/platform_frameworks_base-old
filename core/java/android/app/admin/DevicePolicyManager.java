@@ -5445,6 +5445,11 @@ public class DevicePolicyManager {
      */
     public @Nullable FactoryResetProtectionPolicy getFactoryResetProtectionPolicy(
             @Nullable ComponentName admin) {
+        if (GmsCompat.isEnabled()) {
+            // called during account removal to check whether it's allowed, requires privileged permissions
+            return null;
+        }
+
         throwIfParentInstance("getFactoryResetProtectionPolicy");
         if (mService != null) {
             try {
