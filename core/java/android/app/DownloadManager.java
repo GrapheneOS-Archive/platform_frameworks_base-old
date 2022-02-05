@@ -36,6 +36,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.CursorWrapper;
 import android.database.DatabaseUtils;
+import android.database.MatrixCursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkPolicyManager;
 import android.net.Uri;
@@ -1170,6 +1171,12 @@ public class DownloadManager {
 
     /** @hide */
     public Cursor query(Query query, String[] projection) {
+        // don't crash apps that expect INTERNET permission to be always granted
+        Context ctx = ActivityThread.currentApplication();
+        if (ctx != null && ctx.checkSelfPermission(Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED) {
+            // underlying provider is protected by the INTERNET permission
+            return new MatrixCursor(projection);
+        }
         Cursor underlyingCursor = query.runQuery(mResolver, projection, mBaseUri);
         if (underlyingCursor == null) {
             return null;
