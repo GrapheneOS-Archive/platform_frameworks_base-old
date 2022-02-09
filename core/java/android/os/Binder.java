@@ -26,6 +26,7 @@ import android.util.ExceptionUtils;
 import android.util.Log;
 import android.util.Slog;
 
+import com.android.internal.gmscompat.BinderRedirector;
 import com.android.internal.gmscompat.GmsHooks;
 import com.android.internal.os.BinderCallHeavyHitterWatcher;
 import com.android.internal.os.BinderCallHeavyHitterWatcher.BinderCallHeavyHitterListener;
@@ -640,7 +641,15 @@ public class Binder implements IBinder {
     public void attachInterface(@Nullable IInterface owner, @Nullable String descriptor) {
         mOwner = owner;
         mDescriptor = descriptor;
+        if (GmsCompat.isBinderRedirectionAllowed()) {
+            mPerformRedirectionCheck = "com.google.android.gms.common.internal.IGmsCallbacks".equals(descriptor);
+            if (mPerformRedirectionCheck) {
+                BinderRedirector.maybeInit();
+            }
+        }
     }
+
+    private boolean mPerformRedirectionCheck;
 
     /**
      * Default implementation returns an empty interface name.
@@ -1172,6 +1181,7 @@ public class Binder implements IBinder {
         // Log any exceptions as warnings, don't silently suppress them.
         // If the call was FLAG_ONEWAY then these exceptions disappear into the ether.
         final boolean tracingEnabled = Binder.isTracingEnabled();
+        data.mPerformBinderRedirectionCheck = mPerformRedirectionCheck;
         try {
             final BinderCallHeavyHitterWatcher heavyHitterWatcher = sHeavyHitterWatcher;
             if (heavyHitterWatcher != null) {
@@ -1215,6 +1225,7 @@ public class Binder implements IBinder {
             }
             res = true;
         } finally {
+            data.mPerformBinderRedirectionCheck = false;
             if (tracingEnabled) {
                 Trace.traceEnd(Trace.TRACE_TAG_ALWAYS);
             }
