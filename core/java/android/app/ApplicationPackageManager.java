@@ -123,6 +123,7 @@ import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.Immutable;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.gmscompat.GmsHooks;
+import com.android.internal.gmscompat.GmsInfo;
 import com.android.internal.gmscompat.PlayStoreHooks;
 import com.android.internal.os.SomeArgs;
 import com.android.internal.util.UserIcons;
@@ -458,6 +459,12 @@ public class ApplicationPackageManager extends PackageManager {
                         userId);
         if (ai == null) {
             throw new NameNotFoundException(packageName);
+        }
+        if (GmsCompat.isPlayServices()) {
+            if (GmsInfo.PACKAGE_GMS.equals(packageName)) {
+                // checked when on-demand Dynamite modules are requested
+                ai.flags |= ApplicationInfo.FLAG_SYSTEM | ApplicationInfo.FLAG_UPDATED_SYSTEM_APP;
+            }
         }
         return maybeAdjustApplicationInfo(ai);
     }
