@@ -729,6 +729,12 @@ public class ApplicationPackageManager extends PackageManager {
 
     @Override
     public boolean hasSystemFeature(String name, int version) {
+        if (GmsCompat.isEnabled()) {
+            if ("android.hardware.uwb".equals(name)) {
+                // otherwise, GMS tries to access privileged UwbManager and crashes
+                return false;
+            }
+        }
         return mHasSystemFeatureCache.query(new HasSystemFeatureQuery(name, version));
     }
 
