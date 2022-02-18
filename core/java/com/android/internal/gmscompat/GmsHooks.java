@@ -68,6 +68,7 @@ public final class GmsHooks {
             createNotificationChannels(context);
             notificationChannelsCreated = true;
         }
+
         return new Notification.Builder(context, channelId);
     }
 
@@ -75,6 +76,7 @@ public final class GmsHooks {
         if (!GmsCompat.isPlayStore()) {
             return;
         }
+
         NotificationManager manager = context.getSystemService(NotificationManager.class);
         NotificationChannelGroup group = new NotificationChannelGroup(COMPAT_GROUP_ID,
                 context.getText(R.string.gmscompat_channel_group));
@@ -83,8 +85,8 @@ public final class GmsHooks {
         ArrayList<NotificationChannel> channels = new ArrayList<>(7);
         PlayStoreHooks.createNotificationChannel(context, channels);
 
-        for (int i = 0; i < channels.size(); ++i) {
-            channels.get(i).setGroup(COMPAT_GROUP_ID);
+        for (NotificationChannel channel : channels) {
+            channel.setGroup(COMPAT_GROUP_ID);
         }
 
         manager.createNotificationChannels(channels);
