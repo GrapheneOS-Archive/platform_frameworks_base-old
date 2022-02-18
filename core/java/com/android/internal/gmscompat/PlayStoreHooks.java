@@ -94,7 +94,7 @@ public final class PlayStoreHooks {
                         PendingIntent.FLAG_MUTABLE);
         }
 
-        public void onReceive(Context br_context, Intent intent) {
+        public void onReceive(Context receiverContext, Intent intent) {
             String statusKey = PackageInstaller.EXTRA_STATUS;
             if (!intent.hasExtra(statusKey)) {
                 throw new IllegalStateException("no EXTRA_STATUS in intent " + intent);
@@ -180,7 +180,7 @@ public final class PlayStoreHooks {
                         PendingIntent.FLAG_MUTABLE);
         }
 
-        public void onReceive(Context br_context, Intent intent) {
+        public void onReceive(Context receiverContext, Intent intent) {
             context.unregisterReceiver(this);
 
             // EXTRA_STATUS returns PackageInstaller constant,
