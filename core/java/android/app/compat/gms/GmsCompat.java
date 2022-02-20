@@ -30,6 +30,7 @@ import android.os.Binder;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.UserHandle;
+import android.util.Log;
 
 import com.android.internal.gmscompat.GmsInfo;
 
@@ -203,11 +204,12 @@ public final class GmsCompat {
                 .getPackageInfo(GmsInfo.PACKAGE_GMS, PackageManager.GET_SIGNING_CERTIFICATES);
             // Check signature to avoid breaking microG's implementation of Dynamite
             return isGmsApp(gmsPkg);
+        } catch (PackageManager.NameNotFoundException e) {
+            // Ignored: normal - GMS not installed
         } catch (Exception e) {
-            if (!(e instanceof PackageManager.NameNotFoundException)) {
-                e.printStackTrace();
-            }
-            return false;
+            Log.e(TAG, "Failed to get GMS package info", e);
         }
+
+        return false;
     }
 }
