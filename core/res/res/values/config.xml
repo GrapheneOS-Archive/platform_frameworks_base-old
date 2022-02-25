@@ -1752,7 +1752,9 @@
          set before. -->
     <bool name="config_defaultAdasGnssLocationEnabled" translatable="false">false</bool>
 
-    <string-array name="config_locationExtraPackageNames" translatable="false"></string-array>
+    <string-array name="config_locationExtraPackageNames" translatable="false">
+     <item>com.android.bluetooth</item>
+    </string-array>
 
     <!-- The package name of the default network recommendation app.
          A network recommendation provider must:
