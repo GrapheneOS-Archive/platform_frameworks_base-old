@@ -58,6 +58,7 @@ import android.text.TextUtils;
 import android.util.ArraySet;
 import android.util.ExceptionUtils;
 
+import com.android.internal.gmscompat.GmsInfo;
 import com.android.internal.gmscompat.PlayStoreHooks;
 import com.android.internal.util.IndentingPrintWriter;
 import com.android.internal.util.Preconditions;
@@ -443,6 +444,17 @@ public class PackageInstaller {
      *         session is finalized. IDs are not reused during a given boot.
      */
     public int createSession(@NonNull SessionParams params) throws IOException {
+        if (GmsCompat.isPlayStore()) {
+            switch (Objects.requireNonNull(params.appPackageName)) {
+                case "app.attestation.auditor":
+                case "org.grapheneos.pdfviewer":
+                case GmsInfo.PACKAGE_GSF:
+                case GmsInfo.PACKAGE_GMS:
+                case GmsInfo.PACKAGE_PLAY_STORE:
+                    throw new IllegalArgumentException("installation / updates of " + params.appPackageName + " are disallowed");
+            }
+        }
+
         try {
             return mInstaller.createSession(params, mInstallerPackageName, mAttributionTag,
                     mUserId);
