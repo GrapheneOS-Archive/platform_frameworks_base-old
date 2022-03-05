@@ -20,7 +20,6 @@ import android.annotation.NonNull;
 import android.annotation.SystemApi;
 import android.annotation.SystemService;
 import android.annotation.TestApi;
-import android.app.compat.gms.GmsCompat;
 import android.content.Context;
 import android.content.IntentSender;
 import android.content.pm.ParceledListSlice;
@@ -75,10 +74,6 @@ public class AppIntegrityManager {
      */
     public void updateRuleSet(
             @NonNull RuleSet updateRequest, @NonNull IntentSender statusReceiver) {
-        if (GmsCompat.isEnabled()) {
-            return;
-        }
-
         try {
             mManager.updateRuleSet(
                     updateRequest.getVersion(),
@@ -92,10 +87,6 @@ public class AppIntegrityManager {
     /** Get the current version of the rule set. */
     @NonNull
     public String getCurrentRuleSetVersion() {
-        if (GmsCompat.isEnabled()) {
-            return "";
-        }
-
         try {
             return mManager.getCurrentRuleSetVersion();
         } catch (RemoteException e) {
@@ -106,10 +97,6 @@ public class AppIntegrityManager {
     /** Get the name of the package that provided the current rule set. */
     @NonNull
     public String getCurrentRuleSetProvider() {
-        if (GmsCompat.isEnabled()) {
-            return "";
-        }
-
         try {
             return mManager.getCurrentRuleSetProvider();
         } catch (RemoteException e) {
