@@ -70,7 +70,8 @@ public final class DynamiteContext {
     }
 
     public IFileProxyService getService() {
-        return serviceBinder == null ? getNewBinder() : serviceBinder;
+        IFileProxyService cache = serviceBinder;
+        return cache == null ? getNewBinder() : cache;
     }
 
     private IFileProxyService getNewBinder() {
