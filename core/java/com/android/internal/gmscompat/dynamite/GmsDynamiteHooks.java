@@ -130,8 +130,9 @@ public final class GmsDynamiteHooks {
         if (!GmsCompat.isDynamiteClient()) {
             return null;
         }
+
         DynamiteContext dynamiteCtx = getClientContext();
-        final String path = file.getAbsolutePath();
+        final String path = file.getPath();
 
         if (!path.startsWith(dynamiteCtx.gmsDataPrefix)) {
             return null;
