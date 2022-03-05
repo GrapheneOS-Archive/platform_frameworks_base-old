@@ -31,8 +31,8 @@ import java.util.zip.ZipEntry;
 public final class ModuleLoadState {
     private static final Pattern CLASSES_DEX_PATTERN = Pattern.compile("^classes\\d*\\.dex$");
 
-    public String modulePath;
-    public FileDescriptor moduleFd;
+    public final String modulePath;
+    public final FileDescriptor moduleFd;
 
     public ModuleLoadState(String modulePath, FileDescriptor moduleFd) {
         this.modulePath = modulePath;
