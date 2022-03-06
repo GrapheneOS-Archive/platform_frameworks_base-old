@@ -460,12 +460,15 @@ public class ApplicationPackageManager extends PackageManager {
         if (ai == null) {
             throw new NameNotFoundException(packageName);
         }
+
         if (GmsCompat.isPlayServices()) {
             if (GmsInfo.PACKAGE_GMS.equals(packageName)) {
-                // checked when on-demand Dynamite modules are requested
+                // checked before accessing com.google.android.gms.phenotype content provider
+                // PhenotypeFlags will always return their default values if these flags aren't set
                 ai.flags |= ApplicationInfo.FLAG_SYSTEM | ApplicationInfo.FLAG_UPDATED_SYSTEM_APP;
             }
         }
+
         return maybeAdjustApplicationInfo(ai);
     }
 
