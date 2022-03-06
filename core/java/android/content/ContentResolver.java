@@ -41,6 +41,7 @@ import android.database.ContentObserver;
 import android.database.CrossProcessCursorWrapper;
 import android.database.Cursor;
 import android.database.IContentObserver;
+import android.database.MatrixCursor;
 import android.graphics.Bitmap;
 import android.graphics.ImageDecoder;
 import android.graphics.ImageDecoder.ImageInfo;
@@ -1193,6 +1194,14 @@ public abstract class ContentResolver implements ContentInterface {
             @Nullable String[] projection, @Nullable Bundle queryArgs,
             @Nullable CancellationSignal cancellationSignal) {
         Objects.requireNonNull(uri, "uri");
+
+        if (GmsCompat.isEnabled()) {
+            if ("content://com.google.android.gms.phenotype/com.google.android.location".equals(uri.toString())) {
+                // keep PhenotypeFlags of the location service at their default values
+                // (updated flags degrade its speed and accuracy for unknown reasons)
+                return new MatrixCursor(projection);
+            }
+        }
 
         try {
             if (mWrapped != null) {
