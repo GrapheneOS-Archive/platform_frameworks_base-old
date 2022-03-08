@@ -109,7 +109,7 @@ public class Flags {
     /***************************************/
     // 800 - general visual/theme
     public static final BooleanFlag MONET =
-            new BooleanFlag(800, true, R.bool.flag_monet);
+            new BooleanFlag(800, false, R.bool.flag_monet);
 
     // Pay no attention to the reflection behind the curtain.
     // ========================== Curtain ==========================
