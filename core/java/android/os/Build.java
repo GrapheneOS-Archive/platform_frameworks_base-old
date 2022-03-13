@@ -1261,7 +1261,6 @@ public class Build {
             if (!Objects.equals(system, vendor)) {
                 Slog.e(TAG, "Mismatched fingerprints; system reported " + system
                         + " but vendor reported " + vendor);
-                return false;
             }
         }
 
