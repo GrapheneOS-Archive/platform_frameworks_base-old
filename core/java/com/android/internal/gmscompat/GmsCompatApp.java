@@ -17,6 +17,8 @@
 package com.android.internal.gmscompat;
 
 import android.app.ActivityThread;
+import android.app.Application;
+import android.app.compat.gms.GmsCompat;
 import android.content.Context;
 import android.os.Binder;
 import android.os.Bundle;
@@ -24,12 +26,15 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 
+import com.android.internal.gmscompat.dynamite.server.FileProxyService;
+
 public final class GmsCompatApp {
     private static final String TAG = "GmsCompat/GCA";
     public static final String PKG_NAME = "app.grapheneos.gmscompat";
     private static final String KEY_BINDER = "binder";
     private static final String KEY_BINDER_TRANSACTION_CODES = "binder_txn_codes";
     private static final String KEY_RESULT = "result";
+    private static final String KEY_DynamiteFileProxyService = "DynamiteFileProxyService";
 
     // needed to establish bidirectional IBinder.linkToDeath()
     @SuppressWarnings("FieldCanBeLocal")
@@ -39,12 +44,25 @@ public final class GmsCompatApp {
 
     private GmsCompatApp() {}
 
+    // written by Play services to keep the binder alive
+    @SuppressWarnings("FieldCanBeLocal")
+    private static FileProxyService dynamiteFileProxyService;
+
     // called by GSF, Play services, Play Store during startup
     static IBinder connect(Context ctx) {
         Binder local = new Binder();
         localBinder = local;
         Bundle extras = new Bundle();
         extras.putBinder(KEY_BINDER, local);
+
+        if (GmsCompat.isPlayServices() && "com.google.android.gms.persistent".equals(Application.getProcessName())) {
+            // FileProxyService binder needs to be always available to the Dynamite clients.
+            // "persistent" process launches at bootup and is kept alive by the ServiceConnection
+            // from the GmsCompatApp, which makes it fit for the purpose of hosting the FileProxyService
+            FileProxyService s = new FileProxyService(ctx);
+            dynamiteFileProxyService = s;
+            extras.putBinder(KEY_DynamiteFileProxyService, s.asBinder());
+        }
 
         String authority = PKG_NAME + ".BinderProvider";
         Bundle res = call(ctx, authority, ctx.getPackageName(), null, extras);
@@ -59,6 +77,7 @@ public final class GmsCompatApp {
 
     private static final int METHOD_GET_REDIRECTABLE_INTERFACES = 0;
     private static final int METHOD_GET_REDIRECTOR = 1;
+    private static final int METHOD_GET_DynamiteFileProxyService = 2;
 
     public static String[] getRedirectableInterfaces() {
         Bundle b = gmsClientProviderCall(METHOD_GET_REDIRECTABLE_INTERFACES, null, null);
@@ -74,6 +93,11 @@ public final class GmsCompatApp {
         IBinder binder = b.getBinder(KEY_BINDER);
         int[] txnCodes = b.getIntArray(KEY_BINDER_TRANSACTION_CODES);
         return new BinderRedirector(binder, txnCodes);
+    }
+
+    public static IBinder getDynamiteFileProxyService() {
+        Bundle b = gmsClientProviderCall(METHOD_GET_DynamiteFileProxyService, null, null);
+        return b.getBinder(KEY_BINDER);
     }
 
     private static Bundle gmsClientProviderCall(int method, String arg, Bundle bundleArg) {
