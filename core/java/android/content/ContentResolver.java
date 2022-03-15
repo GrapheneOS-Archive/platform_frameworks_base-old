@@ -74,6 +74,7 @@ import android.util.SparseArray;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.gmscompat.PlayStoreHooks;
+import com.android.internal.gmscompat.dynamite.GmsDynamiteClientHooks;
 import com.android.internal.util.MimeIconUtils;
 
 import dalvik.system.CloseGuard;
@@ -2488,6 +2489,8 @@ public abstract class ContentResolver implements ContentInterface {
         }
         final String auth = uri.getAuthority();
         if (auth != null) {
+            GmsDynamiteClientHooks.maybeInit(mContext, auth);
+
             return acquireProvider(mContext, auth);
         }
         return null;
