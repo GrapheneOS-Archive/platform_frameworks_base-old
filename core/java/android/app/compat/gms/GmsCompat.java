@@ -71,6 +71,12 @@ public final class GmsCompat {
     }
 
     /** @hide */
+    public static boolean isGmsClient() {
+        // alias isDynamiteClient() to clarify intent
+        return isDynamiteClientEnabled;
+    }
+
+    /** @hide */
     public static boolean isDynamiteClient() {
         return isDynamiteClientEnabled;
     }
