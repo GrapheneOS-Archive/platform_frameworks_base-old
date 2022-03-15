@@ -461,9 +461,11 @@ public class ApplicationPackageManager extends PackageManager {
             throw new NameNotFoundException(packageName);
         }
 
-        if (GmsCompat.isPlayServices()) {
+        if (GmsCompat.isGmsClient() || GmsCompat.isPlayServices()) {
             if (GmsInfo.PACKAGE_GMS.equals(packageName)) {
                 // checked before accessing com.google.android.gms.phenotype content provider
+                // in com.google.android.libraries.phenotype.client
+                // .PhenotypeClientHelper#validateContentProvider() -> isGmsCorePreinstalled()
                 // PhenotypeFlags will always return their default values if these flags aren't set
                 ai.flags |= ApplicationInfo.FLAG_SYSTEM | ApplicationInfo.FLAG_UPDATED_SYSTEM_APP;
             }
