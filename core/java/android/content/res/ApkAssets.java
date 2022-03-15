@@ -18,7 +18,6 @@ package android.content.res;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
-import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.content.om.OverlayableInfo;
 import android.content.res.loader.AssetsProvider;
@@ -26,7 +25,7 @@ import android.content.res.loader.ResourcesProvider;
 import android.text.TextUtils;
 
 import com.android.internal.annotations.GuardedBy;
-import com.android.internal.gmscompat.dynamite.GmsDynamiteHooks;
+import com.android.internal.gmscompat.dynamite.GmsDynamiteClientHooks;
 
 import java.io.FileDescriptor;
 import java.io.IOException;
@@ -143,14 +142,7 @@ public final class ApkAssets {
      */
     public static @NonNull ApkAssets loadFromPath(@NonNull String path, @PropertyFlags int flags)
             throws IOException {
-        if (GmsCompat.isDynamiteClient()) {
-            ApkAssets assets = GmsDynamiteHooks.loadAssetsFromPath(path, flags);
-            if (assets != null) {
-                return assets;
-            }
-        }
-
-        return new ApkAssets(FORMAT_APK, path, flags, null /* assets */);
+        return loadFromPath(path, flags, null);
     }
 
     /**
@@ -164,6 +156,13 @@ public final class ApkAssets {
      */
     public static @NonNull ApkAssets loadFromPath(@NonNull String path, @PropertyFlags int flags,
             @Nullable AssetsProvider assets) throws IOException {
+        if (GmsDynamiteClientHooks.enabled()) {
+            ApkAssets apkAssets = GmsDynamiteClientHooks.loadAssetsFromPath(path, flags, assets);
+            if (apkAssets != null) {
+                return apkAssets;
+            }
+        }
+
         return new ApkAssets(FORMAT_APK, path, flags, assets);
     }
 
