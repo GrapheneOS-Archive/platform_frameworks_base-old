@@ -54,6 +54,8 @@ public class KeyguardPINView extends KeyguardPinBasedInputView {
     private int mDisappearYTranslation;
     private View[][] mViews;
     @DevicePostureInt private int mLastDevicePosture = DEVICE_POSTURE_UNKNOWN;
+    private boolean mScramblePin;
+    private List<Integer> mDigits = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 0);
 
     public KeyguardPINView(Context context) {
         this(context, null);
@@ -168,18 +170,17 @@ public class KeyguardPINView extends KeyguardPinBasedInputView {
                         null, mEcaView, null
                 }};
 
-        boolean scramblePin = Settings.Secure.getIntForUser(mContext.getContentResolver(),
+        mScramblePin = Settings.Secure.getIntForUser(mContext.getContentResolver(),
                 Settings.Secure.SCRAMBLE_PIN_LAYOUT, 0, ActivityManager.getCurrentUser()) == 1;
 
-        if (scramblePin) {
-            List<Integer> digits = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 0);
-            Collections.shuffle(digits, new SecureRandom());
+        if (mScramblePin) {
+            Collections.shuffle(mDigits, new SecureRandom());
             int finished = 0;
             for (int i = 0; i < mContainer.getChildCount(); i++) {
                 View view = mContainer.getChildAt(i);
                 if (view instanceof NumPadKey) {
                     NumPadKey key = (NumPadKey) view;
-                    key.setDigit(digits.get(finished));
+                    key.setDigit(mDigits.get(finished));
                     finished++;
                 }
             }
@@ -233,6 +234,14 @@ public class KeyguardPINView extends KeyguardPinBasedInputView {
         mContainer.setClipToPadding(enable);
         mContainer.setClipChildren(enable);
         setClipChildren(enable);
+    }
+
+    @Override
+    protected int getNumberIndex(int number) {
+        if (mScramblePin) {
+            return (mDigits.indexOf(number) + 1) % mDigits.size();
+        }
+        return super.getNumberIndex(number);
     }
 
     @Override
