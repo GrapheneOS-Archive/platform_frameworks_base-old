@@ -53,6 +53,7 @@ import android.os.RemoteException;
 import android.os.UserHandle;
 import android.util.AndroidException;
 import android.util.ArraySet;
+import android.util.Log;
 import android.util.Pair;
 import android.util.proto.ProtoOutputStream;
 
@@ -381,7 +382,7 @@ public final class PendingIntent implements Parcelable {
         sOnMarshaledListener.set(listener);
     }
 
-    private static void checkFlags(int flags, String packageName) {
+    private static int checkFlags(int flags, String packageName) {
         final boolean flagImmutableSet = (flags & PendingIntent.FLAG_IMMUTABLE) != 0;
         final boolean flagMutableSet = (flags & PendingIntent.FLAG_MUTABLE) != 0;
 
@@ -398,8 +399,11 @@ public final class PendingIntent implements Parcelable {
                     + " using FLAG_IMMUTABLE, only use FLAG_MUTABLE if some functionality"
                     + " depends on the PendingIntent being mutable, e.g. if it needs to"
                     + " be used with inline replies or bubbles.";
-                throw new IllegalArgumentException(msg);
+            // secure-by-default instead of crash-by-default for better compatibility
+            Log.e(TAG, msg);
+            return flags | PendingIntent.FLAG_IMMUTABLE;
         }
+        return flags;
     }
 
     /**
@@ -481,7 +485,7 @@ public final class PendingIntent implements Parcelable {
             @NonNull Intent intent, int flags, Bundle options, UserHandle user) {
         String packageName = context.getPackageName();
         String resolvedType = intent.resolveTypeIfNeeded(context.getContentResolver());
-        checkFlags(flags, packageName);
+        flags = checkFlags(flags, packageName);
         try {
             intent.migrateExtraStreamToClipData(context);
             intent.prepareToLeaveProcess(context);
@@ -616,7 +620,7 @@ public final class PendingIntent implements Parcelable {
             intents[i].prepareToLeaveProcess(context);
             resolvedTypes[i] = intents[i].resolveTypeIfNeeded(context.getContentResolver());
         }
-        checkFlags(flags, packageName);
+        flags = checkFlags(flags, packageName);
         try {
             IIntentSender target =
                 ActivityManager.getService().getIntentSenderWithFeature(
@@ -668,7 +672,7 @@ public final class PendingIntent implements Parcelable {
             Intent intent, int flags, UserHandle userHandle) {
         String packageName = context.getPackageName();
         String resolvedType = intent.resolveTypeIfNeeded(context.getContentResolver());
-        checkFlags(flags, packageName);
+        flags = checkFlags(flags, packageName);
         try {
             intent.prepareToLeaveProcess(context);
             IIntentSender target =
@@ -747,7 +751,7 @@ public final class PendingIntent implements Parcelable {
             Intent intent, int flags, int serviceKind) {
         String packageName = context.getPackageName();
         String resolvedType = intent.resolveTypeIfNeeded(context.getContentResolver());
-        checkFlags(flags, packageName);
+        flags = checkFlags(flags, packageName);
         try {
             intent.prepareToLeaveProcess(context);
             IIntentSender target =
