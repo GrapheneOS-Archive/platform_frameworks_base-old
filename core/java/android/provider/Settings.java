@@ -9980,6 +9980,12 @@ public final class Settings {
             "lockscreen_scramble_pin_layout";
 
         /**
+         * Whether to enable eSIM with sandboxed Google Play
+         * @hide
+         */
+        public static final String ESIM_SANDBOXED_PLAY =
+            "gmscompat_esim_sandboxed_play";
+        /**
          * Whether or not to enable media resumption
          * When enabled, media controls in quick settings will populate on boot and persist if
          * resumable via a MediaBrowserService.
