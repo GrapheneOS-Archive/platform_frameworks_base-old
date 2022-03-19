@@ -4804,4 +4804,10 @@
   <java-symbol type="id" name="language_picker_header" />
 
   <java-symbol type="dimen" name="status_bar_height_default" />
+
+  <!-- Text shown for notifications from other users. -->
+  <java-symbol type="string" name="notification_channel_other_users" />
+  <java-symbol type="string" name="notification_channel_other_users_description" />
+  <java-symbol type="string" name="other_users_notification_title" />
+  <java-symbol type="string" name="other_users_notification_switch_user_action" />
 </resources>
