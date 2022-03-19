@@ -65,6 +65,7 @@ public class SystemNotificationChannels {
     @Deprecated public static String SYSTEM_CHANGES_DEPRECATED = "SYSTEM_CHANGES";
     public static String SYSTEM_CHANGES = "SYSTEM_CHANGES_ALERTS";
     public static String DO_NOT_DISTURB = "DO_NOT_DISTURB";
+    public static String OTHER_USERS = "OTHER_USERS";
     public static String ACCESSIBILITY_MAGNIFICATION = "ACCESSIBILITY_MAGNIFICATION";
     public static String ACCESSIBILITY_SECURITY_POLICY = "ACCESSIBILITY_SECURITY_POLICY";
     public static String ABUSIVE_BACKGROUND_APPS = "ABUSIVE_BACKGROUND_APPS";
@@ -205,6 +206,13 @@ public class SystemNotificationChannels {
                 context.getString(R.string.notification_channel_do_not_disturb),
                 NotificationManager.IMPORTANCE_LOW);
         channelsList.add(dndChanges);
+
+        NotificationChannel otherUsers = new NotificationChannel(OTHER_USERS,
+                context.getString(R.string.notification_channel_other_users),
+                NotificationManager.IMPORTANCE_DEFAULT);
+        otherUsers.setDescription(context.getString(R.string.notification_channel_other_users_description));
+        otherUsers.setBlockable(true);
+        channelsList.add(otherUsers);
 
         final NotificationChannel newFeaturePrompt = new NotificationChannel(
                 ACCESSIBILITY_MAGNIFICATION,
