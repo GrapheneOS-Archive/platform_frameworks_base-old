@@ -7142,6 +7142,9 @@ public class PackageManagerService extends IPackageManager.Stub
                 selinuxChangeListener);
 
         m.installWhitelistedSystemPackages();
+
+        EuiccCompatHooks.onServiceInitCompleted(m);
+
         ServiceManager.addService("package", m);
         final PackageManagerNative pmn = m.new PackageManagerNative();
         ServiceManager.addService("package_native", pmn);
@@ -21424,6 +21427,9 @@ public class PackageManagerService extends IPackageManager.Stub
                     + (versionCode == PackageManager.VERSION_CODE_HIGHEST
                     ? "VERSION_CODE_HIGHEST" : versionCode));
         }
+
+        EuiccCompatHooks.onDeletePackage(this, internalPackageName, deleteAllUsers, userId);
+
         // Queue up an async operation since the package deletion may take a little while.
         mHandler.post(() -> {
             int returnCode;
@@ -24091,6 +24097,9 @@ public class PackageManagerService extends IPackageManager.Stub
                     return;
                 }
             }
+
+            EuiccCompatHooks.onSetEnabledSetting(this, packageName, newState, userId);
+
             // If we're enabling a system stub, there's a little more work to do.
             // Prior to enabling the package, we need to decompress the APK(s) to the
             // data partition and then replace the version on the system partition.
