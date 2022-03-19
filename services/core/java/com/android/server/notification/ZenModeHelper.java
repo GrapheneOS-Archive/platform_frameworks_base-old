@@ -25,6 +25,8 @@ import static android.util.StatsLog.ANNOTATION_ID_IS_UID;
 
 import static com.android.internal.util.FrameworkStatsLog.DND_MODE_RULE;
 
+import static com.android.server.notification.NotificationManagerService.CensoredSendState;
+
 import android.app.AppOpsManager;
 import android.app.AutomaticZenRule;
 import android.app.Notification;
@@ -197,6 +199,115 @@ public class ZenModeHelper {
         synchronized (mConfig) {
             return mFiltering.shouldIntercept(mZenMode, mConsolidatedPolicy, record);
         }
+    }
+
+    /**
+     * <p>Determines the censored notification sending state depending on an arbitrary user's
+     * ZenModeConfig. For use in determining if a notification should be forwarded to the foreground
+     * user in censored form.</p>
+     *
+     * <p>Suppose user A is a background user and user B is the foreground user, and that all other
+     * checks for sending censored notifications have passed.</p>
+     *
+     * <ul>
+     * <li>
+     *     If user A has DND off, then user B will get the censored notifications normally
+     *     ({@link CensoredSendState#SEND_NORMAL}). (This means that user B can get a notification
+     *     that makes noise.)
+     * </li>
+     * <li>
+     *     If user A has DND on and isn't hiding notifications from notification shade/lock screen,
+     *     then user B will get muted censored notifications ({@link CensoredSendState#SEND_QUIET}).
+     * </li>
+     * <li>
+     *     If user A has DND on and is hiding notifications, then user B will not get any censored
+     *     notifications {@link CensoredSendState#DONT_SEND}, unless user A manually set it so that
+     *     the notification bypasses DND
+     *
+     *     <ul><li>If it bypasses DND, then user B will get the notification normally
+     *     ({@link CensoredSendState#SEND_NORMAL}).</li></ul>
+     * </ul>
+     *
+     * <p>No mConfig lock is needed during parsing; we work on a copy of the ZenModeConfig.</p>
+     *
+     * <p>See {@link #computeZenMode()} for where the logic for computing zen mode was taken from.
+     * See {@link #updateConsolidatedPolicy(String)} for where the logic for creating a consolidated
+     * policy was taken from. Both methods are combined here to be able to generate a consolidated
+     * policy for an arbitrary ZenModeConfig. We can't use those methods directly, since they
+     * operate on only the foreground user.</p>
+     *
+     * @implNote <p>This doesn't respect automatic rules for background users that change their state
+     * (i.e. become active or inactive), because the calendar/timers to do so are only checked for
+     * the foreground user. (e.g., If a background user has DND on due to an automatic rule, and that
+     * DND rule turns off while the user is still backgrounded, then this method will still treat
+     * notifications as intercepted by DND.)</p>
+     *
+     * <p>We could try to do something like make
+     * {@link ZenModeConfig#parseAutomaticRuleEndTime(Context, Uri)} public and test that against
+     * System.currentTimeMillis.</p>, but that would make this more complicated.
+     *
+     * @param record The notification that is checked to see if it should be intercepted by DND.
+     * @param userId The identifier of the user to check the DND settings for.
+     * @return The censored sending state derived from the the notification and the user's do not
+     *         disturb settings.
+     */
+    CensoredSendState getCensoredSendStateFromUserDndOnVisuals(NotificationRecord record,
+                                                               int userId) {
+        final ZenModeConfig config = getConfigCopyForUser(userId);
+        if (config == null) {
+            return CensoredSendState.SEND_NORMAL;
+        }
+
+        // We create the consolidated policy for the user, and simultaneously compute the zen mode.
+        // The structure is derived from the other methods (see doc comment).
+        final ZenPolicy zenPolicy = new ZenPolicy();
+        int zenMode = Global.ZEN_MODE_OFF;
+        boolean isZenModeFromManualConfig = false;
+        if (config.manualRule != null) {
+            // Don't replace the zen mode anymore. This mirrors the line
+            // `if (mConfig.manualRule != null) return mConfig.manualRule.zenMode;`
+            // from computeZenMode.
+            isZenModeFromManualConfig = true;
+            zenMode = config.manualRule.zenMode;
+            if (zenMode == Global.ZEN_MODE_OFF) {
+                // zenMode won't be changed again anyway, so it won't be intercepted. Send normally
+                // to avoid constructing a consolidated policy.
+                return CensoredSendState.SEND_NORMAL;
+            }
+            applyCustomPolicy(zenPolicy, config.manualRule);
+        }
+
+        // This is apparently how automatic rules are parsed.
+        for (ZenRule automaticRule : config.automaticRules.values()) {
+            if (automaticRule.isAutomaticActive()) {
+                applyCustomPolicy(zenPolicy, automaticRule);
+                if (!isZenModeFromManualConfig
+                        && zenSeverity(automaticRule.zenMode) > zenSeverity(zenMode)) {
+                    zenMode = automaticRule.zenMode;
+                }
+            }
+        }
+
+        if (zenMode == Global.ZEN_MODE_OFF) {
+            // Send normally to avoid constructing a consolidated policy.
+            return CensoredSendState.SEND_NORMAL;
+        }
+
+        // Create the consolidated policy. (Maybe these can be cached?)
+        final NotificationManager.Policy policy = config.toNotificationPolicy(zenPolicy);
+
+        if (mFiltering.shouldIntercept(zenMode, policy, record)) {
+            // Here, notification does not bypass DND
+            if ((policy.suppressedVisualEffects &
+                    NotificationManager.Policy.SUPPRESSED_EFFECT_NOTIFICATION_LIST) != 0) {
+                // If user A has DND on and is hiding notifications from notification shade/loc,
+                // then user B will not get any censored notifications
+                return CensoredSendState.DONT_SEND;
+            }
+            // Otherwise user B will get muted censored notifications
+            return CensoredSendState.SEND_QUIET;
+        }
+        return CensoredSendState.SEND_NORMAL;
     }
 
     public void addCallback(Callback callback) {
@@ -870,6 +981,23 @@ public class ZenModeHelper {
     public ZenModeConfig getConfig() {
         synchronized (mConfig) {
             return mConfig.copy();
+        }
+    }
+
+    /**
+     * For use in determining if a notification should be forwarded to the foreground user in
+     * censored form.
+     *
+     * ZenModeHelper works by only focusing on the *foreground* user's do not disturb settings.
+     * This is needed to expose a way to get the config and interception results for an arbitrary
+     * user without getting affected by any changes.
+     *
+     * @return a copy of the zen mode configuration for the given userId
+     */
+    private ZenModeConfig getConfigCopyForUser(int userId) {
+        synchronized (mConfig) {
+            final ZenModeConfig config = mConfigs.get(userId);
+            return config != null ? config.copy() : null;
         }
     }
 
