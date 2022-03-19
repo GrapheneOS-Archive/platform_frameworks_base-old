@@ -6076,4 +6076,10 @@ ul.</string>
     <string name="ui_translation_accessibility_translated_text"><xliff:g id="message" example="Hello">%1$s</xliff:g> Translated.</string>
     <!-- Accessibility message announced to notify the user when the system has finished translating the content displayed on the screen to a different language after the user requested translation. [CHAR LIMIT=NONE] -->
     <string name="ui_translation_accessibility_translation_finished">Message translated from <xliff:g id="from_language" example="English">%1$s</xliff:g> to <xliff:g id="to_language" example="French">%2$s</xliff:g>.</string>
+
+    <!-- Text shown for notifications from other users. -->
+    <string name="notification_channel_other_users">Other users</string>
+    <string name="notification_channel_other_users_description">Censored notifications from the lock screens of other users</string>
+    <string name="other_users_notification_title">Notification from <xliff:g id="app_name" example="Messages">%1$s</xliff:g> for <xliff:g id="username" example="Alice">%2$s</xliff:g></string>
+    <string name="other_users_notification_switch_user_action">Switch to <xliff:g id="username" example="Bob">%1$s</xliff:g></string>
 </resources>
