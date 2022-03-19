@@ -6368,4 +6368,10 @@ ul.</string>
     <!-- Communal profile label on a screen. This can be used as a tab label for this profile in tabbed views and can be used to represent the profile in sharing surfaces, etc. [CHAR LIMIT=20] -->
     <string name="profile_label_communal">Communal</string>
 
+
+    <!-- Text shown for notifications from other users. -->
+    <string name="notification_channel_other_users">Other users</string>
+    <string name="notification_channel_other_users_description">Censored notifications from the lock screens of other users</string>
+    <string name="other_users_notification_title">Notification from <xliff:g id="app_name" example="Messages">%1$s</xliff:g> for <xliff:g id="username" example="Alice">%2$s</xliff:g></string>
+    <string name="other_users_notification_switch_user_action">Switch to <xliff:g id="username" example="Bob">%1$s</xliff:g></string>
 </resources>
