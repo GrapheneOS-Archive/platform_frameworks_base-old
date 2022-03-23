@@ -19,6 +19,7 @@ package com.android.server.pm;
 import android.app.compat.gms.GmsCompat;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.UserInfo;
 import android.os.Binder;
 import android.os.UserHandle;
 import android.util.Slog;
@@ -26,6 +27,7 @@ import android.util.Slog;
 import com.android.internal.gmscompat.GmsInfo;
 
 import java.util.Arrays;
+import java.util.List;
 
 class EuiccCompatHooks {
     private static final String TAG = "PackageManager/EuiccCompatHooks";
@@ -117,15 +119,20 @@ class EuiccCompatHooks {
         // in case caller doesn't have a permission to disable these packages for some reason
         long token = Binder.clearCallingIdentity();
         try {
+            List<UserInfo> users = pm.mUserManager.getUsers(false);
             for (String pkg : GmsInfo.EUICC_PACKAGES) {
                 if (pm.getPackageInfo(pkg, 0, USER_ID) == null) {
                     // support builds that don't include these packages
                     continue;
                 }
 
-                pm.setApplicationEnabledSetting(pkg,
+                // previous OS version enabled one of these packages (com.google.euiccpixel)
+                // in all user profiles
+                for (UserInfo user : users) {
+                    pm.setApplicationEnabledSetting(pkg,
                         PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-                        0, USER_ID, null);
+                        0, user.id, null);
+                }
             }
         } finally {
             Binder.restoreCallingIdentity(token);
