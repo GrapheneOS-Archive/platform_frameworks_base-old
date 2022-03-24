@@ -114,7 +114,6 @@ public class ThemeOverlayController extends CoreStartable implements Dumpable {
     private final SecureSettings mSecureSettings;
     private final Executor mMainExecutor;
     private final Handler mBgHandler;
-    private final boolean mIsMonetEnabled;
     private final UserTracker mUserTracker;
     private final DeviceProvisionedController mDeviceProvisionedController;
     private final Resources mResources;
@@ -245,7 +244,11 @@ public class ThemeOverlayController extends CoreStartable implements Dumpable {
         final boolean hadWallpaperColors = mCurrentColors.get(userId) != null;
         int latestWallpaperType = getLatestWallpaperType(userId);
         if ((flags & latestWallpaperType) != 0) {
-            mCurrentColors.put(userId, wallpaperColors);
+            if (isMonetEnabled(userId)) {
+                mCurrentColors.put(userId, wallpaperColors);
+            } else {
+                mCurrentColors.put(userId, null);
+            }
             if (DEBUG) Log.d(TAG, "got new colors: " + wallpaperColors + " where: " + flags);
         }
 
@@ -343,6 +346,15 @@ public class ThemeOverlayController extends CoreStartable implements Dumpable {
         }
     };
 
+    private boolean isMonetEnabled(int user) {
+        return Settings.Secure.getIntForUser(
+                mContext.getContentResolver(),
+                Settings.Secure.MONET_MODE,
+                Settings.Secure.MONET_MODE_DISABLED,
+                user
+        ) == Settings.Secure.MONET_MODE_ENABLED;
+    }
+
     @Inject
     public ThemeOverlayController(Context context, BroadcastDispatcher broadcastDispatcher,
             @Background Handler bgHandler, @Main Executor mainExecutor,
@@ -353,7 +365,6 @@ public class ThemeOverlayController extends CoreStartable implements Dumpable {
             @Main Resources resources, WakefulnessLifecycle wakefulnessLifecycle) {
         super(context);
 
-        mIsMonetEnabled = featureFlags.isEnabled(Flags.MONET);
         mDeviceProvisionedController = deviceProvisionedController;
         mBroadcastDispatcher = broadcastDispatcher;
         mUserManager = userManager;
@@ -403,23 +414,16 @@ public class ThemeOverlayController extends CoreStartable implements Dumpable {
                 },
                 UserHandle.USER_ALL);
 
-        if (!mIsMonetEnabled) {
-            return;
-        }
-
         mUserTracker.addCallback(mUserTrackerCallback, mMainExecutor);
 
         mDeviceProvisionedController.addCallback(mDeviceProvisionedListener);
 
-        // All wallpaper color and keyguard logic only applies when Monet is enabled.
-        if (!mIsMonetEnabled) {
-            return;
-        }
-
         // Upon boot, make sure we have the most up to date colors
         Runnable updateColors = () -> {
-            WallpaperColors systemColor = mWallpaperManager.getWallpaperColors(
-                    getLatestWallpaperType(mUserTracker.getUserId()));
+            WallpaperColors systemColor = isMonetEnabled(
+                    mUserTracker.getUserId()) ? mWallpaperManager.getWallpaperColors(
+                    getLatestWallpaperType(mUserTracker.getUserId()))
+                                             : null;
             Runnable applyColors = () -> {
                 if (DEBUG) Log.d(TAG, "Boot colors: " + systemColor);
                 mCurrentColors.put(mUserTracker.getUserId(), systemColor);
@@ -445,7 +449,8 @@ public class ThemeOverlayController extends CoreStartable implements Dumpable {
             @Override
             public void onFinishedGoingToSleep() {
                 final int userId = mUserTracker.getUserId();
-                final WallpaperColors colors = mDeferredWallpaperColors.get(userId);
+                final WallpaperColors colors = isMonetEnabled(userId)
+                        ? mDeferredWallpaperColors.get(userId) : null;
                 if (colors != null) {
                     int flags = mDeferredWallpaperColorsFlags.get(userId);
 
@@ -456,10 +461,30 @@ public class ThemeOverlayController extends CoreStartable implements Dumpable {
                 }
             }
         });
+
+        mSecureSettings.registerContentObserverForUser(
+                Settings.Secure.getUriFor(Settings.Secure.MONET_MODE),
+                false,
+                new ContentObserver(mBgHandler) {
+                    @Override
+                    public void onChange(boolean selfChange) {
+                        super.onChange(selfChange);
+                        WallpaperColors color = isMonetEnabled(mUserTracker.getUserId())
+                                ? mWallpaperManager.getWallpaperColors(WallpaperManager.FLAG_SYSTEM, mUserTracker.getUserId())
+
+                                : null;
+                        handleWallpaperColors(color, WallpaperManager.FLAG_SYSTEM, mUserTracker.getUserId());
+                        reevaluateSystemTheme(true);
+                    }
+                },
+                UserHandle.USER_ALL
+        );
     }
 
     private void reevaluateSystemTheme(boolean forceReload) {
-        final WallpaperColors currentColors = mCurrentColors.get(mUserTracker.getUserId());
+        final WallpaperColors currentColors = isMonetEnabled(
+                   mUserTracker.getUserId()) ? mCurrentColors.get(mUserTracker.getUserId())
+                                             : null;
         final int mainColor;
         if (currentColors == null) {
             mainColor = Color.TRANSPARENT;
@@ -472,15 +497,13 @@ public class ThemeOverlayController extends CoreStartable implements Dumpable {
         }
         mMainWallpaperColor = mainColor;
 
-        if (mIsMonetEnabled) {
-            mThemeStyle = fetchThemeStyleFromSetting();
-            mSecondaryOverlay = getOverlay(mMainWallpaperColor, ACCENT, mThemeStyle);
-            mNeutralOverlay = getOverlay(mMainWallpaperColor, NEUTRAL, mThemeStyle);
-            mNeedsOverlayCreation = true;
-            if (DEBUG) {
-                Log.d(TAG, "fetched overlays. accent: " + mSecondaryOverlay
-                        + " neutral: " + mNeutralOverlay);
-            }
+        mThemeStyle = fetchThemeStyleFromSetting();
+        mSecondaryOverlay = getOverlay(mMainWallpaperColor, ACCENT, mThemeStyle);
+        mNeutralOverlay = getOverlay(mMainWallpaperColor, NEUTRAL, mThemeStyle);
+        mNeedsOverlayCreation = true;
+        if (DEBUG) {
+            Log.d(TAG, "fetched overlays. accent: " + mSecondaryOverlay
+                    + " neutral: " + mNeutralOverlay);
         }
 
         updateThemeOverlays();
@@ -583,7 +606,7 @@ public class ThemeOverlayController extends CoreStartable implements Dumpable {
 
         // Let's generate system overlay if the style picker decided to override it.
         OverlayIdentifier systemPalette = categoryToPackage.get(OVERLAY_CATEGORY_SYSTEM_PALETTE);
-        if (mIsMonetEnabled && systemPalette != null && systemPalette.getPackageName() != null) {
+        if (systemPalette != null && systemPalette.getPackageName() != null) {
             try {
                 String colorString =  systemPalette.getPackageName().toLowerCase();
                 if (!colorString.startsWith("#")) {
@@ -598,16 +621,6 @@ public class ThemeOverlayController extends CoreStartable implements Dumpable {
             } catch (Exception e) {
                 // Color.parseColor doesn't catch any exceptions from the calls it makes
                 Log.w(TAG, "Invalid color definition: " + systemPalette.getPackageName(), e);
-            }
-        } else if (!mIsMonetEnabled && systemPalette != null) {
-            try {
-                // It's possible that we flipped the flag off and still have a @ColorInt in the
-                // setting. We need to sanitize the input, otherwise the overlay transaction will
-                // fail.
-                categoryToPackage.remove(OVERLAY_CATEGORY_SYSTEM_PALETTE);
-                categoryToPackage.remove(OVERLAY_CATEGORY_ACCENT_COLOR);
-            } catch (NumberFormatException e) {
-                // This is a package name. All good, let's continue
             }
         }
 
@@ -683,7 +696,6 @@ public class ThemeOverlayController extends CoreStartable implements Dumpable {
         pw.println("mMainWallpaperColor=" + Integer.toHexString(mMainWallpaperColor));
         pw.println("mSecondaryOverlay=" + mSecondaryOverlay);
         pw.println("mNeutralOverlay=" + mNeutralOverlay);
-        pw.println("mIsMonetEnabled=" + mIsMonetEnabled);
         pw.println("mColorScheme=" + mColorScheme);
         pw.println("mNeedsOverlayCreation=" + mNeedsOverlayCreation);
         pw.println("mAcceptColorEvents=" + mAcceptColorEvents);
