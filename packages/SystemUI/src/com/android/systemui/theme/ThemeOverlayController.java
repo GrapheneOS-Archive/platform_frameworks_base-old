@@ -195,7 +195,7 @@ public class ThemeOverlayController extends SystemUI implements Dumpable {
                 return;
             }
             if (DEBUG) Log.d(TAG, "Updating overlays for user switch / profile added.");
-            reevaluateSystemTheme(true /* forceReload */);
+            applySettings(newUser);
         }
     };
 
@@ -238,7 +238,12 @@ public class ThemeOverlayController extends SystemUI implements Dumpable {
         final boolean hadWallpaperColors = mCurrentColors.get(userId) != null;
         int latestWallpaperType = getLatestWallpaperType(userId);
         if ((flags & latestWallpaperType) != 0) {
-            mCurrentColors.put(userId, wallpaperColors);
+            if (isMonetEnabled(userId)) {
+                mCurrentColors.put(userId, wallpaperColors);
+            }
+            else {
+                mCurrentColors.remove(userId);
+            }
             if (DEBUG) Log.d(TAG, "got new colors: " + wallpaperColors + " where: " + flags);
         }
 
@@ -404,12 +409,9 @@ public class ThemeOverlayController extends SystemUI implements Dumpable {
 
         // Upon boot, make sure we have the most up to date colors
         Runnable updateColors = () -> {
-            WallpaperColors systemColor = mWallpaperManager.getWallpaperColors(
-                    getLatestWallpaperType(mUserTracker.getUserId()));
             Runnable applyColors = () -> {
-                if (DEBUG) Log.d(TAG, "Boot colors: " + systemColor);
-                mCurrentColors.put(mUserTracker.getUserId(), systemColor);
-                reevaluateSystemTheme(false /* forceReload */);
+                if (DEBUG) Log.d(TAG, "Boot done updating user theme ");
+                applySettings();
             };
             if (mDeviceProvisionedController.isCurrentUserSetup()) {
                 mMainExecutor.execute(applyColors);
@@ -442,6 +444,46 @@ public class ThemeOverlayController extends SystemUI implements Dumpable {
                 }
             }
         });
+
+        mSecureSettings.registerContentObserverForUser(
+                Settings.Secure.getUriFor(Settings.Secure.MONET_MODE),
+                false,
+                new ContentObserver(mBgHandler) {
+                    @Override
+                    public void onChange(boolean selfChange) {
+                        super.onChange(selfChange);
+                        if (DEBUG) Log.d(TAG, "Settings for user " +
+                                mUserTracker.getUserId() + " changed");
+                        applySettings();
+                    }
+                },
+                UserHandle.USER_ALL
+        );
+
+    }
+
+    private boolean isMonetEnabled(int user){
+        return Settings.Secure.getIntForUser(
+                mContext.getContentResolver(),
+                Settings.Secure.MONET_MODE,
+                Settings.Secure.MONET_MODE_DISABLED,
+                user
+        ) == Settings.Secure.MONET_MODE_ENABLED;
+    }
+
+    private void applySettings(){
+        applySettings(mUserTracker.getUserId());
+    }
+
+    private void applySettings(int userId) {
+        final WallpaperColors colors = isMonetEnabled(userId)
+                ? mWallpaperManager.getWallpaperColors(WallpaperManager.FLAG_SYSTEM) : null;
+        int flags = WallpaperManager.FLAG_SYSTEM;
+        if (DEBUG) Log.d(TAG, "settings for user " + userId + "changed" +
+                " colors : " + colors + " flags : "
+                        + flags);
+        handleWallpaperColors(colors, flags, userId);
+        reevaluateSystemTheme(true);
     }
 
     private void reevaluateSystemTheme(boolean forceReload) {
