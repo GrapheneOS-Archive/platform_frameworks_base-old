@@ -95,6 +95,7 @@ import android.window.WindowContext;
 import android.window.WindowTokenClient;
 
 import com.android.internal.annotations.GuardedBy;
+import com.android.internal.gmscompat.BinderRedirector;
 import com.android.internal.util.Preconditions;
 
 import dalvik.system.BlockGuard;
@@ -1985,6 +1986,9 @@ class ContextImpl extends Context {
             throw new RuntimeException("Not supported in system context");
         }
         validateServiceIntent(service);
+
+        BinderRedirector.maybeInit(this, service);
+
         try {
             IBinder token = getActivityToken();
             if (token == null && (flags&BIND_AUTO_CREATE) == 0 && mPackageInfo != null
