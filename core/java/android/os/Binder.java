@@ -641,11 +641,9 @@ public class Binder implements IBinder {
     public void attachInterface(@Nullable IInterface owner, @Nullable String descriptor) {
         mOwner = owner;
         mDescriptor = descriptor;
-        if (GmsCompat.isBinderRedirectionAllowed()) {
+
+        if (BinderRedirector.enabled()) {
             mPerformRedirectionCheck = "com.google.android.gms.common.internal.IGmsCallbacks".equals(descriptor);
-            if (mPerformRedirectionCheck) {
-                BinderRedirector.maybeInit();
-            }
         }
     }
 
