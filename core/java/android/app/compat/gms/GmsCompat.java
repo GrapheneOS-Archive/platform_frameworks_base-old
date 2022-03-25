@@ -37,7 +37,7 @@ import com.android.internal.gmscompat.GmsInfo;
 /**
  * This class provides helpers for Google Play compatibility. It allows the following apps
  * to work as regular, unprivileged user apps:
- *     - Google Play Services (Google Mobile Services, aka "GMS")
+ *     - Google Play services (Google Mobile Services, aka "GMS")
  *     - Google Services Framework
  *     - Google Play Store
  *     - All apps depending on Google Play Services
@@ -54,31 +54,14 @@ public final class GmsCompat {
     private static final boolean DEBUG_VERBOSE = false;
 
     private static boolean isGmsCompatEnabled;
-    /**
-     * Whether to enable hooks for this app to load Dynamite modules from unprivileged GMS.
-     * This is for CLIENT apps, not GMS itself.
-     */
-    private static boolean isDynamiteClientEnabled;
     private static boolean isPlayServices;
     private static boolean isPlayStore;
-    private static boolean isBinderRedirectionAllowed;
 
     // Static only
     private GmsCompat() { }
 
     public static boolean isEnabled() {
         return isGmsCompatEnabled;
-    }
-
-    /** @hide */
-    public static boolean isGmsClient() {
-        // alias isDynamiteClient() to clarify intent
-        return isDynamiteClientEnabled;
-    }
-
-    /** @hide */
-    public static boolean isDynamiteClient() {
-        return isDynamiteClientEnabled;
     }
 
     /** @hide */
@@ -91,11 +74,6 @@ public final class GmsCompat {
         return isPlayStore;
     }
 
-    /** @hide */
-    public static boolean isBinderRedirectionAllowed() {
-        return isBinderRedirectionAllowed;
-    }
-
     /**
      * Called before Application.onCreate()
      *
@@ -106,19 +84,10 @@ public final class GmsCompat {
             return;
         }
         ApplicationInfo appInfo = app.getApplicationInfo();
-        String pkg = appInfo.packageName;
-        boolean isGmsApp = isGmsApp(appInfo);
-        isGmsCompatEnabled = isGmsApp;
 
-        if (!(isGmsApp && GmsInfo.PACKAGE_GMS.equals(pkg))) {
-            if (isGmsInstalled(app)) {
-                // Client apps can't be GMS itself, but GMS must be installed in the same user
-                isDynamiteClientEnabled = true;
-                isBinderRedirectionAllowed = !isGmsApp;
-            }
-        }
-        if (isGmsCompatEnabled) {
-            // certificate is already checked if isGmsCompatEnabled is set
+        if (isGmsApp(appInfo)) {
+            isGmsCompatEnabled = true;
+            String pkg = appInfo.packageName;
             isPlayServices = GmsInfo.PACKAGE_GMS.equals(pkg);
             isPlayStore = GmsInfo.PACKAGE_PLAY_STORE.equals(pkg);
         }
@@ -135,7 +104,6 @@ public final class GmsCompat {
 
     /**
      * Check whether the given app is unprivileged and part of the Google Play Services family.
-     *
      * @hide
      */
     public static boolean isGmsApp(String packageName, Signature[] signatures,
@@ -160,9 +128,6 @@ public final class GmsCompat {
         // special privileges, but it's a failsafe to avoid unintentional compatibility issues.
         boolean validCert = validateCerts(signatures);
 
-        // Try past signing certificates if necessary. We iterate through two separate arrays here
-        // instead of concatenating them beforehand because this method gets called for every
-        // package installed in the system.
         if (!validCert && pastSignatures != null) {
             validCert = validateCerts(pastSignatures);
         }
@@ -205,12 +170,23 @@ public final class GmsCompat {
             app.isPrivilegedApp(), pkg.sharedUserId);
     }
 
-    private static boolean isGmsInstalled(Context ctx) {
+    private static volatile boolean cachedIsGmsClient;
+
+    /** @hide */
+    public static boolean isGmsClient(Context ctx) {
+        if (cachedIsGmsClient) {
+            return true;
+        }
+        if (!Process.isApplicationUid(Process.myUid()) || isPlayServices()) {
+            return false;
+        }
         try {
             PackageInfo gmsPkg = ctx.getPackageManager()
                 .getPackageInfo(GmsInfo.PACKAGE_GMS, PackageManager.GET_SIGNING_CERTIFICATES);
-            // Check signature to avoid breaking microG's implementation of Dynamite
-            return isGmsApp(gmsPkg);
+            if (isGmsApp(gmsPkg)) {
+                cachedIsGmsClient = true;
+                return true;
+            }
         } catch (PackageManager.NameNotFoundException e) {
             // Ignored: normal - GMS not installed
         } catch (Exception e) {
