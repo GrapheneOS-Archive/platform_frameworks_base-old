@@ -25,10 +25,8 @@ import android.app.NotificationChannel;
 import android.app.NotificationChannelGroup;
 import android.app.NotificationManager;
 import android.app.compat.gms.GmsCompat;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Process;
 import android.os.SystemClock;
@@ -38,7 +36,6 @@ import android.util.SparseArray;
 import android.webkit.WebView;
 
 import com.android.internal.R;
-import com.android.internal.gmscompat.dynamite.GmsDynamiteHooks;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -155,8 +152,6 @@ public final class GmsHooks {
             } else {
                 Log.d(TAG, "initApplicationBeforeOnCreate: isolated process " + Application.getProcessName());
             }
-        } else if (GmsCompat.isDynamiteClient()) {
-            GmsDynamiteHooks.initClientApp();
         }
     }
 

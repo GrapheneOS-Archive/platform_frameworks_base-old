@@ -17,6 +17,7 @@
 package com.android.internal.gmscompat;
 
 import android.app.ActivityThread;
+import android.app.compat.gms.GmsCompat;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -33,7 +34,9 @@ import java.util.Arrays;
 public final class BinderRedirector {
     private static final String TAG = "BinderRedirector";
 
-    private static volatile String[] redirectableInterfaces;
+    // written last in the init sequence, "volatile" to publish all the preceding writes
+    private static volatile boolean enabled;
+    private static String[] redirectableInterfaces;
 
     private static RedirectionStateListener redirectionStateListener;
     private static BinderRedirector[] cache;
@@ -46,9 +49,28 @@ public final class BinderRedirector {
         this.transactionCodes = transactionCodes;
     }
 
-    public static void maybeInit() {
-        if (redirectableInterfaces == null) {
-            redirectableInterfaces = GmsCompatApp.getRedirectableInterfaces();
+    public static boolean enabled() {
+        return enabled;
+    }
+
+    // call from ContextImpl#bindServiceCommon(),
+    // after intent is validated, but before request to the ActivityManager
+    // (otherwise there would be a race if bindService() is called from the non-main thread)
+    public static void maybeInit(Context ctx, Intent intent) {
+        if (!GmsInfo.PACKAGE_GMS.equals(intent.getPackage())) {
+            return;
+        }
+        if (GmsCompat.isEnabled()) {
+            return;
+        }
+        synchronized (BinderRedirector.class) {
+            if (enabled) {
+                return;
+            }
+            if (GmsCompat.isGmsClient(ctx)) {
+                redirectableInterfaces = GmsCompatApp.getRedirectableInterfaces();
+                enabled = true;
+            }
         }
     }
 
