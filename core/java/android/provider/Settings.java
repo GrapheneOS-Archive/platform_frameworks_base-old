@@ -17186,6 +17186,12 @@ public final class Settings {
                 "review_permissions_notification_state";
 
         /**
+         * Which server to use for attestation certificate rotation
+         * @hide
+         */
+        public static final String ATTEST_REMOTE_PROVISIONER_SERVER = "attest_remote_provisioner_server";
+
+        /**
          * Settings migrated from Wear OS settings provider.
          * @hide
          */
