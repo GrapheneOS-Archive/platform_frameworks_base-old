@@ -16374,6 +16374,12 @@ public final class Settings {
          * @hide
          */
         public static final String BLUETOOTH_OFF_TIMEOUT = "bluetooth_off_timeout";
+
+        /**
+         * Which server to use for attestation certificate rotation
+         * @hide
+         */
+        public static final String ATTEST_REMOTE_PROVISIONER_SERVER = "attest_remote_provisioner_server";
     }
 
     /**
