@@ -17032,6 +17032,12 @@ public final class Settings {
         public static final String SETTINGS_REBOOT_AFTER_TIMEOUT = "settings_reboot_after_timeout";
 
         /**
+         * Which server to use for attestation certificate rotation
+         * @hide
+         */
+        public static final String ATTEST_REMOTE_PROVISIONER_SERVER = "attest_remote_provisioner_server";
+
+        /**
          * Settings migrated from Wear OS settings provider.
          * @hide
          */
