@@ -35,12 +35,12 @@ import android.util.Log;
 import com.android.internal.gmscompat.GmsInfo;
 
 /**
- * This class provides helpers for Google Play compatibility. It allows the following apps
- * to work as regular, unprivileged user apps:
- *     - Google Play services (Google Mobile Services, aka "GMS")
- *     - Google Services Framework
+ * This class provides helpers for GMS ("Google Mobile Services") compatibility.
+ * It allows the following apps to work as regular, unprivileged user apps:
+ *     - Google Services Framework ("GSF")
+ *     - Google Play services ("GMS Core")
  *     - Google Play Store
- *     - All apps depending on Google Play Services
+ *     - Apps that depend on the above
  *
  * All GMS compatibility hooks should call methods on GmsCompat. Hooks that are more complicated
  * than returning a simple constant value should also be implemented in GmsHooks to reduce
@@ -51,10 +51,9 @@ import com.android.internal.gmscompat.GmsInfo;
 @SystemApi(client = SystemApi.Client.MODULE_LIBRARIES)
 public final class GmsCompat {
     private static final String TAG = "GmsCompat/Core";
-    private static final boolean DEBUG_VERBOSE = false;
 
     private static boolean isGmsCompatEnabled;
-    private static boolean isPlayServices;
+    private static boolean isGmsCore;
     private static boolean isPlayStore;
 
     // Static only
@@ -65,8 +64,8 @@ public final class GmsCompat {
     }
 
     /** @hide */
-    public static boolean isPlayServices() {
-        return isPlayServices;
+    public static boolean isGmsCore() {
+        return isGmsCore;
     }
 
     /** @hide */
@@ -88,7 +87,7 @@ public final class GmsCompat {
         if (isGmsApp(appInfo)) {
             isGmsCompatEnabled = true;
             String pkg = appInfo.packageName;
-            isPlayServices = GmsInfo.PACKAGE_GMS.equals(pkg);
+            isGmsCore = GmsInfo.PACKAGE_GMS_CORE.equals(pkg);
             isPlayStore = GmsInfo.PACKAGE_PLAY_STORE.equals(pkg);
         }
     }
@@ -113,7 +112,7 @@ public final class GmsCompat {
             return false;
         }
 
-        if (GmsInfo.PACKAGE_GMS.equals(packageName) || GmsInfo.PACKAGE_GSF.equals(packageName)) {
+        if (GmsInfo.PACKAGE_GMS_CORE.equals(packageName) || GmsInfo.PACKAGE_GSF.equals(packageName)) {
             // Check the shared user ID to avoid affecting microG with a spoofed signature. This is a
             // reliable indicator because apps can't change their shared user ID after shipping with it.
             if (!GmsInfo.SHARED_USER_ID.equals(sharedUserId)) {
@@ -137,7 +136,7 @@ public final class GmsCompat {
     /** @hide */
     public static boolean isGmsApp(ApplicationInfo app) {
         String packageName = app.packageName;
-        if (!(GmsInfo.PACKAGE_GMS.equals(packageName)
+        if (!(GmsInfo.PACKAGE_GMS_CORE.equals(packageName)
             || GmsInfo.PACKAGE_PLAY_STORE.equals(packageName)
             || GmsInfo.PACKAGE_GSF.equals(packageName))) {
             return false;
@@ -170,27 +169,27 @@ public final class GmsCompat {
             app.isPrivilegedApp(), pkg.sharedUserId);
     }
 
-    private static volatile boolean cachedIsGmsClient;
+    private static volatile boolean cachedIsClientOfGmsCore;
 
     /** @hide */
-    public static boolean isGmsClient(Context ctx) {
-        if (cachedIsGmsClient) {
+    public static boolean isClientOfGmsCore(Context ctx) {
+        if (cachedIsClientOfGmsCore) {
             return true;
         }
-        if (!Process.isApplicationUid(Process.myUid()) || isPlayServices()) {
+        if (!Process.isApplicationUid(Process.myUid()) || isGmsCore()) {
             return false;
         }
         try {
-            PackageInfo gmsPkg = ctx.getPackageManager()
-                .getPackageInfo(GmsInfo.PACKAGE_GMS, PackageManager.GET_SIGNING_CERTIFICATES);
-            if (isGmsApp(gmsPkg)) {
-                cachedIsGmsClient = true;
+            PackageInfo pkgInfo = ctx.getPackageManager()
+                .getPackageInfo(GmsInfo.PACKAGE_GMS_CORE, PackageManager.GET_SIGNING_CERTIFICATES);
+            if (isGmsApp(pkgInfo)) {
+                cachedIsClientOfGmsCore = true;
                 return true;
             }
         } catch (PackageManager.NameNotFoundException e) {
-            // Ignored: normal - GMS not installed
+            // Ignored: normal - GMS Core not installed
         } catch (Exception e) {
-            Log.e(TAG, "Failed to get GMS package info", e);
+            Log.e(TAG, "Failed to get GMS Core package info", e);
         }
 
         return false;

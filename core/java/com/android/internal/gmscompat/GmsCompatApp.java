@@ -55,7 +55,7 @@ public final class GmsCompatApp {
         Bundle extras = new Bundle();
         extras.putBinder(KEY_BINDER, local);
 
-        if (GmsCompat.isPlayServices() && "com.google.android.gms.persistent".equals(Application.getProcessName())) {
+        if (GmsCompat.isGmsCore() && "com.google.android.gms.persistent".equals(Application.getProcessName())) {
             // FileProxyService binder needs to be always available to the Dynamite clients.
             // "persistent" process launches at bootup and is kept alive by the ServiceConnection
             // from the GmsCompatApp, which makes it fit for the purpose of hosting the FileProxyService
