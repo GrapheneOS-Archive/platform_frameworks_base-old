@@ -448,7 +448,7 @@ public class PackageInstaller {
             switch (Objects.requireNonNull(params.appPackageName)) {
                 case "app.attestation.auditor":
                 case GmsInfo.PACKAGE_GSF:
-                case GmsInfo.PACKAGE_GMS:
+                case GmsInfo.PACKAGE_GMS_CORE:
                 case GmsInfo.PACKAGE_PLAY_STORE:
                     throw new IllegalArgumentException("installation / updates of " + params.appPackageName + " are disallowed");
             }
