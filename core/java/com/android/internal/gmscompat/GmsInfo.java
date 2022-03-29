@@ -19,8 +19,8 @@ package com.android.internal.gmscompat;
 /** @hide */
 public final class GmsInfo {
     // Package names for GMS apps
-    public static final String PACKAGE_GMS = "com.google.android.gms";
-    public static final String PACKAGE_GSF = "com.google.android.gsf";
+    public static final String PACKAGE_GSF = "com.google.android.gsf"; // "Google Services Framework"
+    public static final String PACKAGE_GMS_CORE = "com.google.android.gms"; // "Play services"
     public static final String PACKAGE_PLAY_STORE = "com.android.vending";
 
     // Shared user ID for GMS and GSF
@@ -36,7 +36,7 @@ public final class GmsInfo {
             "com.google.android.euicc",
     };
 
-    public static final String[] DEPENDENCIES_OF_EUICC_PACKAGES = { PACKAGE_GSF, PACKAGE_GMS };
+    public static final String[] DEPENDENCIES_OF_EUICC_PACKAGES = { PACKAGE_GSF, PACKAGE_GMS_CORE};
 
     private GmsInfo() { }
 }
