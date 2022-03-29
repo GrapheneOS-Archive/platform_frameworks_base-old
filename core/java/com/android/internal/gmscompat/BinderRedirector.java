@@ -57,7 +57,7 @@ public final class BinderRedirector {
     // after intent is validated, but before request to the ActivityManager
     // (otherwise there would be a race if bindService() is called from the non-main thread)
     public static void maybeInit(Context ctx, Intent intent) {
-        if (!GmsInfo.PACKAGE_GMS.equals(intent.getPackage())) {
+        if (!GmsInfo.PACKAGE_GMS_CORE.equals(intent.getPackage())) {
             return;
         }
         if (GmsCompat.isEnabled()) {
@@ -67,7 +67,7 @@ public final class BinderRedirector {
             if (enabled) {
                 return;
             }
-            if (GmsCompat.isGmsClient(ctx)) {
+            if (GmsCompat.isClientOfGmsCore(ctx)) {
                 redirectableInterfaces = GmsCompatApp.getRedirectableInterfaces();
                 enabled = true;
             }

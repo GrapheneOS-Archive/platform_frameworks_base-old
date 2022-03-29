@@ -44,7 +44,7 @@ public final class GmsDynamiteClientHooks {
 
     // written last in the init sequence, "volatile" to publish all the preceding writes
     private static volatile boolean enabled;
-    private static String gmsDataPrefix;
+    private static String gmsCoreDataPrefix;
     private static ArrayMap<String, ParcelFileDescriptor> pfdCache;
     private static IFileProxyService fileProxyService;
 
@@ -61,12 +61,12 @@ public final class GmsDynamiteClientHooks {
             if (enabled()) {
                 return;
             }
-            if (!GmsCompat.isGmsClient(ctx)) {
+            if (!GmsCompat.isClientOfGmsCore(ctx)) {
                 return;
             }
             // faster than ctx.createPackageContext().createDeviceProtectedStorageContext().getDataDir()
             String deDataDirectory = Environment.getDataUserDeDirectory(null, ctx.getUserId()).getPath();
-            gmsDataPrefix = deDataDirectory + '/' + GmsInfo.PACKAGE_GMS + '/';
+            gmsCoreDataPrefix = deDataDirectory + '/' + GmsInfo.PACKAGE_GMS_CORE + '/';
             pfdCache = new ArrayMap<>(20);
 
             try {
@@ -107,7 +107,7 @@ public final class GmsDynamiteClientHooks {
 
     // ApkAssets#loadFromPath(String, int, AssetsProvider)
     public static ApkAssets loadAssetsFromPath(String path, int flags, AssetsProvider assets) throws IOException {
-        if (!path.startsWith(gmsDataPrefix)) {
+        if (!path.startsWith(gmsCoreDataPrefix)) {
             return null;
         }
         FileDescriptor fd = modulePathToFd(path);
@@ -120,7 +120,7 @@ public final class GmsDynamiteClientHooks {
     public static long getFileLastModified(File file) {
         final String path = file.getPath();
 
-        if (enabled && path.startsWith(gmsDataPrefix)) {
+        if (enabled && path.startsWith(gmsCoreDataPrefix)) {
             return new File(modulePathToFdPath(path)).lastModified();
         }
         return 0L;
@@ -141,7 +141,7 @@ public final class GmsDynamiteClientHooks {
 
         for (int i = 0; i < pathParts.length; ++i) {
             String pathPart = pathParts[i];
-            if (!pathPart.startsWith(gmsDataPrefix)) {
+            if (!pathPart.startsWith(gmsCoreDataPrefix)) {
                 continue;
             }
             // defined in bionic/linker/linker_utils.cpp kZipFileSeparator
