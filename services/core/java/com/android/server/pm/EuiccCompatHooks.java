@@ -35,8 +35,8 @@ class EuiccCompatHooks {
     // only the "Owner" user is allowed to access eUICC packages
     private static final int USER_ID = UserHandle.USER_SYSTEM;
 
-    // PackageManagerService#main()
-    // call after init completed, but before the service is published
+    // PackageManagerService#systemReady()
+    // call at the end of systemReady()
     static void onServiceInitCompleted(PackageManagerService pm) {
         // disabled by default on each boot, temporarily enabled by the toggle in the Settings app
         disableEuiccCompatPackages(pm);
