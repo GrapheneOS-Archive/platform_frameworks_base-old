@@ -447,7 +447,6 @@ public class PackageInstaller {
         if (GmsCompat.isPlayStore()) {
             switch (Objects.requireNonNull(params.appPackageName)) {
                 case "app.attestation.auditor":
-                case "org.grapheneos.pdfviewer":
                 case GmsInfo.PACKAGE_GSF:
                 case GmsInfo.PACKAGE_GMS_CORE:
                 case GmsInfo.PACKAGE_PLAY_STORE:
