@@ -429,6 +429,10 @@ public class BackupManager {
     @SystemApi
     @RequiresPermission(android.Manifest.permission.BACKUP)
     public boolean isBackupEnabled() {
+        if (GmsCompat.isEnabled()) {
+            return false;
+        }
+
         checkServiceBinder();
         if (sService != null) {
             try {
@@ -464,6 +468,7 @@ public class BackupManager {
         if (GmsCompat.isEnabled()) {
             return false;
         }
+
         if (!CompatChanges.isChangeEnabled(
                 IS_BACKUP_SERVICE_ACTIVE_ENFORCE_PERMISSION_IN_SERVICE)) {
             mContext.enforceCallingOrSelfPermission(android.Manifest.permission.BACKUP,
