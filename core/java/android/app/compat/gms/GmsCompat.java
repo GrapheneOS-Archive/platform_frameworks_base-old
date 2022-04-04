@@ -37,8 +37,8 @@ import com.android.internal.gmscompat.GmsInfo;
 /**
  * This class provides helpers for GMS ("Google Mobile Services") compatibility.
  * It allows the following apps to work as regular, unprivileged user apps:
- *     - Google Services Framework ("GSF")
- *     - Google Play services ("GMS Core")
+ *     - GSF ("Google Services Framework")
+ *     - GMS Core ("Google Play services")
  *     - Google Play Store
  *     - Apps that depend on the above
  *
@@ -73,6 +73,13 @@ public final class GmsCompat {
         return isPlayStore;
     }
 
+    private static Context appContext;
+
+    /** @hide */
+    public static Context appContext() {
+        return appContext;
+    }
+
     /**
      * Called before Application.onCreate()
      *
@@ -82,6 +89,7 @@ public final class GmsCompat {
         if (!Process.isApplicationUid(Process.myUid())) {
             return;
         }
+        appContext = app;
         ApplicationInfo appInfo = app.getApplicationInfo();
 
         if (isGmsApp(appInfo)) {
@@ -193,5 +201,10 @@ public final class GmsCompat {
         }
 
         return false;
+    }
+
+    /** @hide */
+    public static boolean hasPermission(String perm) {
+        return appContext().checkSelfPermission(perm) == PackageManager.PERMISSION_GRANTED;
     }
 }

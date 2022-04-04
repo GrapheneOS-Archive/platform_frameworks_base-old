@@ -41,7 +41,6 @@ import android.database.ContentObserver;
 import android.database.CrossProcessCursorWrapper;
 import android.database.Cursor;
 import android.database.IContentObserver;
-import android.database.MatrixCursor;
 import android.graphics.Bitmap;
 import android.graphics.ImageDecoder;
 import android.graphics.ImageDecoder.ImageInfo;
@@ -73,6 +72,7 @@ import android.util.Size;
 import android.util.SparseArray;
 
 import com.android.internal.annotations.GuardedBy;
+import com.android.internal.gmscompat.GmsHooks;
 import com.android.internal.gmscompat.PlayStoreHooks;
 import com.android.internal.gmscompat.dynamite.GmsDynamiteClientHooks;
 import com.android.internal.util.MimeIconUtils;
@@ -1197,10 +1197,9 @@ public abstract class ContentResolver implements ContentInterface {
         Objects.requireNonNull(uri, "uri");
 
         if (GmsCompat.isEnabled()) {
-            if ("content://com.google.android.gms.phenotype/com.google.android.location".equals(uri.toString())) {
-                // keep PhenotypeFlags of the location service at their default values
-                // (updated flags degrade its speed and accuracy for unknown reasons)
-                return new MatrixCursor(projection);
+            Cursor c = GmsHooks.interceptQuery(uri, projection);
+            if (c != null) {
+                return c;
             }
         }
 
@@ -2690,6 +2689,12 @@ public abstract class ContentResolver implements ContentInterface {
                     observer.getContentObserver(), userHandle, mTargetSdkVersion);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
+        } catch (SecurityException se) {
+            if (GmsCompat.isEnabled()) {
+                return;
+            }
+
+            throw se;
         }
     }
 

@@ -221,7 +221,7 @@ public class ApplicationPackageManager extends PackageManager {
     @Override
     public PackageInfo getPackageInfo(VersionedPackage versionedPackage, int flags)
             throws NameNotFoundException {
-        flags = GmsHooks.getPackageInfoFlags(flags);
+        flags = GmsHooks.filterPackageInfoFlags(flags);
 
         final int userId = getUserId();
         try {
@@ -239,7 +239,7 @@ public class ApplicationPackageManager extends PackageManager {
     @Override
     public PackageInfo getPackageInfoAsUser(String packageName, int flags, int userId)
             throws NameNotFoundException {
-        flags = GmsHooks.getPackageInfoFlags(flags);
+        flags = GmsHooks.filterPackageInfoFlags(flags);
 
         PackageInfo pi =
                 getPackageInfoAsUserCached(
@@ -1125,6 +1125,8 @@ public class ApplicationPackageManager extends PackageManager {
     @SuppressWarnings("unchecked")
     @Override
     public List<PackageInfo> getInstalledPackages(int flags) {
+        flags = GmsHooks.filterPackageInfoFlags(flags);
+
         return getInstalledPackagesAsUser(flags, getUserId());
     }
 
@@ -2863,6 +2865,11 @@ public class ApplicationPackageManager extends PackageManager {
     @Override
     public void setApplicationEnabledSetting(String packageName,
                                              int newState, int flags) {
+        if (GmsCompat.isPlayStore()) {
+            PlayStoreHooks.setApplicationEnabledSetting(packageName, newState);
+            return;
+        }
+
         try {
             mPM.setApplicationEnabledSetting(packageName, newState, flags,
                     getUserId(), mContext.getOpPackageName());

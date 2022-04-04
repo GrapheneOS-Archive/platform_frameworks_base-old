@@ -16,12 +16,14 @@
 
 package com.android.internal.gmscompat;
 
+import android.app.Activity;
 import android.app.ActivityThread;
 import android.app.IActivityManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.compat.gms.GmsCompat;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -37,8 +39,7 @@ import android.os.Process;
 import android.os.RemoteException;
 import android.os.storage.StorageManager;
 import android.provider.Downloads;
-
-import com.android.internal.R;
+import android.provider.Settings;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -241,11 +242,25 @@ public final class PlayStoreHooks {
             String otherUid = Downloads.Impl.COLUMN_OTHER_UID;
             if (values.containsKey(otherUid)) {
                 int v = values.getAsInteger(otherUid).intValue();
-                if (v != 1000) {
+                if (v != Process.SYSTEM_UID) {
                     throw new IllegalStateException("unexpected COLUMN_OTHER_UID " + v);
                 }
                 values.remove(otherUid);
             }
         }
     }
+
+    // ApplicationPackageManager#setApplicationEnabledSetting
+    public static void setApplicationEnabledSetting(String packageName, int newState) {
+        if (newState == PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+                    && ActivityThread.currentActivityThread().hasAtLeastOneResumedActivity())
+        {
+            Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            i.setData(Uri.fromParts("package", packageName, null));
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            GmsCompat.appContext().startActivity(i);
+        }
+    }
+
+    private PlayStoreHooks() {}
 }
