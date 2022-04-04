@@ -16,13 +16,15 @@
 
 package com.android.internal.gmscompat;
 
-import android.app.ActivityThread;
 import android.app.compat.gms.GmsCompat;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.IBinder;
+import android.os.Parcel;
+import android.os.Parcelable;
+import android.os.RemoteException;
 import android.util.Log;
 
 import java.util.Arrays;
@@ -31,7 +33,7 @@ import java.util.Arrays;
  * Obtains from GmsCompatApp objects that are needed to create HybridBinder
  * and handles redirection state changes.
  */
-public final class BinderRedirector {
+public final class BinderRedirector implements Parcelable {
     private static final String TAG = "BinderRedirector";
 
     // written last in the init sequence, "volatile" to publish all the preceding writes
@@ -68,7 +70,11 @@ public final class BinderRedirector {
                 return;
             }
             if (GmsCompat.isClientOfGmsCore(ctx)) {
-                redirectableInterfaces = GmsCompatApp.getRedirectableInterfaces();
+                try {
+                    redirectableInterfaces = GmsCompatApp.iClientOfGmsCore2Gca().getRedirectableInterfaces();
+                } catch (RemoteException e) {
+                    GmsCompatApp.callFailed(e);
+                }
                 enabled = true;
             }
         }
@@ -100,28 +106,27 @@ public final class BinderRedirector {
             }
             redirectionStateListener.usedRedirections |= (1L << id);
         }
-        BinderRedirector rd = GmsCompatApp.getBinderRedirector(id);
+        BinderRedirector rd;
+        try {
+            rd = GmsCompatApp.iClientOfGmsCore2Gca().getBinderRedirector(id);
+        } catch (RemoteException e) {
+            throw GmsCompatApp.callFailed(e);
+        }
         // all BinderRedirector fields are final, this is thread-safe
         BinderRedirector.cache[id] = rd;
-
-        IBinder dest = rd.destination;
-        if (dest != null) {
-            GmsCompatApp.DeathRecipient.register(dest);
-        }
         return rd;
     }
 
-    static class RedirectionStateListener extends BroadcastReceiver {
-        private static final String INTENT_ACTION = GmsCompatApp.PKG_NAME + ".ACTION_REDIRECTION_STATE_CHANGED";
-        private static final String PERMISSION = GmsCompatApp.PKG_NAME + ".permission.REDIRECTION_STATE_CHANGED_BROADCAST";
-        private static final String KEY_REDIRECTION_ID = "id";
+    public static class RedirectionStateListener extends BroadcastReceiver {
+        public static final String INTENT_ACTION = GmsCompatApp.PKG_NAME + ".ACTION_REDIRECTION_STATE_CHANGED";
+        public static final String PERMISSION = GmsCompatApp.PKG_NAME + ".permission.REDIRECTION_STATE_CHANGED_BROADCAST";
+        public static final String KEY_REDIRECTION_ID = "id";
 
         volatile long usedRedirections;
 
         static RedirectionStateListener register() {
-            Context ctx = ActivityThread.currentApplication();
             RedirectionStateListener l = new RedirectionStateListener();
-            ctx.registerReceiver(l, new IntentFilter(INTENT_ACTION), PERMISSION, null);
+            GmsCompat.appContext().registerReceiver(l, new IntentFilter(INTENT_ACTION), PERMISSION, null);
             return l;
         }
 
@@ -133,5 +138,38 @@ public final class BinderRedirector {
                 System.exit(0);
             }
         }
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        IBinder binder = destination;
+        dest.writeBoolean(binder != null);
+        if (binder != null) {
+            dest.writeStrongBinder(destination);
+            dest.writeIntArray(transactionCodes);
+        }
+    }
+
+    public static final Parcelable.Creator<BinderRedirector> CREATOR
+            = new Parcelable.Creator<BinderRedirector>() {
+        @Override
+        public BinderRedirector createFromParcel(Parcel source) {
+            if (!source.readBoolean()) {
+                return new BinderRedirector(null, null);
+            }
+            IBinder destination = source.readStrongBinder();
+            int[] transactionCodes = source.createIntArray();
+            return new BinderRedirector(destination, transactionCodes);
+        }
+
+        @Override
+        public BinderRedirector[] newArray(int size) {
+            return new BinderRedirector[size];
+        }
+    };
+
+    @Override
+    public int describeContents() {
+        return 0;
     }
 }

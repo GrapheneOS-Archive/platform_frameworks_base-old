@@ -1,0 +1,13 @@
+package com.android.internal.gmscompat;
+
+import com.android.internal.gmscompat.dynamite.server.IFileProxyService;
+
+// calls from main GMS components (GSF, GMS Core, Play Store) to GmsCompatApp
+interface IGms2Gca {
+    void connectGsf(String processName, IBinder callerBinder);
+    void connectGmsCore(String processName, IBinder callerBinder, @nullable IFileProxyService dynamiteFileProxyService);
+    void connectPlayStore(String processName, IBinder callerBinder);
+
+    void showPlayStorePendingUserActionNotification();
+    void dismissPlayStorePendingUserActionNotification();
+}
