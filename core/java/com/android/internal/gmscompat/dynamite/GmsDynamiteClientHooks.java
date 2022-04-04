@@ -70,18 +70,17 @@ public final class GmsDynamiteClientHooks {
             pfdCache = new ArrayMap<>(20);
 
             try {
-                IBinder binder = GmsCompatApp.getDynamiteFileProxyService();
-                IFileProxyService service = IFileProxyService.Stub.asInterface(binder);
-                binder.linkToDeath(() -> {
-                    // When GMS gets terminated (including package updates and crashes),
+                IFileProxyService service = GmsCompatApp.iClientOfGmsCore2Gca().getDynamiteFileProxyService();
+                service.asBinder().linkToDeath(() -> {
+                    // When GMS Core gets terminated (including package updates and crashes),
                     // processes of Dynamite clients get terminated too (same behavior on stock OS,
                     // likely to avoid hard-to-resolve situation when client starts to load
-                    // modules from one GMS version and then GMS gets updated before the rest of the
+                    // modules from one GMS Core version and then GMS Core gets updated before the rest of the
                     // modules are loaded).
                     // This ensures that pfdCache never returns stale file descriptors,
                     // because there's only two types of Dynamite modules:
-                    // - "core", included with the GMS package and always extracted
-                    // to the app_chimera/m directory, may have the same name on different GMS versions
+                    // - "core", included with the GMS Core package and always extracted
+                    // to the app_chimera/m directory, may have the same name on different GMS Core versions
                     // - on-demand, downloaded on first use, each version has a unique file name
 
                     Log.d(TAG, "FileProxyService died");
@@ -91,10 +90,10 @@ public final class GmsDynamiteClientHooks {
 
                 fileProxyService = service;
             } catch (Throwable e) {
-                // linkToDeath() (or queryLocalInterface() inside asInterface()) failed,
-                // most likely because GMS crashed very shortly before getDynamiteFileProxyService(),
+                // linkToDeath() failed,
+                // most likely because GMS Core crashed very shortly before getDynamiteFileProxyService(),
                 // which should be very rare in practice.
-                // Waiting for GMS to respawn is hard to do correctly, not worth the complexity increase
+                // Waiting for GMS Core to respawn is hard to do correctly, not worth the complexity increase
                 Log.e(TAG, "unable to obtain the FileProxyService", e);
                 System.exit(1);
             }
