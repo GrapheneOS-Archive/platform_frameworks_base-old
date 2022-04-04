@@ -16,7 +16,6 @@
 
 package com.android.internal.gmscompat;
 
-import android.app.ActivityThread;
 import android.app.Application;
 import android.app.compat.gms.GmsCompat;
 import android.content.Context;
@@ -31,85 +30,80 @@ import com.android.internal.gmscompat.dynamite.server.FileProxyService;
 public final class GmsCompatApp {
     private static final String TAG = "GmsCompat/GCA";
     public static final String PKG_NAME = "app.grapheneos.gmscompat";
-    private static final String KEY_BINDER = "binder";
-    private static final String KEY_BINDER_TRANSACTION_CODES = "binder_txn_codes";
-    private static final String KEY_RESULT = "result";
-    private static final String KEY_DynamiteFileProxyService = "DynamiteFileProxyService";
 
-    // needed to establish bidirectional IBinder.linkToDeath()
     @SuppressWarnings("FieldCanBeLocal")
+    // written to fields to prevent GC from collecting them
     private static Binder localBinder;
-    @SuppressWarnings("FieldCanBeLocal")
-    private static IBinder remoteBinder;
-
-    private GmsCompatApp() {}
-
-    // written by Play services to keep the binder alive
     @SuppressWarnings("FieldCanBeLocal")
     private static FileProxyService dynamiteFileProxyService;
 
-    // called by GSF, Play services, Play Store during startup
-    static IBinder connect(Context ctx) {
+    private static IGms2Gca binderGms2Gca;
+
+    public static final String KEY_BINDER = "binder";
+
+    // called by GSF, GMS Core, Play Store during startup
+    static void connect(Context ctx) {
         Binder local = new Binder();
         localBinder = local;
-        Bundle extras = new Bundle();
-        extras.putBinder(KEY_BINDER, local);
 
-        if (GmsCompat.isGmsCore() && "com.google.android.gms.persistent".equals(Application.getProcessName())) {
-            // FileProxyService binder needs to be always available to the Dynamite clients.
-            // "persistent" process launches at bootup and is kept alive by the ServiceConnection
-            // from the GmsCompatApp, which makes it fit for the purpose of hosting the FileProxyService
-            FileProxyService s = new FileProxyService(ctx);
-            dynamiteFileProxyService = s;
-            extras.putBinder(KEY_DynamiteFileProxyService, s.asBinder());
-        }
-
-        String authority = PKG_NAME + ".BinderProvider";
-        Bundle res = call(ctx, authority, ctx.getPackageName(), null, extras);
-
-        IBinder remote = res.getBinder(KEY_BINDER);
-        DeathRecipient.register(remote);
-        remoteBinder = remote;
-        return remote;
-    }
-
-    // region | GMS client section
-
-    private static final int METHOD_GET_REDIRECTABLE_INTERFACES = 0;
-    private static final int METHOD_GET_REDIRECTOR = 1;
-    private static final int METHOD_GET_DynamiteFileProxyService = 2;
-
-    public static String[] getRedirectableInterfaces() {
-        Bundle b = gmsClientProviderCall(METHOD_GET_REDIRECTABLE_INTERFACES, null, null);
-        return b.getStringArray(KEY_RESULT);
-    }
-
-    public static BinderRedirector getBinderRedirector(int id) {
-        Bundle b = gmsClientProviderCall(METHOD_GET_REDIRECTOR, Integer.toString(id), null);
-        if (b == null) {
-            // redirector is disabled
-            return new BinderRedirector(null, null);
-        }
-        IBinder binder = b.getBinder(KEY_BINDER);
-        int[] txnCodes = b.getIntArray(KEY_BINDER_TRANSACTION_CODES);
-        return new BinderRedirector(binder, txnCodes);
-    }
-
-    public static IBinder getDynamiteFileProxyService() {
-        Bundle b = gmsClientProviderCall(METHOD_GET_DynamiteFileProxyService, null, null);
-        return b.getBinder(KEY_BINDER);
-    }
-
-    private static Bundle gmsClientProviderCall(int method, String arg, Bundle bundleArg) {
-        String authority = PKG_NAME + ".GmsClientProvider";
-        Context ctx = ActivityThread.currentApplication();
-        return call(ctx, authority, Integer.toString(method), arg, bundleArg);
-    }
-    // endregion
-
-    private static Bundle call(Context ctx, String authority, String method, String arg, Bundle bundleArg) {
         try {
-            return ctx.getContentResolver().call(authority, method, arg, bundleArg);
+            IGms2Gca iGms2Gca = IGms2Gca.Stub.asInterface(getBinder(BINDER_IGms2Gca));
+            binderGms2Gca = iGms2Gca;
+
+            String processName = Application.getProcessName();
+            if (GmsCompat.isGmsCore()) {
+                FileProxyService s = null;
+                if ("com.google.android.gms.persistent".equals(processName)) {
+                    // FileProxyService binder needs to be always available to the Dynamite clients.
+                    // "persistent" process launches at bootup and is kept alive by the ServiceConnection
+                    // from the GmsCompatApp, which makes it fit for the purpose of hosting the FileProxyService
+                    s = new FileProxyService(ctx);
+                    dynamiteFileProxyService = s;
+                }
+                iGms2Gca.connectGmsCore(processName, local, s);
+            } else if (GmsCompat.isPlayStore()) {
+                iGms2Gca.connectPlayStore(processName, local);
+            } else if (GmsInfo.PACKAGE_GSF.equals(ctx.getPackageName())) {
+                iGms2Gca.connectGsf(processName, local);
+            }
+        } catch (RemoteException e) {
+            throw callFailed(e);
+        }
+    }
+
+    public static IGms2Gca iGms2Gca() {
+        return binderGms2Gca;
+    }
+
+    private static volatile IClientOfGmsCore2Gca binderClientOfGmsCore2Gca;
+
+    public static IClientOfGmsCore2Gca iClientOfGmsCore2Gca() {
+        IClientOfGmsCore2Gca cache = binderClientOfGmsCore2Gca;
+        if (cache != null) {
+            return cache;
+        }
+
+        if (GmsCompat.isGmsCore()) {
+            throw new IllegalStateException();
+        }
+
+        IBinder binder = getBinder(BINDER_IClientOfGmsCore2Gca);
+        IClientOfGmsCore2Gca iface = IClientOfGmsCore2Gca.Stub.asInterface(binder);
+        // benign race, it's fine to obtain this interface more than once
+        binderClientOfGmsCore2Gca = iface;
+        return iface;
+    }
+
+    public static final int BINDER_IGms2Gca = 0;
+    public static final int BINDER_IClientOfGmsCore2Gca = 1;
+
+    private static IBinder getBinder(int which) {
+        String authority = PKG_NAME + ".BinderProvider";
+        try {
+            Bundle bundle = GmsCompat.appContext().getContentResolver().call(authority, Integer.toString(which), null, null);
+            IBinder binder = bundle.getBinder(KEY_BINDER);
+            DeathRecipient.register(binder);
+            return binder;
         } catch (Throwable t) {
             // content provider calls are infallible unless something goes very wrong, better fail fast in that case
             Log.e(TAG, "call to " + authority + " failed", t);
@@ -132,8 +126,20 @@ public final class GmsCompatApp {
         }
 
         public void binderDied() {
+            // see comment in callFailed()
             Log.e(TAG, PKG_NAME + " died");
             System.exit(1);
         }
     }
+
+    public static RuntimeException callFailed(RemoteException e) {
+        // running GmsCompat app process is a hard dependency of sandboxed GMS
+        Log.e(TAG, "call failed, calling System.exit(1)", e);
+        System.exit(1);
+        // unreachable, needed for control flow checks by the compiler
+        // (Java doesn't have a concept of "noreturn")
+        return e.rethrowAsRuntimeException();
+    }
+
+    private GmsCompatApp() {}
 }
