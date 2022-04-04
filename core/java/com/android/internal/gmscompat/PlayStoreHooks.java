@@ -18,10 +18,6 @@ package com.android.internal.gmscompat;
 
 import android.app.Activity;
 import android.app.ActivityThread;
-import android.app.IActivityManager;
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.compat.gms.GmsCompat;
 import android.content.BroadcastReceiver;
@@ -42,41 +38,40 @@ import android.provider.Downloads;
 import android.provider.Settings;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Objects;
+import java.util.ArrayDeque;
 import java.util.concurrent.atomic.AtomicLong;
 
 public final class PlayStoreHooks {
-
     private static final String TAG = "GmsCompat/PlayStore";
 
-    // Pending user action notifications
-    static final String PUA_CHANNEL_ID = "gmscompat_playstore_pua_channel";
-    private static final int PUA_NOTIFICATION_ID = 429825706;
-
-    private PlayStoreHooks() {}
-
-    static void createNotificationChannel(Context context, ArrayList<NotificationChannel> dest) {
-        CharSequence name = context.getText(R.string.gmscompat_notif_channel_action_required);
-        NotificationChannel c = new NotificationChannel(PUA_CHANNEL_ID, name,
-                NotificationManager.IMPORTANCE_LOW);
-        c.setShowBadge(false);
-
-        dest.add(c);
-    }
+    // accessed only from the main thread, no need for synchronization
+    static final ArrayDeque<Intent> pendingConfirmationIntents = new ArrayDeque<>();
 
     // Play Store doesn't handle PENDING_USER_ACTION status from PackageInstaller
     // PackageInstaller.Session#commit(IntentSender)
     // PackageInstaller#uninstall(VersionedPackage, int, IntentSender)
     public static IntentSender wrapPackageInstallerStatusReceiver(IntentSender statusReceiver) {
-        Context context = ActivityThread.currentApplication();
-        Objects.requireNonNull(context);
-        return PackageInstallerStatusForwarder.wrap(context, statusReceiver).getIntentSender();
+        return PackageInstallerStatusForwarder.wrap(GmsCompat.appContext(), statusReceiver).getIntentSender();
+    }
+
+    // call at the end of Activity#onResume()
+    public static void activityResumed(Activity activity) {
+        if (pendingConfirmationIntents.size() != 0) {
+            Intent i = pendingConfirmationIntents.removeLast();
+            activity.startActivity(i);
+
+            try {
+                GmsCompatApp.iGms2Gca().dismissPlayStorePendingUserActionNotification();
+            } catch (RemoteException e) {
+                GmsCompatApp.callFailed(e);
+            }
+        }
     }
 
     static class PackageInstallerStatusForwarder extends BroadcastReceiver {
         private Context context;
         private IntentSender target;
+        private PendingIntent pendingIntent;
 
         private static final AtomicLong lastId = new AtomicLong();
 
@@ -88,11 +83,13 @@ public final class PlayStoreHooks {
             String intentAction = context.getPackageName()
                 + "." + PackageInstallerStatusForwarder.class.getName() + "."
                 + lastId.getAndIncrement();
-            context.registerReceiver(sf, new IntentFilter(intentAction));
 
-            return PendingIntent.getBroadcast(context, 0, new Intent(intentAction),
+            sf.pendingIntent = PendingIntent.getBroadcast(context, 0, new Intent(intentAction),
                     PendingIntent.FLAG_CANCEL_CURRENT |
                         PendingIntent.FLAG_MUTABLE);
+
+            context.registerReceiver(sf, new IntentFilter(intentAction));
+            return sf.pendingIntent;
         }
 
         public void onReceive(Context receiverContext, Intent intent) {
@@ -104,36 +101,23 @@ public final class PlayStoreHooks {
 
             if (status == PackageInstaller.STATUS_PENDING_USER_ACTION) {
                 Intent confirmationIntent = intent.getParcelableExtra(Intent.EXTRA_INTENT);
-                confirmationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
                 // there is no public API that I'm aware of (as of API 31)
                 // that would allow to *reliably* find this out
                 if (ActivityThread.currentActivityThread().hasAtLeastOneResumedActivity()) {
                     context.startActivity(confirmationIntent);
                 } else {
-                    // allow multiple PUA notifications
-                    int id = PUA_NOTIFICATION_ID + (((int) lastId.get()) & 0xffff);
-
-                    PendingIntent pi = PendingIntent.getActivity(context, id, confirmationIntent,
-                        PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_CANCEL_CURRENT);
-
-                    Notification notification =
-                        GmsHooks.obtainNotificationBuilder(context, PUA_CHANNEL_ID)
-                        // TODO better icon
-                        .setSmallIcon(context.getApplicationInfo().icon)
-                        .setContentTitle(context.getText(R.string.gmscompat_notif_channel_action_required))
-                        .setContentIntent(pi)
-                        .setOngoing(true)
-                        .setAutoCancel(true)
-                        .build();
-
-                    NotificationManager nm = context.getSystemService(NotificationManager.class);
-                    nm.notify(id, notification);
+                    pendingConfirmationIntents.addLast(confirmationIntent);
+                    try {
+                        GmsCompatApp.iGms2Gca().showPlayStorePendingUserActionNotification();
+                    } catch (RemoteException e) {
+                        GmsCompatApp.callFailed(e);
+                    }
                 }
                 // confirmationIntent has a PendingIntent to this instance, don't unregister yet
                 return;
             }
-
+            pendingIntent.cancel();
             context.unregisterReceiver(this);
 
             try {

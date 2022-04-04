@@ -764,11 +764,6 @@
     <string name="foreground_service_multiple_separator"><xliff:g id="left_side">%1$s</xliff:g>,
         <xliff:g id="right_side">%2$s</xliff:g></string>
 
-    <!-- Name for GmsCompat notification channel group -->
-    <string name="gmscompat_channel_group">Compatibility</string>
-
-    <string name="gmscompat_notif_channel_action_required">Action required</string>
-
     <!-- Displayed to the user to tell them that they have started up the phone in "safe mode" -->
     <string name="safeMode">Safe mode</string>
 

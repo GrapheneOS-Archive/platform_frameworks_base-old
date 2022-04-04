@@ -39,6 +39,7 @@ import android.annotation.UiContext;
 import android.app.VoiceInteractor.Request;
 import android.app.admin.DevicePolicyManager;
 import android.app.assist.AssistContent;
+import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.content.ComponentCallbacks2;
 import android.content.ComponentName;
@@ -147,6 +148,7 @@ import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.app.IVoiceInteractor;
 import com.android.internal.app.ToolbarActionBar;
 import com.android.internal.app.WindowDecorActionBar;
+import com.android.internal.gmscompat.PlayStoreHooks;
 import com.android.internal.policy.PhoneWindow;
 
 import dalvik.system.VMRuntime;
@@ -1971,6 +1973,10 @@ public class Activity extends ContextThemeWrapper
         notifyContentCaptureManagerIfNeeded(CONTENT_CAPTURE_RESUME);
 
         mCalled = true;
+
+        if (GmsCompat.isPlayStore()) {
+            PlayStoreHooks.activityResumed(this);
+        }
     }
 
     /**
