@@ -54,8 +54,6 @@ import android.service.notification.ZenPolicy;
 import android.util.Log;
 import android.util.proto.ProtoOutputStream;
 
-import com.android.internal.gmscompat.GmsHooks;
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
@@ -999,10 +997,6 @@ public class NotificationManager {
      * had before it was deleted.
      */
     public void deleteNotificationChannel(String channelId) {
-        if (GmsHooks.skipDeleteNotificationChannel(channelId)) {
-            return;
-        }
-
         INotificationManager service = getService();
         try {
             service.deleteNotificationChannel(mContext.getPackageName(), channelId);
