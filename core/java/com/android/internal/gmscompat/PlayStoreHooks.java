@@ -105,6 +105,7 @@ public final class PlayStoreHooks {
                 // there is no public API that I'm aware of (as of API 31)
                 // that would allow to *reliably* find this out
                 if (ActivityThread.currentActivityThread().hasAtLeastOneResumedActivity()) {
+                    confirmationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     context.startActivity(confirmationIntent);
                 } else {
                     pendingConfirmationIntents.addLast(confirmationIntent);
