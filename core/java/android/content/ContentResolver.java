@@ -2488,7 +2488,7 @@ public abstract class ContentResolver implements ContentInterface {
         }
         final String auth = uri.getAuthority();
         if (auth != null) {
-            GmsDynamiteClientHooks.maybeInit(mContext, auth);
+            GmsDynamiteClientHooks.maybeInit(auth);
 
             return acquireProvider(mContext, auth);
         }

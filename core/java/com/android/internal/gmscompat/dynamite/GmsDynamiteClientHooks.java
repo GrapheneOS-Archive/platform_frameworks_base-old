@@ -53,7 +53,7 @@ public final class GmsDynamiteClientHooks {
     }
 
     // ContentResolver#acquireProvider(Uri)
-    public static void maybeInit(Context ctx, String auth) {
+    public static void maybeInit(String auth) {
         if (!"com.google.android.gms.chimera".equals(auth)) {
             return;
         }
@@ -61,11 +61,12 @@ public final class GmsDynamiteClientHooks {
             if (enabled()) {
                 return;
             }
-            if (!GmsCompat.isClientOfGmsCore(ctx)) {
+            if (!GmsCompat.isClientOfGmsCore()) {
                 return;
             }
             // faster than ctx.createPackageContext().createDeviceProtectedStorageContext().getDataDir()
-            String deDataDirectory = Environment.getDataUserDeDirectory(null, ctx.getUserId()).getPath();
+            int userId = GmsCompat.appContext().getUserId();
+            String deDataDirectory = Environment.getDataUserDeDirectory(null, userId).getPath();
             gmsCoreDataPrefix = deDataDirectory + '/' + GmsInfo.PACKAGE_GMS_CORE + '/';
             pfdCache = new ArrayMap<>(20);
 

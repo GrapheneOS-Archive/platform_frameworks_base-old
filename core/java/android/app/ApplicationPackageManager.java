@@ -466,7 +466,7 @@ public class ApplicationPackageManager extends PackageManager {
             // in com.google.android.libraries.phenotype.client
             // .PhenotypeClientHelper#validateContentProvider() -> isGmsCorePreinstalled()
             // PhenotypeFlags will always return their default values if these flags aren't set
-            if (GmsCompat.isGmsCore() || GmsCompat.isClientOfGmsCore(mContext)) {
+            if (GmsCompat.isGmsCore() || GmsCompat.isClientOfGmsCore()) {
                 ai.flags |= ApplicationInfo.FLAG_SYSTEM | ApplicationInfo.FLAG_UPDATED_SYSTEM_APP;
             }
         }

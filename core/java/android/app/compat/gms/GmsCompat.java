@@ -183,7 +183,7 @@ public final class GmsCompat {
     private static volatile boolean cachedIsClientOfGmsCore;
 
     /** @hide */
-    public static boolean isClientOfGmsCore(Context ctx) {
+    public static boolean isClientOfGmsCore() {
         if (cachedIsClientOfGmsCore) {
             return true;
         }
@@ -191,7 +191,7 @@ public final class GmsCompat {
             return false;
         }
         try {
-            PackageInfo pkgInfo = ctx.getPackageManager()
+            PackageInfo pkgInfo = appContext().getPackageManager()
                 .getPackageInfo(GmsInfo.PACKAGE_GMS_CORE, PackageManager.GET_SIGNING_CERTIFICATES);
             if (isGmsApp(pkgInfo)) {
                 cachedIsClientOfGmsCore = true;
