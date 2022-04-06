@@ -1987,7 +1987,7 @@ class ContextImpl extends Context {
         }
         validateServiceIntent(service);
 
-        BinderRedirector.maybeInit(this, service);
+        BinderRedirector.maybeInit(service);
 
         try {
             IBinder token = getActivityToken();

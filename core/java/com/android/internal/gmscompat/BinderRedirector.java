@@ -58,7 +58,7 @@ public final class BinderRedirector implements Parcelable {
     // call from ContextImpl#bindServiceCommon(),
     // after intent is validated, but before request to the ActivityManager
     // (otherwise there would be a race if bindService() is called from the non-main thread)
-    public static void maybeInit(Context ctx, Intent intent) {
+    public static void maybeInit(Intent intent) {
         if (!GmsInfo.PACKAGE_GMS_CORE.equals(intent.getPackage())) {
             return;
         }
@@ -69,7 +69,7 @@ public final class BinderRedirector implements Parcelable {
             if (enabled) {
                 return;
             }
-            if (GmsCompat.isClientOfGmsCore(ctx)) {
+            if (GmsCompat.isClientOfGmsCore()) {
                 try {
                     redirectableInterfaces = GmsCompatApp.iClientOfGmsCore2Gca().getRedirectableInterfaces();
                 } catch (RemoteException e) {
