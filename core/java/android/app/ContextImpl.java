@@ -96,6 +96,7 @@ import android.window.WindowTokenClient;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.gmscompat.BinderRedirector;
+import com.android.internal.gmscompat.GmsHooks;
 import com.android.internal.util.Preconditions;
 
 import dalvik.system.BlockGuard;
@@ -2068,17 +2069,11 @@ class ContextImpl extends Context {
     @Override
     public Object getSystemService(String name) {
         if (GmsCompat.isEnabled()) {
-            switch (name) {
-                case Context.CONTEXTHUB_SERVICE:
-                case Context.WIFI_SCANNING_SERVICE:
-                case Context.APP_INTEGRITY_SERVICE:
-                // used for factory reset protection
-                case Context.PERSISTENT_DATA_BLOCK_SERVICE:
-                case Context.FONT_SERVICE:
-                    // these privileged services are null-checked by GMS
-                    return null;
+            if (GmsHooks.isHiddenSystemService(name)) {
+                return null;
             }
         }
+
         if (vmIncorrectContextUseEnabled()) {
             // Check incorrect Context usage.
             if (WINDOW_SERVICE.equals(name) && !isUiContext()) {
