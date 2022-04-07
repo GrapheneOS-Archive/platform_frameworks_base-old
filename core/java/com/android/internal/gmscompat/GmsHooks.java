@@ -47,6 +47,47 @@ import java.util.List;
 public final class GmsHooks {
     private static final String TAG = "GmsCompat/Hooks";
 
+    // ContextImpl#getSystemService(String)
+    public static boolean isHiddenSystemService(String name) {
+        // return true only for services that are null-checked
+        switch (name) {
+            case Context.CONTEXTHUB_SERVICE:
+            case Context.WIFI_SCANNING_SERVICE:
+            case Context.APP_INTEGRITY_SERVICE:
+            // used for factory reset protection
+            case Context.PERSISTENT_DATA_BLOCK_SERVICE:
+            // used for updateable fonts
+            case Context.FONT_SERVICE:
+                return true;
+            case Context.BLUETOOTH_SERVICE:
+                if (!hasNearbyDevicesPermission()) {
+                    return true;
+                }
+        }
+        return false;
+    }
+
+    // ApplicationPackageManager#hasSystemFeature(String, int)
+    public static boolean isHiddenSystemFeature(String name) {
+        switch (name) {
+            // checked before accessing privileged UwbManager
+            case "android.hardware.uwb":
+                return true;
+            case "android.hardware.bluetooth":
+            case "android.hardware.bluetooth_le":
+                if (!hasNearbyDevicesPermission()) {
+                    return true;
+                }
+        }
+        return false;
+    }
+
+    private static boolean hasNearbyDevicesPermission() {
+        // "Nearby devices" permission grants
+        // BLUETOOTH_CONNECT, BLUETOOTH_ADVERTISE and BLUETOOTH_SCAN, checking one is enough
+        return GmsCompat.hasPermission(Manifest.permission.BLUETOOTH_SCAN);
+    }
+
     /**
      * Use the per-app SSAID as a random serial number for SafetyNet. This doesn't necessarily make
      * pass, but at least it retusn a valid "failed" response and stops spamming device key
