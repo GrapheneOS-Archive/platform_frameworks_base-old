@@ -6,8 +6,10 @@ parcelable BinderRedirector;
 
 // calls from clients of GMS Core to GmsCompatApp
 interface IClientOfGmsCore2Gca {
-    String[] getRedirectableInterfaces();
+    String[] getRedirectableInterfaces(out List<String> notableInterfaces);
     BinderRedirector getBinderRedirector(int id);
 
     IFileProxyService getDynamiteFileProxyService();
+
+    oneway void onNotableInterfaceAcquired(String interfaceDescriptor);
 }
