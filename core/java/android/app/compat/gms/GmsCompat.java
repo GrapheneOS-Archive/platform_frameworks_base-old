@@ -16,6 +16,7 @@
 
 package android.app.compat.gms;
 
+import android.annotation.NonNull;
 import android.annotation.SystemApi;
 import android.app.ActivityThread;
 import android.app.Application;
@@ -30,7 +31,6 @@ import android.os.Binder;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.UserHandle;
-import android.util.Log;
 
 import com.android.internal.gmscompat.GmsInfo;
 
@@ -48,7 +48,7 @@ import com.android.internal.gmscompat.GmsInfo;
  *
  * @hide
  */
-@SystemApi(client = SystemApi.Client.MODULE_LIBRARIES)
+@SystemApi
 public final class GmsCompat {
     private static final String TAG = "GmsCompat/Core";
 
@@ -146,20 +146,29 @@ public final class GmsCompat {
 
     /** @hide */
     public static boolean isGmsApp(ApplicationInfo app) {
-        String packageName = app.packageName;
-        if (!(GmsInfo.PACKAGE_GMS_CORE.equals(packageName)
-            || GmsInfo.PACKAGE_PLAY_STORE.equals(packageName)
-            || GmsInfo.PACKAGE_GSF.equals(packageName))) {
+        return isGmsApp(app.packageName, UserHandle.getUserId(app.uid));
+    }
+
+    private static boolean isGmsPackageName(String pkg) {
+        return GmsInfo.PACKAGE_GMS_CORE.equals(pkg)
+            || GmsInfo.PACKAGE_PLAY_STORE.equals(pkg)
+            || GmsInfo.PACKAGE_GSF.equals(pkg);
+    }
+
+    public static boolean isGmsApp(@NonNull String packageName, int userId) {
+        if (!isGmsPackageName(packageName)) {
             return false;
         }
-        int userId = UserHandle.getUserId(app.uid);
+
         IPackageManager pm = ActivityThread.getPackageManager();
 
-        // Fetch PackageInfo to get signing certificates
         PackageInfo pkg;
         long token = Binder.clearCallingIdentity();
         try {
             pkg = pm.getPackageInfo(packageName, PackageManager.GET_SIGNING_CERTIFICATES, userId);
+            if (pkg == null) {
+                return false;
+            }
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         } finally {
@@ -190,19 +199,10 @@ public final class GmsCompat {
         if (!elegibleForClientCompat) {
             return false;
         }
-        try {
-            PackageInfo pkgInfo = appContext().getPackageManager()
-                .getPackageInfo(GmsInfo.PACKAGE_GMS_CORE, PackageManager.GET_SIGNING_CERTIFICATES);
-            if (isGmsApp(pkgInfo)) {
-                cachedIsClientOfGmsCore = true;
-                return true;
-            }
-        } catch (PackageManager.NameNotFoundException e) {
-            // Ignored: normal - GMS Core not installed
-        } catch (Exception e) {
-            Log.e(TAG, "Failed to get GMS Core package info", e);
+        if (isGmsApp(GmsInfo.PACKAGE_GMS_CORE, appContext().getUserId())) {
+            cachedIsClientOfGmsCore = true;
+            return true;
         }
-
         return false;
     }
 
