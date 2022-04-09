@@ -27,6 +27,7 @@ import android.os.Parcelable;
 import android.os.RemoteException;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
@@ -39,6 +40,7 @@ public final class BinderRedirector implements Parcelable {
     // written last in the init sequence, "volatile" to publish all the preceding writes
     private static volatile boolean enabled;
     private static String[] redirectableInterfaces;
+    private static String[] notableInterfaces;
 
     private static RedirectionStateListener redirectionStateListener;
     private static BinderRedirector[] cache;
@@ -71,7 +73,9 @@ public final class BinderRedirector implements Parcelable {
             }
             if (GmsCompat.isClientOfGmsCore()) {
                 try {
-                    redirectableInterfaces = GmsCompatApp.iClientOfGmsCore2Gca().getRedirectableInterfaces();
+                    ArrayList<String> notableIfaces = new ArrayList<>(10);
+                    redirectableInterfaces = GmsCompatApp.iClientOfGmsCore2Gca().getRedirectableInterfaces(notableIfaces);
+                    notableIfaces.toArray(notableInterfaces = new String[notableIfaces.size()]);
                 } catch (RemoteException e) {
                     GmsCompatApp.callFailed(e);
                 }
@@ -87,6 +91,13 @@ public final class BinderRedirector implements Parcelable {
             if (rd.destination != null) {
                 return rd;
             } // else this redirection is disabled
+
+        } else if (Arrays.binarySearch(notableInterfaces, interface_) >= 0) {
+            try {
+                GmsCompatApp.iClientOfGmsCore2Gca().onNotableInterfaceAcquired(interface_);
+            } catch (RemoteException e) {
+                GmsCompatApp.callFailed(e);
+            }
         }
         return null;
     }
