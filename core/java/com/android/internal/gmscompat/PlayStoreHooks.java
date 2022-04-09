@@ -16,6 +16,7 @@
 
 package com.android.internal.gmscompat;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.ActivityThread;
 import android.app.PendingIntent;
@@ -31,12 +32,14 @@ import android.content.pm.IPackageDeleteObserver;
 import android.content.pm.PackageInstaller;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Environment;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.storage.StorageManager;
 import android.provider.Downloads;
 import android.provider.Settings;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.concurrent.atomic.AtomicLong;
@@ -45,7 +48,15 @@ public final class PlayStoreHooks {
     private static final String TAG = "GmsCompat/PlayStore";
 
     // accessed only from the main thread, no need for synchronization
-    static final ArrayDeque<Intent> pendingConfirmationIntents = new ArrayDeque<>();
+    static ArrayDeque<Intent> pendingConfirmationIntents;
+
+    public static void init() {
+        pendingConfirmationIntents = new ArrayDeque<>();
+
+        obbDir = Environment.getExternalStorageDirectory().getPath() + "/Android/obb";
+        playStoreObbDir = obbDir + '/' + GmsInfo.PACKAGE_PLAY_STORE;
+        File.mkdirsFailedHook = PlayStoreHooks::mkdirsFailed;
+    }
 
     // Play Store doesn't handle PENDING_USER_ACTION status from PackageInstaller
     // PackageInstaller.Session#commit(IntentSender)
@@ -244,6 +255,24 @@ public final class PlayStoreHooks {
             i.setData(Uri.fromParts("package", packageName, null));
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             GmsCompat.appContext().startActivity(i);
+        }
+    }
+
+    private static String obbDir;
+    private static String playStoreObbDir;
+
+    // File#mkdirs()
+    public static void mkdirsFailed(File file) {
+        String path = file.getPath();
+
+        if (path.startsWith(obbDir) && !path.startsWith(playStoreObbDir)) {
+            if (!GmsCompat.hasPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                try {
+                    GmsCompatApp.iGms2Gca().showPlayStoreMissingObbPermissionNotification();
+                } catch (RemoteException e) {
+                    GmsCompatApp.callFailed(e);
+                }
+            }
         }
     }
 
