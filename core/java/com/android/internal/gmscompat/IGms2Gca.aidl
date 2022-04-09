@@ -8,6 +8,8 @@ interface IGms2Gca {
     void connectGmsCore(String processName, IBinder callerBinder, @nullable IFileProxyService dynamiteFileProxyService);
     void connectPlayStore(String processName, IBinder callerBinder);
 
-    void showPlayStorePendingUserActionNotification();
-    void dismissPlayStorePendingUserActionNotification();
+    oneway void showPlayStorePendingUserActionNotification();
+    oneway void dismissPlayStorePendingUserActionNotification();
+
+    oneway void showPlayStoreMissingObbPermissionNotification();
 }
