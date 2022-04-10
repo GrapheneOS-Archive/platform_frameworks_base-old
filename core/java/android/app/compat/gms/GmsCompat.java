@@ -183,6 +183,9 @@ public final class GmsCompat {
         if (app == null) {
             return false;
         }
+        if (!app.enabled) {
+            return false;
+        }
         SigningInfo si = pkg.signingInfo;
         return isGmsApp(app.packageName,
             si.getApkContentsSigners(), si.getSigningCertificateHistory(),
