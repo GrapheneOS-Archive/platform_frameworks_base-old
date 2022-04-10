@@ -230,22 +230,6 @@ public final class PlayStoreHooks {
         }
     }
 
-    // Called during self-update sequence
-    // ContentResolver#insert(Uri, ContentValues, Bundle)
-    public static void filterContentValues(Uri url, ContentValues values) {
-        if (values != null && "content://downloads/my_downloads".equals(url.toString())) {
-            // gated by the restricted ACCESS_DOWNLOAD_MANAGER_ADVANCED permission
-            String otherUid = Downloads.Impl.COLUMN_OTHER_UID;
-            if (values.containsKey(otherUid)) {
-                int v = values.getAsInteger(otherUid).intValue();
-                if (v != Process.SYSTEM_UID) {
-                    throw new IllegalStateException("unexpected COLUMN_OTHER_UID " + v);
-                }
-                values.remove(otherUid);
-            }
-        }
-    }
-
     // ApplicationPackageManager#setApplicationEnabledSetting
     public static void setApplicationEnabledSetting(String packageName, int newState) {
         if (newState == PackageManager.COMPONENT_ENABLED_STATE_ENABLED

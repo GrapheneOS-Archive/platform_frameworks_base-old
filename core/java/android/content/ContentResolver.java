@@ -2188,8 +2188,8 @@ public abstract class ContentResolver implements ContentInterface {
     public final @Nullable Uri insert(@RequiresPermission.Write @NonNull Uri url,
             @Nullable ContentValues values, @Nullable Bundle extras) {
         Objects.requireNonNull(url, "url");
-        if (GmsCompat.isPlayStore()) {
-            PlayStoreHooks.filterContentValues(url, values);
+        if (GmsCompat.isEnabled()) {
+            GmsHooks.filterContentValues(url, values);
         }
 
         try {
