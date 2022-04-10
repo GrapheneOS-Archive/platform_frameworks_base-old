@@ -23,6 +23,7 @@ import android.app.ActivityThread;
 import android.app.Application;
 import android.app.PendingIntent;
 import android.app.compat.gms.GmsCompat;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -34,6 +35,7 @@ import android.os.Process;
 import android.os.RemoteException;
 import android.os.SystemClock;
 import android.provider.ContactsContract;
+import android.provider.Downloads;
 import android.provider.Settings;
 import android.util.Log;
 import android.util.SparseArray;
@@ -283,6 +285,26 @@ public final class GmsHooks {
             GmsCompatApp.callFailed(e);
         }
         return true;
+    }
+
+    // ContentResolver#insert(Uri, ContentValues, Bundle)
+    public static void filterContentValues(Uri url, ContentValues values) {
+        if (values != null && Downloads.Impl.CONTENT_URI.equals(url)) {
+            Integer otherUid = values.getAsInteger(Downloads.Impl.COLUMN_OTHER_UID);
+            if (otherUid != null) {
+                if (otherUid.intValue() != Process.SYSTEM_UID) {
+                    throw new IllegalStateException("unexpected COLUMN_OTHER_UID " + otherUid);
+                }
+                // gated by the privileged ACCESS_DOWNLOAD_MANAGER_ADVANCED permission
+                values.remove(Downloads.Impl.COLUMN_OTHER_UID);
+            }
+
+            Integer visibility = values.getAsInteger(Downloads.Impl.COLUMN_VISIBILITY);
+            if (visibility != null && visibility.intValue() == Downloads.Impl.VISIBILITY_HIDDEN) {
+                // VISIBILITY_HIDDEN requires the privileged DOWNLOAD_WITHOUT_NOTIFICATION permission
+                values.remove(Downloads.Impl.COLUMN_VISIBILITY);
+            }
+        }
     }
 
     private GmsHooks() {}
