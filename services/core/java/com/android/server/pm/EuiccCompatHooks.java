@@ -78,17 +78,12 @@ class EuiccCompatHooks {
     }
 
     private static boolean checkDependencies(PackageManagerService pm) {
-        long token = Binder.clearCallingIdentity();
-        try {
-            for (String pkg : GmsInfo.DEPENDENCIES_OF_EUICC_PACKAGES) {
-                if (!isGmsApp(pm, pkg)) {
-                    return false;
-                }
+        for (String pkg : GmsInfo.DEPENDENCIES_OF_EUICC_PACKAGES) {
+            if (!GmsCompat.isGmsApp(pkg, USER_ID)) {
+                return false;
             }
-            return true;
-        } finally {
-            Binder.restoreCallingIdentity(token);
         }
+        return true;
     }
 
     private static boolean neededForEuiccCompat(PackageManagerService pm, String pkg) {
@@ -96,21 +91,7 @@ class EuiccCompatHooks {
             if (!pkg.equals(dep)) {
                 continue;
             }
-            // run a query with full permissions
-            long token = Binder.clearCallingIdentity();
-            try {
-                return isGmsApp(pm, pkg);
-            } finally {
-                Binder.restoreCallingIdentity(token);
-            }
-        }
-        return false;
-    }
-
-    private static boolean isGmsApp(PackageManagerService pm, String pkg) {
-        PackageInfo pi = pm.getPackageInfo(pkg, PackageManager.GET_SIGNING_CERTIFICATES, USER_ID);
-        if (pi != null && pi.applicationInfo.enabled) {
-            return GmsCompat.isGmsApp(pi);
+            return GmsCompat.isGmsApp(pkg, USER_ID);
         }
         return false;
     }
