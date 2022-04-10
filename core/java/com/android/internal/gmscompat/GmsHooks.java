@@ -19,14 +19,19 @@ package com.android.internal.gmscompat;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager.RunningAppProcessInfo;
+import android.app.ActivityThread;
 import android.app.Application;
+import android.app.PendingIntent;
 import android.app.compat.gms.GmsCompat;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Process;
+import android.os.RemoteException;
 import android.os.SystemClock;
 import android.provider.ContactsContract;
 import android.provider.Settings;
@@ -258,6 +263,26 @@ public final class GmsHooks {
             }
         }
         return null;
+    }
+
+    // ContextImpl#startActivity(Intent, Bundle)
+    public static boolean startActivity(Intent intent, Bundle options) {
+        if (ActivityThread.currentActivityThread().hasAtLeastOneResumedActivity()) {
+            return false;
+        }
+
+        // handle background activity starts, which normally require a privileged permission
+
+        Context ctx = GmsCompat.appContext();
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(ctx, 0, intent,
+                PendingIntent.FLAG_IMMUTABLE, options);
+        try {
+            GmsCompatApp.iGms2Gca().startActivityFromTheBackground(ctx.getPackageName(), pendingIntent);
+        } catch (RemoteException e) {
+            GmsCompatApp.callFailed(e);
+        }
+        return true;
     }
 
     private GmsHooks() {}
