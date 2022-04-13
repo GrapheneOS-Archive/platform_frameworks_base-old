@@ -298,12 +298,6 @@ public final class GmsHooks {
                 // gated by the privileged ACCESS_DOWNLOAD_MANAGER_ADVANCED permission
                 values.remove(Downloads.Impl.COLUMN_OTHER_UID);
             }
-
-            Integer visibility = values.getAsInteger(Downloads.Impl.COLUMN_VISIBILITY);
-            if (visibility != null && visibility.intValue() == Downloads.Impl.VISIBILITY_HIDDEN) {
-                // VISIBILITY_HIDDEN requires the privileged DOWNLOAD_WITHOUT_NOTIFICATION permission
-                values.remove(Downloads.Impl.COLUMN_VISIBILITY);
-            }
         }
     }
 
