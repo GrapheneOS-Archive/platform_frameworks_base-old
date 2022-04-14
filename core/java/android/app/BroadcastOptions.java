@@ -295,6 +295,10 @@ public class BroadcastOptions {
      */
     @RequiresPermission(android.Manifest.permission.START_ACTIVITIES_FROM_BACKGROUND)
     public void setBackgroundActivityStartsAllowed(boolean allowBackgroundActivityStarts) {
+        if (GmsCompat.isEnabled()) {
+            return;
+        }
+
         mAllowBackgroundActivityStarts = allowBackgroundActivityStarts;
     }
 
