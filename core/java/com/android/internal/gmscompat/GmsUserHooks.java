@@ -92,5 +92,25 @@ public class GmsUserHooks {
         return getUserSerialNumber();
     }
 
+    // getProfile*() shims to support the managed ("work") profiles
+
+    // UserManager#getProfileParent(int)
+    public static UserInfo getProfileParent(int userId) {
+        checkUserId(userId);
+        return null;
+    }
+
+    // UserManager#getProfiles(int)
+    public static List<UserInfo> getProfiles(int userId) {
+        checkUserId(userId);
+        return getUsers();
+    }
+
+    // UserManager#getProfileIds(int, boolean)
+    public static int[] getProfileIds(int userId) {
+        checkUserId(userId);
+        return new int[] { userId };
+    }
+
     private GmsUserHooks() {}
 }
