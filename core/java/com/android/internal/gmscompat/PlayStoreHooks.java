@@ -21,6 +21,7 @@ import android.app.Activity;
 import android.app.ActivityThread;
 import android.app.PendingIntent;
 import android.app.compat.gms.GmsCompat;
+import android.app.usage.StorageStats;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -228,6 +229,16 @@ public final class PlayStoreHooks {
         } catch (RemoteException e) {
             throw e.rethrowAsRuntimeException();
         }
+    }
+
+    public static StorageStats queryStatsForPackage(String packageName) throws PackageManager.NameNotFoundException {
+        PackageManager pm = GmsCompat.appContext().getPackageManager();
+        String apkPath = pm.getApplicationInfo(packageName, 0).sourceDir;
+
+        StorageStats stats = new StorageStats();
+        stats.codeBytes = new File(apkPath).length();
+        // leave dataBytes, cacheBytes, externalCacheBytes at 0
+        return stats;
     }
 
     // ApplicationPackageManager#setApplicationEnabledSetting
