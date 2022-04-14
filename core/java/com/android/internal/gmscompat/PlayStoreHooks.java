@@ -23,7 +23,6 @@ import android.app.PendingIntent;
 import android.app.compat.gms.GmsCompat;
 import android.app.usage.StorageStats;
 import android.content.BroadcastReceiver;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -33,11 +32,10 @@ import android.content.pm.IPackageDeleteObserver;
 import android.content.pm.PackageInstaller;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Environment;
-import android.os.Process;
 import android.os.RemoteException;
 import android.os.storage.StorageManager;
-import android.provider.Downloads;
 import android.provider.Settings;
 
 import java.io.File;
@@ -105,11 +103,7 @@ public final class PlayStoreHooks {
         }
 
         public void onReceive(Context receiverContext, Intent intent) {
-            String statusKey = PackageInstaller.EXTRA_STATUS;
-            if (!intent.hasExtra(statusKey)) {
-                throw new IllegalStateException("no EXTRA_STATUS in intent " + intent);
-            }
-            int status = intent.getIntExtra(statusKey, 0);
+            int status = getIntFromBundle(intent.getExtras(), PackageInstaller.EXTRA_STATUS);
 
             if (status == PackageInstaller.STATUS_PENDING_USER_ACTION) {
                 Intent confirmationIntent = intent.getParcelableExtra(Intent.EXTRA_INTENT);
@@ -183,25 +177,33 @@ public final class PlayStoreHooks {
 
             // EXTRA_STATUS returns PackageInstaller constant,
             // EXTRA_LEGACY_STATUS returns PackageManager constant
-            String statusKey = PackageInstaller.EXTRA_LEGACY_STATUS;
-            if (!intent.hasExtra(statusKey)) {
-                throw new IllegalStateException("no EXTRA_LEGACY_STATUS in intent " + intent);
-            }
+            int status = getIntFromBundle(intent.getExtras(), PackageInstaller.EXTRA_LEGACY_STATUS);
 
-            int status = intent.getIntExtra(statusKey, 0);
-            if (status != PackageManager.DELETE_SUCCEEDED) {
-                // Play Store doesn't expect uninstallation to fail and ends up in an inconsistent UI state,
-                // which requires user-initiated "Force stop" as a workaround
-                // Most likely cause of a failure is accidental rejection of the second confirmation prompt:
-                // Play Store shows its own confirmation UI before PackageInstaller confirmation UI
-                // is shown. It is unlikely that the user deliberately accepted the first prompt and
-                // rejected the second one
-                System.exit(1);
-            }
             try {
                 target.packageDeleted(packageName, status);
             } catch (RemoteException e) {
                 throw e.rethrowAsRuntimeException();
+            }
+
+            if (status != PackageManager.DELETE_SUCCEEDED) {
+                // Play Store doesn't expect uninstallation to fail
+                // and ends up in an inconsistent UI state if the following workaround isn't applied
+
+                String[] broadcasts = { Intent.ACTION_PACKAGE_REMOVED, Intent.ACTION_PACKAGE_ADDED };
+
+                // default ClassLoader fails to load the needed class
+                ClassLoader cl = GmsCompat.appContext().getClassLoader();
+                try {
+                    Class cls = Class.forName("com.google.android.finsky.packagemanager.impl.PackageMonitorReceiverImpl$RegisteredReceiver", true, cl);
+
+                    for (String action : broadcasts) {
+                        // don't reuse BroadcastReceiver, it's expected that a new instance is made each time
+                        BroadcastReceiver br = (BroadcastReceiver) cls.newInstance();
+                        br.onReceive(context, new Intent(action, packageUri(packageName)));
+                    }
+                } catch (ReflectiveOperationException e) {
+                    throw new RuntimeException(e);
+                }
             }
         }
     }
@@ -246,10 +248,7 @@ public final class PlayStoreHooks {
         if (newState == PackageManager.COMPONENT_ENABLED_STATE_ENABLED
                     && ActivityThread.currentActivityThread().hasAtLeastOneResumedActivity())
         {
-            Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-            i.setData(Uri.fromParts("package", packageName, null));
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            GmsCompat.appContext().startActivity(i);
+            openAppSettings(packageName);
         }
     }
 
@@ -269,6 +268,24 @@ public final class PlayStoreHooks {
                 }
             }
         }
+    }
+
+    static Uri packageUri(String packageName) {
+        return Uri.fromParts("package", packageName, null);
+    }
+
+    // Unfortunately, there's no other way to ensure that the value is present and is of the right type.
+    // Note that Intent.getExtras() makes a copy of the Bundle each time, so reuse its result
+    static int getIntFromBundle(Bundle b, String key) {
+        return ((Integer) b.get(key)).intValue();
+    }
+
+    static void openAppSettings(String packageName) {
+        Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        i.setData(packageUri(packageName));
+        // FLAG_ACTIVITY_CLEAR_TASK is needed to ensure that the right screen is shown (it's a bug in the Settings app)
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        GmsCompat.appContext().startActivity(i);
     }
 
     private PlayStoreHooks() {}
