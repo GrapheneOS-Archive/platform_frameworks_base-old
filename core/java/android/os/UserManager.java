@@ -3679,6 +3679,10 @@ public class UserManager {
     @RequiresPermission(anyOf = {Manifest.permission.MANAGE_USERS,
             Manifest.permission.CREATE_USERS}, conditional = true)
     public List<UserInfo> getProfiles(@UserIdInt int userId) {
+        if (GmsCompat.isEnabled()) {
+            return GmsUserHooks.getProfiles(userId);
+        }
+
         try {
             return mService.getProfiles(userId, false /* enabledOnly */);
         } catch (RemoteException re) {
@@ -3821,6 +3825,10 @@ public class UserManager {
     @RequiresPermission(anyOf = {Manifest.permission.MANAGE_USERS,
             Manifest.permission.CREATE_USERS}, conditional = true)
     public @NonNull int[] getProfileIds(@UserIdInt int userId, boolean enabledOnly) {
+        if (GmsCompat.isEnabled()) {
+            return GmsUserHooks.getProfileIds(userId);
+        }
+
         try {
             return mService.getProfileIds(userId, enabledOnly);
         } catch (RemoteException re) {
@@ -3878,7 +3886,7 @@ public class UserManager {
     })
     public UserInfo getProfileParent(@UserIdInt int userId) {
         if (GmsCompat.isEnabled()) {
-            return null;
+            return GmsUserHooks.getProfileParent(userId);
         }
 
         try {
