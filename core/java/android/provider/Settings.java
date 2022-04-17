@@ -16368,7 +16368,7 @@ public final class Settings {
          * @hide
          */
         public static final String SETTINGS_REBOOT_AFTER_TIMEOUT = "settings_reboot_after_timeout";
-        
+
         /**
          * The amount of time in milliseconds before bluetooth is turned off
          * @hide
