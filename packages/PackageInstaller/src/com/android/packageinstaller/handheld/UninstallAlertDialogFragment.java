@@ -25,15 +25,19 @@ import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.usage.StorageStats;
 import android.app.usage.StorageStatsManager;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.UserInfo;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Process;
 import android.os.UserHandle;
 import android.os.UserManager;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -174,6 +178,10 @@ public class UninstallAlertDialogFragment extends DialogFragment implements
             appDataSize = getAppDataSize(pkg, dialogInfo.allUsers ? null : dialogInfo.user);
         }
 
+        if (getActivity().getIntent().getBooleanExtra(Intent.EXTRA_UNINSTALL_SHOW_MORE_OPTIONS_BUTTON, true)) {
+            dialogBuilder.setNeutralButton(R.string.more_options_button, this);
+        }
+
         if (appDataSize == 0) {
             dialogBuilder.setMessage(messageBuilder.toString());
         } else {
@@ -199,6 +207,14 @@ public class UninstallAlertDialogFragment extends DialogFragment implements
                     mKeepData != null && mKeepData.isChecked());
         } else {
             ((UninstallerActivity) getActivity()).dispatchAborted();
+
+            if (which == Dialog.BUTTON_NEUTRAL) {
+                String pkg = ((UninstallerActivity) getActivity()).getDialogInfo().appInfo.packageName;
+                Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                i.setData(Uri.fromParts("package", pkg, null));
+                i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                startActivity(i);
+            }
         }
     }
 
