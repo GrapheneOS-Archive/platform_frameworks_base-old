@@ -17,7 +17,9 @@
 package com.android.server.location.gnss;
 
 import android.annotation.Nullable;
+import android.content.Context;
 import android.net.TrafficStats;
+import android.provider.Settings;
 import android.util.Log;
 
 import com.android.internal.util.TrafficStatsConstants;
@@ -49,17 +51,45 @@ class GnssPsdsDownloader {
     private static final int REALTIME_PSDS_SERVER_INDEX = 3;
     private static final int MAX_PSDS_TYPE_INDEX = 3;
 
+    // Broadcom GNSS almanac proxy URLs for 6th generation Pixel devices
+    private static final String GRAPHENEOS_BROADCOM_LONG_TERM_PSDS_1 = "https://broadcom-almanacs.grapheneos.org/lto2.dat";
+    private static final String GRAPHENEOS_BROADCOM_LONG_TERM_PSDS_2 = null;
+    private static final String GRAPHENEOS_BROADCOM_LONG_TERM_PSDS_3 = null;
+    private static final String GRAPHENEOS_BROADCOM_NORMAL_PSDS = "https://broadcom-almanacs.grapheneos.org/rto.dat";
+    private static final String GRAPHENEOS_BROADCOM_REALTIME_PSDS = "https://broadcom-almanacs.grapheneos.org/rtistatus.dat";
+
     private final String[] mLongTermPsdsServers;
     private final String[] mPsdsServers;
     // to load balance our server requests
     private int mNextServerIndex;
 
-    GnssPsdsDownloader(Properties properties) {
+    private static boolean shouldUseGrapheneOsBroadcomServer(Context mContext) {
+        final int GRAPHENEOS_BROADCOM_GNSS_SERVER_INTVAL = 0;
+        final int STANDARD_BROADCOM_GNSS_SERVER_INTVAL = 1;
+        return Settings.Global.getInt(mContext.getContentResolver(),
+            Settings.Global.BROADCOM_GNSS_SERVER,
+            GRAPHENEOS_BROADCOM_GNSS_SERVER_INTVAL
+        ) == GRAPHENEOS_BROADCOM_GNSS_SERVER_INTVAL;
+    }
+
+    GnssPsdsDownloader(Properties properties, Context context) {
         // read PSDS servers from the Properties object
         int count = 0;
-        String longTermPsdsServer1 = properties.getProperty("LONGTERM_PSDS_SERVER_1");
-        String longTermPsdsServer2 = properties.getProperty("LONGTERM_PSDS_SERVER_2");
-        String longTermPsdsServer3 = properties.getProperty("LONGTERM_PSDS_SERVER_3");
+        String longTermPsdsServer1;
+        String longTermPsdsServer2;
+        String longTermPsdsServer3;
+        String normalPsdsServer;
+        String realtimePsdsServer;
+
+        if (shouldUseGrapheneOsBroadcomServer(context)) {
+            longTermPsdsServer1 = GRAPHENEOS_BROADCOM_LONG_TERM_PSDS_1;
+            longTermPsdsServer2 = GRAPHENEOS_BROADCOM_LONG_TERM_PSDS_2;
+            longTermPsdsServer3 = GRAPHENEOS_BROADCOM_LONG_TERM_PSDS_3;
+        } else {
+            longTermPsdsServer1 = properties.getProperty("LONGTERM_PSDS_SERVER_1");
+            longTermPsdsServer2 = properties.getProperty("LONGTERM_PSDS_SERVER_2");
+            longTermPsdsServer3 = properties.getProperty("LONGTERM_PSDS_SERVER_3");
+        }
         if (longTermPsdsServer1 != null) count++;
         if (longTermPsdsServer2 != null) count++;
         if (longTermPsdsServer3 != null) count++;
@@ -79,8 +109,13 @@ class GnssPsdsDownloader {
             mNextServerIndex = random.nextInt(count);
         }
 
-        String normalPsdsServer = properties.getProperty("NORMAL_PSDS_SERVER");
-        String realtimePsdsServer = properties.getProperty("REALTIME_PSDS_SERVER");
+        if (shouldUseGrapheneOsBroadcomServer(context)) {
+            normalPsdsServer = GRAPHENEOS_BROADCOM_NORMAL_PSDS;
+            realtimePsdsServer = GRAPHENEOS_BROADCOM_REALTIME_PSDS;
+        } else {
+            normalPsdsServer = properties.getProperty("NORMAL_PSDS_SERVER");
+            realtimePsdsServer = properties.getProperty("REALTIME_PSDS_SERVER");
+        }
         mPsdsServers = new String[MAX_PSDS_TYPE_INDEX + 1];
         mPsdsServers[NORMAL_PSDS_SERVER_INDEX] = normalPsdsServer;
         mPsdsServers[REALTIME_PSDS_SERVER_INDEX] = realtimePsdsServer;
