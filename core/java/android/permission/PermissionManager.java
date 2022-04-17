@@ -91,6 +91,7 @@ public final class PermissionManager {
             "permission grant or revoke changed gids";
 
     private static final String SYSTEM_PKG = "android";
+    private static final String BLUETOOTH_PKG = "com.android.bluetooth";
 
     /**
      * Refuse to install package if groups of permissions are bad
@@ -940,6 +941,7 @@ public final class PermissionManager {
         updateIndicatorExemptedPackages(context);
         ArraySet<String> pkgNames = new ArraySet<>();
         pkgNames.add(SYSTEM_PKG);
+        pkgNames.add(BLUETOOTH_PKG);
         for (int i = 0; i < INDICATOR_EXEMPTED_PACKAGES.length; i++) {
             String exemptedPackage = INDICATOR_EXEMPTED_PACKAGES[i];
             if (exemptedPackage != null) {
