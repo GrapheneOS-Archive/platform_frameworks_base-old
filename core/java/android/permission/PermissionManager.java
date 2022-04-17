@@ -152,6 +152,11 @@ public final class PermissionManager {
             "permission grant or revoke changed gids";
 
     private static final String SYSTEM_PKG = "android";
+    private static final String BLUETOOTH_PKG = "com.android.bluetooth";
+    private static final String PHONE_SERVICES_PKG = "com.android.phone";
+    private static final String PRINT_SPOOLER_PKG = "com.android.printspooler";
+    private static final String FUSED_LOCATION_PKG = "com.android.location.fused";
+    private static final String CELL_BROADCAST_SERVICE_PKG = "com.android.cellbroadcastservice";
 
     /**
      * Refuse to install package if groups of permissions are bad
@@ -1159,6 +1164,21 @@ public final class PermissionManager {
         updateIndicatorExemptedPackages(context);
         ArraySet<String> pkgNames = new ArraySet<>();
         pkgNames.add(SYSTEM_PKG);
+        // Scanning for Bluetooth devices when Bluetooth is enabled is considered
+        // to be location access. It shouldn't be shown for the OS implementation
+        // of Bluetooth.
+        pkgNames.add(BLUETOOTH_PKG);
+        // Phone services (not the Dialer) accesses detailed cellular information
+        // which is considered to be location information. It's a base OS component
+        // serving the intended purpose and shouldn't trigger spurious location
+        // indicator notices every time it retrieves cellular information.
+        pkgNames.add(PHONE_SERVICES_PKG);
+        // Location usage indicator can get triggered when sharing a file to a printer
+        pkgNames.add(PRINT_SPOOLER_PKG);
+        pkgNames.add(FUSED_LOCATION_PKG);
+        // indicator pops up when determining location during a geofenced alert
+        pkgNames.add(CELL_BROADCAST_SERVICE_PKG);
+
         for (int i = 0; i < INDICATOR_EXEMPTED_PACKAGES.length; i++) {
             String exemptedPackage = INDICATOR_EXEMPTED_PACKAGES[i];
             if (exemptedPackage != null) {
