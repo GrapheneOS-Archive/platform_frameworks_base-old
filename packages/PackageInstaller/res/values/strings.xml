@@ -360,4 +360,6 @@
     <!-- Dialog action to close a dialog. [CHAR LIMIT=30] -->
     <string name="close">Close</string>
 
+
+    <string name="more_options_button">More options</string>
 </resources>
