@@ -66,10 +66,6 @@ public final class GmsHooks {
             // used for updateable fonts
             case Context.FONT_SERVICE:
                 return true;
-            case Context.BLUETOOTH_SERVICE:
-                if (!hasNearbyDevicesPermission()) {
-                    return true;
-                }
         }
         return false;
     }
@@ -80,19 +76,8 @@ public final class GmsHooks {
             // checked before accessing privileged UwbManager
             case "android.hardware.uwb":
                 return true;
-            case "android.hardware.bluetooth":
-            case "android.hardware.bluetooth_le":
-                if (!hasNearbyDevicesPermission()) {
-                    return true;
-                }
         }
         return false;
-    }
-
-    private static boolean hasNearbyDevicesPermission() {
-        // "Nearby devices" permission grants
-        // BLUETOOTH_CONNECT, BLUETOOTH_ADVERTISE and BLUETOOTH_SCAN, checking one is enough
-        return GmsCompat.hasPermission(Manifest.permission.BLUETOOTH_SCAN);
     }
 
     /**
