@@ -1826,6 +1826,13 @@ public class Intent implements Parcelable, Cloneable {
             = "android.intent.extra.UNINSTALL_ALL_USERS";
 
     /**
+     * Specify whether the "More options" button should be shown in the package uninstallation UI.
+     * @hide
+     */
+    public static final String EXTRA_UNINSTALL_SHOW_MORE_OPTIONS_BUTTON
+            = "android.intent.extra.UNINSTALL_SHOW_MORE_OPTIONS_BUTTON";
+
+    /**
      * A string that associates with a metadata entry, indicating the last run version of the
      * platform that was setup.
      *
