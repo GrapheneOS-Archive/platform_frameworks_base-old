@@ -683,7 +683,7 @@ public class GnssLocationProvider extends AbstractLocationProvider implements
         Log.i(TAG, "WakeLock acquired by handleDownloadPsdsData()");
         Executors.newSingleThreadExecutor().execute(() -> {
             GnssPsdsDownloader psdsDownloader = new GnssPsdsDownloader(
-                    mGnssConfiguration.getProperties());
+                    mGnssConfiguration.getProperties(), mContext);
             byte[] data = psdsDownloader.downloadPsdsData(psdsType);
             if (data != null) {
                 mHandler.post(() -> {
