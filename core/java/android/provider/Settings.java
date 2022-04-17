@@ -17038,6 +17038,12 @@ public final class Settings {
         public static final String ATTEST_REMOTE_PROVISIONER_SERVER = "attest_remote_provisioner_server";
 
         /**
+         * Which server to use for Broadcom GNSS almanacs
+         * @hide
+         */
+        public static final String PSDS_SERVER = "psds_server";
+
+        /**
          * Settings migrated from Wear OS settings provider.
          * @hide
          */
