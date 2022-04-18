@@ -156,6 +156,11 @@ public final class GmsCompat {
     }
 
     public static boolean isGmsApp(@NonNull String packageName, int userId) {
+        return isGmsApp(packageName, userId, false);
+    }
+
+    /** @hide */
+    public static boolean isGmsApp(@NonNull String packageName, int userId, boolean matchDisabledApp) {
         if (!isGmsPackageName(packageName)) {
             return false;
         }
@@ -174,16 +179,16 @@ public final class GmsCompat {
         } finally {
             Binder.restoreCallingIdentity(token);
         }
-        return isGmsApp(pkg);
+        return isGmsApp(pkg, matchDisabledApp);
     }
 
     /** @hide */
-    public static boolean isGmsApp(PackageInfo pkg) {
+    public static boolean isGmsApp(PackageInfo pkg, boolean matchDisabledApp) {
         ApplicationInfo app = pkg.applicationInfo;
         if (app == null) {
             return false;
         }
-        if (!app.enabled) {
+        if (!app.enabled && !matchDisabledApp) {
             return false;
         }
         SigningInfo si = pkg.signingInfo;
