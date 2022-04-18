@@ -87,12 +87,12 @@ public final class GmsCompat {
      *
      * @hide
      */
-    public static void maybeEnable(Application app) {
+    public static void maybeEnable(Context appCtx) {
         if (!Process.isApplicationUid(Process.myUid())) {
             return;
         }
-        appContext = app;
-        ApplicationInfo appInfo = app.getApplicationInfo();
+        appContext = appCtx;
+        ApplicationInfo appInfo = appCtx.getApplicationInfo();
 
         if (isGmsApp(appInfo)) {
             isGmsCompatEnabled = true;
