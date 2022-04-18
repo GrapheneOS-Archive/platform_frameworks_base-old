@@ -16380,12 +16380,6 @@ public final class Settings {
          * @hide
          */
         public static final String ATTEST_REMOTE_PROVISIONER_SERVER = "attest_remote_provisioner_server";
-
-        /**
-         * Which server to use for Broadcom GNSS almanacs
-         * @hide
-         */
-        public static final String GNSS_SERVER = "gnss_server";
     }
 
     /**
