@@ -54,6 +54,22 @@ import java.util.List;
 public final class GmsHooks {
     private static final String TAG = "GmsCompat/Hooks";
 
+    public static void init(Context ctx, String packageName) {
+        String processName = Application.getProcessName();
+
+        if (!packageName.equals(processName)) {
+            // Fix RuntimeException: Using WebView from more than one process at once with the same data
+            // directory is not supported. https://crbug.com/558377
+            WebView.setDataDirectorySuffix("process-shim--" + processName);
+        }
+
+        if (GmsCompat.isPlayStore()) {
+            PlayStoreHooks.init();
+        }
+
+        GmsCompatApp.connect(ctx, processName);
+    }
+
     // ContextImpl#getSystemService(String)
     public static boolean isHiddenSystemService(String name) {
         // return true only for services that are null-checked
@@ -107,31 +123,6 @@ public final class GmsHooks {
             flags &= ~PackageManager.MATCH_ANY_USER;
         }
         return flags;
-    }
-
-    // Instrumentation#newApplication(ClassLoader, String, Context)
-    // Instrumentation#newApplication(Class, Context)
-    public static void initApplicationBeforeOnCreate(Context ctx) {
-        GmsCompat.maybeEnable(ctx);
-
-        if (GmsCompat.isEnabled()) {
-            String processName = Application.getProcessName();
-            if (!ctx.getPackageName().equals(processName)) {
-                // Fix RuntimeException: Using WebView from more than one process at once with the same data
-                // directory is not supported. https://crbug.com/558377
-                WebView.setDataDirectorySuffix("process-shim--" + processName);
-            }
-
-            if (GmsCompat.isPlayStore()) {
-                PlayStoreHooks.init();
-            }
-
-            if (!Process.isIsolated()) {
-                GmsCompatApp.connect(ctx);
-            } else {
-                Log.d(TAG, "initApplicationBeforeOnCreate: isolated process " + processName);
-            }
-        }
     }
 
     static class RecentBinderPid implements Comparable<RecentBinderPid> {
