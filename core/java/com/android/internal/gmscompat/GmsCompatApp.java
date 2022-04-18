@@ -16,7 +16,6 @@
 
 package com.android.internal.gmscompat;
 
-import android.app.Application;
 import android.app.compat.gms.GmsCompat;
 import android.content.Context;
 import android.os.Binder;
@@ -42,7 +41,7 @@ public final class GmsCompatApp {
     public static final String KEY_BINDER = "binder";
 
     // called by GSF, GMS Core, Play Store during startup
-    static void connect(Context ctx) {
+    static void connect(Context ctx, String processName) {
         Binder local = new Binder();
         localBinder = local;
 
@@ -50,17 +49,16 @@ public final class GmsCompatApp {
             IGms2Gca iGms2Gca = IGms2Gca.Stub.asInterface(getBinder(BINDER_IGms2Gca));
             binderGms2Gca = iGms2Gca;
 
-            String processName = Application.getProcessName();
             if (GmsCompat.isGmsCore()) {
-                FileProxyService s = null;
+                FileProxyService fileProxyService = null;
                 if ("com.google.android.gms.persistent".equals(processName)) {
                     // FileProxyService binder needs to be always available to the Dynamite clients.
                     // "persistent" process launches at bootup and is kept alive by the ServiceConnection
                     // from the GmsCompatApp, which makes it fit for the purpose of hosting the FileProxyService
-                    s = new FileProxyService(ctx);
-                    dynamiteFileProxyService = s;
+                    fileProxyService = new FileProxyService(ctx);
+                    dynamiteFileProxyService = fileProxyService;
                 }
-                iGms2Gca.connectGmsCore(processName, local, s);
+                iGms2Gca.connectGmsCore(processName, local, fileProxyService);
             } else if (GmsCompat.isPlayStore()) {
                 iGms2Gca.connectPlayStore(processName, local);
             } else if (GmsInfo.PACKAGE_GSF.equals(ctx.getPackageName())) {
