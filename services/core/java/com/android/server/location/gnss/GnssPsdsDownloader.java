@@ -19,6 +19,7 @@ package com.android.server.location.gnss;
 import android.annotation.Nullable;
 import android.content.Context;
 import android.net.TrafficStats;
+import android.os.Build;
 import android.provider.Settings;
 import android.util.Log;
 
@@ -66,10 +67,11 @@ class GnssPsdsDownloader {
     private static boolean shouldUseGrapheneOsServer(Context mContext) {
         final int GRAPHENEOS_PSDS_SERVER_INTVAL = 0;
         final int STANDARD_PSDS_SERVER_INTVAL = 1;
-        return Settings.Global.getInt(mContext.getContentResolver(),
+        boolean supportedDevice = (device.equals("oriole") || device.equals("raven") || device.equals("bluejay"));
+        return (supportedDevice && Settings.Global.getInt(mContext.getContentResolver(),
             Settings.Global.PSDS_SERVER,
-            GRAPHENEOS_PSDS_SERVER_INTVAL
-        ) == GRAPHENEOS_PSDS_SERVER_INTVAL;
+            GRAPHENEOS_PDDS_SERVER_INTVAL
+        ) == GRAPHENEOS_PDDS_SERVER_INTVAL);
     }
 
     GnssPsdsDownloader(Properties properties, Context context) {
