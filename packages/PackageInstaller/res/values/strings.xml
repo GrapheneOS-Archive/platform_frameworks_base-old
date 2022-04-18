@@ -235,4 +235,10 @@
     <string name="notification_installation_success_status">Successfully installed \u201c<xliff:g id="appname" example="Package Installer">%1$s</xliff:g>\u201d</string>
 
     <string name="more_options_button">More options</string>
+    <string name="multiuser_gms_uninstall_warning">
+"Warning: due to an upstream issue, uninstallation of this component of sandboxed Google Play will cause a malfunction of sandboxed Google Play in all user profiles.
+As a workaround, you can disable the app to fully turn it off.
+
+"
+    </string>
 </resources>

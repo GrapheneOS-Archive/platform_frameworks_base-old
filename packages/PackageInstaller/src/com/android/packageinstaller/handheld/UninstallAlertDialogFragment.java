@@ -23,6 +23,7 @@ import android.annotation.Nullable;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
+import android.app.compat.gms.GmsCompat;
 import android.app.usage.StorageStats;
 import android.app.usage.StorageStatsManager;
 import android.content.Context;
@@ -127,6 +128,8 @@ public class UninstallAlertDialogFragment extends DialogFragment implements
             }
         }
 
+        maybeAddWarning(dialogInfo, messageBuilder);
+
         final boolean isUpdate =
                 ((dialogInfo.appInfo.flags & ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0);
         UserManager userManager = UserManager.get(getActivity());
@@ -206,6 +209,29 @@ public class UninstallAlertDialogFragment extends DialogFragment implements
                 i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 startActivity(i);
             }
+        }
+    }
+
+    private void maybeAddWarning(UninstallerActivity.DialogInfo dialogInfo, StringBuilder messageBuilder) {
+        if (dialogInfo.allUsers) {
+            return;
+        }
+
+        if (!GmsCompat.isGmsApp(dialogInfo.appInfo.packageName, dialogInfo.user.getIdentifier(), true)) {
+            return;
+        }
+
+        Context ctx = getActivity();
+
+        for (UserInfo user : ctx.getSystemService(UserManager.class).getUsers()) {
+            if (user.getUserHandle().equals(dialogInfo.user)) {
+                continue;
+            }
+            try {
+                ctx.getPackageManager().getPackageInfoAsUser(dialogInfo.appInfo.packageName, 0, user.id);
+                messageBuilder.append(ctx.getString(R.string.multiuser_gms_uninstall_warning));
+                return;
+            } catch (PackageManager.NameNotFoundException ignored) {}
         }
     }
 
