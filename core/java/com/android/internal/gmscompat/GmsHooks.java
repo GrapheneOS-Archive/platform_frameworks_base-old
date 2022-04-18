@@ -111,12 +111,12 @@ public final class GmsHooks {
 
     // Instrumentation#newApplication(ClassLoader, String, Context)
     // Instrumentation#newApplication(Class, Context)
-    public static void initApplicationBeforeOnCreate(Application app) {
-        GmsCompat.maybeEnable(app);
+    public static void initApplicationBeforeOnCreate(Context ctx) {
+        GmsCompat.maybeEnable(ctx);
 
         if (GmsCompat.isEnabled()) {
             String processName = Application.getProcessName();
-            if (!app.getPackageName().equals(processName)) {
+            if (!ctx.getPackageName().equals(processName)) {
                 // Fix RuntimeException: Using WebView from more than one process at once with the same data
                 // directory is not supported. https://crbug.com/558377
                 WebView.setDataDirectorySuffix("process-shim--" + processName);
@@ -127,7 +127,7 @@ public final class GmsHooks {
             }
 
             if (!Process.isIsolated()) {
-                GmsCompatApp.connect(app);
+                GmsCompatApp.connect(ctx);
             } else {
                 Log.d(TAG, "initApplicationBeforeOnCreate: isolated process " + processName);
             }
