@@ -78,7 +78,7 @@ public class BackupEligibilityRules {
      */
     @ChangeId
     @Overridable
-    @EnabledSince(targetSdkVersion = Build.VERSION_CODES.S)
+    @EnabledSince(targetSdkVersion = Build.VERSION_CODES.BASE)
     static final long IGNORE_ALLOW_BACKUP_IN_D2D = 183147249L;
 
     public static BackupEligibilityRules forBackup(PackageManager packageManager,
