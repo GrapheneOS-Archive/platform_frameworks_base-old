@@ -225,12 +225,6 @@ public final class GmsHooks {
 
     // ContentResolver#query(Uri, String[], Bundle, CancellationSignal)
     public static Cursor interceptQuery(Uri uri, String[] projection) {
-        if ("content://com.google.android.gms.phenotype/com.google.android.location".equals(uri.toString())) {
-            // keep PhenotypeFlags of the location service at their default values
-            // (updated flags degrade its speed and accuracy for unknown reasons)
-            return new MatrixCursor(projection);
-        }
-
         String authority = uri.getAuthority();
         if (ContactsContract.AUTHORITY.equals(authority)
                 // com.android.internal.telephony.IccProvider
