@@ -16,4 +16,6 @@ interface IGms2Gca {
     oneway void showPlayStoreMissingObbPermissionNotification();
 
     oneway void startActivityFromTheBackground(String callerPkg, in PendingIntent intent);
+
+    oneway void showGmsCoreMissingPermissionForNearbyShareNotification();
 }

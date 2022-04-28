@@ -148,6 +148,7 @@ import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.app.IVoiceInteractor;
 import com.android.internal.app.ToolbarActionBar;
 import com.android.internal.app.WindowDecorActionBar;
+import com.android.internal.gmscompat.GmsHooks;
 import com.android.internal.gmscompat.PlayStoreHooks;
 import com.android.internal.policy.PhoneWindow;
 
@@ -1588,6 +1589,10 @@ public class Activity extends ContextThemeWrapper
     @MainThread
     @CallSuper
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+        if (GmsCompat.isEnabled()) {
+            GmsHooks.activityOnCreate(this);
+        }
+
         if (DEBUG_LIFECYCLE) Slog.v(TAG, "onCreate " + this + ": " + savedInstanceState);
 
         if (mLastNonConfigurationInstances != null) {
