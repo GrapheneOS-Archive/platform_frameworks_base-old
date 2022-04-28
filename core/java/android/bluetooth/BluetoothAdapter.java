@@ -1079,6 +1079,13 @@ public final class BluetoothAdapter {
      */
     @AdapterState
     private int getStateInternal() {
+        if (GmsCompat.isEnabled()) {
+            if (!GmsCompat.hasPermission(android.Manifest.permission.BLUETOOTH_SCAN)) {
+                // called by both getState() and getLeState()
+                return BluetoothAdapter.STATE_OFF;
+            }
+        }
+
         int state = BluetoothAdapter.STATE_OFF;
         try {
             mServiceLock.readLock().lock();
