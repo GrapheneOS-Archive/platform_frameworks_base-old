@@ -18,6 +18,7 @@ package com.android.internal.gmscompat;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.ActivityManager.RunningAppProcessInfo;
 import android.app.ActivityThread;
 import android.app.Application;
@@ -257,6 +258,22 @@ public final class GmsHooks {
         return true;
     }
 
+    // Activity#onCreate(Bundle)
+    public static void activityOnCreate(Activity activity) {
+        if (GmsCompat.isGmsCore()) {
+            String className = activity.getClass().getName();
+            if ("com.google.android.gms.nearby.sharing.ShareSheetActivity".equals(className)) {
+                if (!hasNearbyDevicesPermission()) {
+                    try {
+                        GmsCompatApp.iGms2Gca().showGmsCoreMissingPermissionForNearbyShareNotification();
+                    } catch (RemoteException e) {
+                        GmsCompatApp.callFailed(e);
+                    }
+                }
+            }
+        }
+    }
+
     // ContentResolver#insert(Uri, ContentValues, Bundle)
     public static void filterContentValues(Uri url, ContentValues values) {
         if (values != null && Downloads.Impl.CONTENT_URI.equals(url)) {
@@ -269,6 +286,12 @@ public final class GmsHooks {
                 values.remove(Downloads.Impl.COLUMN_OTHER_UID);
             }
         }
+    }
+
+    private static boolean hasNearbyDevicesPermission() {
+        // "Nearby devices" permission grants
+        // BLUETOOTH_CONNECT, BLUETOOTH_ADVERTISE and BLUETOOTH_SCAN, checking one is enough
+        return GmsCompat.hasPermission(Manifest.permission.BLUETOOTH_SCAN);
     }
 
     private GmsHooks() {}
