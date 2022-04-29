@@ -10001,6 +10001,14 @@ public final class Settings {
             "lockscreen_scramble_pin_layout";
 
         /**
+         * Toggle to control adding screenshot timestamp to EXIF
+         * @hide
+         */
+        @Readable
+        public static final String SCREENSHOT_TIMESTAMP_EXIF =
+                "screenshot_timestamp_exif";
+
+        /**
          * Whether or not to enable media resumption
          * When enabled, media controls in quick settings will populate on boot and persist if
          * resumable via a MediaBrowserService.

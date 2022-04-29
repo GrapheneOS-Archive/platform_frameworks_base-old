@@ -19,6 +19,7 @@ package com.android.systemui.screenshot;
 import static android.os.FileUtils.closeQuietly;
 
 import android.annotation.IntRange;
+import android.app.ActivityManager;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.graphics.Bitmap;
@@ -29,7 +30,9 @@ import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.os.SystemClock;
 import android.os.Trace;
+import android.os.UserHandle;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.util.Log;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
@@ -84,9 +87,13 @@ class ImageExporter {
     private CompressFormat mCompressFormat = CompressFormat.PNG;
     private int mQuality = 100;
 
+    private static boolean mDisableScreenshotTimestampExif;
+
     @Inject
     ImageExporter(ContentResolver resolver) {
         mResolver = resolver;
+        mDisableScreenshotTimestampExif = Settings.Secure.getIntForUser(resolver,
+            Settings.Secure.SCREENSHOT_TIMESTAMP_EXIF, 1, ActivityManager.getCurrentUser()) == 1;
     }
 
     /**
@@ -402,13 +409,15 @@ class ImageExporter {
         exif.setAttribute(ExifInterface.TAG_IMAGE_WIDTH, Integer.toString(width));
         exif.setAttribute(ExifInterface.TAG_IMAGE_LENGTH, Integer.toString(height));
 
-        String dateTime = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss").format(captureTime);
-        String subSec = DateTimeFormatter.ofPattern("SSS").format(captureTime);
-        String timeZone = DateTimeFormatter.ofPattern("xxx").format(captureTime);
+        if (!mDisableScreenshotTimestampExif) {
+            String dateTime = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss").format(captureTime);
+            String subSec = DateTimeFormatter.ofPattern("SSS").format(captureTime);
+            String timeZone = DateTimeFormatter.ofPattern("xxx").format(captureTime);
 
-        exif.setAttribute(ExifInterface.TAG_DATETIME_ORIGINAL, dateTime);
-        exif.setAttribute(ExifInterface.TAG_SUBSEC_TIME_ORIGINAL, subSec);
-        exif.setAttribute(ExifInterface.TAG_OFFSET_TIME_ORIGINAL, timeZone);
+            exif.setAttribute(ExifInterface.TAG_DATETIME_ORIGINAL, dateTime);
+            exif.setAttribute(ExifInterface.TAG_SUBSEC_TIME_ORIGINAL, subSec);
+            exif.setAttribute(ExifInterface.TAG_OFFSET_TIME_ORIGINAL, timeZone);
+        }
     }
 
     static String getMimeType(CompressFormat format) {
