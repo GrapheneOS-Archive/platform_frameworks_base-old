@@ -18,4 +18,6 @@ interface IGms2Gca {
     oneway void startActivityFromTheBackground(String callerPkg, in PendingIntent intent);
 
     oneway void showGmsCoreMissingPermissionForNearbyShareNotification();
+
+    oneway void showGmsMissingNearbyDevicesPermissionGeneric(String callerPkg);
 }
