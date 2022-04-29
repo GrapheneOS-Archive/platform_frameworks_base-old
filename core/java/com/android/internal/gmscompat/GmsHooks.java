@@ -288,6 +288,25 @@ public final class GmsHooks {
         }
     }
 
+    // BluetoothAdapter#enable()
+    // BluetoothAdapter#enableBLE()
+    public static boolean canEnableBluetoothAdapter() {
+        if (GmsCompat.hasPermission(Manifest.permission.BLUETOOTH_CONNECT)) {
+            return true;
+        }
+
+        if (ActivityThread.currentActivityThread().hasAtLeastOneResumedActivity()) {
+            String pkgName = GmsCompat.appContext().getPackageName();
+            try {
+                GmsCompatApp.iGms2Gca().showGmsMissingNearbyDevicesPermissionGeneric(pkgName);
+            } catch (RemoteException e) {
+                GmsCompatApp.callFailed(e);
+            }
+        } // else don't bother the user
+
+        return false;
+    }
+
     private static boolean hasNearbyDevicesPermission() {
         // "Nearby devices" permission grants
         // BLUETOOTH_CONNECT, BLUETOOTH_ADVERTISE and BLUETOOTH_SCAN, checking one is enough
