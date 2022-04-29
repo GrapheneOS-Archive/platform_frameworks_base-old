@@ -313,5 +313,14 @@ public final class GmsHooks {
         return GmsCompat.hasPermission(Manifest.permission.BLUETOOTH_SCAN);
     }
 
+    // NfcAdapter#enable()
+    public static void enableNfc() {
+        if (ActivityThread.currentActivityThread().hasAtLeastOneResumedActivity()) {
+            Intent i = new Intent(Settings.ACTION_NFC_SETTINGS);
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            GmsCompat.appContext().startActivity(i);
+        }
+    }
+
     private GmsHooks() {}
 }
