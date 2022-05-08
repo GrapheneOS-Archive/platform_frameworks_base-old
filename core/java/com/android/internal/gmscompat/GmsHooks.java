@@ -19,6 +19,7 @@ package com.android.internal.gmscompat;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.ActivityManager.RunningAppProcessInfo;
 import android.app.ActivityThread;
 import android.app.Application;
@@ -238,10 +239,10 @@ public final class GmsHooks {
         return null;
     }
 
-    // ContextImpl#startActivity(Intent, Bundle)
-    public static boolean startActivity(Intent intent, Bundle options) {
-        if (ActivityThread.currentActivityThread().hasAtLeastOneResumedActivity()) {
-            return false;
+    // Instrumentation#execStartActivity(Context, IBinder, IBinder, Activity, Intent, int, Bundle)
+    public static void onActivityStart(int resultCode, Intent intent, Bundle options) {
+        if (resultCode != ActivityManager.START_ABORTED) {
+            return;
         }
 
         // handle background activity starts, which normally require a privileged permission
@@ -255,7 +256,6 @@ public final class GmsHooks {
         } catch (RemoteException e) {
             GmsCompatApp.callFailed(e);
         }
-        return true;
     }
 
     // Activity#onCreate(Bundle)
