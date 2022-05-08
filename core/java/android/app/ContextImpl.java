@@ -1093,13 +1093,6 @@ class ContextImpl extends Context {
                             + " context requires the FLAG_ACTIVITY_NEW_TASK flag."
                             + " Is this really what you want?");
         }
-
-        if (GmsCompat.isEnabled()) {
-            if (GmsHooks.startActivity(intent, options)) {
-                return;
-            }
-        }
-
         mMainThread.getInstrumentation().execStartActivity(
                 getOuterContext(), mMainThread.getApplicationThread(), null,
                 (Activity) null, intent, -1, options);
