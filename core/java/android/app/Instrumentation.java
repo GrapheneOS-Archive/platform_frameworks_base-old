@@ -57,6 +57,7 @@ import android.view.Window;
 import android.view.WindowManagerGlobal;
 
 import com.android.internal.content.ReferrerIntent;
+import com.android.internal.gmscompat.GmsHooks;
 
 import java.io.File;
 import java.lang.annotation.Retention;
@@ -1763,6 +1764,11 @@ public class Instrumentation {
                     intent.resolveTypeIfNeeded(who.getContentResolver()), token,
                     target != null ? target.mEmbeddedID : null, requestCode, 0, null, options);
             checkStartActivityResult(result, intent);
+
+            if (GmsCompat.isEnabled()) {
+                GmsHooks.onActivityStart(result, intent, options);
+            }
+
         } catch (RemoteException e) {
             throw new RuntimeException("Failure from system", e);
         }
