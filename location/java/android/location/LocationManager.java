@@ -1776,6 +1776,13 @@ public class LocationManager {
     public boolean hasProvider(@NonNull String provider) {
         Preconditions.checkArgument(provider != null, "invalid null provider");
 
+        if (NETWORK_PROVIDER.equals(provider)) {
+            if (!getAllProviders().contains(NETWORK_PROVIDER)) {
+                android.util.Log.d("LocationManager", "returning false from hasProvider(NETWORK_PROVIDER)");
+                return false;
+            }
+        }
+
         try {
             return mService.hasProvider(provider);
         } catch (RemoteException e) {
