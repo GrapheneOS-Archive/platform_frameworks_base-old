@@ -321,6 +321,11 @@ public class LocationManagerService extends ILocationManager.Stub implements
             }
         }
 
+        if (NETWORK_PROVIDER.equals(providerName)) {
+            Log.d(TAG, "replaced NETWORK with the PASSIVE provider for uid " + Binder.getCallingUid());
+            return mPassiveManager;
+        }
+
         return null;
     }
 
