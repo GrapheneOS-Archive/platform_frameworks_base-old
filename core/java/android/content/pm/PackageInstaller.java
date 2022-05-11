@@ -34,6 +34,7 @@ import android.app.ActivityManager;
 import android.app.AppGlobals;
 import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.UnsupportedAppUsage;
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager.DeleteFlags;
@@ -52,6 +53,7 @@ import android.os.ParcelableException;
 import android.os.RemoteException;
 import android.os.SystemProperties;
 import android.os.UserHandle;
+import android.provider.Settings;
 import android.system.ErrnoException;
 import android.system.Os;
 import android.text.TextUtils;
@@ -445,12 +447,17 @@ public class PackageInstaller {
      */
     public int createSession(@NonNull SessionParams params) throws IOException {
         if (GmsCompat.isPlayStore()) {
-            switch (Objects.requireNonNull(params.appPackageName)) {
+            String pkg = Objects.requireNonNull(params.appPackageName);
+            switch (pkg) {
                 case "app.attestation.auditor":
                 case GmsInfo.PACKAGE_GSF:
                 case GmsInfo.PACKAGE_GMS_CORE:
                 case GmsInfo.PACKAGE_PLAY_STORE:
-                    throw new IllegalArgumentException("installation / updates of " + params.appPackageName + " are disallowed");
+                    ContentResolver cr = GmsCompat.appContext().getContentResolver();
+                    String pref = "gmscompat_play_store_unrestrict_pkg_" + pkg;
+                    if (Settings.Secure.getInt(cr, pref, 0) != 1) {
+                        throw new IllegalArgumentException("installation / updates of " + pkg + " are disallowed");
+                    }
             }
         }
 
