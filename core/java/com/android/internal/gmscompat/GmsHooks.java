@@ -23,8 +23,10 @@ import android.app.ActivityManager;
 import android.app.ActivityManager.RunningAppProcessInfo;
 import android.app.ActivityThread;
 import android.app.Application;
+import android.app.BroadcastOptions;
 import android.app.PendingIntent;
 import android.app.compat.gms.GmsCompat;
+import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -33,6 +35,7 @@ import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.PowerExemptionManager;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.SystemClock;
@@ -42,6 +45,8 @@ import android.provider.Settings;
 import android.util.Log;
 import android.util.SparseArray;
 import android.webkit.WebView;
+
+import com.android.internal.gmscompat.client.ClientPriorityManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -320,6 +325,57 @@ public final class GmsHooks {
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             GmsCompat.appContext().startActivity(i);
         }
+    }
+
+    // ContextImpl#sendBroadcast
+    // ContextImpl#sendOrderedBroadcast
+    // ContextImpl#sendBroadcastAsUser
+    // ContextImpl#sendOrderedBroadcastAsUser
+    public static Bundle filterBroadcastOptions(Intent intent, Bundle options) {
+        if (options == null) {
+            return null;
+        }
+
+        String targetPkg = intent.getPackage();
+
+        if (targetPkg == null) {
+            ComponentName cn = intent.getComponent();
+            if (cn != null) {
+                targetPkg = cn.getPackageName();
+            }
+        }
+
+        if (targetPkg == null) {
+            return options;
+        }
+
+        BroadcastOptions bo = new BroadcastOptions(options);
+
+        if (bo.getTemporaryAppAllowlistType() == PowerExemptionManager.TEMPORARY_ALLOW_LIST_TYPE_NONE) {
+            return options;
+        }
+        // handle privileged BroadcastOptions#setTemporaryAppAllowlist() that is used for
+        // high-priority FCM pushes, location updates via PendingIntent,
+        // geofencing and activity detection notifications etc
+
+        long duration = bo.getTemporaryAppAllowlistDuration();
+
+        if (duration <= 0) {
+            return options;
+        }
+
+        if (!targetPkg.equals(GmsInfo.PACKAGE_GMS_CORE)) {
+            Log.d(TAG, "emulating temporary PowerExemptionManager allowlist for " + targetPkg
+                + ", duration: " + duration
+                + ", reason: " + bo.getTemporaryAppAllowlistReason()
+                + ", reasonCode: " + PowerExemptionManager.reasonCodeToString(bo.getTemporaryAppAllowlistReasonCode()));
+
+            ClientPriorityManager.raiseToForeground(targetPkg, duration);
+        }
+
+        bo.setTemporaryAppAllowlist(0, PowerExemptionManager.TEMPORARY_ALLOW_LIST_TYPE_NONE,
+                PowerExemptionManager.REASON_UNKNOWN, null);
+        return bo.toBundle();
     }
 
     private GmsHooks() {}

@@ -168,11 +168,6 @@ public class BroadcastOptions {
             android.Manifest.permission.START_FOREGROUND_SERVICES_FROM_BACKGROUND})
     public void setTemporaryAppAllowlist(long duration, @TempAllowListType int type,
             @ReasonCode int reasonCode, @Nullable String reason) {
-        if (GmsCompat.isEnabled()) {
-            // otherwise, broadcasts (e.g. location updates via PendingIntent) from GMS fail
-            // due to lack of any of these privileged permission
-            return;
-        }
         mTemporaryAppAllowlistDuration = duration;
         mTemporaryAppAllowlistType = type;
         mTemporaryAppAllowlistReasonCode = reasonCode;
