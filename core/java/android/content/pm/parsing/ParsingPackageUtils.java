@@ -106,6 +106,7 @@ import android.util.TypedValue;
 import android.util.apk.ApkSignatureVerifier;
 
 import com.android.internal.R;
+import com.android.internal.gmscompat.client.GmsClientHooks;
 import com.android.internal.os.ClassLoaderFactory;
 import com.android.internal.util.ArrayUtils;
 import com.android.internal.util.XmlUtils;
@@ -2138,6 +2139,8 @@ public class ParsingPackageUtils {
 
             pkg.addActivity(a.getResult());
         }
+
+        GmsClientHooks.maybeAddServiceDuringParsing(pkg);
 
         if (hasActivityOrder) {
             pkg.sortActivities();
