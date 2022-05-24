@@ -2284,6 +2284,10 @@ public class UserManager {
      * @return whether the caller is in a managed profile.
      */
     public boolean isManagedProfile() {
+        if (GmsCompat.isEnabled()) {
+            return false;
+        }
+
         // No need for synchronization.  Once it becomes non-null, it'll be non-null forever.
         // Worst case we might end up calling the AIDL method multiple times but that's fine.
         if (mIsManagedProfileCached != null) {

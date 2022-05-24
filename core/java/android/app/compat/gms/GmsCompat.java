@@ -19,7 +19,6 @@ package android.app.compat.gms;
 import android.annotation.NonNull;
 import android.annotation.SystemApi;
 import android.app.ActivityThread;
-import android.app.Application;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.IPackageManager;
@@ -41,6 +40,7 @@ import com.android.internal.gmscompat.GmsInfo;
  *     - GSF ("Google Services Framework")
  *     - GMS Core ("Google Play services")
  *     - Google Play Store
+ *     - GSA ("Google Search app", com.google.android.googlequicksearchbox)
  *     - Apps that depend on the above
  *
  * All GMS compatibility hooks should call methods on GmsCompat. Hooks that are more complicated
@@ -110,9 +110,9 @@ public final class GmsCompat {
         elegibleForClientCompat = !isGmsCore;
     }
 
-    private static boolean validateCerts(Signature[] signatures) {
+    private static boolean validateCerts(Signature[] signatures, String expectedSignature) {
         for (Signature signature : signatures) {
-            if (signature.toCharsString().equals(GmsInfo.SIGNING_CERT)) {
+            if (signature.toCharsString().equals(expectedSignature)) {
                 return true;
             }
         }
@@ -130,23 +130,35 @@ public final class GmsCompat {
             return false;
         }
 
-        if (GmsInfo.PACKAGE_GMS_CORE.equals(packageName) || GmsInfo.PACKAGE_GSF.equals(packageName)) {
-            // Check the shared user ID to avoid affecting microG with a spoofed signature. This is a
-            // reliable indicator because apps can't change their shared user ID after shipping with it.
-            if (!GmsInfo.SHARED_USER_ID.equals(sharedUserId)) {
+        boolean isGsa = false;
+
+        switch (packageName) {
+            case GmsInfo.PACKAGE_GSF:
+            case GmsInfo.PACKAGE_GMS_CORE:
+                // Check the shared user ID to avoid affecting microG with a spoofed signature. This is a
+                // reliable indicator because apps can't change their shared user ID after shipping with it.
+                if (!GmsInfo.SHARED_USER_ID.equals(sharedUserId)) {
+                    return false;
+                }
+                break;
+            case GmsInfo.PACKAGE_PLAY_STORE:
+                break;
+            case GmsInfo.PACKAGE_GSA:
+                isGsa = true;
+                break;
+            default:
                 return false;
-            }
-        } else if (!GmsInfo.PACKAGE_PLAY_STORE.equals(packageName)) {
-            return false;
         }
+
+        String expectedSignature = isGsa ? GmsInfo.GSA_SIGNING_CERT : GmsInfo.SIGNING_CERT;
 
         // Validate signature to avoid affecting apps like microG and Gcam Services Provider.
         // This isn't actually necessary from a security perspective because GMS doesn't get any
         // special privileges, but it's a failsafe to avoid unintentional compatibility issues.
-        boolean validCert = validateCerts(signatures);
+        boolean validCert = validateCerts(signatures, expectedSignature);
 
         if (!validCert && pastSignatures != null) {
-            validCert = validateCerts(pastSignatures);
+            validCert = validateCerts(pastSignatures, expectedSignature);
         }
         return validCert;
     }
@@ -159,7 +171,8 @@ public final class GmsCompat {
     private static boolean isGmsPackageName(String pkg) {
         return GmsInfo.PACKAGE_GMS_CORE.equals(pkg)
             || GmsInfo.PACKAGE_PLAY_STORE.equals(pkg)
-            || GmsInfo.PACKAGE_GSF.equals(pkg);
+            || GmsInfo.PACKAGE_GSF.equals(pkg)
+            || GmsInfo.PACKAGE_GSA.equals(pkg);
     }
 
     public static boolean isGmsApp(@NonNull String packageName, int userId) {
