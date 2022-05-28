@@ -16382,6 +16382,12 @@ public final class Settings {
         public static final String WIFI_OFF_TIMEOUT = "wifi_off_timeout";
 
         /**
+         * The amount of time in milliseconds before NFC is turned off
+         * @hide
+         */
+        public static final String NFC_OFF_TIMEOUT = "nfc_off_timeout";
+
+        /**
          * Whether to automatically reboot the device after a user defined timeout
          *
          * @hide

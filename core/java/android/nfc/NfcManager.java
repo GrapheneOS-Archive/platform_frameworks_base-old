@@ -17,9 +17,17 @@
 package android.nfc;
 
 import android.annotation.SystemService;
+import android.app.AlarmManager;
 import android.compat.annotation.UnsupportedAppUsage;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.database.ContentObserver;
 import android.os.Build;
+import android.os.Handler;
+import android.os.SystemClock;
+import android.provider.Settings;
 
 /**
  * High level manager used to obtain an instance of an {@link NfcAdapter}.
@@ -42,12 +50,15 @@ import android.os.Build;
 @SystemService(Context.NFC_SERVICE)
 public final class NfcManager {
     private final NfcAdapter mAdapter;
-
+    private final Context mContext;
+    private final AlarmManager mAlarmManager;
     /**
      * @hide
      */
     @UnsupportedAppUsage(maxTargetSdk = Build.VERSION_CODES.P, trackingBug = 115609023)
     public NfcManager(Context context) {
+        mAlarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        mContext = context;
         NfcAdapter adapter;
         context = context.getApplicationContext();
         if (context == null) {
@@ -60,6 +71,64 @@ public final class NfcManager {
             adapter = null;
         }
         mAdapter = adapter;
+        reconfigureNfcTimeoutListener();
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(NfcAdapter.ACTION_ADAPTER_STATE_CHANGED);
+        filter.addAction(NfcAdapter.ACTION_HANDOVER_TRANSFER_STARTED);
+        filter.addAction(NfcAdapter.ACTION_HANDOVER_TRANSFER_DONE);
+        filter.addAction(NfcAdapter.ACTION_TECH_DISCOVERED);
+        filter.addAction(NfcAdapter.ACTION_TAG_DISCOVERED);
+        filter.addAction(NfcAdapter.ACTION_NDEF_DISCOVERED);
+        filter.addAction(NfcAdapter.ACTION_TAG_LEFT_FIELD);
+        filter.addAction(NfcAdapter.ACTION_TRANSACTION_DETECTED);
+        BroadcastReceiver receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                reconfigureNfcTimeoutListener();
+            }
+        };
+        mContext.getContentResolver().registerContentObserver(
+                Settings.Global.getUriFor(Settings.Global.NFC_OFF_TIMEOUT),
+                false,
+                new ContentObserver(new Handler(context.getMainLooper())) {
+                    @Override
+                    public void onChange(boolean selfChange) {
+                        super.onChange(selfChange);
+                        reconfigureNfcTimeoutListener();
+                    }
+                });
+        mContext.registerReceiver(receiver, filter);
+    }
+
+
+    private final AlarmManager.OnAlarmListener  mAlarmListener = new AlarmManager.OnAlarmListener() {
+        @Override
+        public void onAlarm() {
+            if (mAdapter != null) mAdapter.disable();
+        }
+    };
+
+    private void reconfigureNfcTimeoutListener() {
+        long duration = nfcTimeoutDurationInMilli();
+        final long timeout = SystemClock.elapsedRealtime() + duration;
+        boolean isEnabled = mAdapter != null && mAdapter.isEnabled();
+
+        if (duration == 0 || !isEnabled){
+            mAlarmManager.cancel(mAlarmListener);
+            return;
+        }
+        mAlarmManager.setExact(
+                AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                timeout,
+                "NFC Idle Timeout",
+                mAlarmListener,
+                new Handler(mContext.getMainLooper())
+        );
+    }
+
+    private long nfcTimeoutDurationInMilli() {
+        return Settings.Global.getLong(mContext.getContentResolver(),
+                Settings.Global.NFC_OFF_TIMEOUT, 0);
     }
 
     /**
