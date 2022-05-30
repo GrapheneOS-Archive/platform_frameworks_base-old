@@ -59,7 +59,6 @@ import android.util.SparseArray;
 import android.view.DisplayAdjustments;
 
 import com.android.internal.annotations.GuardedBy;
-import com.android.internal.gmscompat.GmsHooks;
 import com.android.internal.util.ArrayUtils;
 
 import dalvik.system.BaseDexClassLoader;
