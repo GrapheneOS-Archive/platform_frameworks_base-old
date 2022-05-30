@@ -25,6 +25,7 @@ import com.android.internal.gmscompat.GmsInfo;
 public class GmsClientHooks {
     private static final String TAG = "GmsClientHooks";
 
+    // ParsingPackageUtils#parseBaseApplication
     public static void maybeAddServiceDuringParsing(ParsingPackage pkg) {
         Bundle metadata = pkg.getMetaData();
         boolean isGmsClient = metadata != null && metadata.containsKey("com.google.android.gms.version");

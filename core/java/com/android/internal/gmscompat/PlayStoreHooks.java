@@ -31,6 +31,8 @@ import android.content.pm.IPackageDataObserver;
 import android.content.pm.IPackageDeleteObserver;
 import android.content.pm.PackageInstaller;
 import android.content.pm.PackageManager;
+import android.content.pm.parsing.ParsingPackage;
+import android.content.pm.parsing.component.ParsedUsesPermission;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -56,6 +58,22 @@ public final class PlayStoreHooks {
         obbDir = Environment.getExternalStorageDirectory().getPath() + "/Android/obb";
         playStoreObbDir = obbDir + '/' + GmsInfo.PACKAGE_PLAY_STORE;
         File.mkdirsFailedHook = PlayStoreHooks::mkdirsFailed;
+    }
+
+    // ParsingPackageUtils#parseBaseApplication
+    public static void maybeAddUsesPermission(ParsingPackage pkg) {
+        if (!GmsInfo.PACKAGE_PLAY_STORE.equals(pkg.getPackageName())) {
+            return;
+        }
+
+        String[] perms = {
+                Manifest.permission.REQUEST_INSTALL_PACKAGES,
+                Manifest.permission.REQUEST_DELETE_PACKAGES,
+                Manifest.permission.UPDATE_PACKAGES_WITHOUT_USER_ACTION,
+        };
+        for (String perm : perms) {
+            pkg.addUsesPermission(new ParsedUsesPermission(perm, 0));
+        }
     }
 
     // PackageInstaller.Session#commit(IntentSender)
