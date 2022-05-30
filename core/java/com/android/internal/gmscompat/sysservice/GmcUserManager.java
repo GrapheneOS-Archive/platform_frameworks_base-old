@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
-package com.android.internal.gmscompat;
+package com.android.internal.gmscompat.sysservice;
 
+import android.annotation.UserIdInt;
+import android.content.Context;
 import android.content.pm.UserInfo;
+import android.os.IUserManager;
 import android.os.UserHandle;
 import android.os.UserManager;
 
@@ -28,7 +31,10 @@ import java.util.List;
  * As a workaround, a pseudo-single-user environment is constructed by hiding non-current users
  * and marking the current user as the primary ("Owner") user.
  */
-public class GmsUserHooks {
+public class GmcUserManager extends UserManager {
+    public GmcUserManager(Context context, IUserManager service) {
+        super(context, service);
+    }
 
     private static int getUserId() {
         return UserHandle.myUserId();
@@ -56,61 +62,75 @@ public class GmsUserHooks {
         return ui;
     }
 
-    // ActivityManager#getCurrentUser()
-    public static int getCurrentUser() {
-        return getUserId();
-    }
-
-    // ActivityManager#isUserRunning(int)
-    public static boolean isUserRunning(int userId) {
-        checkUserId(userId);
+    @Override
+    public boolean isSystemUser() {
         return true;
     }
 
-    // UserManager#getUserInfo(int)
-    public static UserInfo getUserInfo(int userId) {
+    @Override
+    public UserInfo getUserInfo(int userId) {
         checkUserId(userId);
         return getUserInfo();
     }
 
-    // UserManager#getUserHandle(int)
-    public static int getUserHandle(int userSerialNumber) {
+    @Override
+    public boolean hasBaseUserRestriction(String restrictionKey, UserHandle userHandle) {
+        // Can't ignore device policy restrictions without permission
+        return hasUserRestriction(restrictionKey, userHandle);
+    }
+
+    @Override
+    public List<UserInfo> getUsers(boolean excludePartial, boolean excludeDying, boolean excludePreCreated) {
+        return Collections.singletonList(getUserInfo());
+    }
+
+    @Override
+    public int getUserSerialNumber(@UserIdInt int userId) {
+        checkUserId(userId);
+        return getUserSerialNumber();
+    }
+
+    @Override
+    public @UserIdInt int getUserHandle(int userSerialNumber) {
         if (userSerialNumber != getUserSerialNumber()) {
             throw new IllegalStateException("unexpected userSerialNumber " + userSerialNumber);
         }
         return getUserId();
     }
 
-    // UserManager#getUsers(boolean, boolean, boolean)
-    public static List<UserInfo> getUsers() {
-        return Collections.singletonList(getUserInfo());
+    // ActivityManager#getCurrentUser()
+    public static int amGetCurrentUser() {
+        return getUserId();
     }
 
-    // UserManager#getUserSerialNumber(int)
-    public static int getUserSerialNumber(int userId) {
+    // ActivityManager#isUserRunning(int)
+    public static boolean amIsUserRunning(int userId) {
         checkUserId(userId);
-        return getUserSerialNumber();
+        return true;
     }
 
-    // getProfile*() shims to support the managed ("work") profiles
+    // support for managed ("work") profiles
 
-    // UserManager#getProfileParent(int)
-    public static UserInfo getProfileParent(int userId) {
-        checkUserId(userId);
-        return null;
-    }
-
-    // UserManager#getProfiles(int)
-    public static List<UserInfo> getProfiles(int userId) {
+    @Override
+    public List<UserInfo> getProfiles(@UserIdInt int userId) {
         checkUserId(userId);
         return getUsers();
     }
 
-    // UserManager#getProfileIds(int, boolean)
-    public static int[] getProfileIds(int userId) {
+    @Override
+    public int[] getProfileIds(@UserIdInt int userId, boolean enabledOnly) {
         checkUserId(userId);
         return new int[] { userId };
     }
 
-    private GmsUserHooks() {}
+    @Override
+    public UserInfo getProfileParent(int userId) {
+        checkUserId(userId);
+        return null;
+    }
+
+    @Override
+    public boolean isManagedProfile() {
+        return false;
+    }
 }
