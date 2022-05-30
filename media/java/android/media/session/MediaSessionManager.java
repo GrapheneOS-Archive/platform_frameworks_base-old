@@ -372,6 +372,11 @@ public final class MediaSessionManager {
             @NonNull OnActiveSessionsChangedListener sessionListener,
             @Nullable ComponentName notificationListener, int userId,
             @Nullable Executor executor) {
+        if (GmsCompat.isEnabled()) {
+            // requires privileged MEDIA_CONTENT_CONTROL permission
+            return;
+        }
+
         Objects.requireNonNull(sessionListener, "sessionListener shouldn't be null");
         if (executor == null) {
             executor = new HandlerExecutor(new Handler());
