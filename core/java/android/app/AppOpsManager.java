@@ -8265,7 +8265,7 @@ public class AppOpsManager {
     public int noteOpNoThrow(int op, int uid, @Nullable String packageName,
             @Nullable String attributionTag, @Nullable String message) {
         if (GmsCompat.isEnabled() && uid != Process.myUid()) {
-            return noteProxyOpNoThrow(op, packageName, uid, attributionTag, message);
+            return noteProxyOpNoThrow(opToPublicName(op), packageName, uid, attributionTag, message);
         }
 
         try {
@@ -8415,14 +8415,6 @@ public class AppOpsManager {
                 mContext.getAttributionSource(), new AttributionSource(proxiedUid,
                         proxiedPackageName, proxiedAttributionTag, mContext.getAttributionSource()
                         .getToken())), message,/*skipProxyOperation*/ false);
-    }
-
-    private int noteProxyOpNoThrow(int op, @Nullable String proxiedPackageName,
-            int proxiedUid, @Nullable String proxiedAttributionTag, @Nullable String message) {
-        return noteProxyOpNoThrow(op, new AttributionSource(
-                mContext.getAttributionSource(), new AttributionSource(proxiedUid,
-                proxiedPackageName, proxiedAttributionTag, mContext.getAttributionSource()
-                .getToken())), message,/*skipProxyOperation*/ false);
     }
 
     /**
