@@ -110,10 +110,14 @@ public final class GmsCompat {
         elegibleForClientCompat = !isGmsCore;
     }
 
-    private static boolean validateCerts(Signature[] signatures, String expectedSignature) {
+    private static boolean validateCerts(Signature[] signatures) {
         for (Signature signature : signatures) {
-            if (signature.toCharsString().equals(expectedSignature)) {
-                return true;
+            String s = signature.toCharsString();
+
+            for (String validSignature : GmsInfo.VALID_SIGNATURES) {
+                if (s.equals(validSignature)) {
+                    return true;
+                }
             }
         }
         return false;
@@ -130,8 +134,6 @@ public final class GmsCompat {
             return false;
         }
 
-        boolean isGsa = false;
-
         switch (packageName) {
             case GmsInfo.PACKAGE_GSF:
             case GmsInfo.PACKAGE_GMS_CORE:
@@ -142,23 +144,19 @@ public final class GmsCompat {
                 }
                 break;
             case GmsInfo.PACKAGE_PLAY_STORE:
-                break;
             case GmsInfo.PACKAGE_GSA:
-                isGsa = true;
                 break;
             default:
                 return false;
         }
 
-        String expectedSignature = isGsa ? GmsInfo.GSA_SIGNING_CERT : GmsInfo.SIGNING_CERT;
-
         // Validate signature to avoid affecting apps like microG and Gcam Services Provider.
         // This isn't actually necessary from a security perspective because GMS doesn't get any
         // special privileges, but it's a failsafe to avoid unintentional compatibility issues.
-        boolean validCert = validateCerts(signatures, expectedSignature);
+        boolean validCert = validateCerts(signatures);
 
         if (!validCert && pastSignatures != null) {
-            validCert = validateCerts(pastSignatures, expectedSignature);
+            validCert = validateCerts(pastSignatures);
         }
         return validCert;
     }
