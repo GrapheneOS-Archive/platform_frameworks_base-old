@@ -162,8 +162,7 @@ public final class PlayStoreHooks {
     }
 
     // Request user action to uninstall a package
-    // ApplicationPackageManager#deletePackage(String, IPackageDeleteObserver, int)
-    public static void deletePackage(Context context, PackageManager pm, String packageName, IPackageDeleteObserver observer, int flags) {
+    public static void deletePackage(PackageManager pm, String packageName, IPackageDeleteObserver observer, int flags) {
         if (flags != 0) {
             throw new IllegalStateException("unexpected flags: " + flags);
         }
@@ -210,13 +209,12 @@ public final class PlayStoreHooks {
 
     // Called during self-update sequence because PackageManager requires
     // the restricted CLEAR_APP_CACHE permission
-    // ApplicationPackageManager#freeStorageAndNotify(String, long, IPackageDataObserver)
-    public static void freeStorageAndNotify(Context context, String volumeUuid, long idealStorageSize,
+    public static void freeStorageAndNotify(String volumeUuid, long idealStorageSize,
             IPackageDataObserver observer) {
         if (volumeUuid != null) {
             throw new IllegalStateException("unexpected volumeUuid " + volumeUuid);
         }
-        StorageManager sm = context.getSystemService(StorageManager.class);
+        StorageManager sm = GmsCompat.appContext().getSystemService(StorageManager.class);
         boolean success = false;
         try {
             sm.allocateBytes(StorageManager.UUID_DEFAULT, idealStorageSize);
@@ -233,6 +231,7 @@ public final class PlayStoreHooks {
         }
     }
 
+    // StorageStatsManager#queryStatsForPackage(UUID, String, UserHandle)
     public static StorageStats queryStatsForPackage(String packageName) throws PackageManager.NameNotFoundException {
         PackageManager pm = GmsCompat.appContext().getPackageManager();
         String apkPath = pm.getApplicationInfo(packageName, 0).sourceDir;
