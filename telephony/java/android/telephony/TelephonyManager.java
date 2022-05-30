@@ -105,6 +105,7 @@ import android.util.Pair;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.internal.gmscompat.sysservice.GmcTelephonyManager;
 import com.android.internal.os.BackgroundThread;
 import com.android.internal.telephony.CellNetworkScanResult;
 import com.android.internal.telephony.IBooleanConsumer;
@@ -557,7 +558,7 @@ public class TelephonyManager {
      */
     public TelephonyManager createForSubscriptionId(int subId) {
       // Don't reuse any TelephonyManager objects.
-      return new TelephonyManager(mContext, subId);
+      return GmsCompat.isEnabled() ? new GmcTelephonyManager(mContext, subId) : new TelephonyManager(mContext, subId);
     }
 
     /**
@@ -573,7 +574,7 @@ public class TelephonyManager {
         if (!SubscriptionManager.isValidSubscriptionId(subId)) {
             return null;
         }
-        return new TelephonyManager(mContext, subId);
+        return GmsCompat.isEnabled() ? new GmcTelephonyManager(mContext, subId) : new TelephonyManager(mContext, subId);
     }
 
     /** {@hide} */
@@ -1964,10 +1965,6 @@ public class TelephonyManager {
     @SuppressAutoDoc // No support for device / profile owner or carrier privileges (b/72967236).
     @RequiresPermission(android.Manifest.permission.READ_PRIVILEGED_PHONE_STATE)
     public String getDeviceId() {
-        if (GmsCompat.isEnabled()) {
-            return null;
-        }
-
         try {
             ITelephony telephony = getITelephony();
             if (telephony == null)
@@ -2021,10 +2018,6 @@ public class TelephonyManager {
     @SuppressAutoDoc // No support for device / profile owner or carrier privileges (b/72967236).
     @RequiresPermission(android.Manifest.permission.READ_PRIVILEGED_PHONE_STATE)
     public String getDeviceId(int slotIndex) {
-        if (GmsCompat.isEnabled()) {
-            return null;
-        }
-
         // FIXME this assumes phoneId == slotIndex
         try {
             IPhoneSubInfo info = getSubscriberInfoService();
@@ -2090,10 +2083,6 @@ public class TelephonyManager {
     @SuppressAutoDoc // No support for device / profile owner or carrier privileges (b/72967236).
     @RequiresPermission(android.Manifest.permission.READ_PRIVILEGED_PHONE_STATE)
     public String getImei(int slotIndex) {
-        if (GmsCompat.isEnabled()) {
-            return null;
-        }
-
         ITelephony telephony = getITelephony();
         if (telephony == null) return null;
 
@@ -2206,10 +2195,6 @@ public class TelephonyManager {
     @SuppressAutoDoc // No support for device / profile owner or carrier privileges (b/72967236).
     @RequiresPermission(android.Manifest.permission.READ_PRIVILEGED_PHONE_STATE)
     public String getMeid(int slotIndex) {
-        if (GmsCompat.isEnabled()) {
-            return null;
-        }
-
         ITelephony telephony = getITelephony();
         if (telephony == null) return null;
 
@@ -2939,10 +2924,6 @@ public class TelephonyManager {
     @RequiresPermission(android.Manifest.permission.READ_PHONE_STATE)
     @UnsupportedAppUsage(maxTargetSdk = Build.VERSION_CODES.P)
     public int getNetworkType(int subId) {
-        if (GmsCompat.isEnabled()) {
-            return NETWORK_TYPE_UNKNOWN;
-        }
-
         try {
             ITelephony telephony = getITelephony();
             if (telephony != null) {
@@ -3852,10 +3833,6 @@ public class TelephonyManager {
     @RequiresPermission(android.Manifest.permission.READ_PRIVILEGED_PHONE_STATE)
     @UnsupportedAppUsage
     public String getSimSerialNumber(int subId) {
-        if (GmsCompat.isEnabled()) {
-            return null;
-        }
-
         try {
             IPhoneSubInfo info = getSubscriberInfoService();
             if (info == null)
@@ -3985,10 +3962,6 @@ public class TelephonyManager {
     @SystemApi
     @RequiresPermission(android.Manifest.permission.READ_PRIVILEGED_PHONE_STATE)
     public UiccSlotInfo[] getUiccSlotsInfo() {
-        if (GmsCompat.isEnabled()) {
-            return null;
-        }
-
         try {
             ITelephony telephony = getITelephony();
             if (telephony == null) {
@@ -4128,10 +4101,6 @@ public class TelephonyManager {
     @RequiresPermission(android.Manifest.permission.READ_PRIVILEGED_PHONE_STATE)
     @UnsupportedAppUsage(maxTargetSdk = Build.VERSION_CODES.P)
     public String getSubscriberId(int subId) {
-        if (GmsCompat.isEnabled()) {
-            return null;
-        }
-
         try {
             IPhoneSubInfo info = getSubscriberInfoService();
             if (info == null)
@@ -4746,14 +4715,6 @@ public class TelephonyManager {
                          mContext.getAttributionTag());
         } catch (RemoteException ex) {
         } catch (NullPointerException ex) {
-        } catch (SecurityException ex) {
-            if (GmsCompat.isEnabled()) {
-                // Google Play Services settings -> Account services -> Google Pay -> Add a payment method
-                // com.google.android.gms: java.lang.SecurityException: getLine1NumberForDisplay: Neither user 1010142 nor current process has android.permission.READ_PHONE_STATE, android.permission.READ_SMS, or android.permission.READ_PHONE_NUMBERS
-                return null;
-            } else {
-                throw ex;
-            }
         }
         if (number != null) {
             return number;
@@ -6424,12 +6385,6 @@ public class TelephonyManager {
             android.Manifest.permission.MODIFY_PHONE_STATE})
     public void requestCellInfoUpdate(@NonNull WorkSource workSource,
             @NonNull @CallbackExecutor Executor executor, @NonNull CellInfoCallback callback) {
-        if (GmsCompat.isEnabled()) {
-            // Attribute the work to GMS instead of the client
-            requestCellInfoUpdate(executor, callback);
-            return;
-        }
-
         try {
             ITelephony telephony = getITelephony();
             if (telephony == null) {
@@ -14635,10 +14590,6 @@ public class TelephonyManager {
     @RequiresPermission(android.Manifest.permission.READ_PRIVILEGED_PHONE_STATE)
     @SystemApi
     public boolean isIccLockEnabled() {
-        if (GmsCompat.isEnabled()) {
-            return false;
-        }
-
         try {
             ITelephony telephony = getITelephony();
             if (telephony != null) {
