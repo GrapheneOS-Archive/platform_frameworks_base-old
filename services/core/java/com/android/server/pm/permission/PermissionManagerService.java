@@ -1881,7 +1881,7 @@ public class PermissionManagerService extends IPermissionManager.Stub {
             // permission as requiring a review as this is the initial state.
             final int uid = mPackageManagerInt.getPackageUid(packageName, 0, userId);
             final int targetSdk = mPackageManagerInt.getUidTargetSdkVersion(uid);
-            final int flags = (targetSdk < Build.VERSION_CODES.M && isRuntimePermission)
+            final int flags = (targetSdk < Build.VERSION_CODES.M && isRuntimePermission && !isSpecialRuntimePermission(permName))
                     ? FLAG_PERMISSION_REVIEW_REQUIRED | FLAG_PERMISSION_REVOKED_COMPAT
                     : 0;
 
@@ -2727,7 +2727,7 @@ public class PermissionManagerService extends IPermissionManager.Stub {
                                         FLAG_PERMISSION_RESTRICTION_UPGRADE_EXEMPT,
                                         FLAG_PERMISSION_RESTRICTION_UPGRADE_EXEMPT);
                             }
-                            if (targetSdkVersion < Build.VERSION_CODES.M) {
+                            if (targetSdkVersion < Build.VERSION_CODES.M && !isSpecialRuntimePermission(permissionName)) {
                                 uidState.updatePermissionFlags(permission,
                                         PackageManager.FLAG_PERMISSION_REVIEW_REQUIRED
                                                 | PackageManager.FLAG_PERMISSION_REVOKED_COMPAT,
@@ -2853,7 +2853,7 @@ public class PermissionManagerService extends IPermissionManager.Stub {
         //                continue;
         //            }
 
-                    if (bp.isRuntimeOnly() && !appSupportsRuntimePermissions) {
+                    if (bp.isRuntimeOnly() && !appSupportsRuntimePermissions && !isSpecialRuntimePermission(bp.getName())) {
                         if (DEBUG_PERMISSIONS) {
                             Log.i(TAG, "Denying runtime-only permission " + bp.getName()
                                     + " for package " + friendlyName);
@@ -2932,7 +2932,7 @@ public class PermissionManagerService extends IPermissionManager.Stub {
                         boolean restrictionApplied = (origState.getPermissionFlags(
                                 bp.getName()) & FLAG_PERMISSION_APPLY_RESTRICTION) != 0;
 
-                        if (appSupportsRuntimePermissions) {
+                        if (appSupportsRuntimePermissions || isSpecialRuntimePermission(bp.getName())) {
                             // If hard restricted we don't allow holding it
                             if (permissionPolicyInitialized && hardRestricted) {
                                 if (!restrictionExempt) {
@@ -3020,7 +3020,7 @@ public class PermissionManagerService extends IPermissionManager.Stub {
                                 if (restrictionApplied) {
                                     flags &= ~FLAG_PERMISSION_APPLY_RESTRICTION;
                                     // Dropping restriction on a legacy app implies a review
-                                    if (!appSupportsRuntimePermissions) {
+                                    if (!appSupportsRuntimePermissions && !isSpecialRuntimePermission(bp.getName())) {
                                         flags |= FLAG_PERMISSION_REVIEW_REQUIRED;
                                     }
                                     wasChanged = true;
