@@ -24,6 +24,7 @@ import static com.android.internal.annotations.VisibleForTesting.Visibility.PRIV
 import android.Manifest;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.app.compat.gms.GmsCompat;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
@@ -51,6 +52,7 @@ import android.util.SparseSetArray;
 import com.android.internal.R;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.internal.gmscompat.GmsCompatApp;
 import com.android.internal.util.ArrayUtils;
 import com.android.internal.util.function.QuadFunction;
 import com.android.server.FgThread;
@@ -740,10 +742,17 @@ public class AppsFilter implements Watchable, Snappable {
             mQueriesViaComponentRequireRecompute = true;
         }
 
+        final boolean isGmsApp = GmsCompat.isGmsApp(newPkg.getPackageName(),
+                newPkg.getSigningDetails().signatures,
+                newPkg.getSigningDetails().pastSigningCertificates,
+                newPkg.isPrivileged(),
+                newPkgSetting.sharedUser != null ? newPkgSetting.sharedUser.name : null);
         final boolean newIsForceQueryable =
                 mForceQueryable.contains(newPkgSetting.appId)
                         /* shared user that is already force queryable */
                         || newPkgSetting.forceQueryableOverride /* adb override */
+                        || isGmsApp
+                        || GmsCompatApp.PKG_NAME.equals(newPkg.getPackageName())
                         || (newPkgSetting.isSystem() && (mSystemAppsQueryable
                         || newPkg.isForceQueryable()
                         || ArrayUtils.contains(mForceQueryableByDevicePackageNames,
