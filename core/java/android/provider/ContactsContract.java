@@ -16,6 +16,7 @@
 
 package android.provider;
 
+import android.Manifest;
 import android.accounts.Account;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -25,6 +26,7 @@ import android.annotation.SdkConstant.SdkConstantType;
 import android.annotation.SystemApi;
 import android.annotation.TestApi;
 import android.app.Activity;
+import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -66,6 +68,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8445,6 +8448,12 @@ public final class ContactsContract {
          */
         public static @NonNull List<SimAccount> getSimAccounts(
                 @NonNull ContentResolver contentResolver) {
+            if (GmsCompat.isEnabled()) {
+                if (!GmsCompat.hasPermission(Manifest.permission.READ_CONTACTS)) {
+                    return Collections.emptyList();
+                }
+            }
+
             Bundle response = contentResolver.call(ContactsContract.AUTHORITY_URI,
                     ContactsContract.SimContacts.QUERY_SIM_ACCOUNTS_METHOD,
                     null, null);
