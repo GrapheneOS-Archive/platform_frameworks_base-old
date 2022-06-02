@@ -41,6 +41,7 @@ import android.util.SparseBooleanArray;
 import android.util.SparseIntArray;
 
 import com.android.internal.annotations.GuardedBy;
+import com.android.internal.gmscompat.HybridBinder;
 import com.android.internal.util.ArrayUtils;
 
 import dalvik.annotation.optimization.CriticalNative;
@@ -3114,6 +3115,9 @@ public final class Parcel {
         return TextUtils.CHAR_SEQUENCE_CREATOR.createFromParcel(this);
     }
 
+    /** {@hide} */
+    public boolean mPerformBinderRedirectionCheck;
+
     /**
      * Read an object from the parcel at the current dataPosition().
      */
@@ -3126,6 +3130,14 @@ public final class Parcel {
                 FLAG_IS_REPLY_FROM_BLOCKING_ALLOWED_OBJECT | FLAG_PROPAGATE_ALLOW_BLOCKING)) {
             Binder.allowBlocking(result);
         }
+
+        if (mPerformBinderRedirectionCheck && result != null) {
+            HybridBinder hb = HybridBinder.maybeCreate(result);
+            if (hb != null) {
+                return hb;
+            }
+        }
+
         return result;
     }
 
