@@ -198,6 +198,7 @@ import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.app.IVoiceInteractor;
 import com.android.internal.content.ReferrerIntent;
+import com.android.internal.gmscompat.GmsHooks;
 import com.android.internal.os.BinderCallsStats;
 import com.android.internal.os.BinderInternal;
 import com.android.internal.os.RuntimeInit;
@@ -4460,8 +4461,14 @@ public final class ActivityThread extends ClientTransactionHandler
             } else {
                 cl = packageInfo.getClassLoader();
             }
-            service = packageInfo.getAppFactory()
-                    .instantiateService(cl, data.info.name, data.intent);
+            {
+                String className = data.info.name;
+                service = GmsHooks.maybeInstantiateService(className);
+                if (service == null) {
+                    service = packageInfo.getAppFactory()
+                            .instantiateService(cl, className, data.intent);
+                }
+            }
             ContextImpl context = ContextImpl.getImpl(service
                     .createServiceBaseContext(this, packageInfo));
             if (data.info.splitName != null) {

@@ -43,6 +43,7 @@ import android.app.VoiceInteractor.Request;
 import android.app.admin.DevicePolicyManager;
 import android.app.assist.AssistContent;
 import android.app.compat.CompatChanges;
+import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.ChangeId;
 import android.compat.annotation.EnabledSince;
 import android.compat.annotation.UnsupportedAppUsage;
@@ -160,6 +161,9 @@ import com.android.internal.app.IVoiceInteractionManagerService;
 import com.android.internal.app.IVoiceInteractor;
 import com.android.internal.app.ToolbarActionBar;
 import com.android.internal.app.WindowDecorActionBar;
+import com.android.internal.gmscompat.GmsCompatApp;
+import com.android.internal.gmscompat.GmsHooks;
+import com.android.internal.gmscompat.PlayStoreHooks;
 import com.android.internal.policy.PhoneWindow;
 import com.android.internal.util.dump.DumpableContainerImpl;
 
@@ -1652,6 +1656,10 @@ public class Activity extends ContextThemeWrapper
     @MainThread
     @CallSuper
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+        if (GmsCompat.isEnabled()) {
+            GmsHooks.activityOnCreate(this);
+        }
+
         if (DEBUG_LIFECYCLE) Slog.v(TAG, "onCreate " + this + ": " + savedInstanceState);
 
         if (mLastNonConfigurationInstances != null) {
@@ -5500,6 +5508,45 @@ public class Activity extends ContextThemeWrapper
      */
     public void startActivityForResult(@RequiresPermission Intent intent, int requestCode,
             @Nullable Bundle options) {
+        if (GmsCompat.isEnabled()) {
+            ComponentName cn = intent.getComponent();
+            if (cn != null && "com.google.android.permissioncontroller".equals(cn.getPackageName())) {
+                // PermissionController activities can't be opened by unprivileged apps.
+                // (Replacing absent com.google.android.permissioncontroller package with
+                // com.android.permissioncontroller would not help)
+                return;
+            }
+        }
+
+        if (android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS.equals(intent.getAction())) {
+            Uri data = intent.getData();
+            if (data != null && "package".equals(data.getScheme())) {
+                String pkg = data.getSchemeSpecificPart();
+
+                if (pkg != null) {
+                    switch (pkg) {
+                        case "com.google.android.tts":
+                        if (GmsCompat.isClientOfGmsCore()) {
+                            boolean installed;
+                            try {
+                                installed = ActivityThread.getPackageManager().getApplicationInfo(pkg, 0, getUserId()) != null;
+                            } catch (RemoteException e) {
+                                throw e.rethrowFromSystemServer();
+                            }
+
+                            if (!installed) {
+                                try {
+                                    GmsCompatApp.iClientOfGmsCore2Gca().showMissingAppNotification(pkg);
+                                } catch (RemoteException e) {
+                                    GmsCompatApp.callFailed(e);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         if (mParent == null) {
             options = transferSpringboardActivityOptions(options);
             Instrumentation.ActivityResult ar =
