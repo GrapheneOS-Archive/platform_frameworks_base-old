@@ -19,6 +19,7 @@ package android.app;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
@@ -56,6 +57,7 @@ import android.view.Window;
 import android.view.WindowManagerGlobal;
 
 import com.android.internal.content.ReferrerIntent;
+import com.android.internal.gmscompat.GmsHooks;
 
 import java.io.File;
 import java.lang.annotation.Retention;
@@ -1228,6 +1230,7 @@ public class Instrumentation {
     public Application newApplication(ClassLoader cl, String className, Context context)
             throws InstantiationException, IllegalAccessException, 
             ClassNotFoundException {
+        GmsCompat.maybeEnable(context);
         Application app = getFactory(context.getPackageName())
                 .instantiateApplication(cl, className);
         app.attach(context);
@@ -1246,6 +1249,7 @@ public class Instrumentation {
     static public Application newApplication(Class<?> clazz, Context context)
             throws InstantiationException, IllegalAccessException, 
             ClassNotFoundException {
+        GmsCompat.maybeEnable(context);
         Application app = (Application)clazz.newInstance();
         app.attach(context);
         return app;
@@ -1803,6 +1807,11 @@ public class Instrumentation {
                     intent.resolveTypeIfNeeded(who.getContentResolver()), token,
                     target != null ? target.mEmbeddedID : null, requestCode, 0, null, options);
             checkStartActivityResult(result, intent);
+
+            if (GmsCompat.isEnabled()) {
+                GmsHooks.onActivityStart(result, intent, options);
+            }
+
         } catch (RemoteException e) {
             throw new RuntimeException("Failure from system", e);
         }
