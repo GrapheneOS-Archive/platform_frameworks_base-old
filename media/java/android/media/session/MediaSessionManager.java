@@ -23,6 +23,7 @@ import android.annotation.RequiresPermission;
 import android.annotation.SuppressLint;
 import android.annotation.SystemApi;
 import android.annotation.SystemService;
+import android.app.compat.gms.GmsCompat;
 import android.content.ComponentName;
 import android.content.Context;
 import android.media.AudioManager;
@@ -49,6 +50,7 @@ import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -191,6 +193,11 @@ public final class MediaSessionManager {
      */
     public @NonNull List<MediaController> getActiveSessions(
             @Nullable ComponentName notificationListener) {
+        if (GmsCompat.isEnabled()) {
+            // MEDIA_CONTENT_CONTROL permission can't be held by an unprivileged app
+            return Collections.emptyList();
+        }
+
         return getActiveSessionsForUser(notificationListener, UserHandle.myUserId());
     }
 
@@ -373,6 +380,11 @@ public final class MediaSessionManager {
             @NonNull OnActiveSessionsChangedListener sessionListener,
             @Nullable ComponentName notificationListener, int userId,
             @Nullable Executor executor) {
+        if (GmsCompat.isEnabled()) {
+            // requires privileged MEDIA_CONTENT_CONTROL permission
+            return;
+        }
+
         Objects.requireNonNull(sessionListener, "sessionListener shouldn't be null");
         if (executor == null) {
             executor = new HandlerExecutor(new Handler());
