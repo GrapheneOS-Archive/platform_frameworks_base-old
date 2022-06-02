@@ -26,6 +26,7 @@ import android.annotation.RequiresPermission;
 import android.annotation.SystemApi;
 import android.annotation.TestApi;
 import android.app.ActivityThread;
+import android.app.compat.gms.GmsCompat;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -777,6 +778,10 @@ public final class DeviceConfig {
     @SystemApi
     @RequiresPermission(READ_DEVICE_CONFIG)
     public static String getProperty(@NonNull String namespace, @NonNull String name) {
+        if (GmsCompat.isEnabled()) {
+            return null;
+        }
+
         // Fetch all properties for the namespace at once and cache them in the local process, so we
         // incur the cost of the IPC less often. Lookups happen much more frequently than updates,
         // and we want to optimize the former.
@@ -947,6 +952,10 @@ public final class DeviceConfig {
     @RequiresPermission(WRITE_DEVICE_CONFIG)
     public static boolean setProperty(@NonNull String namespace, @NonNull String name,
             @Nullable String value, boolean makeDefault) {
+        if (GmsCompat.isEnabled()) {
+            return false;
+        }
+
         ContentResolver contentResolver = ActivityThread.currentApplication().getContentResolver();
         return Settings.Config.putString(contentResolver, namespace, name, value, makeDefault);
     }
@@ -969,6 +978,10 @@ public final class DeviceConfig {
     @SystemApi
     @RequiresPermission(WRITE_DEVICE_CONFIG)
     public static boolean setProperties(@NonNull Properties properties) throws BadConfigException {
+        if (GmsCompat.isEnabled()) {
+            return false;
+        }
+
         ContentResolver contentResolver = ActivityThread.currentApplication().getContentResolver();
         return Settings.Config.setStrings(contentResolver, properties.getNamespace(),
                 properties.mMap);
@@ -1018,6 +1031,10 @@ public final class DeviceConfig {
     @SystemApi
     @RequiresPermission(WRITE_DEVICE_CONFIG)
     public static void resetToDefaults(@ResetMode int resetMode, @Nullable String namespace) {
+        if (GmsCompat.isEnabled()) {
+            return;
+        }
+
         ContentResolver contentResolver = ActivityThread.currentApplication().getContentResolver();
         Settings.Config.resetToDefaults(contentResolver, resetMode, namespace);
     }
