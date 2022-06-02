@@ -199,6 +199,7 @@ import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.app.IVoiceInteractor;
 import com.android.internal.content.ReferrerIntent;
+import com.android.internal.gmscompat.client.GmsCompatClientService;
 import com.android.internal.os.BinderCallsStats;
 import com.android.internal.os.BinderInternal;
 import com.android.internal.os.RuntimeInit;
@@ -4463,8 +4464,13 @@ public final class ActivityThread extends ClientTransactionHandler
             } else {
                 cl = packageInfo.getClassLoader();
             }
-            service = packageInfo.getAppFactory()
-                    .instantiateService(cl, data.info.name, data.intent);
+            {
+                String className = data.info.name;
+                service = className.equals(GmsCompatClientService.class.getName()) ?
+                        new GmsCompatClientService() :
+                        packageInfo.getAppFactory()
+                                .instantiateService(cl, className, data.intent);
+            }
             ContextImpl context = ContextImpl.getImpl(service
                     .createServiceBaseContext(this, packageInfo));
             if (data.info.splitName != null) {
@@ -7962,4 +7968,15 @@ public final class ActivityThread extends ClientTransactionHandler
     // ------------------ Regular JNI ------------------------
     private native void nPurgePendingResources();
     private native void nInitZygoteChildHeapProfiling();
+
+    public boolean hasAtLeastOneResumedActivity() {
+        synchronized (mResourcesManager) {
+            for (int i = 0; i < mActivities.size(); ++i) {
+                if (mActivities.valueAt(i).getLifecycleState() == ActivityLifecycleItem.ON_RESUME) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }

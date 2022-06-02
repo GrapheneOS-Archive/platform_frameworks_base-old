@@ -30,6 +30,7 @@ import android.annotation.UserHandleAware;
 import android.app.Activity;
 import android.app.BroadcastOptions;
 import android.app.PendingIntent;
+import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.content.Context;
 import android.content.pm.ParceledListSlice;
@@ -712,6 +713,10 @@ public final class UsageStatsManager {
     @SystemApi
     @RequiresPermission(android.Manifest.permission.PACKAGE_USAGE_STATS)
     public @StandbyBuckets int getAppStandbyBucket(String packageName) {
+        if (GmsCompat.isEnabled()) {
+            return STANDBY_BUCKET_ACTIVE;
+        }
+
         try {
             return mService.getAppStandbyBucket(packageName, mContext.getOpPackageName(),
                     mContext.getUserId());
