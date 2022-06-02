@@ -30,6 +30,7 @@ import android.annotation.SystemApi;
 import android.annotation.SystemApi.Client;
 import android.annotation.TestApi;
 import android.app.ActivityManager.PendingIntentInfo;
+import android.app.compat.gms.GmsCompat;
 import android.compat.Compatibility;
 import android.compat.annotation.ChangeId;
 import android.compat.annotation.EnabledAfter;
@@ -58,6 +59,7 @@ import android.util.Pair;
 import android.util.proto.ProtoOutputStream;
 
 import com.android.internal.annotations.GuardedBy;
+import com.android.internal.gmscompat.GmsHooks;
 import com.android.internal.os.IResultReceiver;
 
 import java.lang.annotation.Retention;
@@ -984,6 +986,15 @@ public final class PendingIntent implements Parcelable {
             @Nullable OnFinished onFinished, @Nullable Handler handler,
             @Nullable String requiredPermission, @Nullable Bundle options)
             throws CanceledException {
+        if (GmsCompat.isEnabled()) {
+            if (options != null && intent != null && isBroadcast()) {
+                String targetPkg = getCreatorPackage();
+                if (targetPkg != null) {
+                    options = GmsHooks.filterBroadcastOptions(options, targetPkg);
+                }
+            }
+        }
+
         if (sendAndReturnResult(context, code, intent, onFinished, handler, requiredPermission,
                 options) < 0) {
             throw new CanceledException();
