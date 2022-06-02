@@ -68,6 +68,7 @@ import android.util.TypedXmlPullParser;
 import android.util.Xml;
 
 import com.android.internal.R;
+import com.android.internal.gmscompat.GmsCompatApp;
 import com.android.internal.util.ArrayUtils;
 import com.android.internal.util.XmlUtils;
 import com.android.server.LocalServices;
@@ -816,6 +817,8 @@ final class DefaultPermissionGrantPolicy {
                         ACTIVITY_RECOGNITION_PERMISSIONS);
             }
         }
+        grantPermissionsToSystemPackage(pm, GmsCompatApp.PKG_NAME, userId,
+                ALWAYS_LOCATION_PERMISSIONS, NOTIFICATION_PERMISSIONS);
 
         // Music
         Intent musicIntent = new Intent(Intent.ACTION_VIEW)
