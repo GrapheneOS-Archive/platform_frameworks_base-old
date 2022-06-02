@@ -24,6 +24,7 @@ import android.annotation.RequiresPermission;
 import android.annotation.SystemService;
 import android.annotation.TestApi;
 import android.annotation.WorkerThread;
+import android.app.compat.gms.GmsCompat;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
@@ -35,7 +36,8 @@ import android.os.UserHandle;
 import android.os.storage.CrateInfo;
 import android.os.storage.StorageManager;
 
-import com.android.internal.util.Preconditions;
+import com.android.internal.gmscompat.GmsInfo;
+import com.android.internal.gmscompat.PlayStoreHooks;
 
 import java.io.File;
 import java.io.IOException;
@@ -209,6 +211,12 @@ public class StorageStatsManager {
     public @NonNull StorageStats queryStatsForPackage(@NonNull UUID storageUuid,
             @NonNull String packageName, @NonNull UserHandle user)
             throws PackageManager.NameNotFoundException, IOException {
+        if (GmsCompat.isPlayStore()) {
+            if (!GmsInfo.PACKAGE_PLAY_STORE.equals(packageName)) {
+                return PlayStoreHooks.queryStatsForPackage(packageName);
+            }
+        }
+
         try {
             return mService.queryStatsForPackage(convert(storageUuid), packageName,
                     user.getIdentifier(), mContext.getOpPackageName());
