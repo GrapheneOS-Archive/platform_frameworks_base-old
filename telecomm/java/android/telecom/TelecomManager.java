@@ -26,6 +26,7 @@ import android.annotation.SuppressAutoDoc;
 import android.annotation.SuppressLint;
 import android.annotation.SystemApi;
 import android.annotation.SystemService;
+import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.ChangeId;
 import android.compat.annotation.EnabledSince;
 import android.compat.annotation.UnsupportedAppUsage;
@@ -1466,6 +1467,13 @@ public class TelecomManager {
      */
     @SystemApi
     public List<PhoneAccountHandle> getAllPhoneAccountHandles() {
+        if (GmsCompat.isEnabled()) {
+            // requires MODIFY_PHONE_STATE permission
+            // as of GMS 22.06.15, called by SafetyNet in the TelecomTaskService
+            // if "enable_phone_account_cleanup" phenotype flag is set to "true"
+            return Collections.EMPTY_LIST;
+        }
+
         ITelecomService service = getTelecomService();
         if (service != null) {
             try {
