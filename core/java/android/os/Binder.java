@@ -20,11 +20,14 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.SystemApi;
 import android.app.AppOpsManager;
+import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.util.ExceptionUtils;
 import android.util.Log;
 import android.util.Slog;
 
+import com.android.internal.gmscompat.BinderRedirector;
+import com.android.internal.gmscompat.GmsHooks;
 import com.android.internal.os.BinderCallHeavyHitterWatcher;
 import com.android.internal.os.BinderCallHeavyHitterWatcher.BinderCallHeavyHitterListener;
 import com.android.internal.os.BinderInternal;
@@ -638,7 +641,13 @@ public class Binder implements IBinder {
     public void attachInterface(@Nullable IInterface owner, @Nullable String descriptor) {
         mOwner = owner;
         mDescriptor = descriptor;
+
+        if (BinderRedirector.enabled()) {
+            mPerformRedirectionCheck = "com.google.android.gms.common.internal.IGmsCallbacks".equals(descriptor);
+        }
     }
+
+    private boolean mPerformRedirectionCheck;
 
     /**
      * Default implementation returns an empty interface name.
@@ -1131,6 +1140,8 @@ public class Binder implements IBinder {
         sWorkSourceProvider = workSourceProvider;
     }
 
+    private volatile int mPreviousUid;
+
     // Entry point from android_util_Binder.cpp's onTransact
     @UnsupportedAppUsage
     private boolean execTransact(int code, long dataObj, long replyObj,
@@ -1138,6 +1149,16 @@ public class Binder implements IBinder {
         // At that point, the parcel request headers haven't been parsed so we do not know what
         // WorkSource the caller has set. Use calling uid as the default.
         final int callingUid = Binder.getCallingUid();
+        if (GmsCompat.isEnabled()) {
+            if (callingUid != mPreviousUid) {
+                // harmless race
+                mPreviousUid = callingUid;
+                if (Process.isApplicationUid(callingUid)) {
+                    GmsHooks.onBinderTransaction(Binder.getCallingPid(), callingUid);
+                }
+            }
+        }
+
         final long origWorkSource = ThreadLocalWorkSource.setUid(callingUid);
         try {
             return execTransactInternal(code, dataObj, replyObj, flags, callingUid);
@@ -1161,6 +1182,7 @@ public class Binder implements IBinder {
         // Log any exceptions as warnings, don't silently suppress them.
         // If the call was FLAG_ONEWAY then these exceptions disappear into the ether.
         final boolean tracingEnabled = Binder.isTracingEnabled();
+        data.mPerformBinderRedirectionCheck = mPerformRedirectionCheck;
         try {
             final BinderCallHeavyHitterWatcher heavyHitterWatcher = sHeavyHitterWatcher;
             if (heavyHitterWatcher != null) {
@@ -1204,6 +1226,7 @@ public class Binder implements IBinder {
             }
             res = true;
         } finally {
+            data.mPerformBinderRedirectionCheck = false;
             if (tracingEnabled) {
                 Trace.traceEnd(Trace.TRACE_TAG_ALWAYS);
             }

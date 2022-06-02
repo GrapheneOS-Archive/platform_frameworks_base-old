@@ -31,6 +31,7 @@ import android.app.ActivityManager;
 import android.app.ActivityThread;
 import android.app.AppGlobals;
 import android.app.UriGrantsManager;
+import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -71,6 +72,9 @@ import android.util.Size;
 import android.util.SparseArray;
 
 import com.android.internal.annotations.GuardedBy;
+import com.android.internal.gmscompat.GmsHooks;
+import com.android.internal.gmscompat.PlayStoreHooks;
+import com.android.internal.gmscompat.dynamite.GmsDynamiteClientHooks;
 import com.android.internal.util.MimeIconUtils;
 
 import dalvik.system.CloseGuard;
@@ -1192,6 +1196,13 @@ public abstract class ContentResolver implements ContentInterface {
             @Nullable CancellationSignal cancellationSignal) {
         Objects.requireNonNull(uri, "uri");
 
+        if (GmsCompat.isEnabled()) {
+            Cursor c = GmsHooks.interceptQuery(uri, projection);
+            if (c != null) {
+                return c;
+            }
+        }
+
         try {
             if (mWrapped != null) {
                 return mWrapped.query(uri, projection, queryArgs, cancellationSignal);
@@ -2177,6 +2188,9 @@ public abstract class ContentResolver implements ContentInterface {
     public final @Nullable Uri insert(@RequiresPermission.Write @NonNull Uri url,
             @Nullable ContentValues values, @Nullable Bundle extras) {
         Objects.requireNonNull(url, "url");
+        if (GmsCompat.isEnabled()) {
+            GmsHooks.filterContentValues(url, values);
+        }
 
         try {
             if (mWrapped != null) return mWrapped.insert(url, values, extras);
@@ -2474,6 +2488,8 @@ public abstract class ContentResolver implements ContentInterface {
         }
         final String auth = uri.getAuthority();
         if (auth != null) {
+            GmsDynamiteClientHooks.maybeInit(auth);
+
             return acquireProvider(mContext, auth);
         }
         return null;
@@ -2673,6 +2689,12 @@ public abstract class ContentResolver implements ContentInterface {
                     observer.getContentObserver(), userHandle, mTargetSdkVersion);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
+        } catch (SecurityException se) {
+            if (GmsCompat.isEnabled()) {
+                return;
+            }
+
+            throw se;
         }
     }
 
