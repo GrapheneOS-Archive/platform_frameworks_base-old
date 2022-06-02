@@ -20,6 +20,7 @@ import static android.view.WindowManager.LayoutParams.TYPE_APPLICATION;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.app.compat.gms.GmsCompat;
 import android.content.Context;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
@@ -32,6 +33,8 @@ import android.util.ArrayMap;
 import android.util.Log;
 import android.view.ContentRecordingSession;
 import android.view.Surface;
+
+import com.android.internal.gmscompat.GmcMediaProjectionService;
 
 import java.util.Map;
 
@@ -56,6 +59,10 @@ public final class MediaProjection {
 
     /** @hide */
     public MediaProjection(Context context, IMediaProjection impl) {
+        if (GmsCompat.isGmsCore()) {
+            GmcMediaProjectionService.start();
+        }
+
         mCallbacks = new ArrayMap<Callback, CallbackRecord>();
         mContext = context;
         mImpl = impl;
@@ -144,6 +151,11 @@ public final class MediaProjection {
     public VirtualDisplay createVirtualDisplay(@NonNull String name,
             int width, int height, int dpi, int flags, @Nullable Surface surface,
             @Nullable VirtualDisplay.Callback callback, @Nullable Handler handler) {
+        if (GmsCompat.isGmsCore()) {
+            // requires the privileged CAPTURE_SECURE_VIDEO_OUTPUT permission
+            flags &= ~DisplayManager.VIRTUAL_DISPLAY_FLAG_SECURE;
+        }
+
         final VirtualDisplayConfig.Builder builder = new VirtualDisplayConfig.Builder(name, width,
                 height, dpi).setFlags(flags);
         if (surface != null) {
@@ -248,6 +260,10 @@ public final class MediaProjection {
     private final class MediaProjectionCallback extends IMediaProjectionCallback.Stub {
         @Override
         public void onStop() {
+            if (GmsCompat.isGmsCore()) {
+                GmcMediaProjectionService.stop();
+            }
+
             for (CallbackRecord cbr : mCallbacks.values()) {
                 cbr.onStop();
             }

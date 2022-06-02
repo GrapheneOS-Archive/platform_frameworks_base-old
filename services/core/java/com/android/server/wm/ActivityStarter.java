@@ -747,6 +747,13 @@ class ActivityStarter {
                     res = waitResultIfNeeded(mRequest.waitResult, mLastStartActivityRecord,
                             launchingState);
                 }
+
+                if (res == START_ABORTED) {
+                    if (android.app.compat.gms.GmsCompat.isGmsApp(mRequest.callingPackage, mRequest.userId)) {
+                        return START_ABORTED;
+                    }
+                }
+
                 return getExternalResult(res);
             }
         } finally {
