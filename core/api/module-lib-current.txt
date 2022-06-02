@@ -68,6 +68,14 @@ package android.app.admin {
 
 }
 
+package android.app.compat.gms {
+
+  public class GmsModuleHooks {
+    method public static boolean canEnableBluetoothAdapter();
+  }
+
+}
+
 package android.content {
 
   public abstract class ContentProvider implements android.content.ComponentCallbacks2 {
