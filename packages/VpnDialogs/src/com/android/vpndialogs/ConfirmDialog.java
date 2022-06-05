@@ -127,6 +127,8 @@ public class ConfirmDialog extends AlertActivity
                 // Authorize this app to initiate VPN connections in the future without user
                 // intervention.
                 mVm.setVpnPackageAuthorization(mPackage, UserHandle.myUserId(), mVpnType);
+                mVm.setAlwaysOnVpnPackageForUser(UserHandle.myUserId(), mPackage,
+                        true /* lockdownEnabled */, null);
                 setResult(RESULT_OK);
             }
         } catch (Exception e) {
