@@ -121,7 +121,8 @@ public final class GmsDynamiteClientHooks {
         final String path = file.getPath();
 
         if (enabled && path.startsWith(gmsCoreDataPrefix)) {
-            return new File(modulePathToFdPath(path)).lastModified();
+            String fdPath = "/proc/self/fd/" + modulePathToFd(path).getInt$();
+            return new File(fdPath).lastModified();
         }
         return 0L;
     }
@@ -157,7 +158,7 @@ public final class GmsDynamiteClientHooks {
                 filePath = pathPart;
                 nativeLibRelPath = null;
             }
-            String fdFilePath = modulePathToFdPath(filePath);
+            String fdFilePath = "/gmscompat_fd_" + modulePathToFd(filePath).getInt$();
 
             pathParts[i] = nativeLibsPath ?
                 fdFilePath + zipFileSeparator + nativeLibRelPath :
@@ -169,11 +170,6 @@ public final class GmsDynamiteClientHooks {
             return path;
         }
         return String.join(File.pathSeparator, pathParts);
-    }
-
-    private static String modulePathToFdPath(String path) {
-        FileDescriptor fd = modulePathToFd(path);
-        return "/proc/self/fd/" + fd.getInt$();
     }
 
     // Returned file descriptor should never be closed, because it may be dup()-ed at any time by the native code
