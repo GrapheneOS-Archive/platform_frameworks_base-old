@@ -302,6 +302,10 @@ message SystemMessage {
     // Package: android
     NOTE_BT_APM_NOTIFICATION = 74;
 
+    // Inform the user that the device appears to be a prototype.
+    // Package: android
+    NOTE_PROTOTYPE_DETECTED = 75;
+
     // ADD_NEW_IDS_ABOVE_THIS_LINE
     // Legacy IDs with arbitrary values appear below
     // Legacy IDs existed as stable non-conflicting constants prior to the O release
