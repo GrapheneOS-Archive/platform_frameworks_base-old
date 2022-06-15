@@ -5169,6 +5169,8 @@ public class ActivityManagerService extends IActivityManager.Stub
         // UART is on if init's console service is running, send a warning notification.
         showConsoleNotificationIfActive();
         showMteOverrideNotificationIfActive();
+        // If device is not a mass production (MP) variant, send a warning notification.
+        showPrototypeNotificationIfPrototype();
 
         t.traceEnd();
     }
@@ -5190,6 +5192,55 @@ public class ActivityManagerService extends IActivityManager.Stub
             isEnabled = true;
         }
         return isEnabled;
+    }
+
+    private static boolean isPixelDevice() {
+        String[] pixelDevices = {"bluejay", "raven", "oriole", "barbet", "redfin", "bramble", "sunfish", "coral", "flame"};
+        for (String x : pixelDevices) {
+            if (x.equals(Build.DEVICE)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean isPrototypeDevice() {
+        // Check if device is a Pixel phone, since other OEMs may deal with hardware revisions differently
+        //
+        // MP1.0 is what all 3rd generation and newer Pixel devices have as their mass production revision.
+        // Account for future mass production device revisions by only checking for "MP".
+        // All devices with a blown secure boot fuse will have the bootloader report ro.boot.secure_boot as being in PRODUCTION mode.
+        // Engineering devices typically don't have a blown secure boot fuse as they are used for firmware development.
+        return isPixelDevice() && (!SystemProperties.get("ro.revision").contains("MP") || !SystemProperties.get("ro.boot.secure_boot").equals("PRODUCTION"));
+    }
+
+    private void showPrototypeNotificationIfPrototype() {
+        if (!isPrototypeDevice()) {
+            return;
+        }
+        String title = mContext
+                .getString(com.android.internal.R.string.prototype_device_notification_title);
+        String message = mContext
+                .getString(com.android.internal.R.string.prototype_device_notification_message);
+        Notification notification =
+                new Notification.Builder(mContext, SystemNotificationChannels.DEVELOPER)
+                        .setSmallIcon(com.android.internal.R.drawable.stat_sys_adb)
+                        .setWhen(0)
+                        .setOngoing(true)
+                        .setTicker(title)
+                        .setDefaults(0)  // please be quiet
+                        .setColor(mContext.getColor(
+                                com.android.internal.R.color
+                                        .system_notification_accent_color))
+                        .setContentTitle(title)
+                        .setContentText(message)
+                        .setVisibility(Notification.VISIBILITY_PUBLIC)
+                        .build();
+
+        NotificationManager notificationManager =
+                mContext.getSystemService(NotificationManager.class);
+        notificationManager.notifyAsUser(
+                null, SystemMessage.NOTE_PROTOTYPE_DETECTED, notification, UserHandle.ALL);
     }
 
     private void showConsoleNotificationIfActive() {
