@@ -290,6 +290,10 @@ message SystemMessage {
     // Package: android
     NOTE_REVIEW_NOTIFICATION_PERMISSIONS = 71;
 
+    // Inform the user that the device appears to be a prototype.
+    // Package: android
+    NOTE_PROTOTYPE_DETECTED = 72;
+
     // ADD_NEW_IDS_ABOVE_THIS_LINE
     // Legacy IDs with arbitrary values appear below
     // Legacy IDs existed as stable non-conflicting constants prior to the O release
