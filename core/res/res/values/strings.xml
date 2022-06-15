@@ -3728,6 +3728,11 @@
     <!-- Message of notification shown when serial console is enabled. [CHAR LIMIT=NONE] -->
     <string name="console_running_notification_message">Performance is impacted. To disable, check bootloader.</string>
 
+    <!-- Title of notification shown when a prototype device is detected. [CHAR LIMIT=NONE] -->
+    <string name="prototype_device_notification_title">Device is an engineering prototype</string>
+    <!-- Message of notification shown when a prototype device is detected. [CHAR LIMIT=NONE] -->
+    <string name="prototype_device_notification_message">Device security may be affected.</string>
+
     <!-- Title of notification shown when contaminant is detected on the USB port. [CHAR LIMIT=NONE] -->
     <string name="usb_contaminant_detected_title">Liquid or debris in USB port</string>
     <!-- Message of notification shown when contaminant is detected on the USB port. [CHAR LIMIT=NONE] -->
