@@ -1256,6 +1256,14 @@ public abstract class ContentResolver implements ContentInterface {
             final CursorWrapperInner wrapper = new CursorWrapperInner(qCursor, provider);
             stableProvider = null;
             qCursor = null;
+
+            if (GmsCompat.isEnabled()) {
+                Cursor modified = GmsHooks.maybeModifyQueryResult(uri, projection, wrapper);
+                if (modified != null) {
+                    return modified;
+                }
+            }
+
             return wrapper;
         } catch (RemoteException e) {
             // Arbitrary and not worth documenting, as Activity
