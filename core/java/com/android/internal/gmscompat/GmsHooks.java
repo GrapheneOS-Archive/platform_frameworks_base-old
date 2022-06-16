@@ -226,6 +226,45 @@ public final class GmsHooks {
         return null;
     }
 
+    // ContentResolver#query(Uri, String[], Bundle, CancellationSignal)
+    public static Cursor maybeModifyQueryResult(Uri uri, String[] projection, Cursor origCursor) {
+        if (!"content://com.google.android.gms.phenotype/com.google.android.gms.fido".equals(uri.toString())) {
+            return null;
+        }
+
+        final int keyIndex = 0;
+        final int valueIndex = 1;
+        final int projectionLength = 2;
+
+        boolean expectedProjection = projection != null && projection.length == projectionLength
+                && "key".equals(projection[keyIndex]) && "value".equals(projection[valueIndex]);
+
+        if (!expectedProjection) {
+            Log.e(TAG, "unexpected projection " + Arrays.toString(projection), new Throwable());
+            return null;
+        }
+
+        MatrixCursor result = new MatrixCursor(projection, origCursor.getCount());
+
+        try (Cursor orig = origCursor) {
+            while (orig.moveToNext()) {
+                String key = orig.getString(keyIndex);
+                String value = orig.getString(valueIndex);
+
+                if ("Fido2ApiKnownBrowsers__fingerprints".equals(key)) {
+                    // SHA-256 of the Vanadium signature (PackageInfo.signatures[0].toByteArray())
+                    value += ",C6ADB8B83C6D4C17D292AFDE56FD488A51D316FF8F2C11C5410223BFF8A7DBB3";
+                }
+
+                Object[] row = new Object[projectionLength];
+                row[keyIndex] = key;
+                row[valueIndex] = value;
+                result.addRow(row);
+            }
+            return result;
+        }
+    }
+
     // Instrumentation#execStartActivity(Context, IBinder, IBinder, Activity, Intent, int, Bundle)
     public static void onActivityStart(int resultCode, Intent intent, Bundle options) {
         if (resultCode != ActivityManager.START_ABORTED) {
