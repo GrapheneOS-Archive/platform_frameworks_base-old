@@ -30,6 +30,7 @@ import com.android.systemui.qs.external.CustomTile;
 import com.android.systemui.qs.tiles.AirplaneModeTile;
 import com.android.systemui.qs.tiles.AlarmTile;
 import com.android.systemui.qs.tiles.BatterySaverTile;
+import com.android.systemui.qs.tiles.BatteryShareTile;
 import com.android.systemui.qs.tiles.BluetoothTile;
 import com.android.systemui.qs.tiles.CameraToggleTile;
 import com.android.systemui.qs.tiles.CastTile;
@@ -82,6 +83,7 @@ public class QSFactoryImpl implements QSFactory {
     private final Provider<CastTile> mCastTileProvider;
     private final Provider<HotspotTile> mHotspotTileProvider;
     private final Provider<BatterySaverTile> mBatterySaverTileProvider;
+    private final Provider<BatteryShareTile> mBatteryShareTileProvider;
     private final Provider<DataSaverTile> mDataSaverTileProvider;
     private final Provider<NightDisplayTile> mNightDisplayTileProvider;
     private final Provider<NfcTile> mNfcTileProvider;
@@ -118,6 +120,7 @@ public class QSFactoryImpl implements QSFactory {
             Provider<CastTile> castTileProvider,
             Provider<HotspotTile> hotspotTileProvider,
             Provider<BatterySaverTile> batterySaverTileProvider,
+            Provider<BatteryShareTile> batteryShareTileProvider,
             Provider<DataSaverTile> dataSaverTileProvider,
             Provider<NightDisplayTile> nightDisplayTileProvider,
             Provider<NfcTile> nfcTileProvider,
@@ -150,6 +153,7 @@ public class QSFactoryImpl implements QSFactory {
         mCastTileProvider = castTileProvider;
         mHotspotTileProvider = hotspotTileProvider;
         mBatterySaverTileProvider = batterySaverTileProvider;
+        mBatteryShareTileProvider = batteryShareTileProvider;
         mDataSaverTileProvider = dataSaverTileProvider;
         mNightDisplayTileProvider = nightDisplayTileProvider;
         mNfcTileProvider = nfcTileProvider;
@@ -210,6 +214,8 @@ public class QSFactoryImpl implements QSFactory {
                 return mHotspotTileProvider.get();
             case "battery":
                 return mBatterySaverTileProvider.get();
+            case "batteryShare":
+                return mBatteryShareTileProvider.get();
             case "saver":
                 return mDataSaverTileProvider.get();
             case "night":
