@@ -1479,6 +1479,7 @@
 
     <!-- Title of switch for battery saver [CHAR LIMIT=NONE] -->
     <string name="battery_detail_switch_title">Battery Saver</string>
+    <string name="battery_share_switch_title">Battery Share</string>
 
     <!-- Summary of switch for battery saver [CHAR LIMIT=NONE] -->
 
