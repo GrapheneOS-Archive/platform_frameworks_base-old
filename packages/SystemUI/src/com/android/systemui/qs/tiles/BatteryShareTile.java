@@ -121,7 +121,7 @@ public class BatteryShareTile extends SecureQSTile<BooleanState> {
 
     @Override
     public CharSequence getTileLabel() {
-        return mContext.getString(R.string.battery_detail_switch_title);
+        return mContext.getString(R.string.battery_share_switch_title);
     }
 
     private int getAvailableStatus() {
