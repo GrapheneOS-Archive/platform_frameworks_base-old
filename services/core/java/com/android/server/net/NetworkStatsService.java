@@ -89,6 +89,8 @@ import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.database.ContentObserver;
+import android.net.ConnectivityManager;
+import android.net.ConnectivityManager.NetworkCallback;
 import android.net.DataUsageRequest;
 import android.net.INetworkManagementEventObserver;
 import android.net.INetworkStatsService;
@@ -96,7 +98,7 @@ import android.net.INetworkStatsSession;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkIdentity;
-import android.net.NetworkInfo;
+import android.net.NetworkRequest;
 import android.net.NetworkSpecifier;
 import android.net.NetworkStack;
 import android.net.NetworkStateSnapshot;
@@ -453,22 +455,36 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
         mContentObserver = mDeps.makeContentObserver(mHandler, mSettings,
                 mNetworkStatsSubscriptionsMonitor);
         IntentFilter wifiFilter = new IntentFilter();
-        wifiFilter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
         wifiFilter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
 
         context.registerReceiver(
                 new BroadcastReceiver() {
                     @Override
                     public void onReceive(Context context, Intent intent) {
-                        if (WifiManager.NETWORK_STATE_CHANGED_ACTION.equals(intent.getAction())) {
-                            Bundle bundle = intent.getExtras();
-                            NetworkInfo networkInfo = bundle.getParcelable(WifiManager.EXTRA_NETWORK_INFO);
-                            isWifiConnected = networkInfo != null && networkInfo.isConnected();
-                        }
                         reconfigureWiFiTimeoutListener();
                     }
                 }, wifiFilter
         );
+
+        ConnectivityManager connectivityManager = (ConnectivityManager) mContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkRequest wifiRequest = new NetworkRequest.Builder()
+                .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+                .addTransportType(NetworkCapabilities.TRANSPORT_WIFI_AWARE)
+                .build();
+
+        connectivityManager.registerNetworkCallback(
+                wifiRequest,
+                new NetworkCallback() {
+                    @Override
+                    public void onAvailable(Network network) {
+                        isWifiConnected = true;
+                    }
+
+                    @Override
+                    public void onLost(Network network) {
+                        isWifiConnected = false;
+                    }
+                });
 
         context.getContentResolver().registerContentObserver(
                 Global.getUriFor(Global.WIFI_OFF_TIMEOUT),
