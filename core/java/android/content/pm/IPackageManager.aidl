@@ -809,4 +809,8 @@ interface IPackageManager {
     ParceledListSlice queryProperty(String propertyName, int componentType);
 
     void setKeepUninstalledPackages(in List<String> packageList);
+
+    android.content.pm.GosPackageState getGosPackageState(String packageName, int userId);
+
+    android.content.pm.GosPackageState setGosPackageState(String packageName, int flags, in byte[] storageScopes, boolean killUid, int userId);
 }

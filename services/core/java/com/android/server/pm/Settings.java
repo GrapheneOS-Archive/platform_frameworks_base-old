@@ -39,6 +39,7 @@ import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.ComponentInfo;
+import android.content.pm.GosPackageStatePm;
 import android.content.pm.IntentFilterVerificationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManagerInternal;
@@ -981,7 +982,8 @@ public final class Settings implements Watchable, Snappable {
                                 PackageManager.INSTALL_REASON_UNKNOWN,
                                 PackageManager.UNINSTALL_REASON_UNKNOWN,
                                 null, /*harmfulAppWarning*/
-                                null /*splashscreenTheme*/
+                                null, /*splashscreenTheme*/
+                                null /*gosPackageState*/
                         );
                     }
                 }
@@ -1622,7 +1624,8 @@ public final class Settings implements Watchable, Snappable {
                                 PackageManager.INSTALL_REASON_UNKNOWN,
                                 PackageManager.UNINSTALL_REASON_UNKNOWN,
                                 null /*harmfulAppWarning*/,
-                                null /* splashScreenTheme*/);
+                                null, /* splashScreenTheme*/
+                                null /*gosPackageState*/);
                     }
                     return;
                 }
@@ -1713,6 +1716,8 @@ public final class Settings implements Watchable, Snappable {
                     final String splashScreenTheme = parser.getAttributeValue(null,
                             ATTR_SPLASH_SCREEN_THEME);
 
+                    final GosPackageStatePm gosPackageState = GosPackageStatePmHooks.deserialize(parser);
+
                     ArraySet<String> enabledComponents = null;
                     ArraySet<String> disabledComponents = null;
                     PersistableBundle suspendedAppExtras = null;
@@ -1785,7 +1790,7 @@ public final class Settings implements Watchable, Snappable {
                             hidden, distractionFlags, suspended, suspendParamsMap,
                             instantApp, virtualPreload, enabledCaller, enabledComponents,
                             disabledComponents, installReason, uninstallReason, harmfulAppWarning,
-                            splashScreenTheme);
+                            splashScreenTheme, gosPackageState);
 
                     mDomainVerificationManager.setLegacyUserState(name, userId, verifState);
                 } else if (tagName.equals("preferred-activities")) {
@@ -2049,6 +2054,9 @@ public final class Settings implements Watchable, Snappable {
                     serializer.attribute(null, ATTR_SPLASH_SCREEN_THEME,
                             ustate.splashScreenTheme);
                 }
+
+                GosPackageStatePmHooks.serialize(ustate, serializer);
+
                 if (ustate.suspended) {
                     for (int i = 0; i < ustate.suspendParams.size(); i++) {
                         final String suspendingPackage = ustate.suspendParams.keyAt(i);
