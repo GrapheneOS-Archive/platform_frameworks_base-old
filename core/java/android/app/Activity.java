@@ -148,6 +148,7 @@ import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.app.IVoiceInteractor;
 import com.android.internal.app.ToolbarActionBar;
 import com.android.internal.app.WindowDecorActionBar;
+import com.android.internal.app.StorageScopesAppHooks;
 import com.android.internal.gmscompat.GmsHooks;
 import com.android.internal.gmscompat.PlayStoreHooks;
 import com.android.internal.policy.PhoneWindow;
@@ -8543,6 +8544,7 @@ public class Activity extends ContextThemeWrapper
                 PackageManager.EXTRA_REQUEST_PERMISSIONS_NAMES) : new String[0];
         final int[] grantResults = (data != null) ? data.getIntArrayExtra(
                 PackageManager.EXTRA_REQUEST_PERMISSIONS_RESULTS) : new int[0];
+        StorageScopesAppHooks.maybeSpoofSelfPermissionChecks(permissions, grantResults);
         onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
@@ -8553,6 +8555,7 @@ public class Activity extends ContextThemeWrapper
                 PackageManager.EXTRA_REQUEST_PERMISSIONS_NAMES) : new String[0];
         final int[] grantResults = (data != null) ? data.getIntArrayExtra(
                 PackageManager.EXTRA_REQUEST_PERMISSIONS_RESULTS) : new int[0];
+        StorageScopesAppHooks.maybeSpoofSelfPermissionChecks(permissions, grantResults);
         fragment.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
