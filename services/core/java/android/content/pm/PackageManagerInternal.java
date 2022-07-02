@@ -1161,4 +1161,7 @@ public abstract class PackageManagerInternal implements PackageSettingsSnapshotP
      * @return the number of freed bytes or -1 if there was an error in the process.
      */
     public abstract long deleteOatArtifactsOfPackage(String packageName);
+
+    @Nullable
+    public abstract GosPackageState getGosPackageState(String packageName, int userId);
 }
