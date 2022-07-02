@@ -122,6 +122,7 @@ import android.util.Log;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.Immutable;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.internal.app.StorageScopesAppHooks;
 import com.android.internal.gmscompat.GmsInfo;
 import com.android.internal.os.SomeArgs;
 import com.android.internal.util.UserIcons;
@@ -741,14 +742,21 @@ public class ApplicationPackageManager extends PackageManager {
     public int checkPermission(String permName, String pkgName) {
         int res = PermissionManager.checkPackageNamePermission(permName, pkgName, getUserId());
         if (res != PERMISSION_GRANTED) {
+            // don't rely on Context.getPackageName(), may be different from process package name
+            if (!pkgName.equals(ActivityThread.currentPackageName())) {
+                return res;
+            }
+
             // some Microsoft apps crash when INTERNET permission check fails, see
             // com.microsoft.aad.adal.AuthenticationContext.checkInternetPermission() and
             // com.microsoft.identity.client.PublicClientApplication.checkInternetPermission()
             if (Manifest.permission.INTERNET.equals(permName)
-                    // don't rely on Context.getPackageName(), may be different from process package name
-                    && pkgName.equals(ActivityThread.currentPackageName())
                     && pkgName.startsWith("com.microsoft"))
             {
+                return PERMISSION_GRANTED;
+            }
+
+            if (StorageScopesAppHooks.shouldSpoofSelfPermissionCheck(permName)) {
                 return PERMISSION_GRANTED;
             }
         }
