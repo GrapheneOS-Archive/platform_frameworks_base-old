@@ -94,6 +94,9 @@ public class PackageUserState {
     @Nullable
     private ArrayMap<ComponentName, Pair<String, Integer>> componentLabelIconOverrideMap;
 
+    @Nullable
+    public GosPackageStatePm gosPackageState;
+
     @UnsupportedAppUsage
     public PackageUserState() {
         installed = true;
@@ -132,6 +135,7 @@ public class PackageUserState {
             this.componentLabelIconOverrideMap = new ArrayMap<>(o.componentLabelIconOverrideMap);
         }
         splashScreenTheme = o.splashScreenTheme;
+        gosPackageState = o.gosPackageState;
     }
 
     @Nullable
@@ -489,6 +493,10 @@ public class PackageUserState {
         if (!Objects.equals(splashScreenTheme, oldState.splashScreenTheme)) {
             return false;
         }
+
+        if (!Objects.equals(gosPackageState, oldState.gosPackageState)) {
+            return false;
+        }
         return true;
     }
 
@@ -513,6 +521,7 @@ public class PackageUserState {
         hashCode = 31 * hashCode + Objects.hashCode(enabledComponents);
         hashCode = 31 * hashCode + Objects.hashCode(harmfulAppWarning);
         hashCode = 31 * hashCode + Objects.hashCode(splashScreenTheme);
+        hashCode = 31 * hashCode + Objects.hashCode(gosPackageState);
         return hashCode;
     }
 
