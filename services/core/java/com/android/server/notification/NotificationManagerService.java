@@ -1821,8 +1821,11 @@ public class NotificationManagerService extends SystemService {
                 return;
             }
 
+            final boolean canSwitch = mUm.isUserSwitcherEnabled()
+                    && mUm.getUserSwitchability() == UserManager.SWITCHABILITY_STATUS_OK;
+
             final int userIdToSwitchTo = intent.getIntExtra(EXTRA_SWITCH_USER_USERID, -1);
-            if (userIdToSwitchTo >= 0) {
+            if (userIdToSwitchTo >= 0 && canSwitch) {
                 try {
                     ActivityManager.getService().switchUser(userIdToSwitchTo);
                 } catch (RemoteException re) {
@@ -7375,7 +7378,7 @@ public class NotificationManagerService extends SystemService {
                                 | Intent.FLAG_RECEIVER_EXCLUDE_BACKGROUND);
             final PendingIntent pendingIntentSwitchUser = PendingIntent.getBroadcast(getContext(),
                     originalUserId, intent, PendingIntent.FLAG_UPDATE_CURRENT
-                            | PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_ONE_SHOT);
+                            | PendingIntent.FLAG_IMMUTABLE);
 
             // We use the group alert behavior and the fact that the summary will never make
             // an audible alert to control whether censored notifications will make noise.
