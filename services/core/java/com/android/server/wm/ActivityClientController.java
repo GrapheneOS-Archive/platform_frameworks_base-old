@@ -624,6 +624,11 @@ class ActivityClientController extends IActivityClientController.Stub {
         if (callingPkg.isSignedWithPlatformKey()) {
             return true;
         }
+        // Applied shim for usability of checking calling app's permission.
+        if (android.app.compat.browser.BrowserCompat.isOsSignedBrowser(
+                    callingPkg.getPackageName(), UserHandle.getUserId(uid))) {
+            return true;
+        }
         final String[] installerNames = pm.getKnownPackageNames(
                 PackageManagerInternal.PACKAGE_INSTALLER, UserHandle.getUserId(uid));
         return installerNames.length > 0 && callingPkg.getPackageName().equals(installerNames[0]);

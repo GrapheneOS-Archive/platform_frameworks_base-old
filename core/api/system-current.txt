@@ -1272,6 +1272,14 @@ package android.app.compat {
 
 }
 
+package android.app.compat.browser {
+
+  public final class BrowserCompat {
+    method public static boolean isOsSignedBrowser(@NonNull String, int);
+  }
+
+}
+
 package android.app.compat.gms {
 
   public final class GmsCompat {
