@@ -7938,6 +7938,15 @@ public class Activity extends ContextThemeWrapper
         return null;
     }
 
+    @Override
+    public int checkCallingPermission(@Nullable String permission) {
+        if (!permission.equals(android.Manifest.permission.INTERNET)) {
+            return super.checkCallingPermission(permission);
+        }
+        final int uid = getLaunchedFromUid();
+        return checkPermission(permission, -1, uid);
+     }
+
     // ------------------ Internal API ------------------
 
     @UnsupportedAppUsage(maxTargetSdk = Build.VERSION_CODES.P, trackingBug = 115609023)
