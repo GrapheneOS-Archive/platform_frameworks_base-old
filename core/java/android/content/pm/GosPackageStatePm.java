@@ -20,6 +20,7 @@ import android.annotation.Nullable;
 
 import java.util.Arrays;
 
+import static android.content.pm.GosPackageState.FLAG_ALLOW_ACCESS_TO_OBB_DIRECTORY;
 import static android.content.pm.GosPackageState.FLAG_STORAGE_SCOPES_ENABLED;
 
 /**
@@ -83,7 +84,8 @@ public final class GosPackageStatePm {
         return new GosPackageState(flags, storageScopes, derivedFlags);
     }
 
-    private static final int FLAGS_VISIBLE_TO_THE_TARGET_PACKAGE = FLAG_STORAGE_SCOPES_ENABLED;
+    private static final int FLAGS_VISIBLE_TO_THE_TARGET_PACKAGE = FLAG_STORAGE_SCOPES_ENABLED
+            | FLAG_ALLOW_ACCESS_TO_OBB_DIRECTORY;
     private static final int DFLAGS_VISIBLE_TO_THE_TARGET_PACKAGE = -1;
 
     public GosPackageState externalVersionForTargetPackage(int derivedFlags) {
