@@ -40,6 +40,8 @@ public final class GosPackageState implements Parcelable {
     public final int derivedFlags; // derived from persistent state, but not persisted themselves
 
     public static final int FLAG_STORAGE_SCOPES_ENABLED = 1;
+    // checked only if REQUEST_INSTALL_PACKAGES permission is granted
+    public static final int FLAG_ALLOW_ACCESS_TO_OBB_DIRECTORY = 1 << 1;
 
     // to distinguish between the case when no dflags are set and the case when dflags weren't calculated yet
     public static final int DFLAGS_SET = 1;

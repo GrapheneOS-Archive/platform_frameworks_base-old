@@ -158,7 +158,9 @@ class GosPackageStatePmHooks {
             boolean allow = false;
             if (userId == UserHandle.getUserId(callingUid)) {
                 int callingAppId = UserHandle.getAppId(callingUid);
-                allow = callingAppId == pm.permissionControllerAppId;
+                allow = callingAppId == pm.permissionControllerAppId
+                        // appId of the Settings app is the same as SYSTEM_UID
+                        || callingAppId == Process.SYSTEM_UID;
             }
             if (!allow) {
                 throw new SecurityException();
