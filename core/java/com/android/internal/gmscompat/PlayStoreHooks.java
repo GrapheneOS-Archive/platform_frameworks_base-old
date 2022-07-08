@@ -27,6 +27,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.IntentSender;
+import android.content.pm.GosPackageState;
 import android.content.pm.IPackageDataObserver;
 import android.content.pm.IPackageDeleteObserver;
 import android.content.pm.PackageInstaller;
@@ -259,7 +260,10 @@ public final class PlayStoreHooks {
         String path = file.getPath();
 
         if (path.startsWith(obbDir) && !path.startsWith(playStoreObbDir)) {
-            if (!GmsCompat.hasPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            GosPackageState ps = GosPackageState.get(GmsCompat.appContext().getPackageName());
+            boolean hasObbAccess = ps != null && ps.hasFlag(GosPackageState.FLAG_ALLOW_ACCESS_TO_OBB_DIRECTORY);
+
+            if (!hasObbAccess) {
                 try {
                     GmsCompatApp.iGms2Gca().showPlayStoreMissingObbPermissionNotification();
                 } catch (RemoteException e) {
