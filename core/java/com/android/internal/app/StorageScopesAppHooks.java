@@ -19,10 +19,17 @@ package com.android.internal.app;
 import android.Manifest;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.app.AppGlobals;
 import android.app.AppOpsManager;
+import android.content.Context;
+import android.content.Intent;
 import android.content.pm.GosPackageState;
 import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Environment;
 import android.os.Process;
+import android.provider.MediaStore;
+import android.provider.Settings;
 
 import static android.content.pm.GosPackageState.*;
 
@@ -162,6 +169,64 @@ public class StorageScopesAppHooks {
         }
 
         return uid == myUid && uid != Process.SYSTEM_UID;
+    }
+
+    // Instrumentation#execStartActivity(Context, IBinder, IBinder, Activity, Intent, int, Bundle)
+    public static void maybeModifyActivityIntent(Context ctx, Intent i) {
+        String action = i.getAction();
+        if (action == null) {
+            return;
+        }
+
+        int op;
+        switch (action) {
+            case Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION:
+                op = AppOpsManager.OP_MANAGE_EXTERNAL_STORAGE;
+                break;
+            case Settings.ACTION_REQUEST_MANAGE_MEDIA:
+                op = AppOpsManager.OP_MANAGE_MEDIA;
+                break;
+            default:
+                return;
+        }
+
+        Uri uri = i.getData();
+        if (uri == null || !"package".equals(uri.getScheme())) {
+            return;
+        }
+
+        String pkgName = uri.getSchemeSpecificPart();
+
+        if (pkgName == null) {
+            return;
+        }
+
+        if (!pkgName.equals(AppGlobals.getInitialPackage())) {
+            return;
+        }
+
+        int uid = Process.myUid();
+
+        if (!isSpoofingAllowed(uid)) {
+            return;
+        }
+
+        boolean shouldModify = false;
+
+        if (shouldSpoofAppOpCheck(op, uid)) {
+            // in case a buggy app launches intent again despite pseudo-having the permission
+            shouldModify = true;
+        } else {
+            if (op == AppOpsManager.OP_MANAGE_EXTERNAL_STORAGE) {
+                shouldModify = !Environment.isExternalStorageManager();
+            } else if (op == AppOpsManager.OP_MANAGE_MEDIA) {
+                shouldModify = !MediaStore.canManageMedia(ctx);
+            }
+        }
+
+        if (shouldModify) {
+            i.setAction(action + "_PROMPT");
+        }
     }
 
     private StorageScopesAppHooks() {}
