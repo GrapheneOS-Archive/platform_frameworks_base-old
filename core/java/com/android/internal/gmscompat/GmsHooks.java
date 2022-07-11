@@ -259,6 +259,12 @@ public final class GmsHooks {
                     map.put("finsky.SelfUpdate__do_not_install", "1");
                     // don't re-download update files after failed self-update
                     map.put("finsky.SelfUpdate__self_update_download_max_valid_time_ms", "" + Long.MAX_VALUE);
+
+                    // Disable auto-deploying of packages (eg of AR Core ("Google Play Services for AR")).
+                    // By default, Play Store attempts to auto-deploy packages only if the device has
+                    // at least 1 GiB of free storage space.
+                    map.put("finsky.AutoUpdatePolicies__auto_deploy_disk_space_threshold_bytes",
+                            "" + Long.MAX_VALUE);
                 };
             }
         }
