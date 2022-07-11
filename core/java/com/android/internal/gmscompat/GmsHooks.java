@@ -247,6 +247,20 @@ public final class GmsHooks {
                     map.put(key, newValue);
                 };
             }
+        } else if (GmsCompat.isPlayStore()) {
+            if ("content://com.google.android.gsf.gservices/prefix".equals(uri.toString())) {
+                mutator = map -> {
+                    // Disables auto updates of GMS Core, not of all GMS components.
+                    // Updates that don't change version of GMS Core (eg downloading a new APK split
+                    // for new device locale) and manual updates are allowed
+                    map.put("finsky.AutoUpdateCodegen__gms_auto_update_enabled", "0");
+
+                    // prevent auto-updates of Play Store, self-update files are still downloaded
+                    map.put("finsky.SelfUpdate__do_not_install", "1");
+                    // don't re-download update files after failed self-update
+                    map.put("finsky.SelfUpdate__self_update_download_max_valid_time_ms", "" + Long.MAX_VALUE);
+                };
+            }
         }
 
         if (mutator != null) {
