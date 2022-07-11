@@ -448,15 +448,19 @@ public class PackageInstaller {
     public int createSession(@NonNull SessionParams params) throws IOException {
         if (GmsCompat.isPlayStore()) {
             String pkg = Objects.requireNonNull(params.appPackageName);
+            /*
+            GMS Core and Play Store aren't blocked here anymore, internal configuration of Play Store
+            is changed instead to prevent it from retrying failed updates.
+            Also, Play Store is able to update APK splits of GMS Core (eg when device switches to
+            a new locale) without updating GMS Core version.
+             */
             switch (pkg) {
                 case "app.attestation.auditor":
                 case GmsInfo.PACKAGE_GSF:
-                case GmsInfo.PACKAGE_GMS_CORE:
-                case GmsInfo.PACKAGE_PLAY_STORE:
                     ContentResolver cr = GmsCompat.appContext().getContentResolver();
                     String pref = "gmscompat_play_store_unrestrict_pkg_" + pkg;
                     if (Settings.Secure.getInt(cr, pref, 0) != 1) {
-                        throw new IllegalArgumentException("installation / updates of " + pkg + " are disallowed");
+                        throw new IOException("installation / updates of " + pkg + " are disallowed");
                     }
             }
         }
