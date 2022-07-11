@@ -1258,7 +1258,7 @@ public abstract class ContentResolver implements ContentInterface {
             qCursor = null;
 
             if (GmsCompat.isEnabled()) {
-                Cursor modified = GmsHooks.maybeModifyQueryResult(uri, projection, wrapper);
+                Cursor modified = GmsHooks.maybeModifyQueryResult(uri, wrapper);
                 if (modified != null) {
                     return modified;
                 }
