@@ -833,7 +833,6 @@ package android.app {
     field public static final String EXTERNAL_STORAGE_PROVIDER_METHOD_CONVERT_DOC_ID_TO_PATH = "StorageScopes_convertDocIdToPath";
     field public static final int FLAG_ALLOW_WRITES = 1; // 0x1
     field public static final int FLAG_IS_DIR = 2; // 0x2
-    field public static final String MEDIA_PROVIDER_METHOD_CONVERT_URI_TO_FILE_PATH = "StorageScopes_convertUriToFilePath";
     field public static final String MEDIA_PROVIDER_METHOD_INVALIDATE_MEDIA_PROVIDER_CACHE = "StorageScopes_invalidateCache";
     field public final int flags;
     field @NonNull public final String path;
