@@ -153,6 +153,5 @@ public final class StorageScope {
     }
 
     public static final String MEDIA_PROVIDER_METHOD_INVALIDATE_MEDIA_PROVIDER_CACHE = "StorageScopes_invalidateCache";
-    public static final String MEDIA_PROVIDER_METHOD_CONVERT_URI_TO_FILE_PATH = "StorageScopes_convertUriToFilePath";
     public static final String EXTERNAL_STORAGE_PROVIDER_METHOD_CONVERT_DOC_ID_TO_PATH = "StorageScopes_convertDocIdToPath";
 }
