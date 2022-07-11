@@ -43,6 +43,7 @@ import android.provider.BaseColumns;
 import android.provider.ContactsContract;
 import android.provider.Downloads;
 import android.provider.Settings;
+import android.util.ArrayMap;
 import android.util.Log;
 import android.util.SparseArray;
 import android.webkit.WebView;
@@ -52,6 +53,7 @@ import com.android.internal.gmscompat.client.ClientPriorityManager;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * API shims for GMS compatibility. Hooks that are more complicated than a simple
@@ -227,14 +229,39 @@ public final class GmsHooks {
     }
 
     // ContentResolver#query(Uri, String[], Bundle, CancellationSignal)
-    public static Cursor maybeModifyQueryResult(Uri uri, String[] projection, Cursor origCursor) {
-        if (!"content://com.google.android.gms.phenotype/com.google.android.gms.fido".equals(uri.toString())) {
-            return null;
+    public static Cursor maybeModifyQueryResult(Uri uri, Cursor origCursor) {
+        Consumer<ArrayMap<String, String>> mutator = null;
+
+        if (GmsCompat.isGmsCore()) {
+            if ("content://com.google.android.gms.phenotype/com.google.android.gms.fido".equals(uri.toString())) {
+                mutator = map -> {
+                    String key = "Fido2ApiKnownBrowsers__fingerprints";
+                    String origValue = map.get(key);
+
+                    if (origValue == null) {
+                        Log.w(TAG, key + " not found");
+                        return;
+                    }
+
+                    String newValue = origValue + ",C6ADB8B83C6D4C17D292AFDE56FD488A51D316FF8F2C11C5410223BFF8A7DBB3";
+                    map.put(key, newValue);
+                };
+            }
         }
 
+        if (mutator != null) {
+            return modifyKvCursor(origCursor, mutator);
+        }
+
+        return null;
+    }
+
+    private static Cursor modifyKvCursor(Cursor origCursor, Consumer<ArrayMap<String, String>> mutator) {
         final int keyIndex = 0;
         final int valueIndex = 1;
         final int projectionLength = 2;
+
+        String[] projection = origCursor.getColumnNames();
 
         boolean expectedProjection = projection != null && projection.length == projectionLength
                 && "key".equals(projection[keyIndex]) && "value".equals(projection[valueIndex]);
@@ -244,25 +271,31 @@ public final class GmsHooks {
             return null;
         }
 
-        MatrixCursor result = new MatrixCursor(projection, origCursor.getCount());
+        ArrayMap<String, String> map = new ArrayMap<>(origCursor.getColumnCount() + 10);
 
         try (Cursor orig = origCursor) {
             while (orig.moveToNext()) {
                 String key = orig.getString(keyIndex);
                 String value = orig.getString(valueIndex);
 
-                if ("Fido2ApiKnownBrowsers__fingerprints".equals(key)) {
-                    // SHA-256 of the Vanadium signature (PackageInfo.signatures[0].toByteArray())
-                    value += ",C6ADB8B83C6D4C17D292AFDE56FD488A51D316FF8F2C11C5410223BFF8A7DBB3";
-                }
-
-                Object[] row = new Object[projectionLength];
-                row[keyIndex] = key;
-                row[valueIndex] = value;
-                result.addRow(row);
+                map.put(key, value);
             }
-            return result;
         }
+
+        mutator.accept(map);
+
+        final int mapSize = map.size();
+        MatrixCursor result = new MatrixCursor(projection, mapSize);
+
+        for (int i = 0; i < mapSize; ++i) {
+            Object[] row = new Object[projectionLength];
+            row[keyIndex] = map.keyAt(i);
+            row[valueIndex] = map.valueAt(i);
+
+            result.addRow(row);
+        }
+
+        return result;
     }
 
     // Instrumentation#execStartActivity(Context, IBinder, IBinder, Activity, Intent, int, Bundle)
