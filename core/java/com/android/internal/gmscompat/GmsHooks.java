@@ -27,6 +27,7 @@ import android.app.BroadcastOptions;
 import android.app.PendingIntent;
 import android.app.compat.gms.GmsCompat;
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -250,15 +251,23 @@ public final class GmsHooks {
         } else if (GmsCompat.isPlayStore()) {
             if ("content://com.google.android.gsf.gservices/prefix".equals(uri.toString())) {
                 mutator = map -> {
+                    // same as in PackageInstaller#createSession
+                    final String prefPrefix = "gmscompat_play_store_unrestrict_pkg_";
+                    ContentResolver cr = GmsCompat.appContext().getContentResolver();
+
                     // Disables auto updates of GMS Core, not of all GMS components.
                     // Updates that don't change version of GMS Core (eg downloading a new APK split
                     // for new device locale) and manual updates are allowed
-                    map.put("finsky.AutoUpdateCodegen__gms_auto_update_enabled", "0");
+                    if (Settings.Secure.getInt(cr, prefPrefix + GmsInfo.PACKAGE_GMS_CORE, 0) != 1) {
+                        map.put("finsky.AutoUpdateCodegen__gms_auto_update_enabled", "0");
+                    }
 
-                    // prevent auto-updates of Play Store, self-update files are still downloaded
-                    map.put("finsky.SelfUpdate__do_not_install", "1");
-                    // don't re-download update files after failed self-update
-                    map.put("finsky.SelfUpdate__self_update_download_max_valid_time_ms", "" + Long.MAX_VALUE);
+                    if (Settings.Secure.getInt(cr, prefPrefix + GmsInfo.PACKAGE_PLAY_STORE, 0) != 1) {
+                        // prevent auto-updates of Play Store, self-update files are still downloaded
+                        map.put("finsky.SelfUpdate__do_not_install", "1");
+                        // don't re-download update files after failed self-update
+                        map.put("finsky.SelfUpdate__self_update_download_max_valid_time_ms", "" + Long.MAX_VALUE);
+                    }
 
                     // Disable auto-deploying of packages (eg of AR Core ("Google Play Services for AR")).
                     // By default, Play Store attempts to auto-deploy packages only if the device has
