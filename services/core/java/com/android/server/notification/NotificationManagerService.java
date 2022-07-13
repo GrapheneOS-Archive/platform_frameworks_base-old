@@ -7170,6 +7170,13 @@ public class NotificationManagerService extends SystemService {
             return CensoredSendState.DONT_SEND;
         }
 
+        // Handles cases where the notification being sent is a censored notification itself.
+        if (SystemNotificationChannels.OTHER_USERS.equals(record.getChannel().getId())) {
+            if (DBG) Slog.d(TAG, "not sending censored notif due to original being " +
+                    "censored notification itself");
+            return CensoredSendState.DONT_SEND;
+        }
+
         // Handles reoccurring update notifications (fixes issues like status update spamming).
         if (record.isUpdate && (record.getNotification().flags & FLAG_ONLY_ALERT_ONCE) != 0) {
             if (DBG) Slog.d(TAG, "not sending censored notif due to original being " +
