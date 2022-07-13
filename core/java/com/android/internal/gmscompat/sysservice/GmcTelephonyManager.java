@@ -21,12 +21,16 @@ import android.annotation.CallbackExecutor;
 import android.app.compat.gms.GmsCompat;
 import android.content.Context;
 import android.os.WorkSource;
+import android.telephony.TelephonyCallback;
 import android.telephony.TelephonyManager;
 import android.telephony.UiccSlotInfo;
+import android.util.Log;
 
 import java.util.concurrent.Executor;
 
 public class GmcTelephonyManager extends TelephonyManager {
+
+    private static final String TAG = "GmcTelephonyManager";
 
     public GmcTelephonyManager(Context ctx) {
         super(ctx);
@@ -105,7 +109,26 @@ public class GmcTelephonyManager extends TelephonyManager {
         try {
             return super.getGroupIdLevel1();
         } catch (SecurityException e) {
+            Log.d(TAG, "", e);
             return null;
+        }
+    }
+
+    @Override
+    public void registerTelephonyCallback(Executor executor, TelephonyCallback callback) {
+        try {
+            super.registerTelephonyCallback(executor, callback);
+        } catch (SecurityException e) { // requires READ_PHONE_STATE permission
+            Log.d(TAG, "", e);
+        }
+    }
+
+    @Override
+    public void unregisterTelephonyCallback(TelephonyCallback callback) {
+        try {
+            super.unregisterTelephonyCallback(callback);
+        } catch (SecurityException e) {
+            Log.d(TAG, "", e);
         }
     }
 }
