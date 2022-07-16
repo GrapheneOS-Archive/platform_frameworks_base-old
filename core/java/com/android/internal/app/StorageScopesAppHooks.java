@@ -24,7 +24,6 @@ import android.app.AppOpsManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.GosPackageState;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.Process;
@@ -36,7 +35,7 @@ import static android.content.pm.GosPackageState.*;
 public class StorageScopesAppHooks {
     private static final String TAG = "StorageScopesAppHooks";
 
-    private static int isSpoofableRuntimePermission(String permName) {
+    public static int getSpoofableRuntimePermissionDflag(String permName) {
         switch (permName) {
             case Manifest.permission.READ_EXTERNAL_STORAGE:
                 return DFLAG_HAS_READ_EXTERNAL_STORAGE_DECLARATION;
@@ -73,40 +72,11 @@ public class StorageScopesAppHooks {
     // android.app.ApplicationPackageManager#checkPermission(String permName, String pkgName)
     // android.app.ContextImpl#checkPermission(String permission, int pid, int uid)
     public static boolean shouldSpoofSelfPermissionCheck(@NonNull String permName) {
-        int permId = isSpoofableRuntimePermission(permName);
-        if (permId != 0) {
-            return shouldSpoofPermissionCheck(GosPackageState.getForSelf(), permId);
+        int permDflag = getSpoofableRuntimePermissionDflag(permName);
+        if (permDflag != 0) {
+            return shouldSpoofPermissionCheck(GosPackageState.getForSelf(), permDflag);
         }
         return false;
-    }
-
-    // android.app.Activity#dispatchRequestPermissionsResult(int, Intent)
-    // android.app.Activity#dispatchRequestPermissionsResultToFragment(int, Intent, Fragment)
-    public static void maybeSpoofSelfPermissionChecks(@NonNull String[] permissions, @NonNull int[] grantResults) {
-        boolean psObtained = false;
-        GosPackageState ps = null;
-
-        for (int i = 0; i < permissions.length; ++i) {
-            if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
-                String perm = permissions[i];
-                int permId = isSpoofableRuntimePermission(perm);
-                if (permId == 0) {
-                    continue;
-                }
-
-                if (!psObtained) {
-                    ps = GosPackageState.getForSelf();
-                    if (ps == null) {
-                        return;
-                    }
-                    psObtained = true;
-                }
-
-                if (shouldSpoofPermissionCheck(ps, permId)) {
-                    grantResults[i] = PackageManager.PERMISSION_GRANTED;
-                }
-            }
-        }
     }
 
     public static int isSpoofableAppOp(int op) {
