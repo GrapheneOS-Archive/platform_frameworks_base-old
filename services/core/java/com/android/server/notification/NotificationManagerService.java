@@ -7149,6 +7149,11 @@ public class NotificationManagerService extends SystemService {
             return CensoredSendState.DONT_SEND;
         }
 
+        if (userId == ActivityManager.getCurrentUser()) {
+            if (DBG) Slog.d(TAG, "not sending censored notif: notification is coming from (upcoming) foreground user");
+            return CensoredSendState.DONT_SEND;
+        }
+
         // Sending user has to opt in under Multiple users in Settings.
         final boolean userEnabledCensoredSending = Settings.Secure.getIntForUser(
                 getContext().getContentResolver(),
