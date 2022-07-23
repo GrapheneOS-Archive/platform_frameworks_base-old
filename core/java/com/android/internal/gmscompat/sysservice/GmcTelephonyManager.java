@@ -131,4 +131,24 @@ public class GmcTelephonyManager extends TelephonyManager {
             Log.d(TAG, "", e);
         }
     }
+
+    @Override
+    public int getCallState() {
+        try {
+            return super.getCallState();
+        } catch (SecurityException e) { // missing READ_PHONE_STATE permission
+            Log.d(TAG, "", e);
+            return TelephonyManager.CALL_STATE_IDLE;
+        }
+    }
+
+    @Override
+    public int getCallStateForSubscription() {
+        try {
+            return super.getCallStateForSubscription();
+        } catch (SecurityException e) {
+            Log.d(TAG, "", e);
+            return TelephonyManager.CALL_STATE_IDLE;
+        }
+    }
 }
