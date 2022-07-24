@@ -79,7 +79,6 @@ import android.os.UserHandle;
 import android.os.UserManager;
 import android.os.storage.StorageManager;
 import android.permission.PermissionManager;
-import com.android.internal.app.StorageScopesAppHooks;
 import android.system.ErrnoException;
 import android.system.Os;
 import android.system.OsConstants;
@@ -99,6 +98,7 @@ import com.android.internal.annotations.GuardedBy;
 import com.android.internal.gmscompat.BinderRedirector;
 import com.android.internal.gmscompat.sysservice.GmcPackageManager;
 import com.android.internal.gmscompat.GmsHooks;
+import com.android.internal.util.AppPermissionUtils;
 import com.android.internal.util.Preconditions;
 
 import dalvik.system.BlockGuard;
@@ -2172,7 +2172,7 @@ class ContextImpl extends Context {
 
         if (res != PERMISSION_GRANTED) {
             if (selfCheck) {
-                if (StorageScopesAppHooks.shouldSpoofSelfPermissionCheck(permission)) {
+                if (AppPermissionUtils.shouldSpoofSelfCheck(permission)) {
                     return PERMISSION_GRANTED;
                 }
             }
