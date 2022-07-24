@@ -432,6 +432,11 @@ public final class GmsHooks {
             return options;
         }
 
+        return filterBroadcastOptions(options, targetPkg);
+    }
+
+    // PendingIntent#send
+    public static Bundle filterBroadcastOptions(Bundle options, String targetPkg) {
         BroadcastOptions bo = new BroadcastOptions(options);
 
         if (bo.getTemporaryAppAllowlistType() == PowerExemptionManager.TEMPORARY_ALLOW_LIST_TYPE_NONE) {
