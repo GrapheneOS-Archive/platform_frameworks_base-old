@@ -29,7 +29,7 @@ import android.os.RemoteException;
 import android.os.UserHandle;
 import android.permission.PermissionManager;
 
-import com.android.internal.app.StorageScopesAppHooks;
+import com.android.internal.util.AppPermissionUtils;
 
 /**
  * @hide
@@ -146,7 +146,7 @@ public final class GosPackageState implements Parcelable {
 
     public boolean shouldSpoofPermissionCheck(@NonNull String perm) {
         if (hasFlag(FLAG_STORAGE_SCOPES_ENABLED)) {
-            int dflag = StorageScopesAppHooks.getSpoofableRuntimePermissionDflag(perm);
+            int dflag = AppPermissionUtils.getSpoofableStorageRuntimePermissionDflag(perm);
             if (dflag != 0 && hasDerivedFlag(dflag)) {
                 return true;
             }

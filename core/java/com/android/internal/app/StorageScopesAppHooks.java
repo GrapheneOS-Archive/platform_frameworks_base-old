@@ -16,7 +16,6 @@
 
 package com.android.internal.app;
 
-import android.Manifest;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.app.AppGlobals;
@@ -30,37 +29,12 @@ import android.os.Process;
 import android.provider.MediaStore;
 import android.provider.Settings;
 
+import com.android.internal.util.AppPermissionUtils;
+
 import static android.content.pm.GosPackageState.*;
 
 public class StorageScopesAppHooks {
     private static final String TAG = "StorageScopesAppHooks";
-
-    public static int getSpoofableRuntimePermissionDflag(String permName) {
-        switch (permName) {
-            case Manifest.permission.READ_EXTERNAL_STORAGE:
-                return DFLAG_HAS_READ_EXTERNAL_STORAGE_DECLARATION;
-
-            case Manifest.permission.WRITE_EXTERNAL_STORAGE:
-                return DFLAG_HAS_WRITE_EXTERNAL_STORAGE_DECLARATION;
-
-            case Manifest.permission.ACCESS_MEDIA_LOCATION:
-                return DFLAG_HAS_ACCESS_MEDIA_LOCATION_DECLARATION;
-
-            // TODO uncomment after rebase onto AOSP T
-            /*
-            case Manifest.permission.READ_MEDIA_AUDIO:
-                return DFLAG_HAS_READ_MEDIA_AUDIO_DECLARATION;
-
-            case Manifest.permission.READ_MEDIA_IMAGES:
-                return DFLAG_HAS_READ_MEDIA_IMAGES_DECLARATION;
-
-            case Manifest.permission.READ_MEDIA_VIDEO:
-                return DFLAG_HAS_READ_MEDIA_VIDEO_DECLARATION;
-             */
-            default:
-                return 0;
-        }
-    }
 
     private static boolean shouldSpoofPermissionCheck(@Nullable GosPackageState ps, int permDerivedFlag) {
         if (ps == null) {
@@ -69,10 +43,8 @@ public class StorageScopesAppHooks {
         return ps.hasFlag(FLAG_STORAGE_SCOPES_ENABLED) && ps.hasDerivedFlag(permDerivedFlag);
     }
 
-    // android.app.ApplicationPackageManager#checkPermission(String permName, String pkgName)
-    // android.app.ContextImpl#checkPermission(String permission, int pid, int uid)
     public static boolean shouldSpoofSelfPermissionCheck(@NonNull String permName) {
-        int permDflag = getSpoofableRuntimePermissionDflag(permName);
+        int permDflag = AppPermissionUtils.getSpoofableStorageRuntimePermissionDflag(permName);
         if (permDflag != 0) {
             return shouldSpoofPermissionCheck(GosPackageState.getForSelf(), permDflag);
         }
