@@ -232,8 +232,7 @@ public final class GmsCompat {
         return false;
     }
 
-    /** @hide */
-    public static boolean hasPermission(String perm) {
+    public static boolean hasPermission(@NonNull String perm) {
         return appContext().checkSelfPermission(perm) == PackageManager.PERMISSION_GRANTED;
     }
 }
