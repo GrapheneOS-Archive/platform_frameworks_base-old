@@ -29,8 +29,6 @@ import android.os.RemoteException;
 import android.os.UserHandle;
 import android.permission.PermissionManager;
 
-import com.android.internal.util.AppPermissionUtils;
-
 /**
  * @hide
  */

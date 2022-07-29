@@ -23,7 +23,7 @@ import android.os.Bundle;
 import com.android.internal.annotations.GuardedBy;
 import com.android.server.pm.parsing.pkg.AndroidPackage;
 
-import static com.android.internal.util.SpecialRuntimePermAppUtils.*;
+import static android.content.pm.SpecialRuntimePermAppUtils.*;
 
 public class SpecialRuntimePermUtils {
 

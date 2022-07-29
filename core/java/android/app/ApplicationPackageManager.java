@@ -42,6 +42,7 @@ import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ApkChecksum;
+import android.content.pm.AppPermissionUtils;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.ChangedPackages;
 import android.content.pm.Checksum;
@@ -123,7 +124,6 @@ import com.android.internal.annotations.Immutable;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.gmscompat.GmsInfo;
 import com.android.internal.os.SomeArgs;
-import com.android.internal.util.AppPermissionUtils;
 import com.android.internal.util.UserIcons;
 
 import dalvik.system.VMRuntime;

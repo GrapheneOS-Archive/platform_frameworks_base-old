@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.internal.util;
+package android.content.pm;
 
 import android.Manifest;
 
@@ -22,6 +22,7 @@ import com.android.internal.app.StorageScopesAppHooks;
 
 import static android.content.pm.GosPackageState.*;
 
+/** @hide */
 public class AppPermissionUtils {
 
     // android.app.ApplicationPackageManager#checkPermission(String permName, String pkgName)
