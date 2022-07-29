@@ -22,14 +22,13 @@ import android.app.AppGlobals;
 import android.app.AppOpsManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.AppPermissionUtils;
 import android.content.pm.GosPackageState;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.Process;
 import android.provider.MediaStore;
 import android.provider.Settings;
-
-import com.android.internal.util.AppPermissionUtils;
 
 import static android.content.pm.GosPackageState.*;
 

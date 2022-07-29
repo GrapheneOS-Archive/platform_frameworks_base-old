@@ -55,7 +55,7 @@ import android.util.LongSparseArray;
 import android.util.Pair;
 import android.webkit.MimeTypeMap;
 
-import com.android.internal.util.SpecialRuntimePermAppUtils;
+import android.content.pm.SpecialRuntimePermAppUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;

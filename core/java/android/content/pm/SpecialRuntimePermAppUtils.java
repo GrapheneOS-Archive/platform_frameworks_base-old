@@ -14,15 +14,18 @@
  * limitations under the License.
  */
 
-package com.android.internal.util;
+package android.content.pm;
 
 import android.Manifest;
+import android.annotation.SystemApi;
 import android.app.AppGlobals;
-import android.content.Context;
-import android.content.pm.IPackageManager;
-import android.content.pm.PackageManager;
+import android.os.Binder;
+import android.os.Process;
 import android.os.RemoteException;
+import android.permission.PermissionManager;
 
+/** @hide */
+@SystemApi
 public class SpecialRuntimePermAppUtils {
     private static final int FLAG_INITED = 1;
     public static final int FLAG_REQUESTS_INTERNET_PERMISSION = 1 << 1;
@@ -30,9 +33,10 @@ public class SpecialRuntimePermAppUtils {
 
     private static volatile int cachedFlags;
 
-    public static boolean hasInternetPermission() {
-        Context ctx = AppGlobals.getInitialApplication();
-        return ctx.checkSelfPermission(Manifest.permission.INTERNET) == PackageManager.PERMISSION_GRANTED;
+    private static boolean hasInternetPermission() {
+        // checkSelfPermission() is spoofed, query the underlying API directly
+        return PermissionManager.checkPermission(Manifest.permission.INTERNET, Process.myPid(), Process.myUid())
+                == PackageManager.PERMISSION_GRANTED;
     }
 
     public static boolean requestsInternetPermission() {
@@ -55,10 +59,16 @@ public class SpecialRuntimePermAppUtils {
 
         IPackageManager pm = AppGlobals.getPackageManager();
         String pkgName = AppGlobals.getInitialPackage();
+
+        final long token = Binder.clearCallingIdentity(); // in case this method is called in the system_server
         try {
             return (cachedFlags = pm.getSpecialRuntimePermissionFlags(pkgName) | FLAG_INITED);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
+        } finally {
+            Binder.restoreCallingIdentity(token);
         }
     }
+
+    private SpecialRuntimePermAppUtils() {}
 }

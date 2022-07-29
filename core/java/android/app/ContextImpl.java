@@ -46,6 +46,7 @@ import android.content.ReceiverCallNotAllowedException;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.content.pm.AppPermissionUtils;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.IPackageManager;
 import android.content.pm.PackageManager;
@@ -98,7 +99,6 @@ import com.android.internal.annotations.GuardedBy;
 import com.android.internal.gmscompat.BinderRedirector;
 import com.android.internal.gmscompat.sysservice.GmcPackageManager;
 import com.android.internal.gmscompat.GmsHooks;
-import com.android.internal.util.AppPermissionUtils;
 import com.android.internal.util.Preconditions;
 
 import dalvik.system.BlockGuard;
