@@ -32,6 +32,7 @@ import android.annotation.SystemApi;
 import android.app.ActivityThread;
 import android.app.PropertyInvalidatedCache;
 import android.app.compat.gms.GmsCompat;
+import android.app.compat.gms.GmsModuleHooks;
 import android.bluetooth.BluetoothDevice.Transport;
 import android.bluetooth.BluetoothProfile.ConnectionPolicy;
 import android.bluetooth.annotations.RequiresBluetoothAdvertisePermission;
@@ -66,7 +67,6 @@ import android.util.Log;
 import android.util.Pair;
 
 import com.android.internal.annotations.GuardedBy;
-import com.android.internal.gmscompat.GmsHooks;
 
 import java.io.IOException;
 import java.lang.annotation.Retention;
@@ -1039,7 +1039,7 @@ public final class BluetoothAdapter {
         }
 
         if (GmsCompat.isEnabled()) {
-            if (!GmsHooks.canEnableBluetoothAdapter()) {
+            if (!GmsModuleHooks.canEnableBluetoothAdapter()) {
                 return false;
             }
         }
@@ -1219,7 +1219,7 @@ public final class BluetoothAdapter {
         }
 
         if (GmsCompat.isEnabled()) {
-            if (!GmsHooks.canEnableBluetoothAdapter()) {
+            if (!GmsModuleHooks.canEnableBluetoothAdapter()) {
                 return false;
             }
         }
