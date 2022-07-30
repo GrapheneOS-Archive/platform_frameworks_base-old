@@ -75,6 +75,7 @@ import android.view.Display;
 import android.view.WindowManagerGlobal;
 
 import com.android.internal.R;
+import com.android.internal.app.StorageScopesAppHooks;
 
 import libcore.io.IoUtils;
 
@@ -782,6 +783,10 @@ public class WallpaperManager {
      */
     @RequiresPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE)
     public Drawable getDrawable() {
+        if (StorageScopesAppHooks.shouldSpoofSelfPermissionCheck(android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
+            return null;
+        }
+
         final ColorManagementProxy cmProxy = getColorManagementProxy();
         Bitmap bm = sGlobals.peekWallpaperBitmap(mContext, true, FLAG_SYSTEM, cmProxy);
         if (bm != null) {
@@ -1039,6 +1044,10 @@ public class WallpaperManager {
      */
     @RequiresPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE)
     public Drawable getFastDrawable() {
+        if (StorageScopesAppHooks.shouldSpoofSelfPermissionCheck(android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
+            return null;
+        }
+
         final ColorManagementProxy cmProxy = getColorManagementProxy();
         Bitmap bm = sGlobals.peekWallpaperBitmap(mContext, true, FLAG_SYSTEM, cmProxy);
         if (bm != null) {
@@ -1056,6 +1065,10 @@ public class WallpaperManager {
      */
     @RequiresPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE)
     public Drawable peekFastDrawable() {
+        if (StorageScopesAppHooks.shouldSpoofSelfPermissionCheck(android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
+            return null;
+        }
+
         final ColorManagementProxy cmProxy = getColorManagementProxy();
         Bitmap bm = sGlobals.peekWallpaperBitmap(mContext, false, FLAG_SYSTEM, cmProxy);
         if (bm != null) {
@@ -1152,6 +1165,10 @@ public class WallpaperManager {
      */
     @RequiresPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE)
     public ParcelFileDescriptor getWallpaperFile(@SetWallpaperFlags int which) {
+        if (StorageScopesAppHooks.shouldSpoofSelfPermissionCheck(android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
+            return null;
+        }
+
         return getWallpaperFile(which, mContext.getUserId());
     }
 
