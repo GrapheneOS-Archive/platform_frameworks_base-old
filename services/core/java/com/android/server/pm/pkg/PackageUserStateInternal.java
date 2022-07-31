@@ -49,4 +49,7 @@ public interface PackageUserStateInternal extends PackageUserState, FrameworkPac
 
     @Nullable
     Pair<String, Integer> getOverrideLabelIconForComponent(@NonNull ComponentName componentName);
+
+    @Nullable
+    GosPackageStatePm getGosPackageState();
 }
