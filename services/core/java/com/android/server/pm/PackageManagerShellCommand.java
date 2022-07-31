@@ -216,6 +216,8 @@ class PackageManagerShellCommand extends ShellCommand {
         final PrintWriter pw = getOutPrintWriter();
         try {
             switch (cmd) {
+                case "edit-gos-package-state":
+                    return GosPackageStatePmHooks.runShellCommand(this);
                 case "path":
                     return runPath();
                 case "dump":
