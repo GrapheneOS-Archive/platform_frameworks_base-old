@@ -35,6 +35,7 @@ import android.content.ServiceConnection;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ActivityPresentationInfo;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.GosPackageState;
 import android.content.pm.UserInfo;
 import android.net.Uri;
 import android.os.Bundle;
@@ -1224,4 +1225,6 @@ public abstract class ActivityManagerInternal {
      */
     @NonNull
     public abstract StatsEvent getCachedAppsHighWatermarkStats(int atomTag, boolean resetAfterPull);
+
+    public abstract void onGosPackageStateChanged(int uid, @Nullable GosPackageState state);
 }
