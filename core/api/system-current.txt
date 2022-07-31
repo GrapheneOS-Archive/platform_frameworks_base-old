@@ -3201,6 +3201,37 @@ package android.content.pm {
     method @NonNull public final int getType();
   }
 
+  public final class GosPackageState implements android.os.Parcelable {
+    method public static boolean attachableToPackage(@NonNull String);
+    method public int describeContents();
+    method @Nullable public static android.content.pm.GosPackageState get(@NonNull String);
+    method @Nullable public static android.content.pm.GosPackageState getForSelf();
+    method public boolean hasDerivedFlag(int);
+    method public boolean hasFlag(int);
+    method @CheckResult @NonNull public static android.content.pm.GosPackageState set(@NonNull String, int, @Nullable byte[], boolean);
+    method public boolean shouldSpoofPermissionCheck(@NonNull String);
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.content.pm.GosPackageState> CREATOR;
+    field public static final int DFLAGS_SET = 1; // 0x1
+    field public static final int DFLAG_EXPECTS_ACCESS_TO_MEDIA_FILES_ONLY = 4; // 0x4
+    field public static final int DFLAG_EXPECTS_ALL_FILES_ACCESS = 2; // 0x2
+    field public static final int DFLAG_EXPECTS_LEGACY_EXTERNAL_STORAGE = 4096; // 0x1000
+    field public static final int DFLAG_EXPECTS_STORAGE_WRITE_ACCESS = 8; // 0x8
+    field public static final int DFLAG_HAS_ACCESS_MEDIA_LOCATION_DECLARATION = 256; // 0x100
+    field public static final int DFLAG_HAS_MANAGE_EXTERNAL_STORAGE_DECLARATION = 64; // 0x40
+    field public static final int DFLAG_HAS_MANAGE_MEDIA_DECLARATION = 128; // 0x80
+    field public static final int DFLAG_HAS_READ_EXTERNAL_STORAGE_DECLARATION = 16; // 0x10
+    field public static final int DFLAG_HAS_READ_MEDIA_AUDIO_DECLARATION = 512; // 0x200
+    field public static final int DFLAG_HAS_READ_MEDIA_IMAGES_DECLARATION = 1024; // 0x400
+    field public static final int DFLAG_HAS_READ_MEDIA_VIDEO_DECLARATION = 2048; // 0x800
+    field public static final int DFLAG_HAS_WRITE_EXTERNAL_STORAGE_DECLARATION = 32; // 0x20
+    field public static final int FLAG_ALLOW_ACCESS_TO_OBB_DIRECTORY = 2; // 0x2
+    field public static final int FLAG_STORAGE_SCOPES_ENABLED = 1; // 0x1
+    field public final int derivedFlags;
+    field public final int flags;
+    field @Nullable public final byte[] storageScopes;
+  }
+
   public final class InstallationFile {
     method public long getLengthBytes();
     method public int getLocation();
