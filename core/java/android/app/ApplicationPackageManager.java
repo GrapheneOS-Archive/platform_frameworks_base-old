@@ -48,6 +48,7 @@ import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ApkChecksum;
+import android.content.pm.AppPermissionUtils;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.ChangedPackages;
 import android.content.pm.Checksum;
@@ -836,7 +837,17 @@ public class ApplicationPackageManager extends PackageManager {
 
     @Override
     public int checkPermission(String permName, String pkgName) {
-        return PermissionManager.checkPackageNamePermission(permName, pkgName, getUserId());
+        int res = PermissionManager.checkPackageNamePermission(permName, pkgName, getUserId());
+
+        if (res != PERMISSION_GRANTED) {
+            if (pkgName.equals(ActivityThread.currentPackageName())
+                    && AppPermissionUtils.shouldSpoofSelfCheck(permName))
+            {
+                return PERMISSION_GRANTED;
+            }
+        }
+
+        return res;
     }
 
     @Override
