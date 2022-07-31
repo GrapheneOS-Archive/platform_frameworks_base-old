@@ -85,6 +85,7 @@ import android.view.Display;
 import android.view.WindowManagerGlobal;
 
 import com.android.internal.R;
+import com.android.internal.app.StorageScopesAppHooks;
 
 import libcore.io.IoUtils;
 
@@ -967,6 +968,10 @@ public class WallpaperManager {
     @Nullable
     @RequiresPermission(anyOf = {MANAGE_EXTERNAL_STORAGE, READ_WALLPAPER_INTERNAL})
     public Drawable getDrawable(@SetWallpaperFlags int which) {
+        if (StorageScopesAppHooks.shouldSpoofSelfPermissionCheck(android.Manifest.permission.MANAGE_EXTERNAL_STORAGE)) {
+            return null;
+        }
+
         final ColorManagementProxy cmProxy = getColorManagementProxy();
         boolean returnDefault = which != FLAG_LOCK;
         Bitmap bm = sGlobals.peekWallpaperBitmap(mContext, returnDefault, which, cmProxy);
@@ -1296,6 +1301,10 @@ public class WallpaperManager {
     @Nullable
     @RequiresPermission(anyOf = {MANAGE_EXTERNAL_STORAGE, READ_WALLPAPER_INTERNAL})
     public Drawable getFastDrawable(@SetWallpaperFlags int which) {
+        if (StorageScopesAppHooks.shouldSpoofSelfPermissionCheck(android.Manifest.permission.MANAGE_EXTERNAL_STORAGE)) {
+            return null;
+        }
+
         final ColorManagementProxy cmProxy = getColorManagementProxy();
         boolean returnDefault = which != FLAG_LOCK;
         Bitmap bm = sGlobals.peekWallpaperBitmap(mContext, returnDefault, which, cmProxy);
@@ -1544,6 +1553,10 @@ public class WallpaperManager {
     @Nullable
     @RequiresPermission(anyOf = {MANAGE_EXTERNAL_STORAGE, READ_WALLPAPER_INTERNAL})
     public ParcelFileDescriptor getWallpaperFile(@SetWallpaperFlags int which) {
+        if (StorageScopesAppHooks.shouldSpoofSelfPermissionCheck(android.Manifest.permission.MANAGE_EXTERNAL_STORAGE)) {
+            return null;
+        }
+
         return getWallpaperFile(which, mContext.getUserId());
     }
 
