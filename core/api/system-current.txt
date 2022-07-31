@@ -951,6 +951,23 @@ package android.app {
     method public boolean isStatusBarExpansionDisabled();
   }
 
+  public final class StorageScope {
+    ctor public StorageScope(@NonNull String, int);
+    method @NonNull public static android.content.Intent createConfigActivityIntent(@NonNull String);
+    method @NonNull public static android.app.StorageScope[] deserializeArray(@NonNull android.content.pm.GosPackageState);
+    method public boolean isDirectory();
+    method public boolean isFile();
+    method public boolean isWritable();
+    method public static int maxArrayLength();
+    method @Nullable public static byte[] serializeArray(@NonNull android.app.StorageScope[]);
+    field public static final String EXTERNAL_STORAGE_PROVIDER_METHOD_CONVERT_DOC_ID_TO_PATH = "StorageScopes_convertDocIdToPath";
+    field public static final int FLAG_ALLOW_WRITES = 1; // 0x1
+    field public static final int FLAG_IS_DIR = 2; // 0x2
+    field public static final String MEDIA_PROVIDER_METHOD_INVALIDATE_MEDIA_PROVIDER_CACHE = "StorageScopes_invalidateCache";
+    field public final int flags;
+    field @NonNull public final String path;
+  }
+
   public final class SystemServiceRegistry {
     method public static <TServiceClass> void registerContextAwareService(@NonNull String, @NonNull Class<TServiceClass>, @NonNull android.app.SystemServiceRegistry.ContextAwareServiceProducerWithBinder<TServiceClass>);
     method public static <TServiceClass> void registerContextAwareService(@NonNull String, @NonNull Class<TServiceClass>, @NonNull android.app.SystemServiceRegistry.ContextAwareServiceProducerWithoutBinder<TServiceClass>);
