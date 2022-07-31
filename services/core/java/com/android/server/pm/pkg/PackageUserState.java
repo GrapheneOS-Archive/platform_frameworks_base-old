@@ -165,4 +165,7 @@ public interface PackageUserState {
      * This does not survive full removal of the app (i.e., uninstalls for all users).
      */
     long getFirstInstallTime();
+
+    @Nullable
+    GosPackageStatePm getGosPackageState();
 }
