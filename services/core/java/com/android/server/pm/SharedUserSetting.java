@@ -198,6 +198,7 @@ public final class SharedUserSetting extends SettingBase implements SharedUserAp
         // recalculate processes.
         updateProcesses();
         onChanged();
+        gosPackageStateCachedDerivedFlags = 0;
         return true;
     }
 
@@ -211,6 +212,7 @@ public final class SharedUserSetting extends SettingBase implements SharedUserAp
             setFlags(this.getFlags() | packageSetting.getFlags());
             setPrivateFlags(this.getPrivateFlags() | packageSetting.getPrivateFlags());
             onChanged();
+            gosPackageStateCachedDerivedFlags = 0;
         }
         if (packageSetting.getPkg() != null) {
             addProcesses(packageSetting.getPkg().getProcesses());
@@ -411,4 +413,7 @@ public final class SharedUserSetting extends SettingBase implements SharedUserAp
     public LegacyPermissionState getSharedUserLegacyPermissionState() {
         return super.getLegacyPermissionState();
     }
+
+    // guarded by PackageManagerService.mLock
+    int gosPackageStateCachedDerivedFlags;
 }

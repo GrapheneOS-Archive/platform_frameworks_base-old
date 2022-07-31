@@ -1285,4 +1285,7 @@ public abstract class PackageManagerInternal {
     public abstract void shutdown();
 
     public abstract DynamicCodeLogger getDynamicCodeLogger();
+
+    @Nullable
+    public abstract GosPackageState getGosPackageState(String packageName, int userId);
 }
