@@ -129,6 +129,9 @@ public class PackageUserStateImpl extends WatchableImpl implements PackageUserSt
 
     private @CurrentTimeMillisLong long mFirstInstallTimeMillis;
 
+    @Nullable
+    private GosPackageStatePm mGosPackageState;
+
     // TODO(b/239050028): Remove, enforce notifying parent through PMS commit method
     @Nullable
     private Watchable mWatchable;
@@ -188,6 +191,7 @@ public class PackageUserStateImpl extends WatchableImpl implements PackageUserSt
                 ? null : other.mComponentLabelIconOverrideMap.snapshot();
         mFirstInstallTimeMillis = other.mFirstInstallTimeMillis;
         mArchiveState = other.mArchiveState;
+        mGosPackageState = other.mGosPackageState;
         mSnapshot = new SnapshotCache.Sealed<>();
     }
 
@@ -607,6 +611,12 @@ public class PackageUserStateImpl extends WatchableImpl implements PackageUserSt
         return this;
     }
 
+    public @NonNull PackageUserStateImpl setGosPackageState(@Nullable GosPackageStatePm gosPackageState) {
+        mGosPackageState = gosPackageState;
+        onChanged();
+        return this;
+    }
+
     /**
      * Sets the value for {@link #getArchiveState()}.
      */
@@ -802,6 +812,11 @@ public class PackageUserStateImpl extends WatchableImpl implements PackageUserSt
     @DataClass.Generated.Member
     public @Nullable ArchiveState getArchiveState() {
         return mArchiveState;
+    }
+
+    @DataClass.Generated.Member
+    public @Nullable GosPackageStatePm getGosPackageState() {
+        return mGosPackageState;
     }
 
     @DataClass.Generated.Member
