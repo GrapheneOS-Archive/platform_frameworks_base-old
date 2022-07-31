@@ -44,4 +44,7 @@ public interface AndroidPackageInternal extends AndroidPackage,
 
     @NonNull
     String[] getUsesStaticLibrariesSorted();
+
+    int getGosPackageStateCachedDerivedFlags();
+    void setGosPackageStateCachedDerivedFlags(int value);
 }
