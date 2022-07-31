@@ -19,6 +19,8 @@ package android.content.pm;
 import android.annotation.NonNull;
 import android.annotation.SystemApi;
 
+import com.android.internal.app.StorageScopesAppHooks;
+
 /** @hide */
 @SystemApi
 public class AppPermissionUtils {
@@ -30,6 +32,10 @@ public class AppPermissionUtils {
     // android.permission.PermissionManager#checkPermissionUncached
     /** @hide */
     public static boolean shouldSpoofSelfCheck(String permName) {
+        if (StorageScopesAppHooks.shouldSpoofSelfPermissionCheck(permName)) {
+            return true;
+        }
+
         if (SrtPermissions.shouldSpoofSelfCheck(permName)) {
             return true;
         }
@@ -43,6 +49,10 @@ public class AppPermissionUtils {
     // android.app.AppOpsManager#unsafeCheckOpRawNoThrow
     /** @hide */
     public static boolean shouldSpoofSelfAppOpCheck(int op) {
+        if (StorageScopesAppHooks.shouldSpoofSelfAppOpCheck(op)) {
+            return true;
+        }
+
         return false;
     }
 
@@ -52,16 +62,28 @@ public class AppPermissionUtils {
         // permission is split into multiple permissions (based on app's targetSdk), and at least
         // one of of those split permissions is present in manifest, then permission prompt would be
         // shown anyway.
-        return getSpoofablePermissionDflag(ps, perm) != 0;
+        return getSpoofablePermissionDflag(ps, perm, true) != 0;
     }
 
     // Controls spoofing of Activity#onRequestPermissionsResult() callback
     public static boolean shouldSpoofPermissionRequestResult(@NonNull GosPackageState ps, @NonNull String perm) {
-        int dflag = getSpoofablePermissionDflag(ps, perm);
+        int dflag = getSpoofablePermissionDflag(ps, perm, false);
         return dflag != 0 && ps.hasDerivedFlag(dflag);
     }
 
-    private static int getSpoofablePermissionDflag(GosPackageState ps, String perm) {
+    private static int getSpoofablePermissionDflag(GosPackageState ps, String perm, boolean forRequestDialog) {
+        if (ps.hasFlag(GosPackageState.FLAG_STORAGE_SCOPES_ENABLED)) {
+            int permDflag = StorageScopesAppHooks.getSpoofablePermissionDflag(perm);
+            if (permDflag != 0) {
+                if (!forRequestDialog) {
+                    if (StorageScopesAppHooks.shouldSkipPermissionCheckSpoof(ps.derivedFlags, permDflag)) {
+                        return 0;
+                    }
+                }
+                return permDflag;
+            }
+        }
+
         return 0;
     }
 
