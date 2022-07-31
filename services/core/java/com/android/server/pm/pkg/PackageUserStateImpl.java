@@ -92,6 +92,9 @@ public class PackageUserStateImpl extends WatchableImpl implements PackageUserSt
 
     private long mFirstInstallTime;
 
+    @Nullable
+    private GosPackageStatePm mGosPackageState;
+
     // TODO(b/239050028): Remove, enforce notifying parent through PMS commit method
     @Nullable
     private Watchable mWatchable;
@@ -148,6 +151,7 @@ public class PackageUserStateImpl extends WatchableImpl implements PackageUserSt
         mComponentLabelIconOverrideMap = other.mComponentLabelIconOverrideMap == null
                 ? null : other.mComponentLabelIconOverrideMap.snapshot();
         mFirstInstallTime = other.mFirstInstallTime;
+        mGosPackageState = other.mGosPackageState;
         mSnapshot = new SnapshotCache.Sealed<>();
     }
 
@@ -544,6 +548,12 @@ public class PackageUserStateImpl extends WatchableImpl implements PackageUserSt
         return this;
     }
 
+    public @NonNull PackageUserStateImpl setGosPackageState(@Nullable GosPackageStatePm gosPackageState) {
+        mGosPackageState = gosPackageState;
+        onChanged();
+        return this;
+    }
+
     @NonNull
     @Override
     public Map<String, OverlayPaths> getSharedLibraryOverlayPaths() {
@@ -693,6 +703,11 @@ public class PackageUserStateImpl extends WatchableImpl implements PackageUserSt
     @DataClass.Generated.Member
     public long getFirstInstallTimeMillis() {
         return mFirstInstallTime;
+    }
+
+    @DataClass.Generated.Member
+    public @Nullable GosPackageStatePm getGosPackageState() {
+        return mGosPackageState;
     }
 
     @DataClass.Generated.Member

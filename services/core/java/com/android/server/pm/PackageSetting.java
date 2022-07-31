@@ -48,6 +48,7 @@ import com.android.server.pm.parsing.pkg.AndroidPackageUtils;
 import com.android.server.pm.permission.LegacyPermissionDataProvider;
 import com.android.server.pm.permission.LegacyPermissionState;
 import com.android.server.pm.pkg.AndroidPackage;
+import com.android.server.pm.pkg.GosPackageStatePm;
 import com.android.server.pm.pkg.PackageState;
 import com.android.server.pm.pkg.PackageStateInternal;
 import com.android.server.pm.pkg.PackageStateUnserialized;
@@ -359,6 +360,11 @@ public class PackageSetting extends SettingBase implements PackageStateInternal 
         }
         onChanged();
         return this;
+    }
+
+    public void setGosPackageState(@UserIdInt int userId, @Nullable GosPackageStatePm state) {
+        modifyUserState(userId).setGosPackageState(state);
+        onChanged();
     }
 
     public PackageSetting setForceQueryableOverride(boolean forceQueryableOverride) {
@@ -875,7 +881,7 @@ public class PackageSetting extends SettingBase implements PackageStateInternal 
             ArraySet<String> enabledComponents, ArraySet<String> disabledComponents,
             int installReason, int uninstallReason,
             String harmfulAppWarning, String splashScreenTheme,
-            long firstInstallTime) {
+            long firstInstallTime, GosPackageStatePm gosPackageState) {
         modifyUserState(userId)
                 .setSuspendParams(suspendParams)
                 .setCeDataInode(ceDataInode)
@@ -894,7 +900,8 @@ public class PackageSetting extends SettingBase implements PackageStateInternal 
                 .setVirtualPreload(virtualPreload)
                 .setHarmfulAppWarning(harmfulAppWarning)
                 .setSplashScreenTheme(splashScreenTheme)
-                .setFirstInstallTime(firstInstallTime);
+                .setFirstInstallTime(firstInstallTime)
+                .setGosPackageState(gosPackageState);
         onChanged();
     }
 
@@ -912,7 +919,7 @@ public class PackageSetting extends SettingBase implements PackageStateInternal 
                         ? null : otherState.getDisabledComponentsNoCopy().untrackedStorage(),
                 otherState.getInstallReason(), otherState.getUninstallReason(),
                 otherState.getHarmfulAppWarning(), otherState.getSplashScreenTheme(),
-                otherState.getFirstInstallTimeMillis());
+                otherState.getFirstInstallTimeMillis(), otherState.getGosPackageState());
     }
 
     WatchedArraySet<String> getEnabledComponents(int userId) {
