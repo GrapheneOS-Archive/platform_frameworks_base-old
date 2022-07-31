@@ -18,12 +18,20 @@ package android.content.pm;
 
 import android.Manifest;
 
+import com.android.internal.app.StorageScopesAppHooks;
+
+import static android.content.pm.GosPackageState.*;
+
 /** @hide */
 public class AppPermissionUtils {
 
     // android.app.ApplicationPackageManager#checkPermission(String permName, String pkgName)
     // android.app.ContextImpl#checkPermission(String permission, int pid, int uid)
     public static boolean shouldSpoofSelfCheck(String permName) {
+        if (StorageScopesAppHooks.shouldSpoofSelfPermissionCheck(permName)) {
+            return true;
+        }
+
         if (Manifest.permission.INTERNET.equals(permName)
                 && SpecialRuntimePermAppUtils.requestsInternetPermission()
                 && !SpecialRuntimePermAppUtils.awareOfRuntimeInternetPermission())
@@ -32,5 +40,30 @@ public class AppPermissionUtils {
         }
 
         return false;
+    }
+
+    public static int getSpoofableStorageRuntimePermissionDflag(String permName) {
+        switch (permName) {
+            case Manifest.permission.READ_EXTERNAL_STORAGE:
+                return DFLAG_HAS_READ_EXTERNAL_STORAGE_DECLARATION;
+
+            case Manifest.permission.WRITE_EXTERNAL_STORAGE:
+                return DFLAG_HAS_WRITE_EXTERNAL_STORAGE_DECLARATION;
+
+            case Manifest.permission.ACCESS_MEDIA_LOCATION:
+                return DFLAG_HAS_ACCESS_MEDIA_LOCATION_DECLARATION;
+
+            case Manifest.permission.READ_MEDIA_AUDIO:
+                return DFLAG_HAS_READ_MEDIA_AUDIO_DECLARATION;
+
+            case Manifest.permission.READ_MEDIA_IMAGES:
+                return DFLAG_HAS_READ_MEDIA_IMAGES_DECLARATION;
+
+            case Manifest.permission.READ_MEDIA_VIDEO:
+                return DFLAG_HAS_READ_MEDIA_VIDEO_DECLARATION;
+
+            default:
+                return 0;
+        }
     }
 }
