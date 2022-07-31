@@ -3972,6 +3972,11 @@ package android.content.om {
 
 package android.content.pm {
 
+  public class AppPermissionUtils {
+    method public static boolean shouldSkipPermissionRequestDialog(@NonNull android.content.pm.GosPackageState, @NonNull String);
+    method public static boolean shouldSpoofPermissionRequestResult(@NonNull android.content.pm.GosPackageState, @NonNull String);
+  }
+
   public class ApplicationInfo extends android.content.pm.PackageItemInfo implements android.os.Parcelable {
     method @NonNull public android.ext.AppInfoExt ext();
     method @RequiresPermission(android.Manifest.permission.DELETE_PACKAGES) public boolean hasFragileUserData();
