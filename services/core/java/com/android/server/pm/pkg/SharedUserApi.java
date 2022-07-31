@@ -69,4 +69,6 @@ public interface SharedUserApi {
 
     @NonNull
     LegacyPermissionState getSharedUserLegacyPermissionState();
+
+    void syncGosPackageState();
 }
