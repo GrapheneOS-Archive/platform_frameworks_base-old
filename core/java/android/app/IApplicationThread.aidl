@@ -174,4 +174,6 @@ oneway interface IApplicationThread {
             in UiTranslationSpec uiTranslationSpec);
     void scheduleTimeoutService(IBinder token, int startId);
     void schedulePing(in RemoteCallback pong);
+
+    void onGosPackageStateChanged(in @nullable android.content.pm.GosPackageState state);
 }

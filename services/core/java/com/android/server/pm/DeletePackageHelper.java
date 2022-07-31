@@ -632,7 +632,8 @@ final class DeletePackageHelper {
                     null /*splashScreenTheme*/,
                     firstInstallTime,
                     PackageManager.USER_MIN_ASPECT_RATIO_UNSET,
-                    archiveState);
+                    archiveState,
+                    null /*gosPackageState*/);
         }
         mPm.mSettings.writeKernelMappingLPr(ps);
     }
