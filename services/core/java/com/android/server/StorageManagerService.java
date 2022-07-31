@@ -67,6 +67,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.GosPackageState;
 import android.content.pm.IPackageManager;
 import android.content.pm.IPackageMoveObserver;
 import android.content.pm.PackageManager;
@@ -153,6 +154,7 @@ import com.android.internal.util.Preconditions;
 import com.android.internal.widget.LockPatternUtils;
 import com.android.server.pm.Installer;
 import com.android.server.pm.UserManagerInternal;
+import com.android.server.pm.pkg.GosPackageStatePm;
 import com.android.server.storage.AppFuseBridge;
 import com.android.server.storage.StorageSessionController;
 import com.android.server.storage.StorageSessionController.ExternalStorageServiceException;
@@ -4540,9 +4542,25 @@ class StorageManagerService extends IStorageManager.Stub
                     break;
                 }
             }
-            if (hasInstall || hasInstallOp) {
+            if (hasInstall) {
                 return StorageManager.MOUNT_MODE_EXTERNAL_INSTALLER;
             }
+
+            if (hasInstallOp) {
+                /*
+                Originally, previous check was `if (hasInstall || hasInstallOp)`.
+
+                Use a special flag to control access to just Android/obb directory instead.
+                Toggle for this flag is in ExternalSourcesDetails.java in Settings app
+                (same screen that grants the REQUEST_INSTALL_PACKAGES permission)
+                 */
+
+                GosPackageStatePm ps = mPmInternal.getGosPackageState(packageName, UserHandle.getUserId(uid));
+                if (ps != null && ps.hasFlags(GosPackageState.FLAG_ALLOW_ACCESS_TO_OBB_DIRECTORY)) {
+                    return StorageManager.MOUNT_MODE_EXTERNAL_INSTALLER;
+                }
+            }
+
             return StorageManager.MOUNT_MODE_EXTERNAL_DEFAULT;
         } catch (RemoteException e) {
             // Should not happen
