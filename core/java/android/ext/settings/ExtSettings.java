@@ -90,6 +90,10 @@ public class ExtSettings {
             ConnChecksSetting.VAL_GRAPHENEOS, ConnChecksSetting.VAL_STANDARD, ConnChecksSetting.VAL_DISABLED
     );
 
+    // The amount of time in milliseconds before a disconnected Wi-Fi adapter is turned off
+    public static final IntSetting WIFI_AUTO_OFF = new IntSetting(
+            Setting.Scope.GLOBAL, "wifi_off_timeout", 0 /* off by default */);
+
     // AppCompatConfig specifies which hardening features are compatible/incompatible with a
     // specific app.
     // This setting controls whether incompatible hardening features would be disabled by default
