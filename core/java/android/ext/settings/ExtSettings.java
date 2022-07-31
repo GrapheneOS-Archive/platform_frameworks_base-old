@@ -92,6 +92,10 @@ public class ExtSettings {
     public static final IntSetting WIFI_AUTO_OFF = new IntSetting(
             Setting.Scope.GLOBAL, "wifi_off_timeout", 0 /* off by default */);
 
+    // The amount of time in milliseconds before a disconnected Bluetooth adapter is turned off
+    public static final IntSetting BLUETOOTH_AUTO_OFF = new IntSetting(
+            Setting.Scope.GLOBAL, "bluetooth_off_timeout", 0 /* off by default */);
+
     private ExtSettings() {}
 
     // used for making settings defined in this class unreadable by third-party apps
