@@ -28,8 +28,28 @@ import android.permission.PermissionManager;
 @SystemApi
 public class SpecialRuntimePermAppUtils {
     private static final int FLAG_INITED = 1;
+    public static final int FLAG_REQUESTS_INTERNET_PERMISSION = 1 << 1;
+    public static final int FLAG_AWARE_OF_RUNTIME_INTERNET_PERMISSION = 1 << 2;
 
     private static volatile int cachedFlags;
+
+    private static boolean hasInternetPermission() {
+        // checkSelfPermission() is spoofed, query the underlying API directly
+        return PermissionManager.checkPermission(Manifest.permission.INTERNET, Process.myPid(), Process.myUid())
+                == PackageManager.PERMISSION_GRANTED;
+    }
+
+    public static boolean requestsInternetPermission() {
+        return (getFlags() & FLAG_REQUESTS_INTERNET_PERMISSION) != 0;
+    }
+
+    public static boolean awareOfRuntimeInternetPermission() {
+        return (getFlags() & FLAG_AWARE_OF_RUNTIME_INTERNET_PERMISSION) != 0;
+    }
+
+    public static boolean isInternetCompatEnabled() {
+        return !hasInternetPermission() && requestsInternetPermission() && !awareOfRuntimeInternetPermission();
+    }
 
     private static int getFlags() {
         int cache = cachedFlags;
