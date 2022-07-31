@@ -23,6 +23,7 @@ import android.content.pm.SigningDetails;
 import android.service.pm.PackageServiceDumpProto;
 import android.util.ArrayMap;
 import android.util.ArraySet;
+import android.util.SparseArray;
 import android.util.proto.ProtoOutputStream;
 
 import com.android.internal.pm.pkg.component.ComponentMutateUtils;
@@ -31,7 +32,9 @@ import com.android.internal.pm.pkg.component.ParsedProcessImpl;
 import com.android.internal.util.ArrayUtils;
 import com.android.server.pm.permission.LegacyPermissionState;
 import com.android.server.pm.pkg.AndroidPackage;
+import com.android.server.pm.pkg.GosPackageStatePm;
 import com.android.server.pm.pkg.PackageStateInternal;
+import com.android.server.pm.pkg.PackageUserStateInternal;
 import com.android.server.pm.pkg.SharedUserApi;
 import com.android.server.utils.SnapshotCache;
 import com.android.server.utils.Watchable;
@@ -174,10 +177,57 @@ public final class SharedUserSetting extends SettingBase implements SharedUserAp
         }
     }
 
+    @Override
+    public void syncGosPackageState() {
+        syncGosPackageState(mPackages);
+    }
+
+    // Makes GosPackageState the same for all packages in this SharedUser in each userId.
+    // See GosPackageStatePm class comment for more info.
+    private static void syncGosPackageState(WatchedArraySet<PackageSetting> packages) {
+        final int numPkgs = packages.size();
+        // userId -> GosPackageState
+        SparseArray<GosPackageStatePm> userGosPs = null;
+
+        for (int pkgIdx = 0; pkgIdx < numPkgs; ++pkgIdx) {
+            PackageSetting s = packages.valueAt(pkgIdx);
+            SparseArray<? extends PackageUserStateInternal> userStates = s.getUserStates();
+            for (int userIndex = 0, numUsers = userStates.size(); userIndex < numUsers; ++userIndex) {
+                int userId = userStates.keyAt(userIndex);
+                for (int i = 0; i < numPkgs; ++i) {
+                    GosPackageStatePm gosPs = packages.valueAt(i).getUserStateOrDefault(userId).getGosPackageState();
+                    if (gosPs != null) {
+                        if (userGosPs == null) {
+                            userGosPs = new SparseArray<>();
+                        }
+                        userGosPs.set(userId, gosPs);
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (userGosPs == null) {
+            return;
+        }
+
+        for (int idx = 0, numUsers = userGosPs.size(); idx < numUsers; ++idx) {
+            int userId = userGosPs.keyAt(idx);
+            GosPackageStatePm ps = userGosPs.valueAt(idx);
+            for (int pkgIdx = 0; pkgIdx < numPkgs; ++pkgIdx) {
+                PackageSetting s = packages.valueAt(pkgIdx);
+                s.setGosPackageState(userId, ps);
+            }
+        }
+    }
+
     boolean removePackage(PackageSetting packageSetting) {
         if (!mPackages.remove(packageSetting)) {
             return false;
         }
+
+        clearGosPackageStateCachedDerivedFlags();
+
         // recalculate the pkgFlags for this shared user if needed
         if ((this.getFlags() & packageSetting.getFlags()) != 0) {
             int aggregatedFlags = uidFlags;
@@ -210,6 +260,10 @@ public final class SharedUserSetting extends SettingBase implements SharedUserAp
         if (mPackages.add(packageSetting)) {
             setFlags(this.getFlags() | packageSetting.getFlags());
             setPrivateFlags(this.getPrivateFlags() | packageSetting.getPrivateFlags());
+
+            clearGosPackageStateCachedDerivedFlags();
+            syncGosPackageState();
+
             onChanged();
         }
         if (packageSetting.getPkg() != null) {
@@ -410,5 +464,12 @@ public final class SharedUserSetting extends SettingBase implements SharedUserAp
     @Override
     public LegacyPermissionState getSharedUserLegacyPermissionState() {
         return super.getLegacyPermissionState();
+    }
+
+    // to recalculate derived flags when sharedUid members are added/removed
+    private void clearGosPackageStateCachedDerivedFlags() {
+        for (AndroidPackage pkg : getPackages()) {
+            ((com.android.internal.pm.parsing.pkg.AndroidPackageInternal) pkg).setGosPackageStateCachedDerivedFlags(0);
+        }
     }
 }
