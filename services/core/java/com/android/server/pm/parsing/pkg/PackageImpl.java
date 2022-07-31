@@ -777,4 +777,16 @@ public final class PackageImpl extends ParsingPackageImpl implements ParsedPacka
     public String getBaseAppDataDeviceProtectedDirForSystemUser() {
         return mBaseAppDataDeviceProtectedDirForSystemUser;
     }
+
+    private int gosPackageStateCachedDerivedFlags;
+
+    @Override
+    public int getGosPackageStateCachedDerivedFlags() {
+        return gosPackageStateCachedDerivedFlags;
+    }
+
+    @Override
+    public void setGosPackageStateCachedDerivedFlags(int value) {
+        gosPackageStateCachedDerivedFlags = value;
+    }
 }
