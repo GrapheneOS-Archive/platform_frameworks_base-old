@@ -590,7 +590,8 @@ final class DeletePackageHelper {
                     PackageManager.UNINSTALL_REASON_UNKNOWN,
                     null /*harmfulAppWarning*/,
                     null /*splashScreenTheme*/,
-                    0 /*firstInstallTime*/);
+                    0 /*firstInstallTime*/,
+                    null /*gosPackageState*/);
         }
         mPm.mSettings.writeKernelMappingLPr(ps);
     }
