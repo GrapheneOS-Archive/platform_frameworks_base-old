@@ -19,6 +19,7 @@ package com.android.server.ext;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.os.Handler;
 
 import com.android.internal.os.BackgroundThread;
@@ -49,7 +50,9 @@ public final class SystemServerExt {
     }
 
     void initBgThread() {
-
+        if (packageManager.hasSystemFeature(PackageManager.FEATURE_WIFI, 0)) {
+            new WifiAutoOff(this);
+        }
     }
 
     public void registerReceiver(BroadcastReceiver receiver, IntentFilter filter, Handler handler) {
