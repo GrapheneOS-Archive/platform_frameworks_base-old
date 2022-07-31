@@ -16,12 +16,22 @@
 
 package android.content.pm;
 
-import android.Manifest;
 import android.annotation.SystemApi;
 
 /** @hide */
 @SystemApi
 public class SpecialRuntimePermAppUtils {
+
+    private static boolean isInternetCompatEnabled;
+
+    /** @hide */
+    public static void enableInternetCompat() {
+        isInternetCompatEnabled = true;
+    }
+
+    public static boolean isInternetCompatEnabled() {
+        return isInternetCompatEnabled;
+    }
 
     private SpecialRuntimePermAppUtils() {}
 }
