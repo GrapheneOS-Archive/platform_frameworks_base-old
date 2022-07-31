@@ -34,6 +34,8 @@ public final class SystemServerExt {
     }
 
     void initBgThread() {
-
+        if (packageManager.hasSystemFeature(PackageManager.FEATURE_WIFI, 0)) {
+            new WifiAutoOff(this);
+        }
     }
 }
