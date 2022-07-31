@@ -30,6 +30,7 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ActivityPresentationInfo;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.GosPackageState;
 import android.content.pm.UserInfo;
 import android.net.Uri;
 import android.os.Bundle;
@@ -860,4 +861,6 @@ public abstract class ActivityManagerInternal {
      */
     public abstract void registerNetworkPolicyUidObserver(@NonNull IUidObserver observer,
             int which, int cutpoint, @NonNull String callingPackage);
+
+    public abstract void onGosPackageStateChanged(int uid, @Nullable GosPackageState state);
 }
