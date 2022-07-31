@@ -78,6 +78,7 @@ import android.content.pm.ComponentInfo;
 import android.content.pm.DataLoaderType;
 import android.content.pm.FallbackCategoryProvider;
 import android.content.pm.FeatureInfo;
+import android.content.pm.GosPackageState;
 import android.content.pm.IDexModuleRegisterCallback;
 import android.content.pm.IOnChecksumsReadyListener;
 import android.content.pm.IPackageChangeObserver;
@@ -214,6 +215,7 @@ import com.android.server.pm.permission.LegacyPermissionManagerService;
 import com.android.server.pm.permission.PermissionManagerService;
 import com.android.server.pm.permission.PermissionManagerServiceInternal;
 import com.android.server.pm.permission.SpecialRuntimePermUtils;
+import com.android.server.pm.pkg.GosPackageStatePm;
 import com.android.server.pm.pkg.PackageStateInternal;
 import com.android.server.pm.pkg.PackageUserState;
 import com.android.server.pm.pkg.PackageUserStateInternal;
@@ -4180,6 +4182,8 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
 
         // Prune unused static shared libraries which have been cached a period of time
         schedulePruneUnusedStaticSharedLibraries(false /* delay */);
+
+        initGosPackageStateAppIds();
     }
 
     //TODO: b/111402650
@@ -6050,6 +6054,19 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
             mContext.enforceCallingPermission(Manifest.permission.INSTALL_PACKAGES, null);
             SpecialRuntimePermUtils.skipAutoGrantsForPackage(packageName, userId, permissions);
         }
+
+        @Override
+        public GosPackageState getGosPackageState(@NonNull String packageName, int userId) {
+            return GosPackageStatePmHooks.get(PackageManagerService.this, packageName, userId);
+        }
+
+        @Override
+        public GosPackageState setGosPackageState(@NonNull String packageName, int flags, @Nullable byte[] storageScopes, boolean killUid, int userId) {
+            if (GosPackageStatePmHooks.set(PackageManagerService.this, packageName, flags, storageScopes, killUid, userId)) {
+                return GosPackageStatePmHooks.get(PackageManagerService.this, packageName, userId);
+            }
+            return null;
+        }
     }
 
     private class PackageManagerLocalImpl implements PackageManagerLocal {
@@ -6553,6 +6570,12 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
         public void onPackageProcessKilledForUninstall(String packageName) {
             mHandler.post(() -> PackageManagerService.this.notifyInstallObserver(packageName,
                     true /* killApp */));
+        }
+
+        @Nullable
+        @Override
+        public GosPackageStatePm getGosPackageState(String packageName, int userId) {
+            return GosPackageStatePm.get(PackageManagerService.this, packageName, userId);
         }
     }
 
@@ -7322,6 +7345,30 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
     void addInstallerPackageName(InstallSource installSource) {
         synchronized (mLock) {
             mSettings.addInstallerPackageNames(installSource);
+        }
+    }
+
+    int mediaProviderAppId;
+    int permissionControllerAppId;
+    int sysLauncherAppId;
+
+    private void initGosPackageStateAppIds() {
+        synchronized (mLock) {
+            AndroidPackage mediaProvider = mPackages.get("com.android.providers.media.module");
+            if (mediaProvider != null) {
+                // getUid() confusingly returns appId
+                mediaProviderAppId = mediaProvider.getUid();
+            }
+
+            AndroidPackage permissionController = mPackages.get(mRequiredPermissionControllerPackage);
+            if (permissionController != null) {
+                permissionControllerAppId = permissionController.getUid();
+            }
+
+            var sysLauncher = mPackages.get("com.android.launcher3");
+            if (sysLauncher != null) {
+                sysLauncherAppId = sysLauncher.getUid();
+            }
         }
     }
 }
