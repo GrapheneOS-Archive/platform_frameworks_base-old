@@ -54,6 +54,10 @@ public class ExtSettings {
             // also accessed in native code, in frameworks/native/cmds/servicemanager/Access.cpp
             "persist.sys.allow_google_apps_special_access_to_accelerators", true);
 
+    // The amount of time in milliseconds before a disconnected Wi-Fi adapter is turned off
+    public static final IntSetting WIFI_AUTO_OFF = new IntSetting(
+            Setting.Scope.GLOBAL, Settings.Global.WIFI_AUTO_OFF, 0 /* off by default */);
+
     // AppCompatConfig specifies which hardening features are compatible/incompatible with a
     // specific app.
     // This setting controls whether incompatible hardening features would be disabled by default
