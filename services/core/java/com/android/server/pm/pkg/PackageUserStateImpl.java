@@ -19,6 +19,7 @@ package com.android.server.pm.pkg;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.ComponentName;
+import android.content.pm.GosPackageStatePm;
 import android.content.pm.PackageManager;
 import android.content.pm.overlay.OverlayPaths;
 import android.text.TextUtils;
@@ -92,6 +93,9 @@ public class PackageUserStateImpl extends WatchableImpl implements PackageUserSt
     private long mFirstInstallTime;
 
     @Nullable
+    private GosPackageStatePm mGosPackageState;
+
+    @Nullable
     private final Watchable mWatchable;
 
     @NonNull
@@ -146,6 +150,7 @@ public class PackageUserStateImpl extends WatchableImpl implements PackageUserSt
         mComponentLabelIconOverrideMap = other.mComponentLabelIconOverrideMap == null
                 ? null : other.mComponentLabelIconOverrideMap.snapshot();
         mFirstInstallTime = other.mFirstInstallTime;
+        mGosPackageState = other.mGosPackageState;
         mSnapshot = new SnapshotCache.Sealed<>();
     }
 
@@ -542,6 +547,12 @@ public class PackageUserStateImpl extends WatchableImpl implements PackageUserSt
         return this;
     }
 
+    public @NonNull PackageUserStateImpl setGosPackageState(@Nullable GosPackageStatePm gosPackageState) {
+        mGosPackageState = gosPackageState;
+        onChanged();
+        return this;
+    }
+
     @NonNull
     @Override
     public Map<String, OverlayPaths> getSharedLibraryOverlayPaths() {
@@ -732,6 +743,11 @@ public class PackageUserStateImpl extends WatchableImpl implements PackageUserSt
     @DataClass.Generated.Member
     public long getFirstInstallTime() {
         return mFirstInstallTime;
+    }
+
+    @DataClass.Generated.Member
+    public @Nullable GosPackageStatePm getGosPackageState() {
+        return mGosPackageState;
     }
 
     @DataClass.Generated.Member
