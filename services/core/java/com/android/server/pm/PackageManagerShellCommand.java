@@ -228,6 +228,8 @@ class PackageManagerShellCommand extends ShellCommand {
                 case "help":
                     onHelp();
                     return 0;
+                case "edit-gos-package-state":
+                    return GosPackageStatePmHooks.runShellCommand(this);
                 case "path":
                     return runPath();
                 case "dump":
