@@ -25,6 +25,7 @@ import android.annotation.SdkConstant.SdkConstantType;
 import android.annotation.SuppressLint;
 import android.annotation.SystemApi;
 import android.app.PropertyInvalidatedCache;
+import android.app.compat.gms.GmsCompat;
 import android.bluetooth.annotations.RequiresBluetoothConnectPermission;
 import android.bluetooth.annotations.RequiresBluetoothLocationPermission;
 import android.bluetooth.annotations.RequiresBluetoothScanPermission;
@@ -2679,6 +2680,11 @@ public final class BluetoothDevice implements Parcelable, Attributable {
             android.Manifest.permission.BLUETOOTH_PRIVILEGED,
     })
     public byte[] getMetadata(@MetadataKey int key) {
+        if (GmsCompat.isEnabled()) {
+            // used by FastPair to obtain HeadsetPieceImage as of GMS Core 22.06.18
+            throw new NoSuchMethodError();
+        }
+
         final IBluetooth service = sService;
         if (service == null) {
             Log.e(TAG, "Bluetooth is not enabled. Cannot get metadata");
