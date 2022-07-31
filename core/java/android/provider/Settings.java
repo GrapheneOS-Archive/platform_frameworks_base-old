@@ -16408,7 +16408,7 @@ public final class Settings {
         public static final String RESTRICTED_NETWORKING_MODE = "restricted_networking_mode";
 
         /**
-         * The amount of time in milliseconds before Wi-Fi is turned off
+         * The amount of time in milliseconds before disconnected Wi-Fi adapter is turned off
          * @hide
          */
         public static final String WIFI_OFF_TIMEOUT = "wifi_off_timeout";
