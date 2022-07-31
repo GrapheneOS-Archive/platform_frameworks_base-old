@@ -60,6 +60,7 @@ import android.view.ViewConfiguration;
 import android.view.Window;
 import android.view.WindowManagerGlobal;
 
+import com.android.internal.app.StorageScopesAppHooks;
 import com.android.internal.content.ReferrerIntent;
 
 import java.io.File;
@@ -1941,6 +1942,7 @@ public class Instrumentation {
         try {
             intent.migrateExtraStreamToClipData(who);
             intent.prepareToLeaveProcess(who);
+            StorageScopesAppHooks.maybeModifyActivityIntent(who, intent);
             int result = ActivityTaskManager.getService().startActivity(whoThread,
                     who.getOpPackageName(), who.getAttributionTag(), intent,
                     intent.resolveTypeIfNeeded(who.getContentResolver()), token,
