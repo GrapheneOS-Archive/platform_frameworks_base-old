@@ -213,6 +213,7 @@ import com.android.server.pm.permission.LegacyPermissionManagerInternal;
 import com.android.server.pm.permission.LegacyPermissionManagerService;
 import com.android.server.pm.permission.PermissionManagerService;
 import com.android.server.pm.permission.PermissionManagerServiceInternal;
+import com.android.server.pm.permission.SpecialRuntimePermUtils;
 import com.android.server.pm.pkg.PackageStateInternal;
 import com.android.server.pm.pkg.PackageUserState;
 import com.android.server.pm.pkg.PackageUserStateInternal;
@@ -5989,6 +5990,24 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
                     knownPackages, mChangedPackagesTracker, availableFeatures, protectedBroadcasts,
                     getPerUidReadTimeouts(snapshot)
             ).doDump(snapshot, fd, pw, args);
+        }
+
+        @Override
+        public int getSpecialRuntimePermissionFlags(String packageName) {
+            final int callingUid = Binder.getCallingUid();
+
+            synchronized (mLock) {
+                AndroidPackage pkg = mPackages.get(packageName);
+                if (pkg == null) {
+                    throw new IllegalStateException();
+                }
+
+                if (UserHandle.getAppId(callingUid) != pkg.getUid()) { // getUid() confusingly returns appId
+                    throw new SecurityException();
+                }
+
+                return SpecialRuntimePermUtils.getFlags(pkg);
+            }
         }
     }
 
