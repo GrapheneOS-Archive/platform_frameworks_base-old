@@ -17063,6 +17063,12 @@ public final class Settings {
         public static final String PSDS_SERVER = "psds_server";
 
         /**
+         * The amount of time in milliseconds before a disconnected Wi-Fi adapter is turned off
+         * @hide
+         */
+        public static final String WIFI_OFF_TIMEOUT = "wifi_off_timeout";
+
+        /**
          * Settings migrated from Wear OS settings provider.
          * @hide
          */
