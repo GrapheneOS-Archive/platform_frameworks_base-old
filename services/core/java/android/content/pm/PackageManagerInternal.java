@@ -53,6 +53,7 @@ import com.android.server.pm.PackageSetting;
 import com.android.server.pm.dex.DynamicCodeLogger;
 import com.android.server.pm.permission.LegacyPermissionSettings;
 import com.android.server.pm.pkg.AndroidPackage;
+import com.android.server.pm.pkg.GosPackageStatePm;
 import com.android.server.pm.pkg.PackageStateInternal;
 import com.android.server.pm.pkg.SharedUserApi;
 import com.android.server.pm.pkg.mutate.PackageStateMutator;
@@ -1463,4 +1464,7 @@ public abstract class PackageManagerInternal {
      */
     @NonNull
     public abstract PackageArchiver getPackageArchiver();
+
+    @Nullable
+    public abstract GosPackageStatePm getGosPackageState(String packageName, int userId);
 }

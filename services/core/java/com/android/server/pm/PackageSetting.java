@@ -53,6 +53,7 @@ import com.android.server.pm.permission.LegacyPermissionDataProvider;
 import com.android.server.pm.permission.LegacyPermissionState;
 import com.android.server.pm.pkg.AndroidPackage;
 import com.android.server.pm.pkg.ArchiveState;
+import com.android.server.pm.pkg.GosPackageStatePm;
 import com.android.server.pm.pkg.PackageState;
 import com.android.server.pm.pkg.PackageStateInternal;
 import com.android.server.pm.pkg.PackageStateUnserialized;
@@ -374,6 +375,11 @@ public class PackageSetting extends SettingBase implements PackageStateInternal 
         }
         onChanged();
         return this;
+    }
+
+    public void setGosPackageState(@UserIdInt int userId, @Nullable GosPackageStatePm state) {
+        modifyUserState(userId).setGosPackageState(state);
+        onChanged();
     }
 
     public PackageSetting setForceQueryableOverride(boolean forceQueryableOverride) {
@@ -958,7 +964,8 @@ public class PackageSetting extends SettingBase implements PackageStateInternal 
                       ArraySet<String> enabledComponents, ArraySet<String> disabledComponents,
                       int installReason, int uninstallReason,
                       String harmfulAppWarning, String splashScreenTheme,
-                      long firstInstallTime, int aspectRatio, ArchiveState archiveState) {
+                      long firstInstallTime, int aspectRatio, ArchiveState archiveState,
+                      GosPackageStatePm gosPackageState) {
         modifyUserState(userId)
                 .setSuspendParams(suspendParams)
                 .setCeDataInode(ceDataInode)
@@ -980,7 +987,8 @@ public class PackageSetting extends SettingBase implements PackageStateInternal 
                 .setSplashScreenTheme(splashScreenTheme)
                 .setFirstInstallTimeMillis(firstInstallTime)
                 .setMinAspectRatio(aspectRatio)
-                .setArchiveState(archiveState);
+                .setArchiveState(archiveState)
+                .setGosPackageState(gosPackageState);
         onChanged();
     }
 
@@ -999,7 +1007,8 @@ public class PackageSetting extends SettingBase implements PackageStateInternal 
                 otherState.getInstallReason(), otherState.getUninstallReason(),
                 otherState.getHarmfulAppWarning(), otherState.getSplashScreenTheme(),
                 otherState.getFirstInstallTimeMillis(), otherState.getMinAspectRatio(),
-                otherState.getArchiveState());
+                otherState.getArchiveState(),
+                otherState.getGosPackageState());
     }
 
     WatchedArraySet<String> getEnabledComponents(int userId) {
