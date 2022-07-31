@@ -2585,8 +2585,25 @@ public final class BluetoothAdapter {
     @RequiresLegacyBluetoothPermission
     @RequiresNoPermission
     public int getConnectionState() {
-        if (getState() != STATE_ON) {
-            return BluetoothAdapter.STATE_DISCONNECTED;
+        return getConnectionStateInternal(false);
+    }
+
+    /** @hide */
+    @SystemApi
+    public int getConnectionStateLeAware() {
+        return getConnectionStateInternal(true);
+    }
+
+    private int getConnectionStateInternal(boolean leAware) {
+        if (leAware) {
+            int state = getLeState(); // getState() transforms all BLE states into STATE_OFF
+            if (state != STATE_ON && state != STATE_BLE_ON) {
+                return BluetoothAdapter.STATE_DISCONNECTED;
+            }
+        } else {
+            if (getState() != STATE_ON) {
+                return BluetoothAdapter.STATE_DISCONNECTED;
+            }
         }
         try {
             mServiceLock.readLock().lock();
