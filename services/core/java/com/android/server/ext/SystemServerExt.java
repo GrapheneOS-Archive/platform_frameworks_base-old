@@ -34,6 +34,6 @@ public final class SystemServerExt {
     }
 
     void initBgThread() {
-
+        WifiAutoOff.maybeInit(this);
     }
 }
