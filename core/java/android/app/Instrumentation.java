@@ -56,6 +56,7 @@ import android.view.ViewConfiguration;
 import android.view.Window;
 import android.view.WindowManagerGlobal;
 
+import com.android.internal.app.StorageScopesAppHooks;
 import com.android.internal.content.ReferrerIntent;
 import com.android.internal.gmscompat.GmsHooks;
 
@@ -1802,6 +1803,7 @@ public class Instrumentation {
         try {
             intent.migrateExtraStreamToClipData(who);
             intent.prepareToLeaveProcess(who);
+            StorageScopesAppHooks.maybeModifyActivityIntent(who, intent);
             int result = ActivityTaskManager.getService().startActivity(whoThread,
                     who.getOpPackageName(), who.getAttributionTag(), intent,
                     intent.resolveTypeIfNeeded(who.getContentResolver()), token,
