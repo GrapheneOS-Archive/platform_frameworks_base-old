@@ -78,6 +78,7 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.ComponentInfo;
+import android.content.pm.GosPackageState;
 import android.content.pm.IPackageManager;
 import android.content.pm.InstrumentationInfo;
 import android.content.pm.PackageInfo;
@@ -1923,6 +1924,12 @@ public final class ActivityThread extends ClientTransactionHandler
             args.arg5 = viewIds;
             args.arg6 = uiTranslationSpec;
             sendMessage(H.UPDATE_UI_TRANSLATION_STATE, args);
+        }
+
+        @Override
+        public void onGosPackageStateChanged(@Nullable GosPackageState state) {
+            // this is a oneway method, caller (ActivityManager) will not be blocked
+            ActivityThreadHooks.onGosPackageStateChanged(mInitialApplication, state, false);
         }
     }
 
