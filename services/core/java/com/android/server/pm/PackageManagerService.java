@@ -78,6 +78,7 @@ import android.content.pm.ComponentInfo;
 import android.content.pm.DataLoaderType;
 import android.content.pm.FallbackCategoryProvider;
 import android.content.pm.FeatureInfo;
+import android.content.pm.GosPackageState;
 import android.content.pm.IDexModuleRegisterCallback;
 import android.content.pm.IOnChecksumsReadyListener;
 import android.content.pm.IPackageChangeObserver;
@@ -4152,6 +4153,8 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
 
         // Prune unused static shared libraries which have been cached a period of time
         schedulePruneUnusedStaticSharedLibraries(false /* delay */);
+
+        initGosPackageStateAppIds();
     }
 
     //TODO: b/111402650
@@ -6009,6 +6012,16 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
                 return SpecialRuntimePermUtils.getFlags(pkg);
             }
         }
+
+        @Override
+        public GosPackageState getGosPackageState(@NonNull String packageName, int userId) {
+            return GosPackageStatePmHooks.get(PackageManagerService.this, packageName, userId);
+        }
+
+        @Override
+        public GosPackageState setGosPackageState(@NonNull String packageName, int flags, @Nullable byte[] storageScopes, boolean killUid, int userId) {
+            return GosPackageStatePmHooks.set(PackageManagerService.this, packageName, flags, storageScopes, killUid, userId);
+        }
     }
 
     private class PackageManagerLocalImpl implements PackageManagerLocal {
@@ -6512,6 +6525,12 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
         public void onPackageProcessKilledForUninstall(String packageName) {
             mHandler.post(() -> PackageManagerService.this.notifyInstallObserver(packageName,
                     true /* killApp */));
+        }
+
+        @Nullable
+        @Override
+        public GosPackageState getGosPackageState(String packageName, int userId) {
+            return GosPackageStatePmHooks.get(PackageManagerService.this, packageName, userId);
         }
     }
 
@@ -7265,6 +7284,24 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
     void addInstallerPackageName(InstallSource installSource) {
         synchronized (mLock) {
             mSettings.addInstallerPackageNames(installSource);
+        }
+    }
+
+    int mediaProviderAppId;
+    int permissionControllerAppId;
+
+    private void initGosPackageStateAppIds() {
+        synchronized (mLock) {
+            AndroidPackage mediaProvider = mPackages.get("com.android.providers.media.module");
+            if (mediaProvider != null) {
+                // getUid() confusingly returns appId
+                mediaProviderAppId = mediaProvider.getUid();
+            }
+
+            AndroidPackage permissionController = mPackages.get(mRequiredPermissionControllerPackage);
+            if (permissionController != null) {
+                permissionControllerAppId = permissionController.getUid();
+            }
         }
     }
 }
