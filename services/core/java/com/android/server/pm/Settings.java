@@ -108,6 +108,7 @@ import com.android.server.pm.permission.LegacyPermissionDataProvider;
 import com.android.server.pm.permission.LegacyPermissionSettings;
 import com.android.server.pm.permission.LegacyPermissionState;
 import com.android.server.pm.permission.LegacyPermissionState.PermissionState;
+import com.android.server.pm.pkg.GosPackageStatePm;
 import com.android.server.pm.pkg.PackageStateInternal;
 import com.android.server.pm.pkg.PackageUserState;
 import com.android.server.pm.pkg.PackageUserStateInternal;
@@ -1043,7 +1044,8 @@ public final class Settings implements Watchable, Snappable {
                                 PackageManager.UNINSTALL_REASON_UNKNOWN,
                                 null /*harmfulAppWarning*/,
                                 null /*splashscreenTheme*/,
-                                0 /*firstInstallTime*/
+                                0 /*firstInstallTime*/,
+                                null /*gosPackageState*/
                         );
                     }
                 }
@@ -1684,7 +1686,8 @@ public final class Settings implements Watchable, Snappable {
                                 PackageManager.UNINSTALL_REASON_UNKNOWN,
                                 null /*harmfulAppWarning*/,
                                 null /* splashScreenTheme*/,
-                                0 /*firstInstallTime*/
+                                0 /*firstInstallTime*/,
+                                null /*gosPackageState*/
                         );
                     }
                     return;
@@ -1778,6 +1781,8 @@ public final class Settings implements Watchable, Snappable {
                     final long firstInstallTime = parser.getAttributeLongHex(null,
                             ATTR_FIRST_INSTALL_TIME, 0);
 
+                    final GosPackageStatePm gosPackageState = GosPackageStatePmHooks.deserialize(parser);
+
                     ArraySet<String> enabledComponents = null;
                     ArraySet<String> disabledComponents = null;
                     PersistableBundle suspendedAppExtras = null;
@@ -1850,7 +1855,7 @@ public final class Settings implements Watchable, Snappable {
                             enabledCaller, enabledComponents, disabledComponents, installReason,
                             uninstallReason, harmfulAppWarning, splashScreenTheme,
                             firstInstallTime != 0 ? firstInstallTime :
-                                    origFirstInstallTimes.getOrDefault(name, 0L));
+                                    origFirstInstallTimes.getOrDefault(name, 0L), gosPackageState);
 
                     mDomainVerificationManager.setLegacyUserState(name, userId, verifState);
                 } else if (tagName.equals("preferred-activities")) {
@@ -2120,6 +2125,9 @@ public final class Settings implements Watchable, Snappable {
                     serializer.attribute(null, ATTR_SPLASH_SCREEN_THEME,
                             ustate.getSplashScreenTheme());
                 }
+
+                GosPackageStatePmHooks.serialize(ustate, serializer);
+
                 if (ustate.isSuspended()) {
                     for (int i = 0; i < ustate.getSuspendParams().size(); i++) {
                         final String suspendingPackage = ustate.getSuspendParams().keyAt(i);
