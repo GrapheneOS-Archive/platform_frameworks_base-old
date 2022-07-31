@@ -45,6 +45,7 @@ import android.content.ReceiverCallNotAllowedException;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.content.pm.AppPermissionUtils;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.IPackageManager;
 import android.content.pm.PackageManager;
@@ -2170,7 +2171,18 @@ class ContextImpl extends Context {
             Log.v(TAG, "Treating renounced permission " + permission + " as denied");
             return PERMISSION_DENIED;
         }
-        return PermissionManager.checkPermission(permission, pid, uid);
+
+        int res = PermissionManager.checkPermission(permission, pid, uid);
+
+        if (res != PERMISSION_GRANTED) {
+            if (uid == android.os.Process.myUid()) {
+                if (AppPermissionUtils.shouldSpoofSelfCheck(permission)) {
+                    return PERMISSION_GRANTED;
+                }
+            }
+        }
+
+        return res;
     }
 
     /** @hide */
