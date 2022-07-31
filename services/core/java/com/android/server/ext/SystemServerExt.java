@@ -37,5 +37,9 @@ public final class SystemServerExt {
         if (packageManager.hasSystemFeature(PackageManager.FEATURE_WIFI, 0)) {
             new WifiAutoOff(this);
         }
+
+        if (packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH, 0)) {
+            new BluetoothAutoOff(this);
+        }
     }
 }
