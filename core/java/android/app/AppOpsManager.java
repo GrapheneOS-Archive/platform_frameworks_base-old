@@ -76,6 +76,7 @@ import com.android.internal.app.IAppOpsNotedCallback;
 import com.android.internal.app.IAppOpsService;
 import com.android.internal.app.IAppOpsStartedCallback;
 import com.android.internal.app.MessageSamplingConfig;
+import com.android.internal.app.StorageScopesAppHooks;
 import com.android.internal.os.RuntimeInit;
 import com.android.internal.os.ZygoteInit;
 import com.android.internal.util.ArrayUtils;
@@ -8792,6 +8793,13 @@ public class AppOpsManager {
     public int checkOpNoThrow(int op, int uid, String packageName) {
         try {
             int mode = mService.checkOperation(op, uid, packageName);
+
+            if (mode != MODE_ALLOWED) {
+                if (StorageScopesAppHooks.shouldSpoofAppOpCheck(op, uid)) {
+                    return MODE_ALLOWED;
+                }
+            }
+
             return mode == AppOpsManager.MODE_FOREGROUND ? AppOpsManager.MODE_ALLOWED : mode;
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
