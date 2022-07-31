@@ -53,6 +53,7 @@ import com.android.server.pm.PackageSetting;
 import com.android.server.pm.dex.DynamicCodeLogger;
 import com.android.server.pm.permission.LegacyPermissionSettings;
 import com.android.server.pm.pkg.AndroidPackage;
+import com.android.server.pm.pkg.GosPackageStatePm;
 import com.android.server.pm.pkg.PackageStateInternal;
 import com.android.server.pm.pkg.SharedUserApi;
 import com.android.server.pm.pkg.mutate.PackageStateMutator;
@@ -1468,4 +1469,7 @@ public abstract class PackageManagerInternal {
      * Returns true if the device is upgrading from an SDK version lower than the one specified.
      */
     public abstract boolean isUpgradingFromLowerThan(int sdkVersion);
+
+    @Nullable
+    public abstract GosPackageStatePm getGosPackageState(String packageName, int userId);
 }

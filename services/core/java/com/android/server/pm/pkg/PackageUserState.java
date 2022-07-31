@@ -122,6 +122,9 @@ public interface PackageUserState {
     @PackageManager.EnabledState
     int getEnabledState();
 
+    @Nullable
+    GosPackageStatePmApi getGosPackageState();
+
     /**
      * @hide
      * @see PackageManager#setHarmfulAppWarning(String, CharSequence)
