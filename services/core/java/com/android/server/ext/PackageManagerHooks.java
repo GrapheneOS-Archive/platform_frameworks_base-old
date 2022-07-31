@@ -4,6 +4,7 @@ import android.Manifest;
 import android.annotation.Nullable;
 import android.annotation.UserIdInt;
 import android.app.AppBindArgs;
+import android.content.pm.GosPackageState;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManagerInternal;
 import android.os.Binder;
@@ -12,6 +13,7 @@ import android.os.Bundle;
 import android.os.UserHandle;
 import android.util.ArraySet;
 
+import com.android.server.pm.GosPackageStatePmHooks;
 import com.android.server.pm.PackageManagerService;
 import com.android.server.pm.permission.Permission;
 import com.android.server.pm.permission.SpecialRuntimePermUtils;
@@ -76,11 +78,14 @@ public class PackageManagerHooks {
         // isSystem() remains true even if isUpdatedSystemApp() is true
         final boolean isUserApp = !pkgState.isSystem();
 
+        GosPackageState gosPs = GosPackageStatePmHooks.get(pm, callingUid, packageName, userId);
+
         int[] flagsArr = new int[AppBindArgs.FLAGS_ARRAY_LEN];
         flagsArr[AppBindArgs.FLAGS_IDX_SPECIAL_RUNTIME_PERMISSIONS] =
                 SpecialRuntimePermUtils.getFlags(pm, pkg, pkgState, userId);
 
         var b = new Bundle();
+        b.putParcelable(AppBindArgs.KEY_GOS_PACKAGE_STATE, gosPs);
         b.putIntArray(AppBindArgs.KEY_FLAGS_ARRAY, flagsArr);
 
         return b;
