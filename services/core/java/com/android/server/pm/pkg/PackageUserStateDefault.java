@@ -19,6 +19,7 @@ package com.android.server.pm.pkg;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.ComponentName;
+import android.content.pm.GosPackageStatePm;
 import android.content.pm.PackageManager;
 import android.content.pm.overlay.OverlayPaths;
 import android.util.ArraySet;
@@ -137,6 +138,12 @@ class PackageUserStateDefault implements PackageUserStateInternal {
     @Override
     public long getFirstInstallTime() {
         return 0;
+    }
+
+    @Nullable
+    @Override
+    public GosPackageStatePm getGosPackageState() {
+        return null;
     }
 
     @Override
