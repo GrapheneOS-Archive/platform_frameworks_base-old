@@ -35,5 +35,6 @@ public final class SystemServerExt {
 
     void initBgThread() {
         WifiAutoOff.maybeInit(this);
+        BluetoothAutoOff.maybeInit(this);
     }
 }
