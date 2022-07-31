@@ -34,6 +34,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.CursorWrapper;
 import android.database.DatabaseUtils;
+import android.database.MatrixCursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkPolicyManager;
 import android.net.Uri;
@@ -52,6 +53,8 @@ import android.text.TextUtils;
 import android.util.LongSparseArray;
 import android.util.Pair;
 import android.webkit.MimeTypeMap;
+
+import android.content.pm.SpecialRuntimePermAppUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -1116,6 +1119,11 @@ public class DownloadManager {
      * future calls related to this download. Returns -1 if the operation fails.
      */
     public long enqueue(Request request) {
+        if (SpecialRuntimePermAppUtils.isInternetCompatEnabled()) {
+            // invalid id (DownloadProvider uses SQLite and returns a row id)
+            return -1;
+        }
+
         ContentValues values = request.toContentValues(mPackageName);
         Uri downloadUri = mResolver.insert(Downloads.Impl.CONTENT_URI, values);
         if (downloadUri == null) {
@@ -1153,6 +1161,11 @@ public class DownloadManager {
      * @return the number of downloads actually removed
      */
     public int remove(long... ids) {
+        if (SpecialRuntimePermAppUtils.isInternetCompatEnabled()) {
+            // underlying provider is protected by the INTERNET permission
+            return 0;
+        }
+
         return markRowDeleted(ids);
     }
 
@@ -1168,6 +1181,11 @@ public class DownloadManager {
 
     /** @hide */
     public Cursor query(Query query, String[] projection) {
+        if (SpecialRuntimePermAppUtils.isInternetCompatEnabled()) {
+            // underlying provider is protected by the INTERNET permission
+            return new MatrixCursor(projection);
+        }
+
         Cursor underlyingCursor = query.runQuery(mResolver, projection, mBaseUri);
         if (underlyingCursor == null) {
             return null;
@@ -1544,6 +1562,11 @@ public class DownloadManager {
         validateArgumentIsNonEmpty("mimeType", mimeType);
         if (length < 0) {
             throw new IllegalArgumentException(" invalid value for param: totalBytes");
+        }
+
+        if (SpecialRuntimePermAppUtils.isInternetCompatEnabled()) {
+            // underlying provider is protected by the INTERNET permission
+            return -1;
         }
 
         // if there is already an entry with the given path name in downloads.db, return its id
