@@ -166,4 +166,6 @@ oneway interface IApplicationThread {
     void updateUiTranslationState(IBinder activityToken, int state, in TranslationSpec sourceSpec,
             in TranslationSpec targetSpec, in List<AutofillId> viewIds,
             in UiTranslationSpec uiTranslationSpec);
+
+    void onGosPackageStateChanged(in @nullable android.content.pm.GosPackageState state);
 }
