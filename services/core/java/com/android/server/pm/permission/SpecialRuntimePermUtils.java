@@ -34,8 +34,25 @@ public class SpecialRuntimePermUtils {
         for (ParsedUsesPermission perm : pkg.getUsesPermissions()) {
             String name = perm.getName();
             switch (name) {
+                case Manifest.permission.INTERNET:
+                    flags |= FLAG_REQUESTS_INTERNET_PERMISSION;
+                    continue;
                 default:
                     continue;
+            }
+        }
+
+        if ((flags & FLAG_REQUESTS_INTERNET_PERMISSION) != 0) {
+            if (pkg.isSystem()) {
+                flags |= FLAG_AWARE_OF_RUNTIME_INTERNET_PERMISSION;
+            } else {
+                Bundle metadata = pkg.getMetaData();
+                if (metadata != null) {
+                    String key = Manifest.permission.INTERNET + ".mode";
+                    if ("runtime".equals(metadata.getString(key))) {
+                        flags |= FLAG_AWARE_OF_RUNTIME_INTERNET_PERMISSION;
+                    }
+                }
             }
         }
 
