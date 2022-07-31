@@ -3556,6 +3556,9 @@ package android.content.pm {
     field @NonNull public static final android.os.Parcelable.Creator<android.content.pm.ShortcutManager.ShareShortcutInfo> CREATOR;
   }
 
+  public class SpecialRuntimePermAppUtils {
+  }
+
   public final class SuspendDialogInfo implements android.os.Parcelable {
     method public int describeContents();
     method public void writeToParcel(android.os.Parcel, int);
