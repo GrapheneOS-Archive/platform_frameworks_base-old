@@ -53,6 +53,7 @@ import android.compat.annotation.EnabledAfter;
 import android.content.AttributionSource;
 import android.content.Context;
 import android.content.PermissionChecker;
+import android.content.pm.AppPermissionUtils;
 import android.content.pm.IPackageManager;
 import android.content.pm.PackageManager;
 import android.content.pm.ParceledListSlice;
@@ -1736,12 +1737,22 @@ public final class PermissionManager {
                     + permission);
             return PackageManager.PERMISSION_DENIED;
         }
+        int res;
         try {
             sShouldWarnMissingActivityManager = true;
-            return am.checkPermissionForDevice(permission, pid, uid, deviceId);
+            res = am.checkPermissionForDevice(permission, pid, uid, deviceId);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
+
+        if (res != PERMISSION_GRANTED) {
+            if (uid == android.os.Process.myUid()) {
+                if (AppPermissionUtils.shouldSpoofSelfCheck(permission)) {
+                    res = PERMISSION_GRANTED;
+                }
+            }
+        }
+        return res;
     }
 
     /**
@@ -1902,12 +1913,24 @@ public final class PermissionManager {
     /* @hide */
     private static int checkPackageNamePermissionUncached(
             String permName, String pkgName, String persistentDeviceId, @UserIdInt int userId) {
+        int res;
         try {
-            return ActivityThread.getPermissionManager().checkPermission(
+            res = ActivityThread.getPermissionManager().checkPermission(
                     pkgName, permName, persistentDeviceId, userId);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
+
+        if (res != PERMISSION_GRANTED) {
+            if (pkgName.equals(ActivityThread.currentPackageName())
+                    && userId == UserHandle.myUserId()
+                    && AppPermissionUtils.shouldSpoofSelfCheck(permName))
+            {
+                res = PERMISSION_GRANTED;
+            }
+        }
+
+        return res;
     }
 
     /* @hide */
