@@ -24,6 +24,13 @@ public class AppPermissionUtils {
     // android.app.ApplicationPackageManager#checkPermission(String permName, String pkgName)
     // android.app.ContextImpl#checkPermission(String permission, int pid, int uid)
     public static boolean shouldSpoofSelfCheck(String permName) {
+        if (Manifest.permission.INTERNET.equals(permName)
+                && SpecialRuntimePermAppUtils.requestsInternetPermission()
+                && !SpecialRuntimePermAppUtils.awareOfRuntimeInternetPermission())
+        {
+            return true;
+        }
+
         return false;
     }
 }
