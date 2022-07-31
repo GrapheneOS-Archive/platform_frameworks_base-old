@@ -3547,6 +3547,11 @@ package android.content.pm {
   }
 
   public class SpecialRuntimePermAppUtils {
+    method public static boolean awareOfRuntimeInternetPermission();
+    method public static boolean isInternetCompatEnabled();
+    method public static boolean requestsInternetPermission();
+    field public static final int FLAG_AWARE_OF_RUNTIME_INTERNET_PERMISSION = 4; // 0x4
+    field public static final int FLAG_REQUESTS_INTERNET_PERMISSION = 2; // 0x2
   }
 
   public final class SuspendDialogInfo implements android.os.Parcelable {
