@@ -85,6 +85,7 @@ import android.content.pm.ComponentInfo;
 import android.content.pm.DataLoaderType;
 import android.content.pm.FallbackCategoryProvider;
 import android.content.pm.FeatureInfo;
+import android.content.pm.GosPackageState;
 import android.content.pm.IDexModuleRegisterCallback;
 import android.content.pm.IOnChecksumsReadyListener;
 import android.content.pm.IPackageDataObserver;
@@ -225,6 +226,7 @@ import com.android.server.pm.permission.PermissionManagerService;
 import com.android.server.pm.permission.PermissionManagerServiceInternal;
 import com.android.server.pm.permission.SpecialRuntimePermUtils;
 import com.android.server.pm.pkg.AndroidPackage;
+import com.android.server.pm.pkg.GosPackageStatePm;
 import com.android.server.pm.pkg.PackageState;
 import com.android.server.pm.pkg.PackageStateInternal;
 import com.android.server.pm.pkg.PackageUserState;
@@ -4366,6 +4368,8 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
         if (dexUseManager != null) {
             dexUseManager.systemReady();
         }
+
+        GosPackageStatePmHooks.init(this);
     }
 
     //TODO: b/111402650
@@ -4746,6 +4750,10 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
             mHandler.post(new Runnable() {
                 public void run() {
                     mHandler.removeCallbacks(this);
+
+                    GosPackageStatePmHooks.onClearApplicationUserData(
+                            PackageManagerService.this, packageName, userId);
+
                     final boolean succeeded;
                     try (PackageFreezer freezer = freezePackage(packageName, UserHandle.USER_ALL,
                             "clearApplicationUserData",
@@ -6451,6 +6459,18 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
             mContext.enforceCallingPermission(Manifest.permission.INSTALL_PACKAGES, null);
             SpecialRuntimePermUtils.skipAutoGrantsForPackage(packageName, userId, permissions);
         }
+
+        @Override
+        public GosPackageState getGosPackageState(@NonNull String packageName, int userId) {
+            return GosPackageStatePmHooks.get(PackageManagerService.this, packageName, userId);
+        }
+
+        @Override
+        public boolean setGosPackageState(@NonNull String packageName, int userId,
+                                                  @NonNull GosPackageState updatedPs, int editorFlags) {
+            return GosPackageStatePmHooks.set(PackageManagerService.this, packageName, userId,
+                    updatedPs, editorFlags);
+        }
     }
 
     private class PackageManagerInternalImpl extends PackageManagerInternalBase {
@@ -6969,6 +6989,12 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
         public void onPackageProcessKilledForUninstall(String packageName) {
             mHandler.post(() -> PackageManagerService.this.notifyInstallObserver(packageName,
                     true /* killApp */));
+        }
+
+        @Nullable
+        @Override
+        public GosPackageStatePm getGosPackageState(String packageName, int userId) {
+            return GosPackageStatePm.get(PackageManagerService.this, packageName, userId);
         }
     }
 

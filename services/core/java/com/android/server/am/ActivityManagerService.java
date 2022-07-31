@@ -283,6 +283,7 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.ActivityPresentationInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.ApplicationInfo.HiddenApiEnforcementPolicy;
+import android.content.pm.GosPackageState;
 import android.content.pm.IPackageDataObserver;
 import android.content.pm.IPackageManager;
 import android.content.pm.IncrementalStatesInfo;
@@ -19115,6 +19116,13 @@ public class ActivityManagerService extends IActivityManager.Stub
         @Override
         public boolean isThemeOverlayReady(int userId) {
             return ActivityManagerService.this.isThemeOverlayReady(userId);
+        }
+
+        @Override
+        public void onGosPackageStateChanged(int uid, @Nullable GosPackageState state) {
+            synchronized (mProcLock) {
+                mProcessList.onGosPackageStateChangedLOSP(uid, state);
+            }
         }
     }
 
