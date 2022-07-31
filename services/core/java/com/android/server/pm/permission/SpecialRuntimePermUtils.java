@@ -2,8 +2,11 @@ package com.android.server.pm.permission;
 
 import android.Manifest;
 import android.app.ActivityManager;
+import android.companion.virtual.VirtualDeviceManager;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.content.pm.PackageManagerInternal;
+import android.content.pm.SrtPermissions;
 import android.ext.settings.ExtSettings;
 import android.os.Build;
 import android.os.Bundle;
@@ -70,12 +73,41 @@ public class SpecialRuntimePermUtils {
         for (ParsedUsesPermission perm : pkg.getUsesPermissions()) {
             String name = perm.getName();
             switch (name) {
+                case Manifest.permission.INTERNET:
+                    if (shouldEnableInternetCompat(pkg, pkgState, userId)) {
+                        flags |= SrtPermissions.FLAG_INTERNET_COMPAT_ENABLED;
+                    }
+                    continue;
                 default:
                     continue;
             }
         }
 
         return flags;
+    }
+
+    private static boolean shouldEnableInternetCompat(AndroidPackage pkg, PackageState pkgState, int userId) {
+        if (pkgState.isSystem() || pkgState.isUpdatedSystemApp()) {
+            // system packages should be aware of runtime INTERNET permission
+            return false;
+        }
+
+        Bundle metadata = pkg.getMetaData();
+        if (metadata != null) {
+            String key = Manifest.permission.INTERNET + ".mode";
+            if ("runtime".equals(metadata.getString(key))) {
+                // AndroidManifest has
+                // <meta-data android:name="android.permission.INTERNET.mode" android:value="runtime" />
+                // declaration inside the <application> element
+                return false;
+            }
+        }
+
+        var permManager = LocalServices.getService(PermissionManagerServiceInternal.class);
+        // enable InternetCompat if package doesn't have the INTERNET permission
+        return permManager.checkPermission(pkg.getPackageName(),
+                Manifest.permission.INTERNET, VirtualDeviceManager.PERSISTENT_DEVICE_ID_DEFAULT, userId)
+                != PackageManager.PERMISSION_GRANTED;
     }
 
     // Maps userIds to map of package names to permissions that should not be auto granted
