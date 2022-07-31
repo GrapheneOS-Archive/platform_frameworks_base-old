@@ -3192,6 +3192,27 @@ public final class ProcessList {
         }
     }
 
+    @GuardedBy(anyOf = {"mService", "mProcLock"})
+    void onGosPackageStateChangedLOSP(int uid, @Nullable GosPackageState state) {
+        for (int i = mLruProcesses.size() - 1; i >= 0; i--) {
+            ProcessRecord r = mLruProcesses.get(i);
+            if (r.uid != uid) {
+                // isolated and "sdk sandbox" processes are skipped intentionally (they run in
+                // separate UIDs)
+                continue;
+            }
+            final IApplicationThread thread = r.getThread();
+            if (thread != null) {
+                try {
+                    thread.onGosPackageStateChanged(state);
+                } catch (RemoteException ex) {
+                    Slog.d(TAG, "onGosPackageStateChanged failed; uid " + uid
+                            + ", processName " + r.info.processName);
+                }
+            }
+        }
+    }
+
     @GuardedBy({"mService", "mProcLock"})
     private int updateLruProcessInternalLSP(ProcessRecord app, long now, int index,
             int lruSeq, String what, Object obj, ProcessRecord srcApp) {
