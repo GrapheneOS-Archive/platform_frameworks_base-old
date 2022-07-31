@@ -12627,6 +12627,9 @@ public final class Settings {
         /** @hide */
         public static final String GNSS_PSDS_STANDARD = "psds_server"; // historical name
 
+        /** @hide */
+        public static final String WIFI_AUTO_OFF = "wifi_off_timeout";
+
         // ExtSettings END
 
         // NOTE: If you add new settings here, be sure to add them to
