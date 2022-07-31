@@ -116,6 +116,7 @@ import com.android.server.pm.permission.LegacyPermissionState;
 import com.android.server.pm.permission.LegacyPermissionState.PermissionState;
 import com.android.server.pm.pkg.AndroidPackage;
 import com.android.server.pm.pkg.ArchiveState;
+import com.android.server.pm.pkg.GosPackageStatePm;
 import com.android.server.pm.pkg.PackageStateInternal;
 import com.android.server.pm.pkg.PackageUserState;
 import com.android.server.pm.pkg.PackageUserStateInternal;
@@ -1135,7 +1136,8 @@ public final class Settings implements Watchable, Snappable, ResilientAtomicFile
                                 null /*splashscreenTheme*/,
                                 0 /*firstInstallTime*/,
                                 PackageManager.USER_MIN_ASPECT_RATIO_UNSET,
-                                null /*archiveState*/
+                                null /*archiveState*/,
+                                null /*gosPackageState*/
                         );
                     }
                 }
@@ -1835,7 +1837,8 @@ public final class Settings implements Watchable, Snappable, ResilientAtomicFile
                                     null /* splashScreenTheme*/,
                                     0 /*firstInstallTime*/,
                                     PackageManager.USER_MIN_ASPECT_RATIO_UNSET,
-                                    null /*archiveState*/
+                                    null /*archiveState*/,
+                                    null /*gosPackageState*/
                             );
                         }
                         return;
@@ -1939,6 +1942,8 @@ public final class Settings implements Watchable, Snappable, ResilientAtomicFile
                                 ATTR_MIN_ASPECT_RATIO,
                                 PackageManager.USER_MIN_ASPECT_RATIO_UNSET);
 
+                        final GosPackageStatePm gosPackageState = GosPackageStatePmHooks.deserialize(parser);
+
                         ArraySet<String> enabledComponents = null;
                         ArraySet<String> disabledComponents = null;
                         SuspendDialogInfo oldSuspendDialogInfo = null;
@@ -2019,7 +2024,7 @@ public final class Settings implements Watchable, Snappable, ResilientAtomicFile
                                 harmfulAppWarning, splashScreenTheme,
                                 firstInstallTime != 0 ? firstInstallTime
                                         : origFirstInstallTimes.getOrDefault(name, 0L),
-                                minAspectRatio, archiveState);
+                                minAspectRatio, archiveState, gosPackageState);
                         mDomainVerificationManager.setLegacyUserState(name, userId, verifState);
                     } else if (tagName.equals("preferred-activities")) {
                         readPreferredActivitiesLPw(parser, userId);
@@ -2415,6 +2420,9 @@ public final class Settings implements Watchable, Snappable, ResilientAtomicFile
                             serializer.attributeInt(null, ATTR_MIN_ASPECT_RATIO,
                                     ustate.getMinAspectRatio());
                         }
+
+                        GosPackageStatePmHooks.serialize(ustate, serializer);
+
                         if (ustate.isSuspended()) {
                             for (int i = 0; i < ustate.getSuspendParams().size(); i++) {
                                 final UserPackage suspendingPackage =
