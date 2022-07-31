@@ -3727,4 +3727,16 @@ public class PackageImpl implements ParsedPackage, AndroidPackageInternal,
         private static final long STUB = 1L;
         private static final long APEX = 1L << 1;
     }
+
+    private volatile int gosPackageStateCachedDerivedFlags;
+
+    @Override
+    public int getGosPackageStateCachedDerivedFlags() {
+        return gosPackageStateCachedDerivedFlags;
+    }
+
+    @Override
+    public void setGosPackageStateCachedDerivedFlags(int value) {
+        gosPackageStateCachedDerivedFlags = value;
+    }
 }

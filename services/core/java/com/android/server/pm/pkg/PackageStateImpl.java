@@ -378,6 +378,8 @@ public class PackageStateImpl implements PackageState {
         @Nullable
         private final String mSplashScreenTheme;
         private final long mFirstInstallTimeMillis;
+        @Nullable
+        private GosPackageStatePm mGosPackageState;
 
         private UserStateImpl(@NonNull PackageUserState userState) {
             mCeDataInode = userState.getCeDataInode();
@@ -400,6 +402,7 @@ public class PackageStateImpl implements PackageState {
             setBoolean(Booleans.SUSPENDED, userState.isSuspended());
             setBoolean(Booleans.VIRTUAL_PRELOAD, userState.isVirtualPreload());
             mFirstInstallTimeMillis = userState.getFirstInstallTimeMillis();
+            mGosPackageState = ((PackageUserStateInternal) userState).getGosPackageState();
         }
 
         @Override
@@ -545,6 +548,11 @@ public class PackageStateImpl implements PackageState {
         @DataClass.Generated.Member
         public long getFirstInstallTimeMillis() {
             return mFirstInstallTimeMillis;
+        }
+
+        @DataClass.Generated.Member
+        public @Nullable GosPackageStatePm getGosPackageState() {
+            return mGosPackageState;
         }
 
         @DataClass.Generated.Member
