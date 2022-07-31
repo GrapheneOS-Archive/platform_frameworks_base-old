@@ -3552,6 +3552,7 @@ package android.content.pm {
   }
 
   public class SpecialRuntimePermAppUtils {
+    method public static boolean isInternetCompatEnabled();
   }
 
   public final class SuspendDialogInfo implements android.os.Parcelable {
