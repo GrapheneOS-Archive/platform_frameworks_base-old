@@ -44,6 +44,7 @@ import android.content.AttributionSource;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.pm.AppPermissionUtils;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ParceledListSlice;
@@ -8435,12 +8436,19 @@ public class AppOpsManager {
     private int unsafeCheckOpRawNoThrow(int op, int uid, @NonNull String packageName,
             int virtualDeviceId) {
         try {
+            final int mode;
             if (virtualDeviceId == Context.DEVICE_ID_DEFAULT) {
-                return mService.checkOperationRaw(op, uid, packageName, null);
+                mode = mService.checkOperationRaw(op, uid, packageName, null);
             } else {
-                return mService.checkOperationRawForDevice(op, uid, packageName, null,
+                mode = mService.checkOperationRawForDevice(op, uid, packageName, null,
                         Context.DEVICE_ID_DEFAULT);
             }
+            if (mode != MODE_ALLOWED && uid == Process.myUid()) {
+                if (AppPermissionUtils.shouldSpoofSelfAppOpCheck(op)) {
+                    return MODE_ALLOWED;
+                }
+            }
+            return mode;
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
@@ -8637,7 +8645,15 @@ public class AppOpsManager {
                 }
             }
 
-            return syncOp.getOpMode();
+            final int mode = syncOp.getOpMode();
+
+            if (mode != MODE_ALLOWED && uid == Process.myUid()) {
+                if (AppPermissionUtils.shouldSpoofSelfAppOpCheck(op)) {
+                    return MODE_ALLOWED;
+                }
+            }
+
+            return mode;
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
@@ -8812,7 +8828,21 @@ public class AppOpsManager {
                 }
             }
 
-            return syncOp.getOpMode();
+            final int mode = syncOp.getOpMode();
+
+            if (mode != MODE_ALLOWED) {
+                int uid = attributionSource.getUid();
+                int nextUid = attributionSource.getNextUid();
+                boolean selfCheck = (uid == myUid) && (nextUid == myUid || nextUid == Process.INVALID_UID);
+
+                if (selfCheck) {
+                    if (AppPermissionUtils.shouldSpoofSelfAppOpCheck(op)) {
+                        return MODE_ALLOWED;
+                    }
+                }
+            }
+
+            return mode;
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
@@ -8910,6 +8940,12 @@ public class AppOpsManager {
                 mode = mService.checkOperation(op, uid, packageName);
             } else {
                 mode = mService.checkOperationForDevice(op, uid, packageName, virtualDeviceId);
+            }
+
+            if (mode != MODE_ALLOWED && uid == Process.myUid()) {
+                if (AppPermissionUtils.shouldSpoofSelfAppOpCheck(op)) {
+                    return MODE_ALLOWED;
+                }
             }
 
             return mode == AppOpsManager.MODE_FOREGROUND ? AppOpsManager.MODE_ALLOWED : mode;
