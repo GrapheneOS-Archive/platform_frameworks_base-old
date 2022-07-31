@@ -19,6 +19,7 @@ package com.android.server.pm.pkg;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.content.pm.GosPackageStatePm;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManagerInternal;
 import android.content.pm.SharedLibraryInfo;
@@ -351,6 +352,8 @@ public class PackageStateImpl implements PackageState {
         @Nullable
         private final String mSplashScreenTheme;
         private final long mFirstInstallTime;
+        @Nullable
+        private GosPackageStatePm mGosPackageState;
 
         private UserStateImpl(@NonNull PackageUserState userState) {
             mCeDataInode = userState.getCeDataInode();
@@ -373,6 +376,7 @@ public class PackageStateImpl implements PackageState {
             setBoolean(Booleans.SUSPENDED, userState.isSuspended());
             setBoolean(Booleans.VIRTUAL_PRELOAD, userState.isVirtualPreload());
             mFirstInstallTime = userState.getFirstInstallTime();
+            mGosPackageState = userState.getGosPackageState();
         }
 
         @Override
@@ -519,6 +523,11 @@ public class PackageStateImpl implements PackageState {
         @DataClass.Generated.Member
         public long getFirstInstallTime() {
             return mFirstInstallTime;
+        }
+
+        @DataClass.Generated.Member
+        public @Nullable GosPackageStatePm getGosPackageState() {
+            return mGosPackageState;
         }
 
         @DataClass.Generated.Member
