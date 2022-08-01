@@ -940,6 +940,7 @@ public class VpnManagerService extends IVpnManager.Stub {
 
     private void enforceSettingsPermission() {
         enforceAnyPermissionOf(mContext,
+                android.Manifest.permission.CONTROL_ALWAYS_ON_VPN,
                 android.Manifest.permission.NETWORK_SETTINGS,
                 NetworkStack.PERMISSION_MAINLINE_NETWORK_STACK);
     }

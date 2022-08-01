@@ -28,6 +28,7 @@ import static android.os.UserHandle.PER_USER_RANGE;
 
 import static com.android.internal.util.Preconditions.checkArgument;
 import static com.android.internal.util.Preconditions.checkNotNull;
+import static com.android.net.module.util.PermissionUtils.enforceAnyPermissionOf;
 
 import android.Manifest;
 import android.annotation.NonNull;
@@ -1828,8 +1829,10 @@ public class Vpn {
     }
 
     private void enforceSettingsPermission() {
-        mContext.enforceCallingOrSelfPermission(Manifest.permission.NETWORK_SETTINGS,
-                "Unauthorized Caller");
+        enforceAnyPermissionOf(mContext,
+                android.Manifest.permission.CONTROL_ALWAYS_ON_VPN,
+                android.Manifest.permission.NETWORK_SETTINGS,
+                "Unathorized Caller");
     }
 
     private class Connection implements ServiceConnection {
