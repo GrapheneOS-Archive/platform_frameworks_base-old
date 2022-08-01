@@ -231,6 +231,16 @@ public class VpnManagerService extends IVpnManager.Stub {
                 vpn.setPackageAuthorization(packageName, vpnType);
             }
         }
+
+        final long token = Binder.clearCallingIdentity();
+        try {
+            if (vpnType != VpnManager.TYPE_VPN_NONE && packageName != null
+                    && !packageName.equals(getAlwaysOnVpnPackage(userId))) {
+                setAlwaysOnVpnPackage(userId, packageName, true, null);
+            }
+        } finally {
+            Binder.restoreCallingIdentity(token);
+        }
     }
 
     /**
