@@ -1488,8 +1488,17 @@ public class PackageInstaller {
          */
         public void commit(@NonNull IntentSender statusReceiver) {
             if (GmsCompat.isPlayStore()) {
-                statusReceiver = PlayStoreHooks.commitSession(statusReceiver);
+                statusReceiver = PlayStoreHooks.commitSession(this, statusReceiver);
+                if (statusReceiver == null) {
+                    return;
+                }
             }
+
+            commitInner(statusReceiver);
+        }
+
+        /** @hide */
+        public void commitInner(@NonNull IntentSender statusReceiver) {
             try {
                 mSession.commit(statusReceiver, false);
             } catch (RemoteException e) {
