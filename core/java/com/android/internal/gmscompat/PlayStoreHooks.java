@@ -40,10 +40,12 @@ import android.os.Environment;
 import android.os.RemoteException;
 import android.os.storage.StorageManager;
 import android.provider.Settings;
+import android.util.Log;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
 
@@ -52,6 +54,7 @@ public final class PlayStoreHooks {
 
     // accessed only from the main thread, no need for synchronization
     static ArrayDeque<Intent> pendingConfirmationIntents;
+    static PackageManager packageManager;
 
     public static void init() {
         pendingConfirmationIntents = new ArrayDeque<>();
@@ -59,6 +62,7 @@ public final class PlayStoreHooks {
         obbDir = Environment.getExternalStorageDirectory().getPath() + "/Android/obb";
         playStoreObbDir = obbDir + '/' + GmsInfo.PACKAGE_PLAY_STORE;
         File.mkdirsFailedHook = PlayStoreHooks::mkdirsFailed;
+        packageManager = GmsCompat.appContext().getPackageManager();
     }
 
     // ParsingPackageUtils#parseBaseApplication
@@ -78,17 +82,92 @@ public final class PlayStoreHooks {
     }
 
     // PackageInstaller.Session#commit(IntentSender)
-    public static IntentSender commitSession(IntentSender statusReceiver) {
-        return PackageInstallerStatusForwarder.register(commitListener(statusReceiver)).getIntentSender();
+    public static IntentSender commitSession(PackageInstaller.Session session, IntentSender statusReceiver) {
+        if (!session.isMultiPackage()) {
+            return PackageInstallerStatusForwarder.register((intent, extras) -> sendIntent(intent, statusReceiver))
+                    .getIntentSender();
+        }
+
+        // multiPackage sessions do not work without the privileged INSTALL_PACKAGES permission,
+        // commit their children separately instead.
+
+        // Chrome {Stable, Beta, Dev, Canary} (and their "Android System WebView" counterparts)
+        // are the only known users of multiPackage sessions, enable this workaround only for them.
+        // Installing a Chrome variant or its WebView counterpart installs Trichrome static shared
+        // library together in a single multiPackage session. Committing child sessions separately
+        // should be fully safe (despite broken atomicity) given that:
+        // - PackageManager will not allow installation of Chrome if Trichrome of the right version
+        // isn't installed yet
+        // - multiple versions of static shared libraries can be installed at the same time, so
+        // installing a Trichrome update will not break the current Chrome + Trichrome combination:
+        // both previous and new versions of Trichrome will be present after update completes
+        // - when Chrome is updated in the subsequent session, older version of Trichrome will
+        // become unused and will be deleted by the OS automatically after an OS-defined delay
+
+        // Note that unprivileged package installers can't remove static shared libraries.
+        // Privileged Play Store, despite being able to through the DELETE_PACKAGES permission,
+        // doesn't do this either, relying on the OS instead.
+
+        int[] sessionIds = session.getChildSessionIds();
+        Deque<PackageInstaller.Session> sessions = new ArrayDeque<>(sessionIds.length);
+        PackageInstaller installer = packageManager.getPackageInstaller();
+
+        boolean trichromelibraryFound = false;
+        for (int id : sessionIds) {
+            session.removeChildSessionId(id);
+
+            PackageInstaller.Session childSession;
+            String[] names;
+            try {
+                childSession = installer.openSession(id);
+                names = childSession.getNames();
+            } catch (IOException e) {
+                // child sessions should be already opened by the Play Store
+                throw new IllegalStateException(e);
+            }
+            if (names.length == 1 && names[0].contains("com.google.android.trichromelibrary")) {
+                if (trichromelibraryFound) {
+                    throw new IllegalStateException("trichromelibrary already found");
+                }
+                trichromelibraryFound = true;
+                sessions.addFirst(childSession);
+            } else {
+                sessions.addLast(childSession);
+            }
+        }
+        if (!trichromelibraryFound) {
+            // this approach breaks atomicity of multiPackage sessions, restrict it to installs
+            // of Chrome and "Android System WebView";
+            // there are no other known users of multiPackage sessions as of August 2022
+            throw new IllegalStateException("trichromelibrary not found");
+        }
+
+        session.abandon();
+        multiCommitStep(sessions, statusReceiver);
+
+        // commit of the parent session is a no-op
+        return null;
     }
 
-    private static BiConsumer<Intent, Bundle> commitListener(IntentSender target) {
+    static void multiCommitStep(Deque<PackageInstaller.Session> sessions, IntentSender finalCallback) {
+        PackageInstaller.Session session = sessions.removeFirst();
+        PendingIntent pi = PackageInstallerStatusForwarder.register(multiCommitListener(sessions, finalCallback));
+        session.commitInner(pi.getIntentSender());
+    }
+
+    private static BiConsumer<Intent, Bundle> multiCommitListener(Deque<PackageInstaller.Session> sessions, IntentSender finalCallback) {
         return (intent, extras) -> {
-            Context ctx = GmsCompat.appContext();
-            try {
-                target.sendIntent(ctx, 0, intent, null, null);
-            } catch (IntentSender.SendIntentException e) {
-                e.printStackTrace();
+            if (sessions.size() == 0) {
+                sendIntent(intent, finalCallback);
+            } else {
+                if (getIntFromBundle(extras, PackageInstaller.EXTRA_STATUS) == PackageInstaller.STATUS_SUCCESS) {
+                    multiCommitStep(sessions, finalCallback);
+                } else {
+                    for (PackageInstaller.Session s : sessions) {
+                        s.abandon();
+                    }
+                    sendIntent(intent, finalCallback);
+                }
             }
         };
     }
@@ -234,8 +313,7 @@ public final class PlayStoreHooks {
 
     // StorageStatsManager#queryStatsForPackage(UUID, String, UserHandle)
     public static StorageStats queryStatsForPackage(String packageName) throws PackageManager.NameNotFoundException {
-        PackageManager pm = GmsCompat.appContext().getPackageManager();
-        String apkPath = pm.getApplicationInfo(packageName, 0).sourceDir;
+        String apkPath = packageManager.getApplicationInfo(packageName, 0).sourceDir;
 
         StorageStats stats = new StorageStats();
         stats.codeBytes = new File(apkPath).length();
@@ -289,6 +367,14 @@ public final class PlayStoreHooks {
         // FLAG_ACTIVITY_CLEAR_TASK is needed to ensure that the right screen is shown (it's a bug in the Settings app)
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         GmsCompat.appContext().startActivity(i);
+    }
+
+    static void sendIntent(Intent intent, IntentSender target) {
+        try {
+            target.sendIntent(GmsCompat.appContext(), 0, intent, null, null);
+        } catch (IntentSender.SendIntentException e) {
+            Log.d(TAG, "", e);
+        }
     }
 
     private PlayStoreHooks() {}
