@@ -33,8 +33,10 @@ import android.app.ActivityOptions;
 import android.app.AnrController;
 import android.app.ApplicationErrorReport;
 import android.app.ApplicationExitInfo;
+import android.app.compat.gms.GmsCompat;
 import android.app.usage.UsageStatsManager;
 import android.content.ActivityNotFoundException;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.VersionedPackage;
@@ -58,6 +60,7 @@ import android.util.proto.ProtoOutputStream;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.app.ProcessMap;
+import com.android.internal.gmscompat.GmsCompatApp;
 import com.android.internal.logging.MetricsLogger;
 import com.android.internal.logging.nano.MetricsProto;
 import com.android.server.LocalServices;
@@ -588,6 +591,8 @@ class AppErrors {
         final int relaunchReason = r != null
                 ? r.getWindowProcessController().computeRelaunchReason() : RELAUNCH_REASON_NONE;
 
+        final boolean isGms = r != null && GmsCompat.isGmsApp(r.info.packageName, r.userId);
+
         AppErrorResult result = new AppErrorResult();
         int taskId;
         synchronized (mService) {
@@ -623,9 +628,28 @@ class AppErrors {
             data.result = result;
             data.proc = r;
 
+            boolean shouldReturn = false;
+
             // If we can't identify the process or it's already exceeded its crash quota,
             // quit right away without showing a crash dialog.
             if (r == null || !makeAppCrashingLocked(r, shortMsg, longMsg, stackTrace, data)) {
+                shouldReturn = true;
+            }
+
+            if (isGms) {
+                Intent intent = createAppErrorIntentLOSP(r, timeMillis, crashInfo);
+
+                if (intent != null) {
+                    intent.setComponent(ComponentName.createRelative(GmsCompatApp.PKG_NAME, ".CrashReceiver"));
+                    mService.mHandler.post(() ->
+                        mContext.sendBroadcastAsUser(intent, UserHandle.of(r.userId))
+                    );
+
+                    shouldReturn = true;
+                }
+            }
+
+            if (shouldReturn) {
                 return;
             }
 
