@@ -2769,4 +2769,9 @@
 
     <!-- Title for notification of low stylus battery. [CHAR_LIMIT=NONE] -->
     <string name="stylus_battery_low">Stylus battery low</string>
+
+    <string name="error_report_title">Error in %1$s</string>
+    <string name="copy_to_clipboard">Copy to clipboard</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="error_share">Share</string>
 </resources>
