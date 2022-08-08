@@ -2354,4 +2354,9 @@
 
     <!-- Title for User Switch dialog. [CHAR LIMIT=20] -->
     <string name="qs_user_switch_dialog_title">Select user</string>
+
+    <string name="error_report_title">Error in %1$s</string>
+    <string name="copy_to_clipboard">Copy to clipboard</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="error_share">Share</string>
 </resources>
