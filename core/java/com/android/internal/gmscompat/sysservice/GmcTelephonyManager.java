@@ -151,4 +151,14 @@ public class GmcTelephonyManager extends TelephonyManager {
             return TelephonyManager.CALL_STATE_IDLE;
         }
     }
+
+    @Override
+    public int getVoiceNetworkType() {
+        try {
+            return super.getVoiceNetworkType();
+        } catch (SecurityException e) { // missing READ_PHONE_STATE permission
+            Log.d(TAG, "", e);
+            return NETWORK_TYPE_UNKNOWN;
+        }
+    }
 }
