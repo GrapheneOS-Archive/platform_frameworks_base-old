@@ -433,14 +433,8 @@ public final class GmsHooks {
             return options;
         }
 
-        if (!targetPkg.equals(GmsInfo.PACKAGE_GMS_CORE)) {
-            Log.d(TAG, "emulating temporary PowerExemptionManager allowlist for " + targetPkg
-                + ", duration: " + duration
-                + ", reason: " + bo.getTemporaryAppAllowlistReason()
-                + ", reasonCode: " + PowerExemptionManager.reasonCodeToString(bo.getTemporaryAppAllowlistReasonCode()));
-
-            ClientPriorityManager.raiseToForeground(targetPkg, duration);
-        }
+        ClientPriorityManager.raiseToForeground(targetPkg, duration,
+                bo.getTemporaryAppAllowlistReason(), bo.getTemporaryAppAllowlistReasonCode());
 
         bo.setTemporaryAppAllowlist(0, PowerExemptionManager.TEMPORARY_ALLOW_LIST_TYPE_NONE,
                 PowerExemptionManager.REASON_UNKNOWN, null);
