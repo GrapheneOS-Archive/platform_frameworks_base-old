@@ -1014,5 +1014,18 @@
             android:exported="true"
             android:permission="android.permission.CUSTOMIZE_SYSTEM_UI"
             />
+
+        <activity
+            android:name=".ErrorReportActivity"
+            android:exported="true"
+            android:theme="@android:style/Theme.DeviceDefault.DayNight"
+            android:documentLaunchMode="always"
+            android:process=":ui"
+        >
+            <intent-filter>
+                <action android:name="android.intent.action.APP_ERROR" />
+            </intent-filter>
+        </activity>
+
     </application>
 </manifest>
