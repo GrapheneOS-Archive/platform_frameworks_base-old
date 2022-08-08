@@ -16,13 +16,17 @@
 
 package com.android.internal.gmscompat.client;
 
+import android.annotation.Nullable;
 import android.app.compat.gms.GmsCompat;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+import android.os.PowerExemptionManager;
 import android.util.Log;
+
+import com.android.internal.gmscompat.GmsInfo;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -38,6 +42,24 @@ public class ClientPriorityManager implements ServiceConnection, Runnable {
     private boolean unbound;
 
     private ClientPriorityManager() {}
+
+    public static void raiseToForeground(String targetPkg, long durationMs, @Nullable String reason, int reasonCode) {
+        if (durationMs <= 0) {
+            return;
+        }
+
+        if (targetPkg.equals(GmsInfo.PACKAGE_GMS_CORE)) {
+            // always foreground, and doesn't have the GmsCompatClientService
+            return;
+        }
+
+        Log.d(TAG, "emulating temporary PowerExemptionManager allowlist for " + targetPkg
+            + ", duration: " + durationMs
+            + ", reason: " + reason
+            + ", reasonCode: " + PowerExemptionManager.reasonCodeToString(reasonCode));
+
+        raiseToForeground(targetPkg, durationMs);
+    }
 
     public static void raiseToForeground(String targetPkg, long durationMs) {
         Intent intent = new Intent();
