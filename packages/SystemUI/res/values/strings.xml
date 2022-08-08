@@ -2869,4 +2869,9 @@
 
     <!-- Content description for priority mode icon on dream [CHAR LIMIT=NONE] -->
     <string name="priority_mode_dream_overlay_content_description">Priority mode on</string>
+
+    <string name="error_report_title">Error in %1$s</string>
+    <string name="copy_to_clipboard">Copy to clipboard</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="error_share">Share</string>
 </resources>
