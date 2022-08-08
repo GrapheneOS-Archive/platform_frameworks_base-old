@@ -4809,5 +4809,8 @@
   <java-symbol type="string" name="other_users_notification_title" />
   <java-symbol type="string" name="other_users_notification_switch_user_action" />
 
+  <!-- Button that opens the screen with details of an application error -->
+  <java-symbol type="string" name="aerr_show_details" />
+
   <java-symbol type="dimen" name="status_bar_height_default" />
 </resources>
