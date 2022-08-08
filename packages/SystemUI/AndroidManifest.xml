@@ -1025,5 +1025,18 @@
             <meta-data android:name="androidx.emoji2.text.EmojiCompatInitializer"
                 tools:node="remove" />
         </provider>
+
+        <activity
+            android:name=".ErrorReportActivity"
+            android:exported="true"
+            android:theme="@android:style/Theme.DeviceDefault.DayNight"
+            android:documentLaunchMode="always"
+            android:process=":ui"
+        >
+            <intent-filter>
+                <action android:name="android.intent.action.APP_ERROR" />
+            </intent-filter>
+        </activity>
+
     </application>
 </manifest>
