@@ -4810,4 +4810,7 @@
   <java-symbol type="string" name="notification_channel_other_users_description" />
   <java-symbol type="string" name="other_users_notification_title" />
   <java-symbol type="string" name="other_users_notification_switch_user_action" />
+
+  <!-- Button that opens the screen with details of an application error -->
+  <java-symbol type="string" name="aerr_show_details" />
 </resources>

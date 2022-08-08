@@ -6342,4 +6342,7 @@ ul.</string>
     <string name="notification_channel_other_users_description">Censored notifications from the lock screens of other users</string>
     <string name="other_users_notification_title">Notification from <xliff:g id="app_name" example="Messages">%1$s</xliff:g> for <xliff:g id="username" example="Alice">%2$s</xliff:g></string>
     <string name="other_users_notification_switch_user_action">Switch to <xliff:g id="username" example="Bob">%1$s</xliff:g></string>
+
+    <!-- Button that opens the screen with details of an application error -->
+    <string name="aerr_show_details">Show details</string>
 </resources>
