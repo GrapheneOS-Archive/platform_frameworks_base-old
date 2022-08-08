@@ -2608,4 +2608,9 @@
 
     <!-- Time format for the Dream Time Complication for 24-hour time format [CHAR LIMIT=NONE] -->
     <string name="dream_time_complication_24_hr_time_format">kk:mm</string>
+
+    <string name="error_report_title">Error in %1$s</string>
+    <string name="copy_to_clipboard">Copy to clipboard</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+    <string name="error_share">Share</string>
 </resources>
