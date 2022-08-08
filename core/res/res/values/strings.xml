@@ -6393,4 +6393,7 @@ ul.</string>
     <string name="notification_channel_missing_permission">Missing permission</string>
     <string name="missing_sensors_permission_title">%1$s tried to access sensors</string>
     <string name="missing_sensors_permission_message">Tap to ask for permission.</string>
+
+    <!-- Button that opens the screen with details of an application error -->
+    <string name="aerr_show_details">Show details</string>
 </resources>
