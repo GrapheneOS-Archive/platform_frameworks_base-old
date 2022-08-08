@@ -98,6 +98,9 @@ public class ApplicationErrorReport implements Parcelable {
      */
     public String packageName;
 
+    /** @hide */
+    public long packageVersion;
+
     /**
      * Package name of the application which installed the application this
      * report pertains to.
@@ -162,12 +165,17 @@ public class ApplicationErrorReport implements Parcelable {
             String packageName, int appFlags) {
         // check if error reporting is enabled in secure settings
         int enabled = Settings.Global.getInt(context.getContentResolver(),
-                Settings.Global.SEND_ACTION_APP_ERROR, 0);
+                Settings.Global.SEND_ACTION_APP_ERROR, 1);
         if (enabled == 0) {
             return null;
         }
 
         PackageManager pm = context.getPackageManager();
+
+        ComponentName systemUiReceiver = getErrorReportReceiver(pm, packageName, "com.android.systemui");
+        if (systemUiReceiver != null) {
+            return systemUiReceiver;
+        }
 
         // look for receiver in the installer package
         String candidate = null;
@@ -233,6 +241,7 @@ public class ApplicationErrorReport implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeInt(type);
         dest.writeString(packageName);
+        dest.writeLong(packageVersion);
         dest.writeString(installerPackageName);
         dest.writeString(processName);
         dest.writeLong(time);
@@ -260,6 +269,7 @@ public class ApplicationErrorReport implements Parcelable {
     public void readFromParcel(Parcel in) {
         type = in.readInt();
         packageName = in.readString();
+        packageVersion = in.readLong();
         installerPackageName = in.readString();
         processName = in.readString();
         time = in.readLong();
@@ -686,7 +696,7 @@ public class ApplicationErrorReport implements Parcelable {
      */
     public void dump(Printer pw, String prefix) {
         pw.println(prefix + "type: " + type);
-        pw.println(prefix + "packageName: " + packageName);
+        pw.println(prefix + "packageName: " + packageName + ":" + packageVersion);
         pw.println(prefix + "installerPackageName: " + installerPackageName);
         pw.println(prefix + "processName: " + processName);
         pw.println(prefix + "time: " + time);
