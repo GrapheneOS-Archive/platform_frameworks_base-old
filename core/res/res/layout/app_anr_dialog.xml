@@ -41,8 +41,8 @@
             android:id="@+id/aerr_report"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/aerr_report"
-            android:drawableStart="@drawable/ic_feedback"
+            android:text="@string/aerr_show_details"
+            android:drawableStart="@drawable/ic_info_outline_24"
             style="@style/aerr_list_item" />
 
 </LinearLayout>
