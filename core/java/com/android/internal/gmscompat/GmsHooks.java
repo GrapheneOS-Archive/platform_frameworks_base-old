@@ -23,6 +23,7 @@ import android.app.ActivityManager;
 import android.app.ActivityManager.RunningAppProcessInfo;
 import android.app.ActivityThread;
 import android.app.Application;
+import android.app.ApplicationErrorReport;
 import android.app.BroadcastOptions;
 import android.app.PendingIntent;
 import android.app.compat.gms.GmsCompat;
@@ -31,6 +32,7 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.MatrixCursor;
@@ -79,6 +81,39 @@ public final class GmsHooks {
         }
 
         GmsCompatApp.connect(ctx, processName);
+
+        Thread.setUncaughtExceptionPreHandler(new UncaughtExceptionPreHandler());
+    }
+
+    static class UncaughtExceptionPreHandler implements Thread.UncaughtExceptionHandler {
+        final Thread.UncaughtExceptionHandler orig = Thread.getUncaughtExceptionPreHandler();
+
+        @Override
+        public void uncaughtException(Thread t, Throwable e) { // todo comment
+            Context ctx = GmsCompat.appContext();
+
+            ApplicationErrorReport aer = new ApplicationErrorReport();
+            aer.type = ApplicationErrorReport.TYPE_CRASH;
+            aer.crashInfo = new ApplicationErrorReport.ParcelableCrashInfo(e);
+
+            ApplicationInfo ai = ctx.getApplicationInfo();
+            aer.packageName = ai.packageName;
+            aer.packageVersion = ai.longVersionCode;
+            aer.processName = Application.getProcessName();
+
+            // In some cases, GMS kills its process when it receives an uncaught exception, which
+            // bypasses the standard crash handling infrastructure.
+            // Send the report to GmsCompatApp before GMS receives the uncaughtException() callback.
+            try {
+                GmsCompatApp.iGms2Gca().onUncaughtException(aer);
+            } catch (RemoteException re) {
+                Log.e(TAG, "", re);
+            }
+
+            if (orig != null) {
+                orig.uncaughtException(t, e);
+            }
+        }
     }
 
     // ContextImpl#getSystemService(String)
