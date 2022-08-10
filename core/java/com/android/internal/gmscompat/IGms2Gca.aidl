@@ -1,5 +1,6 @@
 package com.android.internal.gmscompat;
 
+import android.app.ApplicationErrorReport;
 import android.app.PendingIntent;
 
 import com.android.internal.gmscompat.dynamite.server.IFileProxyService;
@@ -19,4 +20,6 @@ interface IGms2Gca {
     oneway void showGmsCoreMissingPermissionForNearbyShareNotification();
 
     oneway void showGmsMissingNearbyDevicesPermissionGeneric(String callerPkg);
+
+    void onUncaughtException(in ApplicationErrorReport aer);
 }
