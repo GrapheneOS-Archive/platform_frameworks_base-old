@@ -77,6 +77,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.GosPackageState;
 import android.content.pm.IPackageManager;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManagerInternal;
@@ -1863,6 +1864,24 @@ public final class ProcessList {
 
             runtimeFlags |= Zygote.getMemorySafetyRuntimeFlags(
                     definingAppInfo, app.processInfo, instructionSet, mPlatformCompat);
+
+            String primaryAbi = app.info.primaryCpuAbi;
+            if (!app.info.isSystemApp() && primaryAbi != null && VMRuntime.is64BitAbi(primaryAbi)) {
+                // non-system app that has native 64-bit code
+
+                PackageManagerInternal pmi = LocalServices.getService(PackageManagerInternal.class);
+
+                GosPackageState ps = pmi.getGosPackageState(app.info.packageName, userId);
+                if (ps != null) {
+                    if (ps.hasFlag(GosPackageState.FLAG_DISABLE_HARDENED_MALLOC)) {
+                        runtimeFlags |= Zygote.DISABLE_HARDENED_MALLOC;
+                    }
+
+                    if (ps.hasFlag(GosPackageState.FLAG_ENABLE_COMPAT_VA_39_BIT)) {
+                        runtimeFlags |= Zygote.ENABLE_COMPAT_VA_39_BIT;
+                    }
+                }
+            }
 
             // the per-user SELinux context must be set
             if (TextUtils.isEmpty(app.info.seInfoUser)) {
