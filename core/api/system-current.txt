@@ -3221,11 +3221,14 @@ package android.content.pm {
   public final class GosPackageState implements android.os.Parcelable {
     method public static boolean attachableToPackage(@NonNull String);
     method public int describeContents();
+    method @NonNull public android.content.pm.GosPackageState.Editor edit();
+    method @NonNull public static android.content.pm.GosPackageState.Editor edit(@NonNull String);
     method @Nullable public static android.content.pm.GosPackageState get(@NonNull String);
     method @Nullable public static android.content.pm.GosPackageState getForSelf();
     method public boolean hasDerivedFlag(int);
+    method public boolean hasDerivedFlags(int);
     method public boolean hasFlag(int);
-    method @CheckResult @NonNull public static android.content.pm.GosPackageState set(@NonNull String, int, @Nullable byte[], boolean);
+    method public boolean hasFlags(int);
     method public boolean shouldSpoofPermissionCheck(@NonNull String);
     method public void writeToParcel(@NonNull android.os.Parcel, int);
     field @NonNull public static final android.os.Parcelable.Creator<android.content.pm.GosPackageState> CREATOR;
@@ -3247,6 +3250,16 @@ package android.content.pm {
     field public final int derivedFlags;
     field public final int flags;
     field @Nullable public final byte[] storageScopes;
+  }
+
+  public static class GosPackageState.Editor {
+    method @NonNull public android.content.pm.GosPackageState.Editor addFlags(int);
+    method @Nullable public android.content.pm.GosPackageState apply();
+    method @NonNull public android.content.pm.GosPackageState.Editor clearFlags(int);
+    method @NonNull public android.content.pm.GosPackageState.Editor killUidAfterApply();
+    method @NonNull public android.content.pm.GosPackageState.Editor setFlagsState(int, boolean);
+    method @NonNull public android.content.pm.GosPackageState.Editor setKillUidAfterApply(boolean);
+    method @NonNull public android.content.pm.GosPackageState.Editor setStorageScopes(@Nullable byte[]);
   }
 
   public final class InstallationFile {
