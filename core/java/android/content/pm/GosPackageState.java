@@ -43,6 +43,8 @@ public final class GosPackageState implements Parcelable {
     public static final int FLAG_STORAGE_SCOPES_ENABLED = 1;
     // checked only if REQUEST_INSTALL_PACKAGES permission is granted
     public static final int FLAG_ALLOW_ACCESS_TO_OBB_DIRECTORY = 1 << 1;
+    public static final int FLAG_DISABLE_HARDENED_MALLOC = 1 << 2;
+    public static final int FLAG_ENABLE_COMPAT_VA_39_BIT = 1 << 3;
 
     // to distinguish between the case when no dflags are set and the case when dflags weren't calculated yet
     public static final int DFLAGS_SET = 1;
