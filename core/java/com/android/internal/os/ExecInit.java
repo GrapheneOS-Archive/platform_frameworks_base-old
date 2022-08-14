@@ -3,6 +3,7 @@ package com.android.internal.os;
 import android.os.Trace;
 import android.system.ErrnoException;
 import android.system.Os;
+import android.system.OsConstants;
 import android.util.Slog;
 import android.util.TimingsTraceLog;
 import dalvik.system.VMRuntime;
@@ -78,7 +79,26 @@ public class ExecInit {
 
         WrapperInit.preserveCapabilities();
         try {
-            Os.execv(argv[0], argv);
+            if ((runtimeFlags & Zygote.DISABLE_HARDENED_MALLOC) != 0) {
+                // checked by bionic during early init
+                Os.setenv("DISABLE_HARDENED_MALLOC", "1", true);
+            }
+
+            if ((runtimeFlags & Zygote.ENABLE_COMPAT_VA_39_BIT) != 0) {
+                final int FLAG_COMPAT_VA_39_BIT = 1 << 30;
+
+                int errno = Zygote.execveatWrapper(-1, argv[0], argv, FLAG_COMPAT_VA_39_BIT);
+
+                if (errno == OsConstants.EINVAL) {
+                    // kernel doesn't support FLAG_COMPAT_VA_39_BIT, or a different error that will
+                    // be thrown by execv() anyway
+                    Os.execv(argv[0], argv);
+                } else {
+                    throw new ErrnoException("execveat", errno);
+                }
+            } else {
+                Os.execv(argv[0], argv);
+            }
         } catch (ErrnoException e) {
             throw new RuntimeException(e);
         }
