@@ -141,6 +141,7 @@ import com.android.server.Watchdog;
 import com.android.server.am.ActivityManagerService.ProcessChangeItem;
 import com.android.server.compat.PlatformCompat;
 import com.android.server.pm.pkg.AndroidPackage;
+import com.android.server.pm.pkg.GosPackageStatePm;
 import com.android.server.pm.pkg.PackageStateInternal;
 import com.android.server.wm.ActivityServiceConnectionsHolder;
 import com.android.server.wm.WindowManagerService;
@@ -1952,6 +1953,21 @@ public final class ProcessList {
 
             runtimeFlags |= Zygote.getMemorySafetyRuntimeFlags(
                     definingAppInfo, app.processInfo, instructionSet, mPlatformCompat);
+
+            if (GosPackageState.eligibleForRelaxHardeningFlag(app.info)) {
+                PackageManagerInternal pmi = LocalServices.getService(PackageManagerInternal.class);
+
+                GosPackageStatePm ps = pmi.getGosPackageState(app.info.packageName, userId);
+                if (ps != null) {
+                    if (ps.hasFlags(GosPackageState.FLAG_DISABLE_HARDENED_MALLOC)) {
+                        runtimeFlags |= Zygote.DISABLE_HARDENED_MALLOC;
+                    }
+
+                    if (ps.hasFlags(GosPackageState.FLAG_ENABLE_COMPAT_VA_39_BIT)) {
+                        runtimeFlags |= Zygote.ENABLE_COMPAT_VA_39_BIT;
+                    }
+                }
+            }
 
             // the per-user SELinux context must be set
             if (TextUtils.isEmpty(app.info.seInfoUser)) {
