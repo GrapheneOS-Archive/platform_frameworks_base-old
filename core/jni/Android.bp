@@ -271,6 +271,7 @@ cc_library_shared_for_libandroid_runtime {
                 "android_tracing_PerfettoDataSource.cpp",
                 "android_tracing_PerfettoDataSourceInstance.cpp",
                 "android_tracing_PerfettoProducer.cpp",
+                "ExecStrings.cpp",
             ],
 
             static_libs: [
