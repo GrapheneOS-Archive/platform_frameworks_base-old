@@ -78,7 +78,20 @@ public class ExecInit {
 
         WrapperInit.preserveCapabilities();
         try {
-            Os.execv(argv[0], argv);
+            if ((runtimeFlags & Zygote.DISABLE_HARDENED_MALLOC) != 0) {
+                // checked by bionic during early init
+                Os.setenv("DISABLE_HARDENED_MALLOC", "1", true);
+            }
+
+            if ((runtimeFlags & Zygote.ENABLE_COMPAT_VA_39_BIT) != 0) {
+                final int FLAG_COMPAT_VA_39_BIT = 1 << 30;
+
+                int errno = Zygote.execveatWrapper(-1, argv[0], argv, FLAG_COMPAT_VA_39_BIT);
+
+                throw new ErrnoException("execveat", errno);
+            } else {
+                Os.execv(argv[0], argv);
+            }
         } catch (ErrnoException e) {
             throw new RuntimeException(e);
         }
