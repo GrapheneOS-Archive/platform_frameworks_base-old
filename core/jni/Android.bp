@@ -269,6 +269,7 @@ cc_library_shared_for_libandroid_runtime {
                 "android_window_WindowInfosListener.cpp",
                 "android_window_ScreenCapture.cpp",
                 "jni_common.cpp",
+                "ExecStrings.cpp",
             ],
 
             static_libs: [
