@@ -188,6 +188,14 @@ public final class Zygote {
      */
     public static final int PROFILEABLE = 1 << 24;
 
+    public static final int DISABLE_HARDENED_MALLOC = 1 << 29;
+    public static final int ENABLE_COMPAT_VA_39_BIT = 1 << 30;
+
+    // make sure to update isSimpleForkCommand() in core/jni/com_android_internal_os_ZygoteCommandBuffer.cpp
+    // when adding new flags that depend on exec spawning
+    public static final int RUNTIME_FLAGS_DEPENDENT_ON_EXEC_SPAWNING = DISABLE_HARDENED_MALLOC | ENABLE_COMPAT_VA_39_BIT;
+    public static final int CUSTOM_RUNTIME_FLAGS = DISABLE_HARDENED_MALLOC | ENABLE_COMPAT_VA_39_BIT;
+
     /** No external storage should be mounted. */
     public static final int MOUNT_EXTERNAL_NONE = IVold.REMOUNT_MODE_NONE;
     /** Default external storage should be mounted. */
@@ -1111,6 +1119,7 @@ public final class Zygote {
     @SuppressWarnings("unused")
     private static void callPostForkChildHooks(int runtimeFlags, boolean isSystemServer,
             boolean isZygote, String instructionSet) {
+        runtimeFlags &= ~CUSTOM_RUNTIME_FLAGS; // a warning is printed when an unknown flag is passed
         ZygoteHooks.postForkChild(runtimeFlags, isSystemServer, isZygote, instructionSet);
     }
 
