@@ -16,7 +16,6 @@
 
 package android.content.pm;
 
-import android.annotation.CheckResult;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.SystemApi;
@@ -38,6 +37,8 @@ public final class GosPackageState implements Parcelable {
     @Nullable
     public final byte[] storageScopes;
     public final int derivedFlags; // derived from persistent state, but not persisted themselves
+
+    String packageName; // needed for instantiation of Editor
 
     public static final int FLAG_STORAGE_SCOPES_ENABLED = 1;
     // checked only if REQUEST_INSTALL_PACKAGES permission is granted
@@ -70,6 +71,7 @@ public final class GosPackageState implements Parcelable {
         return get(AppGlobals.getInitialPackage());
     }
 
+    // uses current userId, don't use in places that deal with multiple users (eg system_server)
     @Nullable
     public static GosPackageState get(@NonNull String packageName) {
         Object res = sCache.query(packageName);
@@ -77,19 +79,6 @@ public final class GosPackageState implements Parcelable {
             return (GosPackageState) res;
         }
         return null;
-    }
-
-    @CheckResult
-    @NonNull
-    public static GosPackageState set(@NonNull String packageName, int flags,
-                                      @Nullable byte[] storageScopes, boolean killUid) {
-        int userId = UserHandle.myUserId();
-        try {
-            return AppGlobals.getPackageManager().setGosPackageState(packageName, flags,
-                    storageScopes, killUid, userId);
-        } catch (RemoteException e) {
-            throw e.rethrowFromSystemServer();
-        }
     }
 
     @Override
@@ -121,8 +110,16 @@ public final class GosPackageState implements Parcelable {
         return (flags & flag) != 0;
     }
 
+    public boolean hasFlags(int flags) {
+        return (this.flags & flags) == flags;
+    }
+
     public boolean hasDerivedFlag(int flag) {
         return (derivedFlags & flag) != 0;
+    }
+
+    public boolean hasDerivedFlags(int flags) {
+        return (derivedFlags & flags) == flags;
     }
 
     public static boolean attachableToPackage(@NonNull String pkg) {
@@ -181,10 +178,100 @@ public final class GosPackageState implements Parcelable {
                     }
 
                     try {
-                        return AppGlobals.getPackageManager().getGosPackageState(packageName, userId);
+                        GosPackageState s = AppGlobals.getPackageManager().getGosPackageState(packageName, userId);
+                        if (s != null) {
+                            s.packageName = packageName;
+                        }
+                        return s;
                     } catch (RemoteException e) {
                         throw e.rethrowFromSystemServer();
                     }
                 }
             };
+
+    @NonNull
+    public Editor edit() {
+        return new Editor(this);
+    }
+
+    @NonNull
+    public static Editor edit(@NonNull String packageName) {
+        GosPackageState s = GosPackageState.get(packageName);
+        if (s != null) {
+            return s.edit();
+        }
+
+        return new Editor(packageName);
+    }
+
+    public static class Editor {
+        private final String packageName;
+        private int flags;
+        private byte[] storageScopes;
+        private boolean killUidAfterApply;
+
+        Editor(String packageName) {
+            this.packageName = packageName;
+        }
+
+        Editor(GosPackageState s) {
+            this.packageName = s.packageName;
+            this.flags = s.flags;
+            this.storageScopes = s.storageScopes;
+        }
+
+        @NonNull
+        public Editor setFlagsState(int flags, boolean state) {
+            if (state) {
+                addFlags(flags);
+            } else {
+                clearFlags(flags);
+            }
+            return this;
+        }
+
+        @NonNull
+        public Editor addFlags(int flags) {
+            this.flags |= flags;
+            return this;
+        }
+
+        @NonNull
+        public Editor clearFlags(int flags) {
+            this.flags &= ~flags;
+            return this;
+        }
+
+        @NonNull
+        public Editor setStorageScopes(@Nullable byte[] storageScopes) {
+            this.storageScopes = storageScopes;
+            return this;
+        }
+
+        @NonNull
+        public Editor killUidAfterApply() {
+            this.killUidAfterApply = true;
+            return this;
+        }
+
+        // To simplify chaining of calls if the decision is made at runtime
+        @NonNull
+        public Editor setKillUidAfterApply(boolean v) {
+            this.killUidAfterApply = v;
+            return this;
+        }
+
+        // Returns null if the package is no longer installed.
+        // Note: persistence to storage is asynchronous.
+        @Nullable
+        public GosPackageState apply() {
+            int userId = UserHandle.myUserId();
+            try {
+                return AppGlobals.getPackageManager().setGosPackageState(packageName, flags,
+                        storageScopes, killUidAfterApply, userId);
+            } catch (RemoteException e) {
+                throw e.rethrowFromSystemServer();
+            }
+        }
+    }
 }
