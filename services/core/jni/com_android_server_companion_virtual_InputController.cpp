@@ -451,7 +451,7 @@ static bool nativeWriteScrollEvent(JNIEnv* env, jobject thiz, jint fd, jfloat xA
             writeInputEvent(fd, EV_SYN, SYN_REPORT, 0);
 }
 
-static JNINativeMethod methods[] = {
+static const JNINativeMethod methods[] = {
         {"nativeOpenUinputKeyboard", "(Ljava/lang/String;IILjava/lang/String;)I",
          (void*)nativeOpenUinputKeyboard},
         {"nativeOpenUinputMouse", "(Ljava/lang/String;IILjava/lang/String;)I",
