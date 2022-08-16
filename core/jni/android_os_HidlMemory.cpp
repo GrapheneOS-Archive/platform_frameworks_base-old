@@ -50,7 +50,7 @@ static void nativeFinalize(JNIEnv* env, jobject jobj) {
     delete native;
 }
 
-static JNINativeMethod gMethods[] = {
+static const JNINativeMethod gMethods[] = {
         {"nativeFinalize", "()V", (void*) nativeFinalize},
 };
 
