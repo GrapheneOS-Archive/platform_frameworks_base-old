@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2022 GrapheneOS
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,34 @@
  * limitations under the License.
  */
 
-package com.android.internal.gmscompat.client;
+package com.android.server.ext;
 
-import android.content.pm.parsing.ParsingPackage;
-import android.content.pm.parsing.component.ParsedService;
+import android.Manifest;
 import android.os.Bundle;
 
 import com.android.internal.gmscompat.GmsInfo;
+import com.android.internal.gmscompat.client.GmsCompatClientService;
+import com.android.server.pm.pkg.component.ParsedServiceImpl;
+import com.android.server.pm.pkg.component.ParsedUsesPermissionImpl;
+import com.android.server.pm.pkg.parsing.ParsingPackage;
 
-public class GmsClientHooks {
-    private static final String TAG = "GmsClientHooks";
+public class GmsSysServerHooks {
+
+    // ParsingPackageUtils#parseBaseApplication
+    public static void maybeAddUsesPermission(ParsingPackage pkg) {
+        if (!GmsInfo.PACKAGE_PLAY_STORE.equals(pkg.getPackageName())) {
+            return;
+        }
+
+        String[] perms = {
+                Manifest.permission.REQUEST_INSTALL_PACKAGES,
+                Manifest.permission.REQUEST_DELETE_PACKAGES,
+                Manifest.permission.UPDATE_PACKAGES_WITHOUT_USER_ACTION,
+        };
+        for (String perm : perms) {
+            pkg.addUsesPermission(new ParsedUsesPermissionImpl(perm, 0));
+        }
+    }
 
     // ParsingPackageUtils#parseBaseApplication
     public static void maybeAddServiceDuringParsing(ParsingPackage pkg) {
@@ -38,7 +56,7 @@ public class GmsClientHooks {
             return;
         }
 
-        ParsedService s = new ParsedService();
+        ParsedServiceImpl s = new ParsedServiceImpl();
         s.setPackageName(pkg.getPackageName());
         s.setName(GmsCompatClientService.class.getName());
         s.setProcessName(pkg.getProcessName());
@@ -48,6 +66,4 @@ public class GmsClientHooks {
 
         pkg.addService(s);
     }
-
-    private GmsClientHooks() {}
 }
