@@ -35,6 +35,7 @@ import android.annotation.SystemApi;
 import android.annotation.SystemService;
 import android.app.PendingIntent;
 import android.app.PropertyInvalidatedCache;
+import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.content.Context;
 import android.content.Intent;
@@ -2482,6 +2483,10 @@ public class SubscriptionManager {
     @SystemApi
     @RequiresPermission(Manifest.permission.READ_PRIVILEGED_PHONE_STATE)
     public @NonNull int[] getActiveSubscriptionIdList() {
+        if (GmsCompat.isEnabled()) {
+            return new int[0];
+        }
+
         return getActiveSubscriptionIdList(/* visibleOnly */ true);
     }
 
@@ -4116,4 +4121,3 @@ public class SubscriptionManager {
                         usageSetting, subscriptionId, mContext.getOpPackageName()));
     }
 }
-

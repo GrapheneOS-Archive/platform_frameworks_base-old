@@ -591,6 +591,10 @@ public class BroadcastOptions extends ComponentOptions {
     @SystemApi
     @RequiresPermission(android.Manifest.permission.ACCESS_BROADCAST_RESPONSE_STATS)
     public void recordResponseEventWhileInBackground(@IntRange(from = 0) long id) {
+        if (GmsCompat.isEnabled()) {
+            return;
+        }
+
         mIdForResponseEvent = id;
     }
 
