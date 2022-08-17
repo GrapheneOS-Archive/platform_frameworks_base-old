@@ -276,6 +276,7 @@ public final class UserHandle implements Parcelable {
      * Returns the user id for a given uid.
      * @hide
      */
+    @SystemApi(client = SystemApi.Client.MODULE_LIBRARIES)
     @UnsupportedAppUsage
     @TestApi
     public static @UserIdInt int getUserId(int uid) {
@@ -366,6 +367,7 @@ public final class UserHandle implements Parcelable {
      * Returns the uid that is composed from the userId and the appId.
      * @hide
      */
+    @SystemApi(client = SystemApi.Client.MODULE_LIBRARIES)
     @UnsupportedAppUsage
     @TestApi
     public static int getUid(@UserIdInt int userId, @AppIdInt int appId) {
