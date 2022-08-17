@@ -16,6 +16,7 @@
 
 package com.android.internal.gmscompat.sysservice;
 
+import android.annotation.NonNull;
 import android.annotation.SuppressLint;
 import android.app.ApplicationPackageManager;
 import android.app.compat.gms.GmsCompat;
@@ -85,25 +86,38 @@ public class GmcPackageManager extends ApplicationPackageManager {
 
     // MATCH_ANY_USER flag requires privileged INTERACT_ACROSS_USERS permission
 
-    @Override
-    public List<SharedLibraryInfo> getSharedLibraries(int flags) {
-        return super.getSharedLibraries(flags & ~MATCH_ANY_USER);
+    private static PackageInfoFlags filterFlags(PackageInfoFlags flags) {
+        long v = flags.getValue();
+
+        if ((v & MATCH_ANY_USER) != 0) {
+            return PackageInfoFlags.of(v & ~MATCH_ANY_USER);
+        }
+
+        return flags;
     }
 
     @Override
-    public PackageInfo getPackageInfo(VersionedPackage versionedPackage, int flags)
-            throws NameNotFoundException {
-        return super.getPackageInfo(versionedPackage, flags & ~MATCH_ANY_USER);
+    public @NonNull List<SharedLibraryInfo> getSharedLibraries(PackageInfoFlags flags) {
+        return super.getSharedLibraries(filterFlags(flags));
     }
 
     @Override
-    public PackageInfo getPackageInfoAsUser(String packageName, int flags, int userId)
-            throws NameNotFoundException {
-        return super.getPackageInfoAsUser(packageName, flags & ~MATCH_ANY_USER, userId);
+    public PackageInfo getPackageInfo(String packageName, PackageInfoFlags flags) throws NameNotFoundException {
+        return super.getPackageInfo(packageName, filterFlags(flags));
     }
 
     @Override
-    public List<PackageInfo> getInstalledPackages(int flags) {
-        return super.getInstalledPackages(flags & ~MATCH_ANY_USER);
+    public PackageInfo getPackageInfo(VersionedPackage versionedPackage, PackageInfoFlags flags) throws NameNotFoundException {
+        return super.getPackageInfo(versionedPackage, filterFlags(flags));
+    }
+
+    @Override
+    public PackageInfo getPackageInfoAsUser(String packageName, PackageInfoFlags flags, int userId) throws NameNotFoundException {
+        return super.getPackageInfoAsUser(packageName, filterFlags(flags), userId);
+    }
+
+    @Override
+    public List<PackageInfo> getInstalledPackagesAsUser(PackageInfoFlags flags, int userId) {
+        return super.getInstalledPackagesAsUser(filterFlags(flags), userId);
     }
 }
