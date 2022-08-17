@@ -400,6 +400,11 @@ package android.os {
     field public static final long TRACE_TAG_NETWORK = 2097152L; // 0x200000L
   }
 
+  public final class UserHandle implements android.os.Parcelable {
+    method public static int getUid(int, int);
+    method public static int getUserId(int);
+  }
+
 }
 
 package android.os.storage {
