@@ -11128,6 +11128,12 @@ public class DevicePolicyManagerService extends BaseIDevicePolicyManager {
         Preconditions.checkCallAuthorization(canManageUsers(caller)
                 || hasCallingOrSelfPermission(permission.INTERACT_ACROSS_USERS));
 
+        synchronized (getLockObject()) {
+            if (getLogoutUserIdUnchecked() == UserHandle.USER_NULL) {
+                setLogoutUserIdLocked(UserHandle.USER_SYSTEM);
+            }
+        }
+
         int currentUserId = getCurrentForegroundUserId();
         if (VERBOSE_LOG) {
             Slogf.v(LOG_TAG, "logout() called by uid %d; current user is %d", caller.getUid(),
