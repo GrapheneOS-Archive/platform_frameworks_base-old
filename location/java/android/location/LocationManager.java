@@ -1555,6 +1555,10 @@ public class LocationManager {
             @NonNull @CallbackExecutor Executor executor,
             @NonNull LocationListener listener) {
         if (GmsCompat.isEnabled()) {
+            if (!GmsCompat.hasPermission(ACCESS_COARSE_LOCATION)) {
+                return;
+            }
+
             // requires privileged UPDATE_APP_OPS_STATS permission
             locationRequest.setHideFromAppOps(false);
             // requires privileged WRITE_SECURE_SETTINGS permission
