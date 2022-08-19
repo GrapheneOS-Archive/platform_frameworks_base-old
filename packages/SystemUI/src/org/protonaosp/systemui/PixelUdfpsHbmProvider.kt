@@ -59,7 +59,7 @@ class PixelUdfpsHbmProvider @Inject constructor(
         displayManager.registerDisplayListener(this, handler)
     }
 
-    override fun enableHbm(hbmType: Int, surface: Surface?, onHbmEnabled: Runnable?) {
+    override fun enableHbm(hbmType: Int, surface: Surface?, halControlsIllumination: Boolean, onHbmEnabled: Runnable?) {
         if (hbmType != HBM_TYPE) {
             return
         }
