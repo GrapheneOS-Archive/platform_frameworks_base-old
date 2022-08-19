@@ -38,6 +38,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.Mock
+import org.mockito.Mockito.anyInt
 import org.mockito.Mockito.never
 import org.mockito.Mockito.nullable
 import org.mockito.Mockito.verify
@@ -146,7 +147,7 @@ class UdfpsViewTest : SysuiTestCase() {
         view.startIllumination(onDone)
 
         val illuminator = withArgCaptor<Runnable> {
-            verify(hbmProvider).enableHbm(anyBoolean(), capture())
+            verify(hbmProvider).enableHbm(anyInt(), nullable(Surface::class.java), anyBoolean(), capture())
         }
 
         assertThat(view.isIlluminationRequested).isTrue()

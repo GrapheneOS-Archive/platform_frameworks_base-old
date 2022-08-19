@@ -21,17 +21,26 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.PointF
 import android.graphics.RectF
+import android.os.Build
+import android.os.UserHandle
+import android.provider.Settings
 import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
+import android.view.Surface
 import android.widget.FrameLayout
 import com.android.systemui.R
 import com.android.systemui.doze.DozeReceiver
+import com.android.systemui.biometrics.UdfpsHbmTypes.HbmType
 
 private const val TAG = "UdfpsView"
+private const val SETTING_HBM_TYPE = "com.android.systemui.biometrics.UdfpsSurfaceView.hbmType"
+@HbmType
+private const val DEFAULT_HBM_TYPE = UdfpsHbmTypes.LOCAL_HBM
 
 /**
- * The main view group containing all UDFPS animations.
+ * A view containing 1) A SurfaceView for HBM, and 2) A normal drawable view for all other
+ * animations.
  */
 class UdfpsView(
     context: Context,
@@ -60,6 +69,21 @@ class UdfpsView(
         com.android.internal.R.integer.config_udfps_illumination_transition_ms
     ).toLong()
 
+    @HbmType
+    private val hbmType = if (Build.IS_ENG || Build.IS_USERDEBUG) {
+        Settings.Secure.getIntForUser(
+            context.contentResolver,
+            SETTING_HBM_TYPE,
+            DEFAULT_HBM_TYPE,
+            UserHandle.USER_CURRENT
+        )
+    } else {
+        DEFAULT_HBM_TYPE
+    }
+
+    // Only used for UdfpsHbmTypes.GLOBAL_HBM.
+    private var ghbmView: UdfpsSurfaceView? = null
+
     /** View controller (can be different for enrollment, BiometricPrompt, Keyguard, etc.). */
     var animationViewController: UdfpsAnimationViewController<*>? = null
 
@@ -87,6 +111,12 @@ class UdfpsView(
     // Don't propagate any touch events to the child views.
     override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
         return (animationViewController == null || !animationViewController!!.shouldPauseAuth())
+    }
+
+    override fun onFinishInflate() {
+        if (hbmType == UdfpsHbmTypes.GLOBAL_HBM) {
+            ghbmView = findViewById(R.id.hbm_view)
+        }
     }
 
     override fun dozeTimeTick() {
@@ -153,13 +183,26 @@ class UdfpsView(
     override fun startIllumination(onIlluminatedRunnable: Runnable?) {
         isIlluminationRequested = true
         animationViewController?.onIlluminationStarting()
-        doIlluminate(onIlluminatedRunnable)
+
+        val gView = ghbmView
+        if (gView != null) {
+            gView.setGhbmIlluminationListener(this::doIlluminate)
+            gView.visibility = VISIBLE
+            gView.startGhbmIllumination(onIlluminatedRunnable)
+        } else {
+            doIlluminate(null /* surface */, onIlluminatedRunnable)
+        }
     }
 
-    private fun doIlluminate(onIlluminatedRunnable: Runnable?) {
+    private fun doIlluminate(surface: Surface?, onIlluminatedRunnable: Runnable?) {
+        if (ghbmView != null && surface == null) {
+            Log.e(TAG, "doIlluminate | surface must be non-null for GHBM")
+        }
+
         // TODO(b/231335067): enableHbm with halControlsIllumination=true shouldn't make sense.
         // This only makes sense now because vendor code may rely on the side effects of enableHbm.
-        hbmProvider?.enableHbm(halControlsIllumination) {
+        hbmProvider?.enableHbm(hbmType, surface, halControlsIllumination) {
+            ghbmView?.drawIlluminationDot(sensorRect)
             if (onIlluminatedRunnable != null) {
                 if (halControlsIllumination) {
                     onIlluminatedRunnable.run()
@@ -177,6 +220,10 @@ class UdfpsView(
     override fun stopIllumination() {
         isIlluminationRequested = false
         animationViewController?.onIlluminationStopped()
+        ghbmView?.let { view ->
+            view.setGhbmIlluminationListener(null)
+            view.visibility = INVISIBLE
+        }
         hbmProvider?.disableHbm(null /* onHbmDisabled */)
     }
 }
