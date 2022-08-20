@@ -3984,6 +3984,11 @@ public class SubscriptionManager {
                 && source != PHONE_NUMBER_SOURCE_IMS) {
             throw new IllegalArgumentException("invalid source " + source);
         }
+
+        if (GmsCompat.isEnabled()) {
+            return "";
+        }
+
         try {
             ISub iSub = TelephonyManager.getSubscriptionService();
             if (iSub != null) {
