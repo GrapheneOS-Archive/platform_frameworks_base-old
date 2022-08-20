@@ -23,6 +23,7 @@ import android.annotation.Nullable;
 import android.annotation.RequiresPermission;
 import android.annotation.SystemApi;
 import android.annotation.SystemService;
+import android.app.compat.gms.GmsCompat;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager.NameNotFoundException;
@@ -32,6 +33,7 @@ import android.os.UserHandle;
 
 import com.android.internal.util.CollectionUtils;
 
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -166,6 +168,10 @@ public final class DomainVerificationManager {
     @NonNull
     @RequiresPermission(android.Manifest.permission.DOMAIN_VERIFICATION_AGENT)
     public List<String> queryValidVerificationPackageNames() {
+        if (GmsCompat.isEnabled()) {
+            return Collections.emptyList();
+        }
+
         try {
             return mDomainVerificationManager.queryValidVerificationPackageNames();
         } catch (RemoteException e) {
