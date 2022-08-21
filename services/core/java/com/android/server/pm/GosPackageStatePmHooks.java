@@ -343,6 +343,9 @@ class GosPackageStatePmHooks {
 
         if ((flags & DFLAG_HAS_MANAGE_MEDIA_DECLARATION) != 0) {
             if ((flags & (DFLAG_HAS_READ_EXTERNAL_STORAGE_DECLARATION
+                    | DFLAG_HAS_READ_MEDIA_AUDIO_DECLARATION
+                    | DFLAG_HAS_READ_MEDIA_IMAGES_DECLARATION
+                    | DFLAG_HAS_READ_MEDIA_VIDEO_DECLARATION
                     | DFLAG_HAS_MANAGE_EXTERNAL_STORAGE_DECLARATION)) == 0)
             {
                 flags &= ~DFLAG_HAS_MANAGE_MEDIA_DECLARATION;
@@ -355,6 +358,8 @@ class GosPackageStatePmHooks {
 
         if ((flags & DFLAG_HAS_ACCESS_MEDIA_LOCATION_DECLARATION) != 0) {
             if ((flags & (DFLAG_HAS_READ_EXTERNAL_STORAGE_DECLARATION
+                    | DFLAG_HAS_READ_MEDIA_IMAGES_DECLARATION
+                    | DFLAG_HAS_READ_MEDIA_VIDEO_DECLARATION
                     | DFLAG_HAS_MANAGE_EXTERNAL_STORAGE_DECLARATION)) == 0)
             {
                 flags &= ~DFLAG_HAS_ACCESS_MEDIA_LOCATION_DECLARATION;
