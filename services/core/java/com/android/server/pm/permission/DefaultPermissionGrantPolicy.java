@@ -50,9 +50,11 @@ import android.os.UserHandle;
 import android.os.storage.StorageManager;
 import android.permission.PermissionManager;
 import android.print.PrintManager;
+import android.provider.AlarmClock;
 import android.provider.CalendarContract;
 import android.provider.ContactsContract;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.provider.Telephony.Sms.Intents;
 import android.security.Credentials;
 import android.speech.RecognitionService;
@@ -893,6 +895,10 @@ final class DefaultPermissionGrantPolicy {
                     COARSE_BACKGROUND_LOCATION_PERMISSIONS, CONTACTS_PERMISSIONS);
         }
 
+        // Updater app
+        String updaterAppPackage = getDefaultSystemHandlerActivityPackage(pm, Settings.ACTION_SYSTEM_UPDATE_SETTINGS, userId);
+        grantPermissionsToSystemPackage(pm, updaterAppPackage, userId, NOTIFICATION_PERMISSIONS);
+
         // There is no real "marker" interface to identify the shared storage backup, it is
         // hardcoded in BackupManagerService.SHARED_BACKUP_AGENT_PACKAGE.
         grantSystemFixedPermissionsToSystemPackage(pm, "com.android.sharedstoragebackup", userId,
@@ -907,6 +913,20 @@ final class DefaultPermissionGrantPolicy {
         String commonServiceAction = "android.adservices.AD_SERVICES_COMMON_SERVICE";
         grantPermissionsToSystemPackage(pm, getDefaultSystemHandlerServicePackage(pm,
                         commonServiceAction, userId), userId, NOTIFICATION_PERMISSIONS);
+
+        String clockAppPackage = getDefaultSystemHandlerActivityPackage(pm, AlarmClock.ACTION_SET_ALARM, userId);
+        grantPermissionsToSystemPackage(pm, clockAppPackage, userId, NOTIFICATION_PERMISSIONS);
+
+        String[] notifPackages = {
+            "com.android.contacts",
+            "app.grapheneos.apps",
+            "app.grapheneos.camera",
+            "app.attestation.auditor",
+            "com.stevesoltys.seedvault",
+        };
+        for (String pkg : notifPackages) {
+            grantPermissionsToSystemPackage(pm, pkg, userId, NOTIFICATION_PERMISSIONS);
+        }
     }
 
     private String getDefaultSystemHandlerActivityPackageForCategory(PackageManagerWrapper pm,
