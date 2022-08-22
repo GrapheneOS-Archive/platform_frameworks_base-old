@@ -282,6 +282,19 @@ public final class GmsHooks {
                     String newValue = origValue + ",C6ADB8B83C6D4C17D292AFDE56FD488A51D316FF8F2C11C5410223BFF8A7DBB3";
                     map.put(key, newValue);
                 };
+            } else if ("content://com.google.android.gms.phenotype/com.google.android.gms.enpromo".equals(uri.toString())) {
+                mutator = map -> {
+                    // enpromo is a GmsCore module that shows a notification that prompts the user
+                    // to enable Exposure Notifications (en).
+                    // It needs location access to determine which location-specific app needs to be
+                    // installed for Exposure Notifications to function.
+                    // Location permission can't be revoked for privileged GmsCore, it being revoked
+                    // leads to a crash (location access being disabled is handled correctly, but
+                    // spoofing it would break other functionality)
+                    if (!GmsCompat.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION)) {
+                        map.put("PromoFeature__enabled", "0");
+                    }
+                };
             }
         } else if (GmsCompat.isPlayStore()) {
             if ("content://com.google.android.gsf.gservices/prefix".equals(uri.toString())) {
