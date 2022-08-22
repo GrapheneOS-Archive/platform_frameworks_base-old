@@ -1337,7 +1337,6 @@ public final class PermissionPolicyService extends SystemService {
                         info.getCheckedOptions().getRemoteTransition())
                     : new ActivityOptions(new Bundle());
             options.setTaskOverlay(true, false);
-            options.setLaunchTaskId(taskId);
             if (remoteAnimation) {
                 // Remote animation set on the intercepted activity will be handled by the grant
                 // permission activity, which is launched below. So we need to clear remote
