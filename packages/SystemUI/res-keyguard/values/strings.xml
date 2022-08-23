@@ -192,13 +192,13 @@
     <string name="airplane_mode">Airplane mode</string>
 
     <!-- An explanation text that the pattern needs to be solved since the device has just been restarted. [CHAR LIMIT=80] -->
-    <string name="kg_prompt_reason_restart_pattern">Pattern required after device restarts</string>
+    <string name="kg_prompt_reason_restart_pattern">Pattern required after session ended</string>
 
     <!-- An explanation text that the pin needs to be entered since the device has just been restarted. [CHAR LIMIT=80] -->
-    <string name="kg_prompt_reason_restart_pin">PIN required after device restarts</string>
+    <string name="kg_prompt_reason_restart_pin">PIN required after session ended</string>
 
     <!-- An explanation text that the password needs to be entered since the device has just been restarted. [CHAR LIMIT=80] -->
-    <string name="kg_prompt_reason_restart_password">Password required after device restarts</string>
+    <string name="kg_prompt_reason_restart_password">Password required after session ended</string>
 
     <!-- An explanation text that the pattern needs to be solved since the user hasn't used strong authentication since quite some time. [CHAR LIMIT=80] -->
     <string name="kg_prompt_reason_timeout_pattern">Pattern required for additional security</string>
