@@ -915,6 +915,17 @@ final class DefaultPermissionGrantPolicy {
 
         String clockAppPackage = getDefaultSystemHandlerActivityPackage(pm, AlarmClock.ACTION_SET_ALARM, userId);
         grantPermissionsToSystemPackage(pm, clockAppPackage, userId, NOTIFICATION_PERMISSIONS);
+
+        String[] notifPackages = {
+            "com.android.contacts",
+            "app.grapheneos.apps",
+            "app.grapheneos.camera",
+            "app.attestation.auditor",
+            "com.stevesoltys.seedvault",
+        };
+        for (String pkg : notifPackages) {
+            grantPermissionsToSystemPackage(pm, pkg, userId, NOTIFICATION_PERMISSIONS);
+        }
     }
 
     private String getDefaultSystemHandlerActivityPackageForCategory(PackageManagerWrapper pm,
