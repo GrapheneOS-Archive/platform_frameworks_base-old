@@ -54,6 +54,7 @@ import android.provider.AlarmClock;
 import android.provider.CalendarContract;
 import android.provider.ContactsContract;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.provider.Telephony.Sms.Intents;
 import android.security.Credentials;
 import android.speech.RecognitionService;
@@ -892,6 +893,10 @@ final class DefaultPermissionGrantPolicy {
             grantPermissionsToSystemPackage(pm, textClassifierPackage, userId,
                     COARSE_BACKGROUND_LOCATION_PERMISSIONS, CONTACTS_PERMISSIONS);
         }
+
+        // Updater app
+        String updaterAppPackage = getDefaultSystemHandlerActivityPackage(pm, Settings.ACTION_SYSTEM_UPDATE_SETTINGS, userId);
+        grantPermissionsToSystemPackage(pm, updaterAppPackage, userId, NOTIFICATION_PERMISSIONS);
 
         // There is no real "marker" interface to identify the shared storage backup, it is
         // hardcoded in BackupManagerService.SHARED_BACKUP_AGENT_PACKAGE.
