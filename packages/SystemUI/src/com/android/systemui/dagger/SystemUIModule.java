@@ -31,6 +31,7 @@ import com.android.systemui.appops.dagger.AppOpsModule;
 import com.android.systemui.assist.AssistModule;
 import com.android.systemui.biometrics.AlternateUdfpsTouchProvider;
 import com.android.systemui.biometrics.UdfpsDisplayModeProvider;
+import com.android.systemui.biometrics.UdfpsHbmController;
 import com.android.systemui.biometrics.dagger.BiometricsModule;
 import com.android.systemui.classifier.FalsingModule;
 import com.android.systemui.controls.dagger.ControlsModule;
@@ -200,6 +201,10 @@ public abstract class SystemUIModule {
 
     @BindsOptionalOf
     abstract UdfpsDisplayModeProvider optionalUdfpsDisplayModeProvider();
+
+    @SysUISingleton
+    @Binds
+    abstract UdfpsDisplayModeProvider bindUdfpsHbmController(UdfpsHbmController controller);
 
     @BindsOptionalOf
     abstract AlternateUdfpsTouchProvider optionalUdfpsTouchProvider();
