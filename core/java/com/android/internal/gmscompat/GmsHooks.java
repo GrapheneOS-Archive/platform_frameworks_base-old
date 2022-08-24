@@ -38,6 +38,7 @@ import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.DeadSystemRuntimeException;
 import android.os.PowerExemptionManager;
 import android.os.Process;
 import android.os.RemoteException;
@@ -89,7 +90,7 @@ public final class GmsHooks {
         final Thread.UncaughtExceptionHandler orig = Thread.getUncaughtExceptionPreHandler();
 
         @Override
-        public void uncaughtException(Thread t, Throwable e) { // todo comment
+        public void uncaughtException(Thread t, Throwable e) {
             Context ctx = GmsCompat.appContext();
 
             ApplicationErrorReport aer = new ApplicationErrorReport();
@@ -104,14 +105,37 @@ public final class GmsHooks {
             // In some cases, GMS kills its process when it receives an uncaught exception, which
             // bypasses the standard crash handling infrastructure.
             // Send the report to GmsCompatApp before GMS receives the uncaughtException() callback.
-            try {
-                GmsCompatApp.iGms2Gca().onUncaughtException(aer);
-            } catch (RemoteException re) {
-                Log.e(TAG, "", re);
+
+            if (!isDeadSystemRuntimeException(e)) {
+                try {
+                    GmsCompatApp.iGms2Gca().onUncaughtException(aer);
+                } catch (RemoteException re) {
+                    Log.e(TAG, "", re);
+                }
             }
 
             if (orig != null) {
                 orig.uncaughtException(t, e);
+            }
+        }
+
+        // in some cases a DeadSystemRuntimeException is thrown despite the system being actually
+        // still alive, likely when the Binder buffer space is full and a binder transaction with
+        // system_server fails.
+        // See https://cs.android.com/android/platform/superproject/+/android-13.0.0_r3:frameworks/base/core/jni/android_util_Binder.cpp;l=894
+        // (DeadObjectException is rethrown as DeadSystemRuntimeException by
+        // android.os.RemoteException#rethrowFromSystemServer())
+        private static boolean isDeadSystemRuntimeException(Throwable e) {
+            for (;;) {
+                if (e == null) {
+                    return false;
+                }
+
+                if (e instanceof DeadSystemRuntimeException) {
+                    return true;
+                }
+
+                e = e.getCause();
             }
         }
     }
