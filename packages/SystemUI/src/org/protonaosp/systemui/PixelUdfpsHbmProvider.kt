@@ -20,8 +20,10 @@ import android.hardware.display.DisplayManager
 import android.os.Handler
 import android.os.IBinder
 import android.os.ServiceManager
+import android.view.Surface
 import com.android.systemui.biometrics.AuthController
 import com.android.systemui.biometrics.UdfpsHbmProvider
+import com.android.systemui.biometrics.UdfpsHbmTypes
 import com.android.systemui.dagger.SysUISingleton
 import com.android.systemui.dagger.qualifiers.DisplayId
 import com.android.systemui.dagger.qualifiers.Main
@@ -57,7 +59,11 @@ class PixelUdfpsHbmProvider @Inject constructor(
         displayManager.registerDisplayListener(this, handler)
     }
 
-    override fun enableHbm(halControlsIllumination: Boolean, onHbmEnabled: Runnable?) {
+    override fun enableHbm(hbmType: Int, surface: Surface?, onHbmEnabled: Runnable?) {
+        if (hbmType != HBM_TYPE) {
+            return
+        }
+
         // Run the callback and skip enabling if already enabled
         // (otherwise it may fail, similar to disabling)
         if (displayHal.getLhbmState()) {
@@ -69,7 +75,7 @@ class PixelUdfpsHbmProvider @Inject constructor(
         bgExecutor.execute {
             // Request HbmSVManager to lock the refresh rate. On the Pixel 6 Pro (raven), LHBM only
             // works at peak refresh rate.
-            authController.udfpsHbmListener?.onHbmEnabled(displayId)
+            authController.udfpsHbmListener?.onHbmEnabled(hbmType, displayId)
 
             if (currentRefreshRate == peakRefreshRate) {
                 // Enable immediately if refresh rate is correct
@@ -111,7 +117,7 @@ class PixelUdfpsHbmProvider @Inject constructor(
         bgExecutor.execute {
             displayHal?.setLhbmState(false)
             // Unlock refresh rate
-            handler.post { authController.udfpsHbmListener?.onHbmDisabled(displayId) }
+            handler.post { authController.udfpsHbmListener?.onHbmDisabled(HBM_TYPE, displayId) }
 
             onHbmDisabled?.let { handler.post(it) }
         }
@@ -133,5 +139,8 @@ class PixelUdfpsHbmProvider @Inject constructor(
     companion object {
         // Descriptor for Pixel display HAL's AIDL service
         private const val PIXEL_DISPLAY_HAL = "com.google.hardware.pixel.display.IDisplay/default"
+
+        // For simplicity, we only support local HBM as that's the only mode used in production
+        private const val HBM_TYPE = UdfpsHbmTypes.LOCAL_HBM
     }
 }
