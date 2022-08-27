@@ -21,11 +21,14 @@ import android.annotation.CallbackExecutor;
 import android.app.compat.gms.GmsCompat;
 import android.content.Context;
 import android.os.WorkSource;
+import android.telephony.CellInfo;
 import android.telephony.TelephonyCallback;
 import android.telephony.TelephonyManager;
 import android.telephony.UiccSlotInfo;
 import android.util.Log;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.Executor;
 
 public class GmcTelephonyManager extends TelephonyManager {
@@ -97,6 +100,24 @@ public class GmcTelephonyManager extends TelephonyManager {
     public void requestCellInfoUpdate(WorkSource workSource, @CallbackExecutor Executor executor, CellInfoCallback callback) {
         // Attribute the work to GMS instead of the client
         requestCellInfoUpdate(executor, callback);
+    }
+
+    @Override
+    public void requestCellInfoUpdate(Executor executor, CellInfoCallback callback) {
+        if (!GmsCompat.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)) {
+            return;
+        }
+
+        super.requestCellInfoUpdate(executor, callback);
+    }
+
+    @Override
+    public List<CellInfo> getAllCellInfo() {
+        if (!GmsCompat.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)) {
+            return Collections.emptyList();
+        }
+
+        return super.getAllCellInfo();
     }
 
     @Override
