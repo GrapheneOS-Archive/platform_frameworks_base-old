@@ -43,6 +43,7 @@ import android.os.PowerExemptionManager;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.SystemClock;
+import android.os.UserHandle;
 import android.provider.BaseColumns;
 import android.provider.ContactsContract;
 import android.provider.Downloads;
@@ -252,6 +253,14 @@ public final class GmsHooks {
             RecentBinderPid rbp = binderPids[i];
             String[] pkgs = rbp.packageNames;
             if (pkgs == null) {
+                if (UserHandle.getUserId(rbp.uid) != UserHandle.myUserId()) {
+                    // SystemUI from userId 0 sends callbacks to apps from all userIds via
+                    // android.window.IOnBackInvokedCallback.
+                    // getPackagesForUid() will fail due to missing privileged
+                    // INTERACT_ACROSS_USERS permission
+                    continue;
+                }
+
                 pkgs = pm.getPackagesForUid(rbp.uid);
                 if (pkgs == null || pkgs.length == 0) {
                     continue;
