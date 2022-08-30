@@ -964,6 +964,7 @@ package android.app {
     field public static final int FLAG_ALLOW_WRITES = 1; // 0x1
     field public static final int FLAG_IS_DIR = 2; // 0x2
     field public static final String MEDIA_PROVIDER_METHOD_INVALIDATE_MEDIA_PROVIDER_CACHE = "StorageScopes_invalidateCache";
+    field public static final String MEDIA_PROVIDER_METHOD_MEDIA_ID_TO_FILE_PATH = "StorageScopes_mediaIdToFilePath";
     field public final int flags;
     field @NonNull public final String path;
   }
