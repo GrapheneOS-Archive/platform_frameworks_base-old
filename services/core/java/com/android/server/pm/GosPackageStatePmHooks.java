@@ -111,7 +111,9 @@ class GosPackageStatePmHooks {
                     allow = selfCheck
                             || callingAppId == pm.mediaProviderAppId
                             || callingAppId == pm.permissionControllerAppId
-                            || callingAppId == Process.SYSTEM_UID;
+                            || callingAppId == Process.SYSTEM_UID
+                            || callingAppId == pm.sysLauncherAppId
+                    ;
                 }
                 if (!allow) {
                     throw new SecurityException();
