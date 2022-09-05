@@ -2187,7 +2187,7 @@ public class ParsingPackageUtils {
         }
 
         GmsSysServerHooks.maybeAddServiceDuringParsing(pkg);
-        GmsSysServerHooks.maybeAddUsesPermission(pkg);
+        GmsSysServerHooks.fixupPermissions(pkg);
 
         if (hasActivityOrder) {
             pkg.sortActivities();
