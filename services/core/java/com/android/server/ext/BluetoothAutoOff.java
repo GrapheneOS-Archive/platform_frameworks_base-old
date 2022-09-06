@@ -3,6 +3,7 @@ package com.android.server.ext;
 import android.annotation.Nullable;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.BluetoothProfile;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -12,12 +13,14 @@ import android.provider.Settings;
 import android.util.Slog;
 
 class BluetoothAutoOff extends DelayedConditionalAction {
+    private final BluetoothManager manager;
     @Nullable
     private final BluetoothAdapter adapter;
 
     BluetoothAutoOff(SystemServerExt sse) {
         super(sse, sse.bgHandler);
-        adapter = sse.context.getSystemService(BluetoothManager.class).getAdapter();
+        manager = sse.context.getSystemService(BluetoothManager.class);
+        adapter = manager.getAdapter();
     }
 
     @Override
@@ -51,11 +54,18 @@ class BluetoothAutoOff extends DelayedConditionalAction {
 
     private boolean isAdapterOnAndDisconnected() {
         if (adapter != null) {
-            int state = adapter.getLeStateSysApi(); // getState() converts BLE states into STATE_OFF
+            if (adapter.isLeEnabled()) {
+                if (adapter.getConnectionState() == BluetoothAdapter.STATE_DISCONNECTED) {
+                    // Bluetooth GATT Profile (Bluetooth LE) connection state is ignored
+                    // by getConnectionState()
+                    return manager.getConnectedDevices(BluetoothProfile.GATT).size() == 0;
+                }
+            }
 
-            if (state == BluetoothAdapter.STATE_ON || state == BluetoothAdapter.STATE_BLE_ON) {
-                // getConnectionState() converts BLE states into STATE_DISCONNECTED
-                return adapter.getConnectionStateLeAware() == BluetoothAdapter.STATE_DISCONNECTED;
+            // isLeEnabled() currently implies isEnabled(), but check again anyway in case
+            // this changes in the future
+            if (adapter.isEnabled()) {
+                return adapter.getConnectionState() == BluetoothAdapter.STATE_DISCONNECTED;
             }
         }
 
