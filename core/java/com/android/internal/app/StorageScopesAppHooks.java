@@ -50,7 +50,7 @@ public class StorageScopesAppHooks {
         return false;
     }
 
-    public static int isSpoofableAppOp(int op) {
+    private static int isSpoofableAppOp(int op) {
         switch (op) {
             case AppOpsManager.OP_READ_EXTERNAL_STORAGE:
                 return DFLAG_HAS_READ_EXTERNAL_STORAGE_DECLARATION;
@@ -81,35 +81,15 @@ public class StorageScopesAppHooks {
         }
     }
 
-    public static boolean shouldSpoofAppOpCheck(int op, int uid) {
+    public static boolean shouldSpoofSelfAppOpCheck(int op) {
         int opDerivedFlag = isSpoofableAppOp(op);
 
         if (opDerivedFlag == 0) {
             return false;
         }
 
-        return shouldSpoofAppOpCheckInner(uid, opDerivedFlag);
-    }
-
-    private static boolean shouldSpoofAppOpCheckInner(int uid, int opDerivedFlag) {
-        if (!isSpoofingAllowed(uid)) {
-            return false;
-        }
-
         GosPackageState ps = GosPackageState.getForSelf();
         return ps != null && ps.hasFlag(FLAG_STORAGE_SCOPES_ENABLED) && ps.hasDerivedFlag(opDerivedFlag);
-    }
-
-    private static int cachedMyUid;
-
-    private static boolean isSpoofingAllowed(int uid) {
-        int myUid = cachedMyUid;
-        if (myUid == 0) {
-            myUid = Process.myUid();
-            cachedMyUid = myUid;
-        }
-
-        return uid == myUid && uid != Process.SYSTEM_UID;
     }
 
     // Instrumentation#execStartActivity(Context, IBinder, IBinder, Activity, Intent, int, Bundle)
@@ -146,15 +126,9 @@ public class StorageScopesAppHooks {
             return;
         }
 
-        int uid = Process.myUid();
-
-        if (!isSpoofingAllowed(uid)) {
-            return;
-        }
-
         boolean shouldModify = false;
 
-        if (shouldSpoofAppOpCheck(op, uid)) {
+        if (shouldSpoofSelfAppOpCheck(op)) {
             // in case a buggy app launches intent again despite pseudo-having the permission
             shouldModify = true;
         } else {
