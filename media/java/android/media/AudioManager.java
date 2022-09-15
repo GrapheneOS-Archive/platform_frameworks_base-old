@@ -31,7 +31,6 @@ import android.annotation.TestApi;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.compat.CompatChanges;
-import android.app.compat.gms.GmsCompat;
 import android.bluetooth.BluetoothCodecConfig;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothLeAudioCodecConfig;
@@ -8204,11 +8203,6 @@ public class AudioManager {
         }
         Objects.requireNonNull(device);
         Objects.requireNonNull(timeUnit);
-
-        if (GmsCompat.isEnabled()) {
-            return;
-        }
-
         try {
             getService().muteAwaitConnection(usagesToMute, device, timeUnit.toMillis(timeout));
         } catch (RemoteException e) {
@@ -8228,10 +8222,6 @@ public class AudioManager {
     @SystemApi
     @RequiresPermission(android.Manifest.permission.MODIFY_AUDIO_ROUTING)
     public @Nullable AudioDeviceAttributes getMutingExpectedDevice() {
-        if (GmsCompat.isEnabled()) {
-            return null;
-        }
-
         try {
             return getService().getMutingExpectedDevice();
         } catch (RemoteException e) {
@@ -8333,10 +8323,6 @@ public class AudioManager {
     public void registerMuteAwaitConnectionCallback(
             @NonNull @CallbackExecutor Executor executor,
             @NonNull MuteAwaitConnectionCallback callback) {
-        if (GmsCompat.isEnabled()) {
-            return;
-        }
-
         synchronized (mMuteAwaitConnectionListenerLock) {
             final Pair<ArrayList<ListenerInfo<MuteAwaitConnectionCallback>>,
                     MuteAwaitConnectionDispatcherStub> res =
@@ -8360,9 +8346,6 @@ public class AudioManager {
     @RequiresPermission(android.Manifest.permission.MODIFY_AUDIO_ROUTING)
     public void unregisterMuteAwaitConnectionCallback(
             @NonNull MuteAwaitConnectionCallback callback) {
-        if (GmsCompat.isEnabled()) {
-            return;
-        }
         synchronized (mMuteAwaitConnectionListenerLock) {
             final Pair<ArrayList<ListenerInfo<MuteAwaitConnectionCallback>>,
                     MuteAwaitConnectionDispatcherStub> res =
