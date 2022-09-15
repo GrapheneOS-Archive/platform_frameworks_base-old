@@ -26,7 +26,6 @@ import android.annotation.SdkConstant.SdkConstantType;
 import android.annotation.SystemApi;
 import android.annotation.TestApi;
 import android.app.Activity;
-import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -8448,12 +8447,6 @@ public final class ContactsContract {
          */
         public static @NonNull List<SimAccount> getSimAccounts(
                 @NonNull ContentResolver contentResolver) {
-            if (GmsCompat.isEnabled()) {
-                if (!GmsCompat.hasPermission(Manifest.permission.READ_CONTACTS)) {
-                    return Collections.emptyList();
-                }
-            }
-
             Bundle response = contentResolver.call(ContactsContract.AUTHORITY_URI,
                     ContactsContract.SimContacts.QUERY_SIM_ACCOUNTS_METHOD,
                     null, null);
