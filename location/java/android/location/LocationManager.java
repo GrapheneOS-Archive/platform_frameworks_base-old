@@ -526,9 +526,6 @@ public class LocationManager {
     @SystemApi
     @RequiresPermission(Manifest.permission.LOCATION_HARDWARE)
     public void setExtraLocationControllerPackage(@Nullable String packageName) {
-        if (GmsCompat.isEnabled()) {
-            return;
-        }
         try {
             mService.setExtraLocationControllerPackage(packageName);
         } catch (RemoteException e) {
@@ -544,10 +541,6 @@ public class LocationManager {
     @SystemApi
     @RequiresPermission(Manifest.permission.LOCATION_HARDWARE)
     public void setExtraLocationControllerPackageEnabled(boolean enabled) {
-        if (GmsCompat.isEnabled()) {
-            return;
-        }
-
         try {
             mService.setExtraLocationControllerPackageEnabled(enabled);
         } catch (RemoteException e) {
