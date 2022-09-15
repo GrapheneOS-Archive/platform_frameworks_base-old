@@ -50,59 +50,6 @@ public class GmcTelephonyManager extends TelephonyManager {
     }
 
     @Override
-    public String getDeviceId() {
-        return null;
-    }
-
-    @Override
-    public String getDeviceId(int slotIndex) {
-        return null;
-    }
-
-    @Override
-    public String getImei(int slotIndex) {
-        return null;
-    }
-
-    @Override
-    public String getMeid(int slotIndex) {
-        return null;
-    }
-
-    @Override
-    public int getNetworkType(int subId) {
-        if (GmsCompat.hasPermission(Manifest.permission.READ_PHONE_STATE)) {
-            return super.getNetworkType(subId);
-        }
-
-        return NETWORK_TYPE_UNKNOWN;
-    }
-
-    @Override
-    public String getSimSerialNumber(int subId) {
-        return null;
-    }
-
-    @Override
-    public UiccSlotInfo[] getUiccSlotsInfo() {
-        return null;
-    }
-
-    @Override
-    public String getSubscriberId(int subId) {
-        return null;
-    }
-
-    @Override
-    public String getLine1Number(int subId) {
-        try {
-            return super.getLine1Number(subId);
-        } catch (SecurityException e) {
-            return null;
-        }
-    }
-
-    @Override
     public void requestCellInfoUpdate(WorkSource workSource, @CallbackExecutor Executor executor, CellInfoCallback callback) {
         // Attribute the work to GMS instead of the client
         requestCellInfoUpdate(executor, callback);
@@ -115,69 +62,6 @@ public class GmcTelephonyManager extends TelephonyManager {
         }
 
         super.requestCellInfoUpdate(executor, callback);
-    }
-
-    @Override
-    public List<CellInfo> getAllCellInfo() {
-        if (!GmsCompat.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)) {
-            return Collections.emptyList();
-        }
-
-        return super.getAllCellInfo();
-    }
-
-    @Override
-    public boolean isIccLockEnabled() {
-        return false;
-    }
-
-    @Override
-    public String getGroupIdLevel1() {
-        try {
-            return super.getGroupIdLevel1();
-        } catch (SecurityException e) {
-            Log.d(TAG, "", e);
-            return null;
-        }
-    }
-
-    @Override
-    public void unregisterTelephonyCallback(TelephonyCallback callback) {
-        try {
-            super.unregisterTelephonyCallback(callback);
-        } catch (SecurityException e) {
-            Log.d(TAG, "", e);
-        }
-    }
-
-    @Override
-    public int getCallState() {
-        try {
-            return super.getCallState();
-        } catch (SecurityException e) { // missing READ_PHONE_STATE permission
-            Log.d(TAG, "", e);
-            return TelephonyManager.CALL_STATE_IDLE;
-        }
-    }
-
-    @Override
-    public int getCallStateForSubscription() {
-        try {
-            return super.getCallStateForSubscription();
-        } catch (SecurityException e) {
-            Log.d(TAG, "", e);
-            return TelephonyManager.CALL_STATE_IDLE;
-        }
-    }
-
-    @Override
-    public int getVoiceNetworkType() {
-        try {
-            return super.getVoiceNetworkType();
-        } catch (SecurityException e) { // missing READ_PHONE_STATE permission
-            Log.d(TAG, "", e);
-            return NETWORK_TYPE_UNKNOWN;
-        }
     }
 
     public static int[] filterTelephonyCallbackEvents(int[] eventsArray) {
@@ -278,15 +162,4 @@ public class GmcTelephonyManager extends TelephonyManager {
             TelephonyCallback.EVENT_DATA_ENABLED_CHANGED,
             TelephonyCallback.EVENT_LINK_CAPACITY_ESTIMATE_CHANGED,
     };
-
-    @Nullable
-    @Override
-    public ServiceState getServiceState(int includeLocationData) {
-        try {
-            return super.getServiceState(includeLocationData);
-        } catch (SecurityException e) {
-            Log.d(TAG, "", e);
-            return null;
-        }
-    }
 }
