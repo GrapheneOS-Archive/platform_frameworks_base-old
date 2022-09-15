@@ -42,6 +42,13 @@ public class AppPermissionUtils {
         return false;
     }
 
+    // android.app.AppOpsManager#checkOpNoThrow
+    // android.app.AppOpsManager#noteOpNoThrow
+    // android.app.AppOpsManager#noteProxyOpNoThrow
+    public static boolean shouldSpoofSelfAppOpCheck(int op) {
+        return false;
+    }
+
     public static int getSpoofableStorageRuntimePermissionDflag(String permName) {
         switch (permName) {
             case Manifest.permission.READ_EXTERNAL_STORAGE:
