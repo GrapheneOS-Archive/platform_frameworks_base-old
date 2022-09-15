@@ -22,7 +22,6 @@ import android.annotation.Nullable;
 import android.annotation.RequiresPermission;
 import android.annotation.SystemApi;
 import android.app.compat.CompatChanges;
-import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.ChangeId;
 import android.compat.annotation.EnabledAfter;
 import android.compat.annotation.UnsupportedAppUsage;
@@ -429,10 +428,6 @@ public class BackupManager {
     @SystemApi
     @RequiresPermission(android.Manifest.permission.BACKUP)
     public boolean isBackupEnabled() {
-        if (GmsCompat.isEnabled()) {
-            return false;
-        }
-
         checkServiceBinder();
         if (sService != null) {
             try {
@@ -465,10 +460,6 @@ public class BackupManager {
     @SystemApi
     @RequiresPermission(android.Manifest.permission.BACKUP)
     public boolean isBackupServiceActive(UserHandle user) {
-        if (GmsCompat.isEnabled()) {
-            return false;
-        }
-
         if (!CompatChanges.isChangeEnabled(
                 IS_BACKUP_SERVICE_ACTIVE_ENFORCE_PERMISSION_IN_SERVICE)) {
             mContext.enforceCallingOrSelfPermission(android.Manifest.permission.BACKUP,
