@@ -239,7 +239,6 @@ import com.android.internal.app.IAppOpsService;
 import com.android.internal.app.IBatteryStats;
 import com.android.internal.app.ISoundTriggerService;
 import com.android.internal.appwidget.IAppWidgetService;
-import com.android.internal.gmscompat.sysservice.GmcDevicePolicyManager;
 import com.android.internal.gmscompat.sysservice.GmcUserManager;
 import com.android.internal.graphics.fonts.IFontManager;
 import com.android.internal.net.INetworkWatchlistManager;
@@ -440,11 +439,6 @@ public final class SystemServiceRegistry {
             @Override
             public DevicePolicyManager createService(ContextImpl ctx) throws ServiceNotFoundException {
                 IBinder b = ServiceManager.getServiceOrThrow(Context.DEVICE_POLICY_SERVICE);
-
-                if (GmsCompat.isEnabled()) {
-                    return new GmcDevicePolicyManager(ctx, IDevicePolicyManager.Stub.asInterface(b));
-                }
-
                 return new DevicePolicyManager(ctx, IDevicePolicyManager.Stub.asInterface(b));
             }});
 
