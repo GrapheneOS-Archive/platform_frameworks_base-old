@@ -2737,12 +2737,6 @@ public abstract class ContentResolver implements ContentInterface {
                     observer.getContentObserver(), userHandle, mTargetSdkVersion);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
-        } catch (SecurityException se) {
-            if (GmsCompat.isEnabled()) {
-                return;
-            }
-
-            throw se;
         }
     }
 
