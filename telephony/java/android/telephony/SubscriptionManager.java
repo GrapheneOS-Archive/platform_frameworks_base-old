@@ -35,7 +35,6 @@ import android.annotation.SystemApi;
 import android.annotation.SystemService;
 import android.app.PendingIntent;
 import android.app.PropertyInvalidatedCache;
-import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.content.Context;
 import android.content.Intent;
@@ -2483,10 +2482,6 @@ public class SubscriptionManager {
     @SystemApi
     @RequiresPermission(Manifest.permission.READ_PRIVILEGED_PHONE_STATE)
     public @NonNull int[] getActiveSubscriptionIdList() {
-        if (GmsCompat.isEnabled()) {
-            return new int[0];
-        }
-
         return getActiveSubscriptionIdList(/* visibleOnly */ true);
     }
 
@@ -3994,11 +3989,6 @@ public class SubscriptionManager {
                 && source != PHONE_NUMBER_SOURCE_IMS) {
             throw new IllegalArgumentException("invalid source " + source);
         }
-
-        if (GmsCompat.isEnabled()) {
-            return "";
-        }
-
         try {
             ISub iSub = TelephonyManager.getSubscriptionService();
             if (iSub != null) {
