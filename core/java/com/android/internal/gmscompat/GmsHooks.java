@@ -281,23 +281,6 @@ public final class GmsHooks {
     }
 
     // ContentResolver#query(Uri, String[], Bundle, CancellationSignal)
-    public static Cursor interceptQuery(Uri uri, String[] projection) {
-        String authority = uri.getAuthority();
-        if (ContactsContract.AUTHORITY.equals(authority)
-                // com.android.internal.telephony.IccProvider
-                || "icc".equals(authority))
-        {
-            if (!GmsCompat.hasPermission(Manifest.permission.READ_CONTACTS)) {
-                if (projection == null) {
-                    projection = new String[] { BaseColumns._ID };
-                }
-                return new MatrixCursor(projection);
-            }
-        }
-        return null;
-    }
-
-    // ContentResolver#query(Uri, String[], Bundle, CancellationSignal)
     public static Cursor maybeModifyQueryResult(Uri uri, Cursor origCursor) {
         Consumer<ArrayMap<String, String>> mutator = null;
 
