@@ -36,7 +36,10 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.database.CursorWrapper;
 import android.database.MatrixCursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -57,6 +60,9 @@ import android.util.SparseArray;
 import android.webkit.WebView;
 
 import com.android.internal.gmscompat.client.ClientPriorityManager;
+import com.android.internal.gmscompat.flags.GmsFlag;
+import com.android.internal.gmscompat.flags.GmsPhenotypeChangeCountsCursor;
+import com.android.internal.gmscompat.flags.GmsPhenotypeFlagsCursor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -316,65 +322,34 @@ public final class GmsHooks {
     }
 
     // ContentResolver#query(Uri, String[], Bundle, CancellationSignal)
-    public static Cursor maybeModifyQueryResult(Uri uri, Cursor origCursor) {
+    public static Cursor maybeModifyQueryResult(Uri uri, @Nullable String[] projection, @Nullable Bundle queryArgs,
+                                                Cursor origCursor) {
         Consumer<ArrayMap<String, String>> mutator = null;
 
-        if (GmsCompat.isGmsCore()) {
-            if ("content://com.google.android.gms.phenotype/com.google.android.gms.fido".equals(uri.toString())) {
-                mutator = map -> {
-                    String key = "Fido2ApiKnownBrowsers__fingerprints";
-                    String origValue = map.get(key);
-
-                    if (origValue == null) {
-                        Log.w(TAG, key + " not found");
-                        return;
-                    }
-
-                    String newValue = origValue + ",C6ADB8B83C6D4C17D292AFDE56FD488A51D316FF8F2C11C5410223BFF8A7DBB3";
-                    map.put(key, newValue);
-                };
-            } else if ("content://com.google.android.gms.phenotype/com.google.android.gms.enpromo".equals(uri.toString())) {
-                mutator = map -> {
-                    // enpromo is a GmsCore module that shows a notification that prompts the user
-                    // to enable Exposure Notifications (en).
-                    // It needs location access to determine which location-specific app needs to be
-                    // installed for Exposure Notifications to function.
-                    // Location permission can't be revoked for privileged GmsCore, it being revoked
-                    // leads to a crash (location access being disabled is handled correctly, but
-                    // spoofing it would break other functionality)
-                    if (!GmsCompat.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION)) {
-                        map.put("PromoFeature__enabled", "0");
-                    }
-                };
+        if (GmsFlag.GSERVICES_URI.equals(uri.toString())) {
+            if (queryArgs == null) {
+                return null;
             }
-        } else if (GmsCompat.isPlayStore()) {
-            if ("content://com.google.android.gsf.gservices/prefix".equals(uri.toString())) {
-                mutator = map -> {
-                    // same as in PackageInstaller#createSession
-                    final String prefPrefix = "gmscompat_play_store_unrestrict_pkg_";
-                    ContentResolver cr = GmsCompat.appContext().getContentResolver();
-
-                    // Disables auto updates of GMS Core, not of all GMS components.
-                    // Updates that don't change version of GMS Core (eg downloading a new APK split
-                    // for new device locale) and manual updates are allowed
-                    if (Settings.Secure.getInt(cr, prefPrefix + GmsInfo.PACKAGE_GMS_CORE, 0) != 1) {
-                        map.put("finsky.AutoUpdateCodegen__gms_auto_update_enabled", "0");
-                    }
-
-                    if (Settings.Secure.getInt(cr, prefPrefix + GmsInfo.PACKAGE_PLAY_STORE, 0) != 1) {
-                        // prevent auto-updates of Play Store, self-update files are still downloaded
-                        map.put("finsky.SelfUpdate__do_not_install", "1");
-                        // don't re-download update files after failed self-update
-                        map.put("finsky.SelfUpdate__self_update_download_max_valid_time_ms", "" + Long.MAX_VALUE);
-                    }
-
-                    // Disable auto-deploying of packages (eg of AR Core ("Google Play Services for AR")).
-                    // By default, Play Store attempts to auto-deploy packages only if the device has
-                    // at least 1 GiB of free storage space.
-                    map.put("finsky.AutoUpdatePolicies__auto_deploy_disk_space_threshold_bytes",
-                            "" + Long.MAX_VALUE);
-                };
+            String[] selectionArgs = queryArgs.getStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS);
+            if (selectionArgs == null) {
+                return null;
             }
+
+            ArrayMap<String, GmsFlag> flags = config().gservicesFlags;
+            if (flags == null) {
+                return null;
+            }
+
+            mutator = map -> {
+                for (GmsFlag f : flags.values()) {
+                    for (String sel : selectionArgs) {
+                        if (f.name.startsWith(sel)) {
+                            f.applyToGservicesMap(map);
+                            break;
+                        }
+                    }
+                }
+            };
         }
 
         if (mutator != null) {
@@ -610,6 +585,50 @@ public final class GmsHooks {
         }
 
         return res;
+    }
+
+    public static void onSQLiteOpenHelperConstructed(SQLiteOpenHelper h, @Nullable Context context) {
+        if (context == null) {
+            return;
+        }
+
+        if (GmsCompat.isGmsCore()) {
+            if (inPersistentGmsCoreProcess) {
+                if ("phenotype.db".equals(h.getDatabaseName()) && !context.isDeviceProtectedStorage()) {
+                    if (phenotypeDb != null) {
+                        Log.w(TAG, "reassigning phenotypeDb", new Throwable());
+                    }
+                    phenotypeDb = h;
+                }
+            }
+        }
+    }
+
+    private static volatile SQLiteOpenHelper phenotypeDb;
+    public static SQLiteOpenHelper getPhenotypeDb() { return phenotypeDb; }
+
+    // SQLiteDatabase#queryWithFactory
+    @Nullable
+    public static CursorWrapper maybeWrapSqlCursor(SQLiteDatabase db, String table,
+                                                   String selection, String[] selectionArgs, Cursor cursor) {
+        if (cursor == null) {
+            return null;
+        }
+
+        if (GmsCompat.isGmsCore()) {
+            String dbPath = db.getPath();
+            if (dbPath.endsWith("/phenotype.db")) {
+                switch (table) {
+                    case "Flags":
+                    case "FlagOverrides":
+                        return GmsPhenotypeFlagsCursor.maybeCreate(selection, selectionArgs, cursor);
+                    case "ChangeCounts":
+                        return GmsPhenotypeChangeCountsCursor.maybeCreate(selection, selectionArgs, cursor);
+                }
+            }
+        }
+
+        return null;
     }
 
     private GmsHooks() {}
