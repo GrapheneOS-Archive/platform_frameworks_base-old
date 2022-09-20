@@ -17,6 +17,7 @@
 package com.android.internal.gmscompat;
 
 import android.Manifest;
+import android.annotation.Nullable;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityManager;
@@ -60,14 +61,20 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
-/**
- * API shims for GMS compatibility. Hooks that are more complicated than a simple
- * constant return value should be delegated to this class for easier maintenance.
- *
- * @hide
- */
+import static com.android.internal.gmscompat.GmsInfo.PACKAGE_GMS_CORE;
+
 public final class GmsHooks {
     private static final String TAG = "GmsCompat/Hooks";
+
+    private static volatile GmsCompatConfig config;
+
+    public static final String PERSISTENT_GmsCore_PROCESS = PACKAGE_GMS_CORE + ".persistent";
+    public static boolean inPersistentGmsCoreProcess;
+
+    public static GmsCompatConfig config() {
+        // thread-safe: immutable after publication
+        return config;
+    }
 
     public static void init(Context ctx, String packageName) {
         String processName = Application.getProcessName();
@@ -78,13 +85,39 @@ public final class GmsHooks {
             WebView.setDataDirectorySuffix("process-shim--" + processName);
         }
 
+        if (GmsCompat.isGmsCore()) {
+            inPersistentGmsCoreProcess = processName.equals(PERSISTENT_GmsCore_PROCESS);
+        }
+
         if (GmsCompat.isPlayStore()) {
             PlayStoreHooks.init();
         }
 
-        GmsCompatApp.connect(ctx, processName);
+        configUpdateLock = new Object();
+
+        // Locking is needed to prevent a race that would occur if config is updated via
+        // BinderGca2Gms#updateConfig in the time window between BinderGms2Gca#connect and setConfig()
+        // call below. Older GmsCompatConfig would overwrite the newer one in that case.
+        synchronized (configUpdateLock) {
+            GmsCompatConfig config = GmsCompatApp.connect(ctx, processName);
+            setConfig(config);
+        }
 
         Thread.setUncaughtExceptionPreHandler(new UncaughtExceptionPreHandler());
+    }
+
+    static Object configUpdateLock;
+
+    static void setConfig(GmsCompatConfig c) {
+        if (GmsCompat.isPlayStore()) {
+            PlayStoreHooks.setupGservicesFlags(c);
+        }
+
+        // configUpdateLock should never be null at this point, it's initialized before GmsCompatApp
+        // gets a handle to BinderGca2Gms that is used for updating GmsCompatConfig
+        synchronized (configUpdateLock) {
+            config = c;
+        }
     }
 
     static class UncaughtExceptionPreHandler implements Thread.UncaughtExceptionHandler {
@@ -227,8 +260,8 @@ public final class GmsHooks {
     }
 
     // In some cases (Play Games Services, Play {Asset, Feature} Delivery)
-    // GMS Core relies on getRunningAppProcesses() to figure out whether its client is running.
-    // This workaround is racy, because unprivileged apps don't know whether arbitrary pid is alive.
+    // GMS relies on getRunningAppProcesses() to figure out whether its client is running.
+    // This workaround is racy, because unprivileged apps can't know whether an arbitrary pid is alive.
     // ActivityManager#getRunningAppProcesses()
     public static ArrayList<RunningAppProcessInfo> addRecentlyBoundPids(Context context,
                                                                         List<RunningAppProcessInfo> orig) {
