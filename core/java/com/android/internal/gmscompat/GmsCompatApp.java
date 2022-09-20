@@ -26,13 +26,15 @@ import android.util.Log;
 
 import com.android.internal.gmscompat.dynamite.server.FileProxyService;
 
+import static com.android.internal.gmscompat.GmsHooks.inPersistentGmsCoreProcess;
+
 public final class GmsCompatApp {
     private static final String TAG = "GmsCompat/GCA";
     public static final String PKG_NAME = "app.grapheneos.gmscompat";
 
     @SuppressWarnings("FieldCanBeLocal")
     // written to fields to prevent GC from collecting them
-    private static Binder localBinder;
+    private static BinderGca2Gms binderGca2Gms;
     @SuppressWarnings("FieldCanBeLocal")
     private static FileProxyService dynamiteFileProxyService;
 
@@ -40,9 +42,9 @@ public final class GmsCompatApp {
 
     public static final String KEY_BINDER = "binder";
 
-    static void connect(Context ctx, String processName) {
-        Binder local = new Binder();
-        localBinder = local;
+    static GmsCompatConfig connect(Context ctx, String processName) {
+        BinderGca2Gms gca2Gms = new BinderGca2Gms();
+        binderGca2Gms = gca2Gms;
 
         try {
             IGms2Gca iGms2Gca = IGms2Gca.Stub.asInterface(getBinder(BINDER_IGms2Gca));
@@ -50,16 +52,16 @@ public final class GmsCompatApp {
 
             if (GmsCompat.isGmsCore()) {
                 FileProxyService fileProxyService = null;
-                if ("com.google.android.gms.persistent".equals(processName)) {
+                if (inPersistentGmsCoreProcess) {
                     // FileProxyService binder needs to be always available to the Dynamite clients.
                     // "persistent" process launches at bootup and is kept alive by the ServiceConnection
                     // from the GmsCompatApp, which makes it fit for the purpose of hosting the FileProxyService
                     fileProxyService = new FileProxyService(ctx);
                     dynamiteFileProxyService = fileProxyService;
                 }
-                iGms2Gca.connectGmsCore(processName, local, fileProxyService);
+                return iGms2Gca.connectGmsCore(processName, gca2Gms, fileProxyService);
             } else {
-                iGms2Gca.connect(ctx.getPackageName(), processName, local);
+                return iGms2Gca.connect(ctx.getPackageName(), processName, gca2Gms);
             }
         } catch (RemoteException e) {
             throw callFailed(e);
