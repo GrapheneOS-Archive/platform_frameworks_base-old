@@ -38,8 +38,10 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.DeadSystemRuntimeException;
+import android.os.Parcel;
 import android.os.PowerExemptionManager;
 import android.os.Process;
 import android.os.RemoteException;
@@ -536,6 +538,78 @@ public final class GmsHooks {
         bo.setTemporaryAppAllowlist(0, PowerExemptionManager.TEMPORARY_ALLOW_LIST_TYPE_NONE,
                 PowerExemptionManager.REASON_UNKNOWN, null);
         return bo.toBundle();
+    }
+
+    // Parcel#readException
+    public static boolean interceptException(Exception e, Parcel p) {
+        if (!(e instanceof SecurityException)) {
+            return false;
+        }
+
+        if (p.dataAvail() != 0) {
+            Log.w(TAG, "malformed Parcel: dataAvail() " + p.dataAvail() + " after exception", e);
+            return false;
+        }
+
+        StackTraceElement[] steArr = e.getStackTrace();
+        ClassLoader defaultClassLoader = GmsCompat.appContext().getClassLoader();
+
+        // first 2 elements are guaranteed to be inside the Parcel class
+        final int firstIndex = 2;
+
+        StackTraceElement targetMethod = null;
+
+        // To find out which API call caused the exception, iterate through the stack trace until
+        // the first app's class (app's classes are loaded with PathClassLoader)
+        for (int i = firstIndex; i < steArr.length; ++i) {
+            StackTraceElement ste = steArr[i];
+            String className = ste.getClassName();
+            Class class_;
+            try {
+                class_ = Class.forName(className, false, defaultClassLoader);
+            } catch (ClassNotFoundException cnfe) {
+                return false;
+            }
+
+            ClassLoader classLoader = class_.getClassLoader();
+            if (classLoader == null) {
+                return false;
+            }
+
+            String clName = classLoader.getClass().getName();
+
+            if ("java.lang.BootClassLoader".equals(clName)) {
+                continue;
+            }
+
+            if (!"dalvik.system.PathClassLoader".equals(clName)) {
+                return false;
+            }
+
+            if (i == firstIndex) {
+                return false;
+            }
+
+            targetMethod = steArr[i - 1];
+            break;
+        }
+
+        if (targetMethod == null) {
+            return false;
+        }
+
+        StubDef stub = StubDef.find(targetMethod.getClassName(), targetMethod.getMethodName(), config());
+        if (stub == null) {
+            return false;
+        }
+
+        boolean res = stub.stubOutMethod(p);
+
+        if (Build.isDebuggable()) {
+            Log.i(TAG, res ? "intercepted" : "stubOut failed", e);
+        }
+
+        return res;
     }
 
     private GmsHooks() {}
