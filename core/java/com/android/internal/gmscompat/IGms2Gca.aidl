@@ -3,12 +3,14 @@ package com.android.internal.gmscompat;
 import android.app.ApplicationErrorReport;
 import android.app.PendingIntent;
 
+import com.android.internal.gmscompat.GmsCompatConfig;
+import com.android.internal.gmscompat.IGca2Gms;
 import com.android.internal.gmscompat.dynamite.server.IFileProxyService;
 
-// calls from main GMS components (GSF, GMS Core, Play Store) to GmsCompatApp
+// calls from GMS components to GmsCompatApp
 interface IGms2Gca {
-    void connectGmsCore(String processName, IBinder callerBinder, @nullable IFileProxyService dynamiteFileProxyService);
-    void connect(String packageName, String processName, IBinder callerBinder);
+    GmsCompatConfig connectGmsCore(String processName, IGca2Gms iGca2Gms, @nullable IFileProxyService dynamiteFileProxyService);
+    GmsCompatConfig connect(String packageName, String processName, IGca2Gms iGca2Gms);
 
     oneway void showPlayStorePendingUserActionNotification();
     oneway void dismissPlayStorePendingUserActionNotification();
