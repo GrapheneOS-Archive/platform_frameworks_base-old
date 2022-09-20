@@ -22,6 +22,7 @@ import android.app.PendingIntent;
 import android.app.compat.gms.GmsCompat;
 import android.app.usage.StorageStats;
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -355,6 +356,26 @@ public final class PlayStoreHooks {
             target.sendIntent(GmsCompat.appContext(), 0, intent, null, null);
         } catch (IntentSender.SendIntentException e) {
             Log.d(TAG, "", e);
+        }
+    }
+
+    static void setupGservicesFlags(GmsCompatConfig config) {
+        ContentResolver cr = GmsCompat.appContext().getContentResolver();
+        final String prefPrefix = "gmscompat_play_store_unrestrict_pkg_";
+
+        // Disables auto updates of GMS Core, not of all GMS components.
+        // Updates that don't change version of GMS Core (eg downloading a new APK split
+        // for new device locale) and manual updates are allowed
+        if (Settings.Secure.getInt(cr, prefPrefix + GmsInfo.PACKAGE_GMS_CORE, 0) != 1) {
+            config.addGservicesFlag("finsky.AutoUpdateCodegen__gms_auto_update_enabled", "0");
+        }
+
+        if (Settings.Secure.getInt(cr, prefPrefix + GmsInfo.PACKAGE_PLAY_STORE, 0) != 1) {
+            // prevent auto-updates of Play Store, self-update files are still downloaded
+            config.addGservicesFlag("finsky.SelfUpdate__do_not_install", "1");
+            // don't re-download update files after failed self-update
+            config.addGservicesFlag("finsky.SelfUpdate__self_update_download_max_valid_time_ms",
+                    "" + Long.MAX_VALUE);
         }
     }
 
