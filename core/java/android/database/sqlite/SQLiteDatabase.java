@@ -24,6 +24,7 @@ import android.annotation.StringDef;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.app.ActivityThread;
+import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -44,6 +45,8 @@ import android.util.EventLog;
 import android.util.Log;
 import android.util.Pair;
 import android.util.Printer;
+
+import com.android.internal.gmscompat.GmsHooks;
 import com.android.internal.util.Preconditions;
 import dalvik.system.CloseGuard;
 import java.io.File;
@@ -1552,15 +1555,24 @@ public final class SQLiteDatabase extends SQLiteClosable {
             String selection, String[] selectionArgs, String groupBy,
             String having, String orderBy, String limit, CancellationSignal cancellationSignal) {
         acquireReference();
+        Cursor res;
         try {
             String sql = SQLiteQueryBuilder.buildQueryString(
                     distinct, table, columns, selection, groupBy, having, orderBy, limit);
 
-            return rawQueryWithFactory(cursorFactory, sql, selectionArgs,
+            res = rawQueryWithFactory(cursorFactory, sql, selectionArgs,
                     findEditTable(table), cancellationSignal);
         } finally {
             releaseReference();
         }
+
+        if (GmsCompat.isGmsCore()) {
+            Cursor c = GmsHooks.maybeWrapSqlCursor(this, table, selection, selectionArgs, res);
+            if (c != null) {
+                return c;
+            }
+        }
+        return res;
     }
 
     /**
