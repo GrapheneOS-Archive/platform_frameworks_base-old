@@ -2576,7 +2576,18 @@ public abstract class ContentResolver implements ContentInterface {
      */
     public final @Nullable ContentProviderClient acquireContentProviderClient(@NonNull Uri uri) {
         Objects.requireNonNull(uri, "uri");
-        IContentProvider provider = acquireProvider(uri);
+
+        IContentProvider provider;
+        try {
+            provider = acquireProvider(uri);
+        } catch (SecurityException se) {
+            if (GmsCompat.isEnabled()) {
+                Log.d("GmsCompat", "uri: " + uri, se);
+                return null;
+            }
+            throw se;
+        }
+
         if (provider != null) {
             return new ContentProviderClient(this, provider, uri.getAuthority(), true);
         }
