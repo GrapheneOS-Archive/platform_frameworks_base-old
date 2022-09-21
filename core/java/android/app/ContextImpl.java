@@ -3443,17 +3443,9 @@ class ContextImpl extends Context {
         @Override
         @UnsupportedAppUsage
         protected IContentProvider acquireProvider(Context context, String auth) {
-            try {
-                return mMainThread.acquireProvider(context,
-                        ContentProvider.getAuthorityWithoutUserId(auth),
-                        resolveUserIdFromAuthority(auth), true);
-            } catch (SecurityException se) {
-                if (GmsCompat.isEnabled()) {
-                    Log.d("GmsCompat", "auth " + auth, se);
-                    return null;
-                }
-                throw se;
-            }
+            return mMainThread.acquireProvider(context,
+                    ContentProvider.getAuthorityWithoutUserId(auth),
+                    resolveUserIdFromAuthority(auth), true);
         }
 
         @Override
@@ -3470,17 +3462,9 @@ class ContextImpl extends Context {
 
         @Override
         protected IContentProvider acquireUnstableProvider(Context c, String auth) {
-            try {
-                return mMainThread.acquireProvider(c,
-                        ContentProvider.getAuthorityWithoutUserId(auth),
-                        resolveUserIdFromAuthority(auth), false);
-            } catch (SecurityException se) {
-                if (GmsCompat.isEnabled()) {
-                    Log.d("GmsCompat", "auth " + auth, se);
-                    return null;
-                }
-                throw se;
-            }
+            return mMainThread.acquireProvider(c,
+                    ContentProvider.getAuthorityWithoutUserId(auth),
+                    resolveUserIdFromAuthority(auth), false);
         }
 
         @Override
