@@ -44,6 +44,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
 
@@ -53,6 +55,7 @@ public final class PlayStoreHooks {
     // accessed only from the main thread, no need for synchronization
     static ArrayDeque<Intent> pendingConfirmationIntents;
     static PackageManager packageManager;
+    static Executor commitExecutor;
 
     public static void init() {
         pendingConfirmationIntents = new ArrayDeque<>();
@@ -61,6 +64,7 @@ public final class PlayStoreHooks {
         playStoreObbDir = obbDir + '/' + GmsInfo.PACKAGE_PLAY_STORE;
         File.mkdirsFailedHook = PlayStoreHooks::mkdirsFailed;
         packageManager = GmsCompat.appContext().getPackageManager();
+        commitExecutor = Executors.newSingleThreadExecutor();
     }
 
     // PackageInstaller.Session#commit(IntentSender)
@@ -134,7 +138,9 @@ public final class PlayStoreHooks {
     static void multiCommitStep(Deque<PackageInstaller.Session> sessions, IntentSender finalCallback) {
         PackageInstaller.Session session = sessions.removeFirst();
         PendingIntent pi = PackageInstallerStatusForwarder.register(multiCommitListener(sessions, finalCallback));
-        session.commitInner(pi.getIntentSender());
+
+        // commitInner will block if getSilentUpdateWaitMillis() is > 0
+        commitExecutor.execute(() -> session.commitInner(pi.getIntentSender()));
     }
 
     private static BiConsumer<Intent, Bundle> multiCommitListener(Deque<PackageInstaller.Session> sessions, IntentSender finalCallback) {
