@@ -73,6 +73,9 @@ public class GmsSysServerHooks {
                     break;
                 }
             }
+        } else if (GmsInfo.PACKAGE_GMS_CORE.equals(pkgName)) {
+            String perm = Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS;
+            pkg.addUsesPermission(new ParsedUsesPermissionImpl(perm, 0));
         }
     }
 
