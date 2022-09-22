@@ -59,6 +59,7 @@ import android.os.ParcelFileDescriptor;
 import android.os.Parcelable;
 import android.os.ParcelableException;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.provider.Settings;
@@ -67,6 +68,7 @@ import android.system.Os;
 import android.text.TextUtils;
 import android.util.ArraySet;
 import android.util.ExceptionUtils;
+import android.util.Log;
 
 import com.android.internal.gmscompat.GmsInfo;
 import com.android.internal.gmscompat.PlayStoreHooks;
@@ -1499,6 +1501,24 @@ public class PackageInstaller {
 
         /** @hide */
         public void commitInner(@NonNull IntentSender statusReceiver) {
+            if (GmsCompat.isPlayStore()) {
+                long waitMs = 0;
+                try {
+                    waitMs = mSession.getSilentUpdateWaitMillis();
+                } catch (Exception e) {
+                    // getSilentUpdateWaitMillis() will fail if Play Store didn't set packageName
+                    // of this session. It always does currently AFAIK (September 2022)
+                    Log.e("GmsCompat", "", e);
+                }
+
+                if (waitMs > 0) {
+                    // Should happen only if the same package is updated twice within 30 seconds
+                    // (likely a Play Store bug, possibly related to APK splits)
+                    Log.d("GmsCompat", "PackageInstaller.Session.getSilentUpdateWaitMillis returned " + waitMs + ", sleeping...");
+                    SystemClock.sleep(waitMs + 100);
+                }
+            }
+
             try {
                 mSession.commit(statusReceiver, false);
             } catch (RemoteException e) {
