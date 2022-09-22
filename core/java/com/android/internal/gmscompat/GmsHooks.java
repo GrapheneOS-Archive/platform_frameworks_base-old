@@ -50,8 +50,6 @@ import android.os.Process;
 import android.os.RemoteException;
 import android.os.SystemClock;
 import android.os.UserHandle;
-import android.provider.BaseColumns;
-import android.provider.ContactsContract;
 import android.provider.Downloads;
 import android.provider.Settings;
 import android.util.ArrayMap;
@@ -61,7 +59,6 @@ import android.webkit.WebView;
 
 import com.android.internal.gmscompat.client.ClientPriorityManager;
 import com.android.internal.gmscompat.flags.GmsFlag;
-import com.android.internal.gmscompat.flags.GmsPhenotypeChangeCountsCursor;
 import com.android.internal.gmscompat.flags.GmsPhenotypeFlagsCursor;
 
 import java.util.ArrayList;
@@ -622,8 +619,6 @@ public final class GmsHooks {
                     case "Flags":
                     case "FlagOverrides":
                         return GmsPhenotypeFlagsCursor.maybeCreate(selection, selectionArgs, cursor);
-                    case "ChangeCounts":
-                        return GmsPhenotypeChangeCountsCursor.maybeCreate(selection, selectionArgs, cursor);
                 }
             }
         }
