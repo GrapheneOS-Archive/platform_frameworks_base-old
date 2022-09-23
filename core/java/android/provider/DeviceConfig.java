@@ -18,6 +18,7 @@ package android.provider;
 
 import static android.Manifest.permission.READ_DEVICE_CONFIG;
 import static android.Manifest.permission.WRITE_DEVICE_CONFIG;
+import static com.android.internal.gmscompat.GmsCompatApp.deviceConfigNamespace;
 
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
@@ -39,6 +40,7 @@ import android.util.Log;
 import android.util.Pair;
 
 import com.android.internal.annotations.GuardedBy;
+import com.android.internal.gmscompat.GmsCompatApp;
 import com.android.internal.util.Preconditions;
 
 import java.util.Arrays;
@@ -779,7 +781,7 @@ public final class DeviceConfig {
     @RequiresPermission(READ_DEVICE_CONFIG)
     public static String getProperty(@NonNull String namespace, @NonNull String name) {
         if (GmsCompat.isEnabled()) {
-            return null;
+            return GmsCompatApp.getString(deviceConfigNamespace(namespace), name);
         }
 
         // Fetch all properties for the namespace at once and cache them in the local process, so we
@@ -848,6 +850,14 @@ public final class DeviceConfig {
     @RequiresPermission(READ_DEVICE_CONFIG)
     public static boolean getBoolean(@NonNull String namespace, @NonNull String name,
             boolean defaultValue) {
+        if (GmsCompat.isEnabled()) {
+            if ("gservices".equals(namespace) && "enable_gmscore_gservices_storage".equals(name)) {
+                // Not overriden anywhere, but checked very often. Calls to GmsCompatApp are not cached,
+                // avoid IPC spam.
+                return defaultValue;
+            }
+        }
+
         String value = getProperty(namespace, name);
         return value != null ? Boolean.parseBoolean(value) : defaultValue;
     }
@@ -953,7 +963,8 @@ public final class DeviceConfig {
     public static boolean setProperty(@NonNull String namespace, @NonNull String name,
             @Nullable String value, boolean makeDefault) {
         if (GmsCompat.isEnabled()) {
-            return false;
+            // makeDefault is ignored: defaults are unsupported by GmsCompat and are unused by GMS
+            return GmsCompatApp.putString(deviceConfigNamespace(namespace), name, value);
         }
 
         ContentResolver contentResolver = ActivityThread.currentApplication().getContentResolver();
@@ -979,7 +990,7 @@ public final class DeviceConfig {
     @RequiresPermission(WRITE_DEVICE_CONFIG)
     public static boolean setProperties(@NonNull Properties properties) throws BadConfigException {
         if (GmsCompat.isEnabled()) {
-            return false;
+            return GmsCompatApp.setProperties(properties);
         }
 
         ContentResolver contentResolver = ActivityThread.currentApplication().getContentResolver();
@@ -1032,7 +1043,7 @@ public final class DeviceConfig {
     @RequiresPermission(WRITE_DEVICE_CONFIG)
     public static void resetToDefaults(@ResetMode int resetMode, @Nullable String namespace) {
         if (GmsCompat.isEnabled()) {
-            return;
+            throw new UnsupportedOperationException();
         }
 
         ContentResolver contentResolver = ActivityThread.currentApplication().getContentResolver();
