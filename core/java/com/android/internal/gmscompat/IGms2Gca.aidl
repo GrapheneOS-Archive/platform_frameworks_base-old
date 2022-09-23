@@ -2,6 +2,7 @@ package com.android.internal.gmscompat;
 
 import android.app.ApplicationErrorReport;
 import android.app.PendingIntent;
+import android.database.IContentObserver;
 
 import com.android.internal.gmscompat.GmsCompatConfig;
 import com.android.internal.gmscompat.IGca2Gms;
@@ -24,4 +25,10 @@ interface IGms2Gca {
     oneway void showGmsMissingNearbyDevicesPermissionGeneric(String callerPkg);
 
     void onUncaughtException(in ApplicationErrorReport aer);
+
+    @nullable String privSettingsGetString(String ns, String key);
+    boolean privSettingsPutString(String ns, String key, @nullable String value);
+    boolean privSettingsPutStrings(String ns, in String[] keys, in String[] values);
+    void privSettingsRegisterObserver(String ns, String key, IContentObserver observer);
+    void privSettingsUnregisterObserver(IContentObserver observer);
 }
