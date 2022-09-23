@@ -5476,6 +5476,16 @@ public class Activity extends ContextThemeWrapper
      */
     public void startActivityForResult(@RequiresPermission Intent intent, int requestCode,
             @Nullable Bundle options) {
+        if (GmsCompat.isEnabled()) {
+            ComponentName cn = intent.getComponent();
+            if (cn != null && "com.google.android.permissioncontroller".equals(cn.getPackageName())) {
+                // PermissionController activities can't be opened by unprivileged apps.
+                // (Replacing absent com.google.android.permissioncontroller package with
+                // com.android.permissioncontroller would not help)
+                return;
+            }
+        }
+
         if (mParent == null) {
             options = transferSpringboardActivityOptions(options);
             Instrumentation.ActivityResult ar =
