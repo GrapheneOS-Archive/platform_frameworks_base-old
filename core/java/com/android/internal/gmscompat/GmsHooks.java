@@ -27,6 +27,7 @@ import android.app.Application;
 import android.app.ApplicationErrorReport;
 import android.app.BroadcastOptions;
 import android.app.PendingIntent;
+import android.app.RemoteServiceException;
 import android.app.compat.gms.GmsCompat;
 import android.content.ComponentName;
 import android.content.ContentResolver;
@@ -145,7 +146,7 @@ public final class GmsHooks {
             // bypasses the standard crash handling infrastructure.
             // Send the report to GmsCompatApp before GMS receives the uncaughtException() callback.
 
-            if (!isDeadSystemRuntimeException(e)) {
+            if (!shouldSkipException(e)) {
                 try {
                     GmsCompatApp.iGms2Gca().onUncaughtException(aer);
                 } catch (RemoteException re) {
@@ -158,19 +159,26 @@ public final class GmsHooks {
             }
         }
 
-        // in some cases a DeadSystemRuntimeException is thrown despite the system being actually
-        // still alive, likely when the Binder buffer space is full and a binder transaction with
-        // system_server fails.
-        // See https://cs.android.com/android/platform/superproject/+/android-13.0.0_r3:frameworks/base/core/jni/android_util_Binder.cpp;l=894
-        // (DeadObjectException is rethrown as DeadSystemRuntimeException by
-        // android.os.RemoteException#rethrowFromSystemServer())
-        private static boolean isDeadSystemRuntimeException(Throwable e) {
+        private static boolean shouldSkipException(Throwable e) {
             for (;;) {
                 if (e == null) {
                     return false;
                 }
 
-                if (e instanceof DeadSystemRuntimeException) {
+                boolean skip =
+    // in some cases a DeadSystemRuntimeException is thrown despite the system being actually
+    // still alive, likely when the Binder buffer space is full and a binder transaction with
+    // system_server fails.
+    // See https://cs.android.com/android/platform/superproject/+/android-13.0.0_r3:frameworks/base/core/jni/android_util_Binder.cpp;l=894
+    // (DeadObjectException is rethrown as DeadSystemRuntimeException by
+    // android.os.RemoteException#rethrowFromSystemServer())
+                    e instanceof DeadSystemRuntimeException
+    // Seems to be an OS bug, see
+    // https://cs.android.com/android/platform/superproject/+/android-13.0.0_r3:frameworks/base/services/core/java/com/android/server/am/BroadcastQueue.java;l=654
+                    || e instanceof RemoteServiceException.CannotDeliverBroadcastException
+                ;
+
+                if (skip) {
                     return true;
                 }
 
