@@ -190,6 +190,8 @@ public final class GmsHooks {
             case Context.PERSISTENT_DATA_BLOCK_SERVICE:
             // used for updateable fonts
             case Context.FONT_SERVICE:
+            // requires privileged permissions
+            case Context.STATS_MANAGER:
                 return true;
         }
         return false;
