@@ -20,7 +20,6 @@ import android.Manifest;
 import android.annotation.Nullable;
 import android.app.ActivityManager;
 import android.content.pm.GosPackageState;
-import android.content.pm.GosPackageStatePm;
 import android.os.Binder;
 import android.os.Process;
 import android.os.RemoteException;
@@ -31,6 +30,7 @@ import android.util.TypedXmlSerializer;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.server.pm.parsing.pkg.AndroidPackage;
+import com.android.server.pm.pkg.GosPackageStatePm;
 import com.android.server.pm.pkg.PackageStateInternal;
 import com.android.server.pm.pkg.PackageUserStateInternal;
 import com.android.server.pm.pkg.component.ParsedUsesPermission;

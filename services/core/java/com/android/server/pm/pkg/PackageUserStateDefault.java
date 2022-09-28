@@ -19,7 +19,6 @@ package com.android.server.pm.pkg;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.ComponentName;
-import android.content.pm.GosPackageStatePm;
 import android.content.pm.PackageManager;
 import android.content.pm.overlay.OverlayPaths;
 import android.util.ArraySet;
