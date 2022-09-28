@@ -19,7 +19,6 @@ package com.android.server.pm.pkg;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
-import android.content.pm.GosPackageStatePm;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManagerInternal;
 import android.content.pm.SharedLibraryInfo;
