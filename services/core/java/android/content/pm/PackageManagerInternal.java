@@ -49,6 +49,7 @@ import com.android.server.pm.PackageSetting;
 import com.android.server.pm.dex.DynamicCodeLogger;
 import com.android.server.pm.parsing.pkg.AndroidPackage;
 import com.android.server.pm.pkg.AndroidPackageApi;
+import com.android.server.pm.pkg.GosPackageStatePm;
 import com.android.server.pm.pkg.PackageStateInternal;
 import com.android.server.pm.pkg.SharedUserApi;
 import com.android.server.pm.pkg.component.ParsedMainComponent;
@@ -1287,5 +1288,5 @@ public abstract class PackageManagerInternal {
     public abstract DynamicCodeLogger getDynamicCodeLogger();
 
     @Nullable
-    public abstract GosPackageState getGosPackageState(String packageName, int userId);
+    public abstract GosPackageStatePm getGosPackageState(String packageName, int userId);
 }
