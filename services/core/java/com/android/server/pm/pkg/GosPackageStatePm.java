@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package android.content.pm;
+package com.android.server.pm.pkg;
 
 import android.annotation.Nullable;
+import android.content.pm.GosPackageState;
 
 import java.util.Arrays;
 
