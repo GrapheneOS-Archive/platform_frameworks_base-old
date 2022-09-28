@@ -215,6 +215,7 @@ import com.android.server.pm.permission.LegacyPermissionManagerService;
 import com.android.server.pm.permission.PermissionManagerService;
 import com.android.server.pm.permission.PermissionManagerServiceInternal;
 import com.android.server.pm.permission.SpecialRuntimePermUtils;
+import com.android.server.pm.pkg.GosPackageStatePm;
 import com.android.server.pm.pkg.PackageStateInternal;
 import com.android.server.pm.pkg.PackageUserState;
 import com.android.server.pm.pkg.PackageUserStateInternal;
@@ -6529,8 +6530,8 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
 
         @Nullable
         @Override
-        public GosPackageState getGosPackageState(String packageName, int userId) {
-            return GosPackageStatePmHooks.get(PackageManagerService.this, packageName, userId);
+        public GosPackageStatePm getGosPackageState(String packageName, int userId) {
+            return GosPackageStatePm.get(PackageManagerService.this, packageName, userId);
         }
     }
 
