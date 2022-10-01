@@ -10,6 +10,7 @@ import android.app.compat.gms.GmsCompat;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.ArrayMap;
+import android.util.Base64;
 import android.util.Log;
 
 import com.android.internal.gmscompat.GmsInfo;
@@ -50,6 +51,9 @@ public class GmsFlag implements Parcelable {
 
     public static final String GSERVICES_URI = "content://"
             + GmsInfo.PACKAGE_GSF + '.' + NAMESPACE_GSERVICES + "/prefix";
+
+    public static final String PHENOTYPE_URI_PREFIX = "content://"
+            + GmsInfo.PACKAGE_GMS_CORE + ".phenotype/";
 
     public GmsFlag() {}
 
@@ -95,6 +99,51 @@ public class GmsFlag implements Parcelable {
 
         String orig = map.get(name);
         map.put(name, stringVal(orig));
+    }
+
+    private static final int PHENOTYPE_BASE64_FLAGS = Base64.NO_PADDING | Base64.NO_WRAP;
+
+    public void applyToPhenotypeMap(ArrayMap<String, String> map) {
+        if (!shouldOverride()) {
+            return;
+        }
+
+        if (valueSupplier != null) {
+            Object val = valueSupplier.get();
+
+            String s;
+            if (type == TYPE_BYTES) {
+                s = Base64.encodeToString((byte[]) val, PHENOTYPE_BASE64_FLAGS);
+            } else {
+                s = val.toString();
+            }
+
+            map.put(name, s);
+            return;
+        }
+
+        String s;
+        switch (type) {
+            case TYPE_BOOL:
+                s = boolArg ? "1" : "0";
+                break;
+            case TYPE_INT:
+                s = Long.toString(integerArg);
+                break;
+            case TYPE_FLOAT:
+                s = Double.toString(floatArg);
+                break;
+            case TYPE_STRING:
+                s = stringVal(map.get(name));
+                break;
+            case TYPE_BYTES:
+                s = Base64.encodeToString(bytesArg, PHENOTYPE_BASE64_FLAGS);
+                break;
+            default:
+                return;
+        }
+
+        map.put(name, s);
     }
 
     public boolean shouldOverride() {
