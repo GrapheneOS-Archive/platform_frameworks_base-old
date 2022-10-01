@@ -12,4 +12,6 @@ interface IClientOfGmsCore2Gca {
     IFileProxyService getDynamiteFileProxyService();
 
     oneway void onNotableInterfaceAcquired(String interfaceDescriptor);
+
+    oneway void showMissingAppNotification(String pkgName);
 }
