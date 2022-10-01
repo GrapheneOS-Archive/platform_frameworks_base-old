@@ -60,7 +60,6 @@ import android.webkit.WebView;
 
 import com.android.internal.gmscompat.client.ClientPriorityManager;
 import com.android.internal.gmscompat.flags.GmsFlag;
-import com.android.internal.gmscompat.flags.GmsPhenotypeFlagsCursor;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -331,9 +330,11 @@ public final class GmsHooks {
     // ContentResolver#query(Uri, String[], Bundle, CancellationSignal)
     public static Cursor maybeModifyQueryResult(Uri uri, @Nullable String[] projection, @Nullable Bundle queryArgs,
                                                 Cursor origCursor) {
+        String uriString = uri.toString();
+
         Consumer<ArrayMap<String, String>> mutator = null;
 
-        if (GmsFlag.GSERVICES_URI.equals(uri.toString())) {
+        if (GmsFlag.GSERVICES_URI.equals(uriString)) {
             if (queryArgs == null) {
                 return null;
             }
@@ -355,6 +356,26 @@ public final class GmsHooks {
                             break;
                         }
                     }
+                }
+            };
+        } else if (uriString.startsWith(GmsFlag.PHENOTYPE_URI_PREFIX)) {
+            List<String> path = uri.getPathSegments();
+            if (path.size() != 1) {
+                Log.e(TAG, "unknown phenotype uri " + uriString, new Throwable());
+                return null;
+            }
+
+            String namespace = path.get(0);
+
+            ArrayMap<String, GmsFlag> nsFlags = config().flags.get(namespace);
+
+            if (nsFlags == null) {
+                return null;
+            }
+
+            mutator = map -> {
+                for (GmsFlag f : nsFlags.values()) {
+                    f.applyToPhenotypeMap(map);
                 }
             };
         }
@@ -613,28 +634,6 @@ public final class GmsHooks {
 
     private static volatile SQLiteOpenHelper phenotypeDb;
     public static SQLiteOpenHelper getPhenotypeDb() { return phenotypeDb; }
-
-    // SQLiteDatabase#queryWithFactory
-    @Nullable
-    public static CursorWrapper maybeWrapSqlCursor(SQLiteDatabase db, String table,
-                                                   String selection, String[] selectionArgs, Cursor cursor) {
-        if (cursor == null) {
-            return null;
-        }
-
-        if (GmsCompat.isGmsCore()) {
-            String dbPath = db.getPath();
-            if (dbPath.endsWith("/phenotype.db")) {
-                switch (table) {
-                    case "Flags":
-                    case "FlagOverrides":
-                        return GmsPhenotypeFlagsCursor.maybeCreate(selection, selectionArgs, cursor);
-                }
-            }
-        }
-
-        return null;
-    }
 
     private GmsHooks() {}
 }
