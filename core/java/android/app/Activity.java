@@ -158,6 +158,7 @@ import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.app.IVoiceInteractor;
 import com.android.internal.app.ToolbarActionBar;
 import com.android.internal.app.WindowDecorActionBar;
+import com.android.internal.gmscompat.GmsCompatApp;
 import com.android.internal.gmscompat.GmsHooks;
 import com.android.internal.gmscompat.PlayStoreHooks;
 import com.android.internal.policy.PhoneWindow;
@@ -5483,6 +5484,35 @@ public class Activity extends ContextThemeWrapper
                 // (Replacing absent com.google.android.permissioncontroller package with
                 // com.android.permissioncontroller would not help)
                 return;
+            }
+        }
+
+        if (android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS.equals(intent.getAction())) {
+            Uri data = intent.getData();
+            if (data != null && "package".equals(data.getScheme())) {
+                String pkg = data.getSchemeSpecificPart();
+
+                if (pkg != null) {
+                    switch (pkg) {
+                        case "com.google.android.tts":
+                        if (GmsCompat.isClientOfGmsCore()) {
+                            boolean installed;
+                            try {
+                                installed = ActivityThread.getPackageManager().getApplicationInfo(pkg, 0, getUserId()) != null;
+                            } catch (RemoteException e) {
+                                throw e.rethrowFromSystemServer();
+                            }
+
+                            if (!installed) {
+                                try {
+                                    GmsCompatApp.iClientOfGmsCore2Gca().showMissingAppNotification(pkg);
+                                } catch (RemoteException e) {
+                                    GmsCompatApp.callFailed(e);
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 
