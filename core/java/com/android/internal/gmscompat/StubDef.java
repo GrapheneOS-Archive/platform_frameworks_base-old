@@ -6,6 +6,7 @@
 package com.android.internal.gmscompat;
 
 import android.annotation.Nullable;
+import android.app.compat.gms.GmsCompat;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.ArrayMap;
@@ -45,7 +46,59 @@ public class StubDef implements Parcelable {
     public static final int THROW = 17;
 
     @Nullable
-    static StubDef find(String className, String methodName, GmsCompatConfig config) {
+    public static StubDef find(Throwable e, GmsCompatConfig config) {
+        StackTraceElement[] steArr = e.getStackTrace();
+        ClassLoader defaultClassLoader = GmsCompat.appContext().getClassLoader();
+
+        // first 2 elements are guaranteed to be inside the Parcel class
+        final int firstIndex = 2;
+
+        StackTraceElement targetMethod = null;
+
+        // To find out which API call caused the exception, iterate through the stack trace until
+        // the first app's class (app's classes are loaded with PathClassLoader)
+        for (int i = firstIndex; i < steArr.length; ++i) {
+            StackTraceElement ste = steArr[i];
+            String className = ste.getClassName();
+            Class class_;
+            try {
+                class_ = Class.forName(className, false, defaultClassLoader);
+            } catch (ClassNotFoundException cnfe) {
+                return null;
+            }
+
+            ClassLoader classLoader = class_.getClassLoader();
+            if (classLoader == null) {
+                return null;
+            }
+
+            String clName = classLoader.getClass().getName();
+
+            if ("java.lang.BootClassLoader".equals(clName)) {
+                continue;
+            }
+
+            if (!"dalvik.system.PathClassLoader".equals(clName)) {
+                return null;
+            }
+
+            if (i == firstIndex) {
+                return null;
+            }
+
+            targetMethod = steArr[i - 1];
+            break;
+        }
+
+        if (targetMethod == null) {
+            return null;
+        }
+
+        return find(targetMethod.getClassName(), targetMethod.getMethodName(), config);
+    }
+
+    @Nullable
+    private static StubDef find(String className, String methodName, GmsCompatConfig config) {
         ArrayMap<String, StubDef> classStubs = config.stubs.get(className);
         if (classStubs == null) {
             return null;
