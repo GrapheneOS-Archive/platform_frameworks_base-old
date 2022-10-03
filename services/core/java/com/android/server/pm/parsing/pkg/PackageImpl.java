@@ -752,7 +752,7 @@ public class PackageImpl extends ParsingPackageImpl implements ParsedPackage, An
         return mBaseAppDataDeviceProtectedDirForSystemUser;
     }
 
-    private int gosPackageStateCachedDerivedFlags;
+    private volatile int gosPackageStateCachedDerivedFlags;
 
     @Override
     public int getGosPackageStateCachedDerivedFlags() {
