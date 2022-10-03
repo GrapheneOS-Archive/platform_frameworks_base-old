@@ -45,6 +45,9 @@ public class StubDef implements Parcelable {
 
     public static final int THROW = 17;
 
+    // see com.android.modules.utils.SynchronousResultReceiver.Result#getValue()
+    public static final int DEFAULT = 18;
+
     @Nullable
     public static StubDef find(Throwable e, GmsCompatConfig config) {
         StackTraceElement[] steArr = e.getStackTrace();
