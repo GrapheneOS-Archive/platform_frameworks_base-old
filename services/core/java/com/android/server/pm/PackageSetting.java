@@ -355,11 +355,6 @@ public class PackageSetting extends SettingBase implements PackageStateInternal 
         onChanged();
     }
 
-    @Nullable
-    public GosPackageStatePm getGosPackageState(@UserIdInt int userId) {
-        return readUserState(userId).getGosPackageState();
-    }
-
     public PackageSetting setForceQueryableOverride(boolean forceQueryableOverride) {
         this.forceQueryableOverride = forceQueryableOverride;
         onChanged();
