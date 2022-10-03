@@ -3230,7 +3230,8 @@ package android.content.pm {
     method public boolean hasDerivedFlags(int);
     method public boolean hasFlag(int);
     method public boolean hasFlags(int);
-    method public boolean shouldSpoofPermissionCheck(@NonNull String);
+    method public boolean shouldSkipRuntimePermissionRequest(@NonNull String);
+    method public boolean shouldSpoofRuntimePermissionCheck(@NonNull String);
     method public void writeToParcel(@NonNull android.os.Parcel, int);
     field @NonNull public static final android.os.Parcelable.Creator<android.content.pm.GosPackageState> CREATOR;
     field public static final int DFLAGS_SET = 1; // 0x1
