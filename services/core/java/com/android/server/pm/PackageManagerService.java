@@ -6021,7 +6021,10 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
 
         @Override
         public GosPackageState setGosPackageState(@NonNull String packageName, int flags, @Nullable byte[] storageScopes, boolean killUid, int userId) {
-            return GosPackageStatePmHooks.set(PackageManagerService.this, packageName, flags, storageScopes, killUid, userId);
+            if (GosPackageStatePmHooks.set(PackageManagerService.this, packageName, flags, storageScopes, killUid, userId)) {
+                return GosPackageStatePmHooks.get(PackageManagerService.this, packageName, userId);
+            }
+            return null;
         }
     }
 

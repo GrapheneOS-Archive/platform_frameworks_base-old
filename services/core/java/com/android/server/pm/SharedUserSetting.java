@@ -175,6 +175,8 @@ public final class SharedUserSetting extends SettingBase implements SharedUserAp
     }
 
     boolean removePackage(PackageSetting packageSetting) {
+        clearGosPackageStateCachedDerivedFlags();
+
         if (!mPackages.remove(packageSetting)) {
             return false;
         }
@@ -198,7 +200,6 @@ public final class SharedUserSetting extends SettingBase implements SharedUserAp
         // recalculate processes.
         updateProcesses();
         onChanged();
-        gosPackageStateCachedDerivedFlags = 0;
         return true;
     }
 
@@ -211,8 +212,10 @@ public final class SharedUserSetting extends SettingBase implements SharedUserAp
         if (mPackages.add(packageSetting)) {
             setFlags(this.getFlags() | packageSetting.getFlags());
             setPrivateFlags(this.getPrivateFlags() | packageSetting.getPrivateFlags());
+
+            clearGosPackageStateCachedDerivedFlags();
+
             onChanged();
-            gosPackageStateCachedDerivedFlags = 0;
         }
         if (packageSetting.getPkg() != null) {
             addProcesses(packageSetting.getPkg().getProcesses());
@@ -414,6 +417,10 @@ public final class SharedUserSetting extends SettingBase implements SharedUserAp
         return super.getLegacyPermissionState();
     }
 
-    // guarded by PackageManagerService.mLock
-    int gosPackageStateCachedDerivedFlags;
+    // to recalculate derived flags when sharedUid members are added/removed
+    private void clearGosPackageStateCachedDerivedFlags() {
+        for (AndroidPackage pkg : getPackages()) {
+            pkg.setGosPackageStateCachedDerivedFlags(0);
+        }
+    }
 }
