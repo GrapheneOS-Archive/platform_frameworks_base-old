@@ -21,6 +21,7 @@ import android.annotation.Nullable;
 import android.app.ActivityManager;
 import android.content.pm.GosPackageState;
 import android.os.Binder;
+import android.os.Build;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.UserHandle;
@@ -28,11 +29,11 @@ import android.util.Slog;
 import android.util.TypedXmlPullParser;
 import android.util.TypedXmlSerializer;
 
-import com.android.internal.annotations.GuardedBy;
 import com.android.server.pm.parsing.pkg.AndroidPackage;
 import com.android.server.pm.pkg.GosPackageStatePm;
 import com.android.server.pm.pkg.PackageStateInternal;
 import com.android.server.pm.pkg.PackageUserStateInternal;
+import com.android.server.pm.pkg.SharedUserApi;
 import com.android.server.pm.pkg.component.ParsedUsesPermission;
 
 import java.io.IOException;
@@ -90,76 +91,66 @@ class GosPackageStatePmHooks {
     static GosPackageState get(PackageManagerService pm, String packageName, int userId) {
         final int callingUid = Binder.getCallingUid();
 
-        synchronized (pm.mLock) {
-            final PackageSetting ps = pm.mSettings.getPackageLPr(packageName);
-            if (ps == null) {
-                return null;
-            }
-
-            if (ps.isPrivileged()) {
-                // a precaution, in case there's a serious bug with GosPackageState-related code
-                return null;
-            }
-
-            boolean selfCheck = false;
-
-            if (callingUid != Process.SYSTEM_UID) {
-                boolean allow = false;
-                if (userId == UserHandle.getUserId(callingUid)) {
-                    int callingAppId = UserHandle.getAppId(callingUid);
-                    selfCheck = ps.getAppId() == callingAppId;
-                    allow = selfCheck
-                            || callingAppId == pm.mediaProviderAppId
-                            || callingAppId == pm.permissionControllerAppId
-                            || callingAppId == Process.SYSTEM_UID
-                            || callingAppId == pm.sysLauncherAppId
-                    ;
-                }
-                if (!allow) {
-                    throw new SecurityException();
-                }
-            }
-
-            return getInner(pm, ps, userId, selfCheck);
-        }
-    }
-
-    @GuardedBy("PackageManagerService.mLock")
-    @Nullable
-    private static GosPackageState getInner(PackageManagerService pm, PackageSetting ps, int userId, boolean selfCheck) {
-        GosPackageStatePm gosPs = ps.getGosPackageState(userId);
-        if (gosPs == null) {
-            gosPs = GosPackageStatePmHooks.maybeGetForSharedUserPackage(pm, ps, userId);
-        }
-
-        if (gosPs == null) {
+        var snapshot = pm.snapshotComputer();
+        PackageStateInternal psi = snapshot.getPackageStates().get(packageName);
+        if (psi == null) {
+            // likely the package was racily uninstalled
             return null;
         }
 
-        int derivedFlags = GosPackageStatePmHooks.maybeDeriveFlags(pm, gosPs, ps);
+        final int appId = psi.getAppId();
+
+        if (!GosPackageState.attachableToPackage(appId)) {
+            return null;
+        }
+
+        boolean selfCheck = false;
+
+        if (callingUid != Process.SYSTEM_UID) {
+            boolean allow = false;
+            if (userId == UserHandle.getUserId(callingUid)) {
+                int callingAppId = UserHandle.getAppId(callingUid);
+                selfCheck = appId == callingAppId;
+                allow = selfCheck
+                        || callingAppId == pm.mediaProviderAppId
+                        || callingAppId == pm.permissionControllerAppId
+                        || callingAppId == Process.SYSTEM_UID
+                        || callingAppId == pm.sysLauncherAppId
+                ;
+            }
+            if (!allow) {
+                throw new SecurityException();
+            }
+        }
+
+        GosPackageStatePm ps = GosPackageStatePm.get(snapshot, psi, userId);
+
+        if (ps == null) {
+            return null;
+        }
+
+        int derivedFlags = maybeDeriveFlags(snapshot, ps, psi);
 
         return selfCheck ?
                 // return as little information as possible to the target package
-                gosPs.externalVersionForTargetPackage(derivedFlags) :
-                gosPs.externalVersionForPrivilegedCallers(derivedFlags);
+                ps.externalVersionForTargetPackage(derivedFlags) :
+                ps.externalVersionForPrivilegedCallers(derivedFlags);
     }
 
-    // new GosPackageState is returned because derivedFlags may change as a result of this call
-    // (and to ensure consistency in case more than one process modifies GosPackageState at the same time)
-    @Nullable
     // PackageManagerService.IPackageManagerImpl#setGosPackageState
-    static GosPackageState set(PackageManagerService pm, String packageName,
+    static boolean set(PackageManagerService pm, String packageName,
                                int flags, @Nullable byte[] storageScopes,
                                boolean killUid,
                                int userId) {
         final int callingUid = Binder.getCallingUid();
 
-        GosPackageState result;
-        int appId;
+        final int appId;
 
         synchronized (pm.mLock) {
             boolean allow = false;
-            if (userId == UserHandle.getUserId(callingUid)) {
+            if (callingUid == Process.SYSTEM_UID) {
+                allow = true;
+            } else if (userId == UserHandle.getUserId(callingUid)) {
                 int callingAppId = UserHandle.getAppId(callingUid);
                 allow = callingAppId == pm.permissionControllerAppId
                         // appId of the Settings app is the same as SYSTEM_UID
@@ -171,15 +162,18 @@ class GosPackageStatePmHooks {
 
             PackageSetting ps = pm.mSettings.getPackageLPr(packageName);
             if (ps == null) {
-                return null;
-            }
-
-            if (ps.isPrivileged()) {
-                // a precaution, in case there's a serious bug with GosPackageState-related code
-                throw new IllegalStateException( "attaching GosPackageState to a privileged package " + packageName + " is not allowed");
+                return false;
             }
 
             appId = ps.getAppId();
+
+            if (!GosPackageState.attachableToPackage(appId)) {
+                if (Build.isDebuggable()) {
+                    throw new IllegalStateException();
+                }
+
+                return false;
+            }
 
             GosPackageStatePm gosPs = null;
             if (flags != 0) {
@@ -193,7 +187,7 @@ class GosPackageStatePmHooks {
 
                 if (sharedPkgs == null) {
                     Slog.w(TAG, "SharedUserSetting.getPackages() for " + packageName + " is null");
-                    return null;
+                    return false;
                 }
 
                 // see GosPackageStatePm doc
@@ -209,8 +203,6 @@ class GosPackageStatePmHooks {
 
             // will invalidate app-side caches (GosPackageState.sCache)
             pm.scheduleWritePackageRestrictions(userId);
-
-            result = getInner(pm, ps, userId, false);
         }
 
         if (killUid) {
@@ -225,11 +217,10 @@ class GosPackageStatePmHooks {
             }
         }
 
-        return result;
+        return true;
     }
 
-    @GuardedBy("PackageManagerService.mLock")
-    private static int maybeDeriveFlags(PackageManagerService pm, final GosPackageStatePm gosPs, PackageSetting pkgSetting) {
+    private static int maybeDeriveFlags(Computer snapshot, final GosPackageStatePm gosPs, PackageStateInternal pkgSetting) {
         if ((gosPs.flags & FLAG_STORAGE_SCOPES_ENABLED) == 0) {
             // derived flags are used only by StorageScopes for now
             return 0;
@@ -241,14 +232,15 @@ class GosPackageStatePmHooks {
             return 0;
         }
 
-        SharedUserSetting sharedUser = pm.mSettings.getSharedUserSettingLPr(pkgSetting);
-
-        int cachedDerivedFlags = sharedUser != null ?
-                sharedUser.gosPackageStateCachedDerivedFlags :
-                pkg.getGosPackageStateCachedDerivedFlags();
+        int cachedDerivedFlags = pkg.getGosPackageStateCachedDerivedFlags();
 
         if (cachedDerivedFlags != 0) {
             return cachedDerivedFlags;
+        }
+
+        SharedUserApi sharedUser = null;
+        if (pkgSetting.hasSharedUser()) {
+            sharedUser = snapshot.getSharedUser(pkgSetting.getSharedUserAppId());
         }
 
         int flags;
@@ -269,16 +261,11 @@ class GosPackageStatePmHooks {
 
         flags |= DFLAGS_SET;
 
-        if (sharedUser != null) {
-            sharedUser.gosPackageStateCachedDerivedFlags = flags;
-        } else {
-            pkg.setGosPackageStateCachedDerivedFlags(flags);
-        }
+        pkg.setGosPackageStateCachedDerivedFlags(flags);
 
         return flags;
     }
 
-    @GuardedBy("PackageManagerService.mLock")
     private static int deriveFlags(int flags, AndroidPackage pkg) {
         List<ParsedUsesPermission> list = pkg.getUsesPermissions();
         for (int i = 0, m = list.size(); i < m; ++i) {
@@ -369,30 +356,5 @@ class GosPackageStatePmHooks {
         }
 
         return flags;
-    }
-
-    @Nullable
-    @GuardedBy("PackageManagerService.mLock")
-    // see GosPackageStatePm doc
-    private static GosPackageStatePm maybeGetForSharedUserPackage(PackageManagerService pm, PackageSetting packageSetting, int userId) {
-        SharedUserSetting sharedUser = pm.mSettings.getSharedUserSettingLPr(packageSetting);
-        if (sharedUser == null) {
-            return null;
-        }
-
-        var packageStates = sharedUser.getPackageStates();
-        if (packageStates == null) {
-            return null;
-        }
-
-        for (int i = 0, m = packageStates.size(); i < m; ++i) {
-            PackageStateInternal state = packageStates.valueAtUnchecked(i);
-            GosPackageStatePm ps = state.getUserStateOrDefault(userId).getGosPackageState();
-            if (ps != null) {
-                return ps;
-            }
-        }
-
-        return null;
     }
 }
