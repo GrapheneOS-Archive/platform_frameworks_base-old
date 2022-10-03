@@ -63,7 +63,6 @@ import android.os.UserManager;
 import android.provider.DeviceConfig;
 import android.util.ArrayMap;
 import android.util.ArraySet;
-import android.util.Log;
 import android.util.LongSparseArray;
 import android.util.LongSparseLongArray;
 import android.util.Pools;
@@ -7770,7 +7769,6 @@ public class AppOpsManager {
      */
     @RequiresPermission(android.Manifest.permission.MANAGE_APP_OPS_MODES)
     public void setUidMode(int code, int uid, @Mode int mode) {
-        maybeLogModeChange(uid, mode, opToName(code), null);
         try {
             mService.setUidMode(code, uid, mode);
         } catch (RemoteException e) {
@@ -7791,7 +7789,6 @@ public class AppOpsManager {
     @SystemApi
     @RequiresPermission(android.Manifest.permission.MANAGE_APP_OPS_MODES)
     public void setUidMode(@NonNull String appOp, int uid, @Mode int mode) {
-        maybeLogModeChange(uid, mode, appOp, null);
         try {
             mService.setUidMode(AppOpsManager.strOpToOp(appOp), uid, mode);
         } catch (RemoteException e) {
@@ -7832,7 +7829,6 @@ public class AppOpsManager {
     @TestApi
     @RequiresPermission(android.Manifest.permission.MANAGE_APP_OPS_MODES)
     public void setMode(int code, int uid, String packageName, @Mode int mode) {
-        maybeLogModeChange(uid, mode, opToName(code), packageName);
         try {
             mService.setMode(code, uid, packageName, mode);
         } catch (RemoteException e) {
@@ -7855,7 +7851,6 @@ public class AppOpsManager {
     @RequiresPermission(android.Manifest.permission.MANAGE_APP_OPS_MODES)
     public void setMode(@NonNull String op, int uid, @Nullable String packageName,
             @Mode int mode) {
-        maybeLogModeChange(uid, mode, op, packageName);
         try {
             mService.setMode(strOpToOp(op), uid, packageName, mode);
         } catch (RemoteException e) {
@@ -7890,7 +7885,6 @@ public class AppOpsManager {
     @RequiresPermission(android.Manifest.permission.MANAGE_APP_OPS_MODES)
     @UnsupportedAppUsage(maxTargetSdk = Build.VERSION_CODES.R, trackingBug = 170729553)
     public void resetAllModes() {
-        maybeLogModeChange(-1, MODE_DEFAULT, null, null);
         try {
             mService.resetAllModes(mContext.getUserId(), null);
         } catch (RemoteException e) {
@@ -10423,33 +10417,5 @@ public class AppOpsManager {
             }
         }
         return new AttributedOpEntry(opEntries.get(0).mOp, false, accessEvents, rejectEvents);
-    }
-
-    private static volatile long prevTs;
-
-    private static void maybeLogModeChange(int uid, int mode, String op, String pkg) {
-        switch (mode) {
-            case MODE_IGNORED:
-            case MODE_ERRORED:
-            case MODE_DEFAULT:
-                break;
-            default:
-                return;
-        }
-
-        long ts = SystemClock.elapsedRealtime();
-
-        if (ts > 15 * 60_000L) { // 15 minutes passed since boot started
-            return;
-        }
-
-        if ((ts - prevTs) < 100) { // don't spam the log
-            return;
-        }
-
-        prevTs = ts;
-
-        Log.d("AppOpResetDebug", "selfUid: " + Process.myUid() + ", targetUid: " + uid
-                + ", mode " + modeToName(mode) + ", targetPkg: " + pkg + ", op: " + op, new Throwable());
     }
 }
