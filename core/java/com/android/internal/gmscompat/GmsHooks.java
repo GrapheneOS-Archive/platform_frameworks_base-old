@@ -458,8 +458,8 @@ public final class GmsHooks {
     }
 
     private static boolean hasNearbyDevicesPermission() {
-        // "Nearby devices" permission grants
-        // BLUETOOTH_CONNECT, BLUETOOTH_ADVERTISE and BLUETOOTH_SCAN, checking one is enough
+        // "Nearby devices" user-facing permission grants multiple underlying permissions,
+        // checking one is enough
         return GmsCompat.hasPermission(Manifest.permission.BLUETOOTH_SCAN);
     }
 
