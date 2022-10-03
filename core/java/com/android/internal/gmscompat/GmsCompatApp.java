@@ -16,6 +16,8 @@
 
 package com.android.internal.gmscompat;
 
+import android.Manifest;
+import android.accounts.AccountManager;
 import android.annotation.Nullable;
 import android.app.compat.gms.GmsCompat;
 import android.content.Context;
@@ -65,6 +67,8 @@ public final class GmsCompatApp {
                     // from the GmsCompatApp, which makes it fit for the purpose of hosting the FileProxyService
                     fileProxyService = new FileProxyService(ctx);
                     dynamiteFileProxyService = fileProxyService;
+
+                    ctx.getMainThreadHandler().postDelayed(GmsCompatApp::maybeShowContactsSyncNotification, 3000L);
                 }
                 return iGms2Gca.connectGmsCore(processName, gca2Gms, fileProxyService);
             } else {
@@ -255,6 +259,27 @@ public final class GmsCompatApp {
             throw callFailed(e);
         }
         return true;
+    }
+
+    static void maybeShowContactsSyncNotification() {
+        if (GmsCompat.hasPermission(Manifest.permission.WRITE_CONTACTS)) {
+            return;
+        }
+
+        Context ctx = GmsCompat.appContext();
+        var am = ctx.getSystemService(AccountManager.class);
+
+        am.addOnAccountsUpdatedListener(accounts -> {
+            // invoked only for Google accounts, "updateImmediately" arg ensures that it'll be called
+            // even if account is already added
+            if (accounts.length != 0) {
+                try {
+                    iGms2Gca().maybeShowContactsSyncNotification();
+                } catch (RemoteException e) {
+                    callFailed(e);
+                }
+            }
+        }, ctx.getMainThreadHandler(), true);
     }
 
     private GmsCompatApp() {}
