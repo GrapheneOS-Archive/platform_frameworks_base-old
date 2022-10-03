@@ -31,6 +31,8 @@ import android.os.UserHandle;
 import android.permission.PermissionManager;
 import android.provider.Settings;
 
+import dalvik.system.VMRuntime;
+
 /**
  * @hide
  */
@@ -215,6 +217,13 @@ public final class GosPackageState implements Parcelable {
         }
 
         return new Editor(packageName, getUserId());
+    }
+
+    /** @hide */
+    public static boolean eligibleForRelaxHardeningFlag(ApplicationInfo ai) {
+        String primaryAbi = ai.primaryCpuAbi;
+        // non-system app that has native 64-bit code
+        return !ai.isSystemApp() && primaryAbi != null && VMRuntime.is64BitAbi(primaryAbi);
     }
 
     public static class Editor {
