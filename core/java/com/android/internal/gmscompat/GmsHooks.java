@@ -554,54 +554,8 @@ public final class GmsHooks {
             return false;
         }
 
-        StackTraceElement[] steArr = e.getStackTrace();
-        ClassLoader defaultClassLoader = GmsCompat.appContext().getClassLoader();
+        StubDef stub = StubDef.find(e, config());
 
-        // first 2 elements are guaranteed to be inside the Parcel class
-        final int firstIndex = 2;
-
-        StackTraceElement targetMethod = null;
-
-        // To find out which API call caused the exception, iterate through the stack trace until
-        // the first app's class (app's classes are loaded with PathClassLoader)
-        for (int i = firstIndex; i < steArr.length; ++i) {
-            StackTraceElement ste = steArr[i];
-            String className = ste.getClassName();
-            Class class_;
-            try {
-                class_ = Class.forName(className, false, defaultClassLoader);
-            } catch (ClassNotFoundException cnfe) {
-                return false;
-            }
-
-            ClassLoader classLoader = class_.getClassLoader();
-            if (classLoader == null) {
-                return false;
-            }
-
-            String clName = classLoader.getClass().getName();
-
-            if ("java.lang.BootClassLoader".equals(clName)) {
-                continue;
-            }
-
-            if (!"dalvik.system.PathClassLoader".equals(clName)) {
-                return false;
-            }
-
-            if (i == firstIndex) {
-                return false;
-            }
-
-            targetMethod = steArr[i - 1];
-            break;
-        }
-
-        if (targetMethod == null) {
-            return false;
-        }
-
-        StubDef stub = StubDef.find(targetMethod.getClassName(), targetMethod.getMethodName(), config());
         if (stub == null) {
             return false;
         }
