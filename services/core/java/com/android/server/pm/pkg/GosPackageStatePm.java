@@ -19,6 +19,9 @@ package com.android.server.pm.pkg;
 import android.annotation.Nullable;
 import android.content.pm.GosPackageState;
 
+import com.android.server.pm.Computer;
+import com.android.server.pm.PackageManagerService;
+
 import java.util.Arrays;
 
 import static android.content.pm.GosPackageState.FLAG_ALLOW_ACCESS_TO_OBB_DIRECTORY;
@@ -27,11 +30,11 @@ import static android.content.pm.GosPackageState.FLAG_STORAGE_SCOPES_ENABLED;
 /**
  * GrapheneOS-specific package state, stored in PackageUserState (per-user, removed during uninstallation).
  *
- * Used directly only by the PackageManagerService, an instance of "external" GosPackageState class
- * is returned to other users.
+ * Used directly by the PackageManagerService and by other system_server components,
+ * an instance of "external" GosPackageState class is returned to other users.
  *
- * Note that if the package has a sharedUserId, same GosPackageState is used for all packages that
- * have the same sharedUserId. This is done because in some cases (eg when an app accesses
+ * Note that if the package has a sharedUserId, then its GosPackageState is used for all other
+ * packages in that sharedUserId. This is done because in some cases (eg when an app accesses
  * MediaProvider via FUSE) there's no way to retrieve the package name, only UID is available.
  * In that case MediaProvider calls getPackageManager().getPackagesForUid(uid)[0] which means that
  * the package name will be wrong if uid belongs to a sharedUserId package that is not at 0-th index
@@ -56,6 +59,72 @@ public final class GosPackageStatePm {
     public GosPackageStatePm(int flags, @Nullable byte[] storageScopes) {
         this.flags = flags;
         this.storageScopes = storageScopes;
+    }
+
+    @Nullable
+    public static GosPackageStatePm get(PackageManagerService pm, String packageName, int userId) {
+        return get(pm.snapshotComputer(), packageName, userId);
+    }
+
+    public static GosPackageStatePm get(Computer snapshot, String packageName, int userId) {
+        PackageStateInternal psi = snapshot.getPackageStates().get(packageName);
+        if (psi == null) {
+            return null;
+        }
+
+        return get(snapshot, psi, userId);
+    }
+
+    public static GosPackageStatePm get(Computer snapshot, PackageStateInternal psi, int userId) {
+        GosPackageStatePm res = psi.getUserStateOrDefault(userId).getGosPackageState();
+        if (res != null) {
+            return res;
+        }
+
+        return maybeGetForSharedUserPackage(snapshot, psi, userId);
+    }
+
+    @Nullable
+    private static GosPackageStatePm maybeGetForSharedUserPackage(Computer snapshot, PackageStateInternal psi, int userId) {
+        if (!psi.hasSharedUser()) {
+            return null;
+        }
+
+        SharedUserApi sharedUser = snapshot.getSharedUser(psi.getSharedUserAppId());
+
+        if (sharedUser == null) {
+            return null;
+        }
+
+        var packageStates = sharedUser.getPackageStates();
+
+        for (int i = 0, m = packageStates.size(); i < m; ++i) {
+            var entry = packageStates.valueAtUnchecked(i);
+            if (entry == null) {
+                continue;
+            }
+
+            GosPackageStatePm s = entry.getUserStateOrDefault(userId).getGosPackageState();
+            if (s != null) {
+                return s;
+            }
+        }
+
+        return null;
+    }
+
+    public static GosPackageState.Editor getEditor(PackageManagerService pm, String packageName, int userId) {
+        var ps = get(pm, packageName, userId);
+
+        if (ps != null) {
+            return new GosPackageState.Editor(packageName, userId, ps.flags, ps.storageScopes);
+        }
+
+        return new GosPackageState.Editor(packageName, userId);
+    }
+
+    public boolean hasFlags(int flags) {
+        return (this.flags & flags) == flags;
     }
 
     @Override
