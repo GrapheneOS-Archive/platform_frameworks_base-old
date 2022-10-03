@@ -22,11 +22,14 @@ import android.annotation.SystemApi;
 import android.app.AppGlobals;
 import android.app.PropertyInvalidatedCache;
 import android.content.Context;
+import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.os.Process;
 import android.os.RemoteException;
 import android.os.UserHandle;
 import android.permission.PermissionManager;
+import android.provider.Settings;
 
 /**
  * @hide
@@ -62,7 +65,8 @@ public final class GosPackageState implements Parcelable {
     public static final int DFLAG_HAS_READ_MEDIA_VIDEO_DECLARATION = 1 << 11;
     public static final int DFLAG_EXPECTS_LEGACY_EXTERNAL_STORAGE = 1 << 12;
 
-    GosPackageState(int flags, @Nullable byte[] storageScopes, int derivedFlags) {
+    /** @hide */
+    public GosPackageState(int flags, @Nullable byte[] storageScopes, int derivedFlags) {
         this.flags = flags;
         this.storageScopes = storageScopes;
         this.derivedFlags = derivedFlags;
@@ -124,6 +128,14 @@ public final class GosPackageState implements Parcelable {
         return (derivedFlags & flags) == flags;
     }
 
+    /** @hide */
+    public static boolean attachableToPackage(int appId) {
+        // Packages with this appId use the "android.uid.system" sharedUserId, which is expensive
+        // to deal with due to the large number of packages that it includes (see GosPackageStatePm
+        // doc). These packages have no need for GosPackageState.
+        return appId != Process.SYSTEM_UID;
+    }
+
     public static boolean attachableToPackage(@NonNull String pkg) {
         Context ctx = AppGlobals.getInitialApplication();
         if (ctx == null) {
@@ -137,8 +149,7 @@ public final class GosPackageState implements Parcelable {
             return false;
         }
 
-        // a precaution, in case there's a serious bug with GosPackageState-related code
-        return !ai.isPrivilegedApp();
+        return attachableToPackage(UserHandle.getAppId(ai.uid));
     }
 
     public boolean shouldSpoofPermissionCheck(@NonNull String perm) {
@@ -175,7 +186,7 @@ public final class GosPackageState implements Parcelable {
                 private GosPackageState getUncached(@NonNull String packageName) {
                     int userId = cachedUserId;
                     if (userId < 0) {
-                        userId = UserHandle.myUserId();
+                        userId = getUserId();
                         cachedUserId = userId;
                     }
 
@@ -193,7 +204,7 @@ public final class GosPackageState implements Parcelable {
 
     @NonNull
     public Editor edit() {
-        return new Editor(this);
+        return new Editor(this, getUserId());
     }
 
     @NonNull
@@ -203,23 +214,39 @@ public final class GosPackageState implements Parcelable {
             return s.edit();
         }
 
-        return new Editor(packageName);
+        return new Editor(packageName, getUserId());
     }
 
     public static class Editor {
         private final String packageName;
+        private final int userId;
         private int flags;
         private byte[] storageScopes;
         private boolean killUidAfterApply;
 
-        Editor(String packageName) {
+        /**
+         * Don't call directly, use GosPackageState#edit or GosPackageStatePm#edit
+         *
+         * @hide
+         *  */
+        public Editor(String packageName, int userId, int flags, byte[] storageScopes) {
             this.packageName = packageName;
+            this.userId = userId;
+            this.flags = flags;
+            this.storageScopes = storageScopes;
         }
 
-        Editor(GosPackageState s) {
-            this.packageName = s.packageName;
-            this.flags = s.flags;
-            this.storageScopes = s.storageScopes;
+        /**
+         * Don't call directly, use GosPackageState#edit or GosPackageStatePm#edit
+         *
+         * @hide
+         *  */
+        public Editor(String packageName, int userId) {
+            this(packageName, userId, 0, null);
+        }
+
+        Editor(GosPackageState s, int userId) {
+            this(s.packageName, userId, s.flags, s.storageScopes);
         }
 
         @NonNull
@@ -267,7 +294,6 @@ public final class GosPackageState implements Parcelable {
         // Note: persistence to storage is asynchronous.
         @Nullable
         public GosPackageState apply() {
-            int userId = UserHandle.myUserId();
             try {
                 return AppGlobals.getPackageManager().setGosPackageState(packageName, flags,
                         storageScopes, killUidAfterApply, userId);
@@ -275,5 +301,16 @@ public final class GosPackageState implements Parcelable {
                 throw e.rethrowFromSystemServer();
             }
         }
+    }
+
+    static int getUserId() {
+        if (Build.IS_DEBUGGABLE) {
+            if (Settings.isInSystemServer()) {
+                // system_server should use GosPackageStatePm instead
+                throw new IllegalStateException();
+            }
+        }
+
+        return UserHandle.myUserId();
     }
 }
