@@ -136,6 +136,7 @@ import com.android.server.am.ActivityManagerService.ProcessChangeItem;
 import com.android.server.compat.PlatformCompat;
 import com.android.server.pm.dex.DexManager;
 import com.android.server.pm.parsing.pkg.AndroidPackage;
+import com.android.server.pm.pkg.GosPackageStatePm;
 import com.android.server.pm.pkg.PackageStateInternal;
 import com.android.server.wm.ActivityServiceConnectionsHolder;
 import com.android.server.wm.WindowManagerService;
@@ -1865,19 +1866,16 @@ public final class ProcessList {
             runtimeFlags |= Zygote.getMemorySafetyRuntimeFlags(
                     definingAppInfo, app.processInfo, instructionSet, mPlatformCompat);
 
-            String primaryAbi = app.info.primaryCpuAbi;
-            if (!app.info.isSystemApp() && primaryAbi != null && VMRuntime.is64BitAbi(primaryAbi)) {
-                // non-system app that has native 64-bit code
-
+            if (GosPackageState.eligibleForRelaxHardeningFlag(app.info)) {
                 PackageManagerInternal pmi = LocalServices.getService(PackageManagerInternal.class);
 
-                GosPackageState ps = pmi.getGosPackageState(app.info.packageName, userId);
+                GosPackageStatePm ps = pmi.getGosPackageState(app.info.packageName, userId);
                 if (ps != null) {
-                    if (ps.hasFlag(GosPackageState.FLAG_DISABLE_HARDENED_MALLOC)) {
+                    if (ps.hasFlags(GosPackageState.FLAG_DISABLE_HARDENED_MALLOC)) {
                         runtimeFlags |= Zygote.DISABLE_HARDENED_MALLOC;
                     }
 
-                    if (ps.hasFlag(GosPackageState.FLAG_ENABLE_COMPAT_VA_39_BIT)) {
+                    if (ps.hasFlags(GosPackageState.FLAG_ENABLE_COMPAT_VA_39_BIT)) {
                         runtimeFlags |= Zygote.ENABLE_COMPAT_VA_39_BIT;
                     }
                 }
