@@ -72,6 +72,7 @@ package android.app.compat.gms {
 
   public class GmsModuleHooks {
     method public static boolean canEnableBluetoothAdapter();
+    method public static boolean interceptSynchronousResultReceiverException(@NonNull RuntimeException);
   }
 
 }
