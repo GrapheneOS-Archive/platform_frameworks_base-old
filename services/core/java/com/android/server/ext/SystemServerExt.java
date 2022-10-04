@@ -31,6 +31,12 @@ public final class SystemServerExt {
     public final Handler bgHandler;
     public final PackageManagerService packageManager;
 
+    private static SystemServerExt instance;
+
+    public static SystemServerExt get() {
+        return instance;
+    }
+
     private SystemServerExt(Context systemContext, PackageManagerService pm) {
         context = systemContext;
         bgHandler = BackgroundThread.getHandler();
@@ -47,6 +53,7 @@ public final class SystemServerExt {
     public static void init(Context systemContext, PackageManagerService pm) {
         SystemServerExt sse = new SystemServerExt(systemContext, pm);
         sse.bgHandler.post(sse::initBgThread);
+        instance = sse;
 
         // init synchronously to make sure they are disabled before any of the apps are started
         new GoogleEuiccPkgsDisabler(sse);
