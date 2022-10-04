@@ -5151,4 +5151,10 @@
 
   <!-- Whether we order unlocking and waking -->
   <java-symbol type="bool" name="config_orderUnlockAndWake" />
+
+  <java-symbol type="string" name="notification_action_dont_show_again" />
+
+  <java-symbol type="string" name="notification_channel_missing_permission" />
+  <java-symbol type="string" name="missing_sensors_permission_title" />
+  <java-symbol type="string" name="missing_sensors_permission_message" />
 </resources>
