@@ -205,6 +205,7 @@ import com.android.internal.util.function.pooled.PooledPredicate;
 import com.android.server.Watchdog;
 import com.android.server.am.ActivityManagerService;
 import com.android.server.am.AppTimeTracker;
+import com.android.server.ext.RelaxAppHardeningNotification;
 import com.android.server.uri.NeededUriGrants;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -5265,6 +5266,9 @@ class Task extends TaskFragment {
         }
         Slog.w(TAG, "  Force finishing activity "
                 + r.intent.getComponent().flattenToShortString());
+
+        RelaxAppHardeningNotification.maybeShow(r.app.mInfo);
+
         Task finishedTask = r.getTask();
         mDisplayContent.requestTransitionAndLegacyPrepare(TRANSIT_CLOSE, TRANSIT_FLAG_APP_CRASHED);
         r.finishIfPossible(reason, false /* oomAdj */);

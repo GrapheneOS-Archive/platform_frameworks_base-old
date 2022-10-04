@@ -233,6 +233,8 @@ public class SystemNotificationChannels {
                 NotificationManager.IMPORTANCE_LOW);
         channelsList.add(abusiveBackgroundAppsChannel);
 
+        extraChannels(context, channelsList);
+
         nm.createNotificationChannels(channelsList);
     }
 
@@ -267,4 +269,22 @@ public class SystemNotificationChannels {
     }
 
     private SystemNotificationChannels() {}
+
+    public static final String RELAX_APP_HARDENING = "RELAX_APP_HARDENING";
+
+    private static void extraChannels(Context ctx, List<NotificationChannel> dest) {
+        channel(ctx, RELAX_APP_HARDENING,
+                    R.string.notification_channel_top_app_crashed,
+                    NotificationManager.IMPORTANCE_HIGH, true, dest);
+    }
+
+    private static NotificationChannel channel(Context ctx, String id, int nameRes, int importance, boolean silent, List<NotificationChannel> dest) {
+        var c = new NotificationChannel(id, ctx.getText(nameRes), importance);
+        if (silent) {
+            c.setSound(null, null);
+            c.enableVibration(false);
+        }
+        dest.add(c);
+        return c;
+    }
 }
