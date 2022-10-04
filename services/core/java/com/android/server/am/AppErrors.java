@@ -63,6 +63,7 @@ import com.android.internal.logging.MetricsLogger;
 import com.android.internal.logging.nano.MetricsProto;
 import com.android.server.LocalServices;
 import com.android.server.PackageWatchdog;
+import com.android.server.ext.RelaxAppHardeningNotification;
 import com.android.server.usage.AppStandbyInternal;
 import com.android.server.wm.WindowProcessController;
 
@@ -449,6 +450,8 @@ class AppErrors {
 
     @GuardedBy("mService")
     void killAppAtUserRequestLocked(ProcessRecord app) {
+        RelaxAppHardeningNotification.onUserRequestedAppKill();
+
         ErrorDialogController controller = app.mErrorState.getDialogController();
 
         int reasonCode = ApplicationExitInfo.REASON_ANR;

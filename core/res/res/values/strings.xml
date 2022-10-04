@@ -6345,4 +6345,10 @@ ul.</string>
 
     <!-- Button that opens the screen with details of an application error -->
     <string name="aerr_show_details">Show details</string>
+
+    <string name="notification_action_dont_show_again">Don’t show again</string>
+
+    <string name="notification_channel_top_app_crashed">App unexpectedly stopped</string>
+    <string name="relax_app_hardening_notification_title">%1$s unexpectedly stopped</string>
+    <string name="relax_app_hardening_notification_message">Enabling “Exploit protection compatibility mode“ is likely to resolve this issue. Tap to open settings.</string>
 </resources>

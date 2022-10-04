@@ -399,6 +399,7 @@ import com.android.server.appop.AppOpsService;
 import com.android.server.compat.PlatformCompat;
 import com.android.server.contentcapture.ContentCaptureManagerInternal;
 import com.android.server.criticalevents.CriticalEventLog;
+import com.android.server.ext.RelaxAppHardeningNotification;
 import com.android.server.firewall.IntentFirewall;
 import com.android.server.graphics.fonts.FontManagerInternal;
 import com.android.server.job.JobSchedulerInternal;
@@ -3334,6 +3335,11 @@ public class ActivityManagerService extends IActivityManager.Stub
                         "Process " + app.processName + " (pid " + pid + ") has died: "
                         + ProcessList.makeOomAdjString(setAdj, true) + " "
                         + ProcessList.makeProcStateString(setProcState), app.info.uid);
+
+                if (setProcState == PROCESS_STATE_TOP) {
+                    RelaxAppHardeningNotification.maybeShow(app.info);
+                }
+
                 mAppProfiler.setAllowLowerMemLevelLocked(true);
             } else {
                 // Note that we always want to do oom adj to update our state with the

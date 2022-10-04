@@ -4813,4 +4813,10 @@
 
   <!-- Button that opens the screen with details of an application error -->
   <java-symbol type="string" name="aerr_show_details" />
+
+  <java-symbol type="string" name="notification_action_dont_show_again" />
+
+  <java-symbol type="string" name="notification_channel_top_app_crashed" />
+  <java-symbol type="string" name="relax_app_hardening_notification_title" />
+  <java-symbol type="string" name="relax_app_hardening_notification_message" />
 </resources>
