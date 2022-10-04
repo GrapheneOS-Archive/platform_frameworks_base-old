@@ -4817,6 +4817,12 @@
   <!-- Button that opens the screen with details of an application error -->
   <java-symbol type="string" name="aerr_show_details" />
 
+  <java-symbol type="string" name="notification_action_dont_show_again" />
+
+  <java-symbol type="string" name="notification_channel_missing_permission" />
+  <java-symbol type="string" name="missing_sensors_permission_title" />
+  <java-symbol type="string" name="missing_sensors_permission_message" />
+
   <java-symbol type="dimen" name="status_bar_height_default" />
 
   <java-symbol type="bool" name="system_server_plays_face_haptics" />
