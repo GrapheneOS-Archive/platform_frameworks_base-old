@@ -7793,6 +7793,9 @@ public class ActivityManagerService extends IActivityManager.Stub
     @Override
     public void killUid(int appId, int userId, String reason) {
         enforceCallingPermission(Manifest.permission.KILL_UID, "killUid");
+
+        RelaxAppHardeningNotification.onUserRequestedAppKill();
+
         synchronized (this) {
             final long identity = Binder.clearCallingIdentity();
             try {
