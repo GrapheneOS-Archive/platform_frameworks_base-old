@@ -136,6 +136,7 @@ import com.android.server.pm.parsing.pkg.AndroidPackage;
 import com.android.server.pm.parsing.pkg.AndroidPackageUtils;
 import com.android.server.pm.pkg.AndroidPackageApi;
 import com.android.server.pm.pkg.PackageStateInternal;
+import com.android.server.pm.pkg.PackageUserStateUtils;
 import com.android.server.pm.pkg.component.ComponentMutateUtils;
 import com.android.server.pm.pkg.component.ParsedPermission;
 import com.android.server.pm.pkg.component.ParsedPermissionGroup;
@@ -2652,9 +2653,10 @@ public class PermissionManagerServiceImpl implements PermissionManagerServiceInt
 
         synchronized (mLock) {
             for (final int userId : userIds) {
+                final boolean isNotInstalledUserApp = !ps.isSystem()
+                        && !PackageUserStateUtils.isAvailable(ps.getUserStateOrDefault(userId), 0);
+
                 final UserPermissionState userState = mState.getOrCreateUserState(userId);
-                // "replace" parameter is set to true even when the app is first installed
-                final boolean uidStateWasPresent = userState.getUidState(ps.getAppId()) != null;
                 final UidPermissionState uidState = userState.getOrCreateUidState(ps.getAppId());
 
                 if (uidState.isMissing()) {
@@ -2895,13 +2897,23 @@ public class PermissionManagerServiceImpl implements PermissionManagerServiceInt
                                 }
                             }
 
-                            if (isSpecialRuntimePermission(permName) &&
-                                    origPermState == null &&
-                                    // don't grant special runtime permission after update,
-                                    // unless app comes from the system image
-                                    (!uidStateWasPresent || ps.isSystem())) {
-                                if (uidState.grantPermission(bp)) {
-                                    wasChanged = true;
+                            if (isSpecialRuntimePermission(permName)) {
+                                if (origPermState == null && ps.isSystem()) {
+                                    // always grant special runtime permissions to system packages
+                                    if (uidState.grantPermission(bp)) {
+                                        wasChanged = true;
+                                    }
+                                }
+
+                                if (isNotInstalledUserApp) {
+                                    // Previously, special runtime permissions were granted in users
+                                    // that didn't have the package installed, which breaks the code
+                                    // that allows to skip granting these permissions at install time.
+                                    // (if UidPermissionState is already present at install time, it's
+                                    // reused as is).
+                                    if (uidState.revokePermission(bp)) {
+                                        wasChanged = true;
+                                    }
                                 }
                             }
                         } else {
@@ -3643,7 +3655,7 @@ public class PermissionManagerServiceImpl implements PermissionManagerServiceInt
     }
 
     private void grantRequestedRuntimePermissionsInternal(@NonNull AndroidPackage pkg,
-            @Nullable List<String> permissions, int userId) {
+            @Nullable List<String> permissions, int userId, boolean newlyInstalled) {
         final int immutableFlags = PackageManager.FLAG_PERMISSION_SYSTEM_FIXED
                 | PackageManager.FLAG_PERMISSION_POLICY_FIXED;
 
@@ -3658,6 +3670,9 @@ public class PermissionManagerServiceImpl implements PermissionManagerServiceInt
         final int myUid = Process.myUid();
 
         for (String permission : pkg.getRequestedPermissions()) {
+            final boolean isPregrantedSpecialRuntimePermission = newlyInstalled &&
+                    SpecialRuntimePermUtils.shouldAutoGrant(pkg.getPackageName(), userId, permission);
+
             final boolean shouldGrantPermission;
             synchronized (mLock) {
                 final Permission bp = mRegistry.getPermission(permission);
@@ -3666,10 +3681,11 @@ public class PermissionManagerServiceImpl implements PermissionManagerServiceInt
                         && (supportsRuntimePermissions || !bp.isRuntimeOnly())
                         && (permissions == null || permissions.contains(permission));
             }
-            if (shouldGrantPermission) {
+
+            if (shouldGrantPermission || isPregrantedSpecialRuntimePermission) {
                 final int flags = getPermissionFlagsInternal(pkg.getPackageName(), permission,
                         myUid, userId);
-                if (supportsRuntimePermissions || isSpecialRuntimePermission(permission)) {
+                if (supportsRuntimePermissions || isPregrantedSpecialRuntimePermission) {
                     // Installer cannot change immutable permissions.
                     if ((flags & immutableFlags) == 0) {
                         grantRuntimePermissionInternal(pkg.getPackageName(), permission, false,
@@ -5021,7 +5037,8 @@ public class PermissionManagerServiceImpl implements PermissionManagerServiceInt
             addAllowlistedRestrictedPermissionsInternal(pkg,
                     params.getAllowlistedRestrictedPermissions(),
                     FLAG_PERMISSION_WHITELIST_INSTALLER, userId);
-            grantRequestedRuntimePermissionsInternal(pkg, params.getGrantedPermissions(), userId);
+            grantRequestedRuntimePermissionsInternal(pkg, params.getGrantedPermissions(), userId,
+                    params.isNewlyInstalledInUserId(userId));
         }
     }
 
