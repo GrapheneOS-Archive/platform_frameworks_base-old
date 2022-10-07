@@ -4819,4 +4819,8 @@
   <java-symbol type="string" name="notification_channel_top_app_crashed" />
   <java-symbol type="string" name="relax_app_hardening_notification_title" />
   <java-symbol type="string" name="relax_app_hardening_notification_message" />
+
+  <java-symbol type="string" name="notification_channel_missing_permission" />
+  <java-symbol type="string" name="missing_sensors_permission_title" />
+  <java-symbol type="string" name="missing_sensors_permission_message" />
 </resources>
