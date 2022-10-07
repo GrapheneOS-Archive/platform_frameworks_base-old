@@ -6024,6 +6024,12 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
             }
             return null;
         }
+
+        @Override
+        public void skipSpecialRuntimePermissionAutoGrantsForPackage(String packageName, int userId, List<String> permissions) {
+            mContext.enforceCallingPermission(Manifest.permission.INSTALL_PACKAGES, null);
+            SpecialRuntimePermUtils.skipAutoGrantsForPackage(packageName, userId, permissions);
+        }
     }
 
     private class PackageManagerLocalImpl implements PackageManagerLocal {
