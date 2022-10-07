@@ -27,7 +27,6 @@ import static android.content.pm.SpecialRuntimePermAppUtils.*;
 
 public class SpecialRuntimePermUtils {
 
-    @GuardedBy("PackageManagerService.mLock")
     public static int getFlags(AndroidPackage pkg) {
         int flags = 0;
 
