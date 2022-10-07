@@ -10566,6 +10566,15 @@ public final class Settings {
         public static final int DISABLE_SCREENSHOT_TIMESTAMP_EXIF = 0;
 
         /**
+         * Whether to auto grant OTHER_SENSORS special runtime permission to new user apps (0 or 1).
+         * @hide
+         */
+        public static final String AUTO_GRANT_OTHER_SENSORS_PERMISSION = "auto_grant_OTHER_SENSORS_perm";
+
+        /** @hide */
+        public static final int AUTO_GRANT_OTHER_SENSORS_PERMISSION_DEFAULT = 1;
+
+        /**
          * Whether or not to enable media resumption
          * When enabled, media controls in quick settings will populate on boot and persist if
          * resumable via a MediaBrowserService.
