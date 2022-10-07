@@ -6000,18 +6000,16 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
         public int getSpecialRuntimePermissionFlags(String packageName) {
             final int callingUid = Binder.getCallingUid();
 
-            synchronized (mLock) {
-                AndroidPackage pkg = mPackages.get(packageName);
-                if (pkg == null) {
-                    throw new IllegalStateException();
-                }
-
-                if (UserHandle.getAppId(callingUid) != pkg.getUid()) { // getUid() confusingly returns appId
-                    throw new SecurityException();
-                }
-
-                return SpecialRuntimePermUtils.getFlags(pkg);
+            AndroidPackage pkg = snapshot().getPackage(packageName);
+            if (pkg == null) {
+                throw new IllegalStateException();
             }
+
+            if (UserHandle.getAppId(callingUid) != pkg.getUid()) { // getUid() confusingly returns appId
+                throw new SecurityException();
+            }
+
+            return SpecialRuntimePermUtils.getFlags(pkg);
         }
 
         @Override
