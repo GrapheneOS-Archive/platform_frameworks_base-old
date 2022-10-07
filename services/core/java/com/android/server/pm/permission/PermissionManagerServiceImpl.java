@@ -1810,7 +1810,9 @@ public class PermissionManagerServiceImpl implements PermissionManagerServiceInt
             // If this permission was granted by default or role, make sure it is.
             if ((oldFlags & FLAG_PERMISSION_GRANTED_BY_DEFAULT) != 0
                     || (oldFlags & FLAG_PERMISSION_GRANTED_BY_ROLE) != 0
-                    || isSpecialRuntimePermission(permName)) {
+                    || (isSpecialRuntimePermission(permName)
+                        && checkPermission(packageName, permName, userId) == PERMISSION_GRANTED)
+            ) {
                 // PermissionPolicyService will handle the app op for runtime permissions later.
                 grantRuntimePermissionInternal(packageName, permName, false,
                         Process.SYSTEM_UID, userId, delayingPermCallback);
