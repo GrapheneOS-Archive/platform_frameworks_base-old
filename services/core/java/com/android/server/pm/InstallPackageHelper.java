@@ -599,6 +599,7 @@ final class InstallPackageHelper {
                         permissionParamsBuilder.setAllowlistedRestrictedPermissions(
                                 pkgSetting.getPkg().getRequestedPermissions());
                     }
+                    permissionParamsBuilder.setNewlyInstalledInUserId(userId);
                     mPm.mPermissionManager.onPackageInstalled(pkgSetting.getPkg(),
                             Process.INVALID_UID /* previousAppId */,
                             permissionParamsBuilder.build(), userId);
@@ -2118,6 +2119,10 @@ final class InstallPackageHelper {
                     }
                 }
 
+                final PermissionManagerServiceInternal.PackageInstalledParams.Builder
+                        permissionParamsBuilder =
+                        new PermissionManagerServiceInternal.PackageInstalledParams.Builder();
+
                 // Set install reason for users that are having the package newly installed.
                 final int[] allUsersList = mPm.mUserManager.getUserIds();
                 if (userId == UserHandle.USER_ALL) {
@@ -2125,10 +2130,12 @@ final class InstallPackageHelper {
                         if (!previousUserIds.contains(currentUserId)
                                 && ps.getInstalled(currentUserId)) {
                             ps.setInstallReason(installReason, currentUserId);
+                            permissionParamsBuilder.setNewlyInstalledInUserId(currentUserId);
                         }
                     }
                 } else if (!previousUserIds.contains(userId)) {
                     ps.setInstallReason(installReason, userId);
+                    permissionParamsBuilder.setNewlyInstalledInUserId(userId);
                 }
 
                 // TODO(b/169721400): generalize Incremental States and create a Callback object
@@ -2149,9 +2156,6 @@ final class InstallPackageHelper {
 
                 mPm.mSettings.writeKernelMappingLPr(ps);
 
-                final PermissionManagerServiceInternal.PackageInstalledParams.Builder
-                        permissionParamsBuilder =
-                        new PermissionManagerServiceInternal.PackageInstalledParams.Builder();
                 final boolean grantPermissions = (installArgs.mInstallFlags
                         & PackageManager.INSTALL_GRANT_RUNTIME_PERMISSIONS) != 0;
                 if (grantPermissions) {
