@@ -298,6 +298,10 @@ message SystemMessage {
     // Package: android
     NOTE_RELAX_APP_HARDENING = 500;
 
+    // See com.android.server.ext.MissingSpecialRuntimePermissionNotification
+    // Package: android
+    NOTE_MISSING_PERMISSION_OTHER_SENSORS = 501;
+
     // ADD_NEW_IDS_ABOVE_THIS_LINE
     // Legacy IDs with arbitrary values appear below
     // Legacy IDs existed as stable non-conflicting constants prior to the O release

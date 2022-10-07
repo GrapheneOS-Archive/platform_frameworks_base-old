@@ -271,10 +271,14 @@ public class SystemNotificationChannels {
     private SystemNotificationChannels() {}
 
     public static final String RELAX_APP_HARDENING = "RELAX_APP_HARDENING";
+    public static final String MISSING_PERMISSION = "MISSING_PERMISSION";
 
     private static void extraChannels(Context ctx, List<NotificationChannel> dest) {
         channel(ctx, RELAX_APP_HARDENING,
                     R.string.notification_channel_top_app_crashed,
+                    NotificationManager.IMPORTANCE_HIGH, true, dest);
+        channel(ctx, MISSING_PERMISSION,
+                    R.string.notification_channel_missing_permission,
                     NotificationManager.IMPORTANCE_HIGH, true, dest);
     }
 

@@ -6351,4 +6351,8 @@ ul.</string>
     <string name="notification_channel_top_app_crashed">App unexpectedly stopped</string>
     <string name="relax_app_hardening_notification_title">%1$s unexpectedly stopped</string>
     <string name="relax_app_hardening_notification_message">Enabling “Exploit protection compatibility mode“ is likely to resolve this issue. Tap to open settings.</string>
+
+    <string name="notification_channel_missing_permission">Missing permission</string>
+    <string name="missing_sensors_permission_title">%1$s tries to access sensors</string>
+    <string name="missing_sensors_permission_message">Tap to ask for permission.</string>
 </resources>
