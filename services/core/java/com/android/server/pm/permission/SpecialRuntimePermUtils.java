@@ -17,15 +17,23 @@
 package com.android.server.pm.permission;
 
 import android.Manifest;
+import android.app.ActivityManager;
+import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.util.Slog;
 
-import com.android.internal.annotations.GuardedBy;
+import com.android.server.ext.SystemServerExt;
 import com.android.server.pm.parsing.pkg.AndroidPackage;
 import com.android.server.pm.pkg.component.ParsedUsesPermission;
+
+import java.util.List;
 
 import static android.content.pm.SpecialRuntimePermAppUtils.*;
 
 public class SpecialRuntimePermUtils {
+    private static final String TAG = "SpecialRuntimePermUtils";
 
     public static boolean isSpecialRuntimePermission(String permission) {
         switch (permission) {
@@ -34,6 +42,41 @@ public class SpecialRuntimePermUtils {
                 return true;
         }
         return false;
+    }
+
+    public static boolean shouldAutoGrant(String packageName, int userId, String perm) {
+        if (!isSpecialRuntimePermission(perm)) {
+            return false;
+        }
+
+        if (Manifest.permission.OTHER_SENSORS.equals(perm)) {
+            if (ActivityManager.getService() == null) {
+                // a failsafe: should never happen
+                Slog.d(TAG, "AMS is null");
+                if (Build.isDebuggable()) {
+                    throw new IllegalStateException();
+                }
+                return false;
+            }
+
+            Context ctx = SystemServerExt.get().context;
+            var cr = ctx.getContentResolver();
+            var key = Settings.Secure.AUTO_GRANT_OTHER_SENSORS_PERMISSION;
+            int def = Settings.Secure.AUTO_GRANT_OTHER_SENSORS_PERMISSION_DEFAULT;
+
+            try {
+                return Settings.Secure.getIntForUser(cr, key, def, userId) == 1;
+            } catch (Exception e) {
+                // a failsafe: should never happen
+                Slog.d(TAG, "", e);
+                if (Build.isDebuggable()) {
+                    throw new IllegalStateException(e);
+                }
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public static int getFlags(AndroidPackage pkg) {
