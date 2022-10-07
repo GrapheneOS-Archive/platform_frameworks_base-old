@@ -44,16 +44,19 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Process;
+import android.os.RemoteException;
 import android.os.UserManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
 
 import com.android.internal.app.AlertActivity;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -132,6 +135,8 @@ public class PackageInstallerActivity extends AlertActivity {
     private boolean mPermissionResultWasSet;
     private boolean mAllowNextOnPause;
 
+    private CheckBox mGrantInternetPermission;
+
     private void startInstallConfirm() {
         View viewToEnable;
 
@@ -141,6 +146,14 @@ public class PackageInstallerActivity extends AlertActivity {
         } else {
             // This is a new application with no permissions.
             viewToEnable = requireViewById(R.id.install_confirm_question);
+
+            if (mPkgInfo != null) {
+                String[] perms = mPkgInfo.requestedPermissions;
+                if (perms != null && Arrays.asList(perms).contains(Manifest.permission.INTERNET)) {
+                    mGrantInternetPermission = requireViewById(R.id.install_allow_INTERNET_permission);
+                    mGrantInternetPermission.setVisibility(View.VISIBLE);
+                }
+            }
         }
 
         viewToEnable.setVisibility(View.VISIBLE);
@@ -438,6 +451,8 @@ public class PackageInstallerActivity extends AlertActivity {
         mAlert.setButton(DialogInterface.BUTTON_POSITIVE, getString(R.string.install),
                 (ignored, ignored2) -> {
                     if (mOk.isEnabled()) {
+                        handleSpecialRuntimePermissionAutoGrants();
+
                         if (mSessionId != -1) {
                             mInstaller.setPermissionsResult(mSessionId, true);
                             mPermissionResultWasSet = true;
@@ -892,6 +907,26 @@ public class PackageInstallerActivity extends AlertActivity {
         @Override
         public void onCancel(DialogInterface dialog) {
             getActivity().finish();
+        }
+    }
+
+    void handleSpecialRuntimePermissionAutoGrants() {
+        var skipPermissionAutoGrants = new ArrayList<String>();
+
+        if (mGrantInternetPermission != null) {
+            if (!mGrantInternetPermission.isChecked()) {
+                skipPermissionAutoGrants.add(Manifest.permission.INTERNET);
+            }
+        }
+
+        var pm = AppGlobals.getPackageManager();
+        var pkgName = mPkgInfo.packageName;
+        int userId = getUserId();
+        try {
+            pm.skipSpecialRuntimePermissionAutoGrantsForPackage(pkgName,
+                    userId, skipPermissionAutoGrants);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
         }
     }
 }
