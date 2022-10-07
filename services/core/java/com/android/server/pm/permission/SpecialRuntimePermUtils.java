@@ -27,6 +27,15 @@ import static android.content.pm.SpecialRuntimePermAppUtils.*;
 
 public class SpecialRuntimePermUtils {
 
+    public static boolean isSpecialRuntimePermission(String permission) {
+        switch (permission) {
+            case Manifest.permission.INTERNET:
+            case Manifest.permission.OTHER_SENSORS:
+                return true;
+        }
+        return false;
+    }
+
     public static int getFlags(AndroidPackage pkg) {
         int flags = 0;
 
