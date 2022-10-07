@@ -237,4 +237,6 @@
     <string name="notification_installation_success_status">Successfully installed \u201c<xliff:g id="appname" example="Package Installer">%1$s</xliff:g>\u201d</string>
 
     <string name="more_options_button">More options</string>
+
+    <string name="allow_network_permission_checkbox">Allow Network permission</string>
 </resources>
