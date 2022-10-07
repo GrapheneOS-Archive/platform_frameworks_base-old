@@ -362,4 +362,6 @@
 
 
     <string name="more_options_button">More options</string>
+
+    <string name="allow_network_permission_checkbox">Allow Network permission</string>
 </resources>
