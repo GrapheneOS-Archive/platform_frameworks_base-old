@@ -43,6 +43,7 @@ import static android.content.pm.PackageManager.FLAG_PERMISSION_WHITELIST_UPGRAD
 import static android.content.pm.PackageManager.MASK_PERMISSION_FLAGS_ALL;
 import static android.content.pm.PackageManager.MATCH_DEBUG_TRIAGED_MISSING;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
+import static com.android.server.pm.permission.SpecialRuntimePermUtils.isSpecialRuntimePermission;
 import static android.os.Process.INVALID_UID;
 import static android.os.Trace.TRACE_TAG_PACKAGE_MANAGER;
 import static android.permission.PermissionManager.KILL_APP_REASON_GIDS_CHANGED;
@@ -2524,10 +2525,6 @@ public class PermissionManagerServiceImpl implements PermissionManagerServiceInt
             }
             return permission.computeGids(userId);
         }
-    }
-
-    public static boolean isSpecialRuntimePermission(final String permission) {
-        return Manifest.permission.INTERNET.equals(permission) || Manifest.permission.OTHER_SENSORS.equals(permission);
     }
 
     /**
