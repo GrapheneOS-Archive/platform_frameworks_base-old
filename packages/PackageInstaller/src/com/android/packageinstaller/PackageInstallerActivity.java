@@ -22,6 +22,7 @@ import static android.view.WindowManager.LayoutParams.SYSTEM_FLAG_HIDE_NON_SYSTE
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.AppGlobals;
 import android.app.AppOpsManager;
 import android.app.Dialog;
 import android.app.DialogFragment;
@@ -44,6 +45,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Process;
+import android.os.RemoteException;
 import android.os.UserHandle;
 import android.os.UserManager;
 import android.provider.Settings;
@@ -54,12 +56,15 @@ import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -149,9 +154,10 @@ public class PackageInstallerActivity extends Activity {
 
     private AlertDialog mDialog;
 
+    private CheckBox mGrantInternetPermission;
+
     private void startInstallConfirm() {
         TextView viewToEnable;
-
         if (mAppInfo != null) {
             viewToEnable = mDialog.requireViewById(R.id.install_confirm_question_update);
 
@@ -172,7 +178,20 @@ public class PackageInstallerActivity extends Activity {
             }
         } else {
             // This is a new application with no permissions.
-            viewToEnable = mDialog.requireViewById(R.id.install_confirm_question);
+            LinearLayout layout = mDialog.requireViewById(R.id.install_confirm_question);
+            viewToEnable = layout.requireViewById(R.id.install_confirm_question_text);
+
+            if (mPkgInfo != null) {
+                ApplicationInfo ai = mPkgInfo.applicationInfo;
+                boolean isSystemApp = ai != null && ai.isSystemApp();
+                String[] perms = mPkgInfo.requestedPermissions;
+                if (!isSystemApp && perms != null && Arrays.asList(perms).contains(Manifest.permission.INTERNET)) {
+                    mGrantInternetPermission = layout.requireViewById(R.id.install_allow_INTERNET_permission);
+                    mGrantInternetPermission.setVisibility(View.VISIBLE);
+                }
+            }
+
+            layout.setVisibility(View.VISIBLE);
         }
 
         viewToEnable.setVisibility(View.VISIBLE);
@@ -529,6 +548,8 @@ public class PackageInstallerActivity extends Activity {
         builder.setPositiveButton(getString(R.string.install),
                 (ignored, ignored2) -> {
                     if (mOk.isEnabled()) {
+                        handleSpecialRuntimePermissionAutoGrants();
+
                         if (mSessionId != -1) {
                             setActivityResult(RESULT_OK);
                             finish();
@@ -957,6 +978,26 @@ public class PackageInstallerActivity extends Activity {
         @Override
         public void onCancel(DialogInterface dialog) {
             getActivity().finish();
+        }
+    }
+
+    void handleSpecialRuntimePermissionAutoGrants() {
+        var skipPermissionAutoGrants = new ArrayList<String>();
+
+        if (mGrantInternetPermission != null) {
+            if (!mGrantInternetPermission.isChecked()) {
+                skipPermissionAutoGrants.add(Manifest.permission.INTERNET);
+            }
+        }
+
+        var pm = AppGlobals.getPackageManager();
+        var pkgName = mPkgInfo.packageName;
+        int userId = getUserId();
+        try {
+            pm.skipSpecialRuntimePermissionAutoGrantsForPackage(pkgName,
+                    userId, skipPermissionAutoGrants);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
         }
     }
 }
