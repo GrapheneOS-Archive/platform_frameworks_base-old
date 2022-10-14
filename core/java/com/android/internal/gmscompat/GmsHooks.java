@@ -37,9 +37,7 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.database.CursorWrapper;
 import android.database.MatrixCursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
 import android.os.Build;
@@ -63,6 +61,7 @@ import com.android.internal.gmscompat.flags.GmsFlag;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -427,6 +426,19 @@ public final class GmsHooks {
         }
 
         return result;
+    }
+
+    // SharedPreferencesImpl#getAll
+    public static void maybeModifySharedPreferencesValues(String name, HashMap<String, Object> map) {
+        // some PhenotypeFlags are stored in SharedPreferences instead of phenotype.db database
+        ArrayMap<String, GmsFlag> flags = GmsHooks.config().flags.get(name);
+        if (flags == null) {
+            return;
+        }
+
+        for (GmsFlag f : flags.values()) {
+            f.applyToPhenotypeMap(map);
+        }
     }
 
     // Instrumentation#execStartActivity(Context, IBinder, IBinder, Activity, Intent, int, Bundle)
