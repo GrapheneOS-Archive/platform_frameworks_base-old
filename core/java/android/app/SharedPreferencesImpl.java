@@ -17,6 +17,7 @@
 package android.app;
 
 import android.annotation.Nullable;
+import android.app.compat.gms.GmsCompat;
 import android.compat.Compatibility;
 import android.compat.annotation.ChangeId;
 import android.compat.annotation.EnabledSince;
@@ -32,6 +33,7 @@ import android.system.StructTimespec;
 import android.util.Log;
 
 import com.android.internal.annotations.GuardedBy;
+import com.android.internal.gmscompat.GmsHooks;
 import com.android.internal.util.ExponentiallyBucketedHistogram;
 import com.android.internal.util.XmlUtils;
 
@@ -287,11 +289,24 @@ final class SharedPreferencesImpl implements SharedPreferences {
 
     @Override
     public Map<String, ?> getAll() {
+        HashMap<String, Object> res;
         synchronized (mLock) {
             awaitLoadedLocked();
             //noinspection unchecked
-            return new HashMap<String, Object>(mMap);
+            res = new HashMap<String, Object>(mMap);
         }
+
+        if (GmsCompat.isEnabled()) {
+            String fileName = mFile.getName();
+            String suffix = ".xml";
+            if (fileName.endsWith(suffix)) {
+                int endIndex = fileName.length() - suffix.length();
+                String name = fileName.substring(0, endIndex);
+                GmsHooks.maybeModifySharedPreferencesValues(name, res);
+            }
+        }
+
+        return res;
     }
 
     @Override

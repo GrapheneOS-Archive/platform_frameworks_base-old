@@ -15,6 +15,7 @@ import android.util.Log;
 
 import com.android.internal.gmscompat.GmsInfo;
 
+import java.util.Map;
 import java.util.function.Supplier;
 
 public class GmsFlag implements Parcelable {
@@ -103,7 +104,7 @@ public class GmsFlag implements Parcelable {
 
     private static final int PHENOTYPE_BASE64_FLAGS = Base64.NO_PADDING | Base64.NO_WRAP;
 
-    public void applyToPhenotypeMap(ArrayMap<String, String> map) {
+    public void applyToPhenotypeMap(Map map) {
         if (!shouldOverride()) {
             return;
         }
@@ -134,7 +135,7 @@ public class GmsFlag implements Parcelable {
                 s = Double.toString(floatArg);
                 break;
             case TYPE_STRING:
-                s = stringVal(map.get(name));
+                s = stringVal(String.valueOf(map.get(name)));
                 break;
             case TYPE_BYTES:
                 s = Base64.encodeToString(bytesArg, PHENOTYPE_BASE64_FLAGS);
