@@ -29,6 +29,7 @@ import android.util.SparseArray;
 
 import com.android.server.LocalServices;
 import com.android.server.ext.SystemServerExt;
+import com.android.server.pm.UserManagerInternal;
 import com.android.server.pm.parsing.pkg.AndroidPackage;
 import com.android.server.pm.pkg.component.ParsedUsesPermission;
 
@@ -63,13 +64,17 @@ public class SpecialRuntimePermUtils {
                 return false;
             }
 
+            var um = LocalServices.getService(UserManagerInternal.class);
+            // use parent profile settings for work profile
+            int userIdForSettings = um.getProfileParentId(userId);
+
             Context ctx = SystemServerExt.get().context;
             var cr = ctx.getContentResolver();
             var key = Settings.Secure.AUTO_GRANT_OTHER_SENSORS_PERMISSION;
             int def = Settings.Secure.AUTO_GRANT_OTHER_SENSORS_PERMISSION_DEFAULT;
 
             try {
-                return Settings.Secure.getIntForUser(cr, key, def, userId) == 1;
+                return Settings.Secure.getIntForUser(cr, key, def, userIdForSettings) == 1;
             } catch (Exception e) {
                 // a failsafe: should never happen
                 Slog.d(TAG, "", e);
