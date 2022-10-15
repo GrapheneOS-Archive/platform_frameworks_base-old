@@ -48,7 +48,6 @@ import android.util.SparseBooleanArray;
 import com.android.internal.R;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
-import com.android.internal.gmscompat.GmsCompatApp;
 import com.android.internal.util.ArrayUtils;
 import com.android.server.FgThread;
 import com.android.server.compat.CompatChange;
@@ -530,7 +529,6 @@ public final class AppsFilterImpl extends AppsFilterLocked implements Watchable,
                             /* shared user that is already force queryable */
                             || newPkgSetting.isForceQueryableOverride() /* adb override */
                             || isGmsApp
-                            || GmsCompatApp.PKG_NAME.equals(newPkg.getPackageName())
                             || (newPkgSetting.isSystem() && (mSystemAppsQueryable
                             || newPkg.isForceQueryable()
                             || ArrayUtils.contains(mForceQueryableByDevicePackageNames,
