@@ -2651,7 +2651,7 @@ public class PermissionManagerServiceImpl implements PermissionManagerServiceInt
         synchronized (mLock) {
             for (final int userId : userIds) {
                 final boolean isNotInstalledUserApp = !ps.isSystem()
-                        && !PackageUserStateUtils.isAvailable(ps.getUserStateOrDefault(userId), 0);
+                        && !ps.getUserStateOrDefault(userId).isInstalled();
 
                 final UserPermissionState userState = mState.getOrCreateUserState(userId);
                 final UidPermissionState uidState = userState.getOrCreateUidState(ps.getAppId());
