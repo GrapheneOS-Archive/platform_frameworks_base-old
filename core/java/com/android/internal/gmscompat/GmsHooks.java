@@ -63,6 +63,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 import static com.android.internal.gmscompat.GmsInfo.PACKAGE_GMS_CORE;
@@ -442,15 +443,22 @@ public final class GmsHooks {
     }
 
     // Instrumentation#execStartActivity(Context, IBinder, IBinder, Activity, Intent, int, Bundle)
-    public static void onActivityStart(int resultCode, Intent intent, Bundle options) {
+    public static void onActivityStart(int resultCode, Intent intent, int requestCode, Bundle options) {
         if (resultCode != ActivityManager.START_ABORTED) {
             return;
         }
 
         // handle background activity starts, which normally require a privileged permission
 
-        Context ctx = GmsCompat.appContext();
+        if (requestCode >= 0) {
+            Log.d(TAG, "attempt to call startActivityForResult() from the background " + intent, new Throwable());
+            return;
+        }
 
+        // needed to prevent invalid reuse of PendingIntents, see PendingIntent doc
+        intent.setIdentifier(UUID.randomUUID().toString());
+
+        Context ctx = GmsCompat.appContext();
         PendingIntent pendingIntent = PendingIntent.getActivity(ctx, 0, intent,
                 PendingIntent.FLAG_IMMUTABLE, options);
         try {
