@@ -27,6 +27,7 @@ import android.content.pm.IPackageManager;
 import android.content.pm.PackageInfo;
 import android.content.pm.SharedLibraryInfo;
 import android.content.pm.VersionedPackage;
+import android.os.UserHandle;
 
 import com.android.internal.gmscompat.PlayStoreHooks;
 
@@ -119,5 +120,21 @@ public class GmcPackageManager extends ApplicationPackageManager {
     @Override
     public List<PackageInfo> getInstalledPackagesAsUser(PackageInfoFlags flags, int userId) {
         return super.getInstalledPackagesAsUser(filterFlags(flags), userId);
+    }
+
+    @Override
+    public String[] getPackagesForUid(int uid) {
+        int userId = UserHandle.getUserId(uid);
+        int myUserId = UserHandle.myUserId();
+
+        if (userId != myUserId) {
+            if (userId != 0) {
+                throw new IllegalArgumentException("uid from unexpected userId: " + uid);
+            }
+            // querying uids from other userIds requires a privileged permission
+            uid = UserHandle.getUid(myUserId, UserHandle.getAppId(uid));
+        }
+
+        return super.getPackagesForUid(uid);
     }
 }
