@@ -3082,7 +3082,7 @@ public final class Settings {
             if (GmsCompat.isEnabled()) {
                 String ns = maybeGetGmsCompatNamespace();
                 if (ns != null) {
-                    if (!mAllFields.contains(name)) {
+                    if (!mAllFields.contains(name) && !name.startsWith("gmscompat")) {
                         return GmsCompatApp.getString(ns, name);
                     }
                 }
