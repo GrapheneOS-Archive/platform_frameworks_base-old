@@ -3013,6 +3013,24 @@ public class PackageInstallerSession extends IPackageInstallerSession.Stub {
         // {@link PackageLite#getTargetSdk()}
         mValidatedTargetSdk = packageLite.getTargetSdk();
 
+        String initiatingPackageName = mInstallSource.initiatingPackageName;
+        if (initiatingPackageName != null && !isInstallerShell && !Build.isDebuggable()) {
+            switch (mPackageName) {
+                case com.android.internal.gmscompat.GmsInfo.PACKAGE_GSF:
+                case com.android.internal.gmscompat.GmsInfo.PACKAGE_GMS_CORE:
+                case com.android.internal.gmscompat.GmsInfo.PACKAGE_PLAY_STORE:
+                    switch (initiatingPackageName) {
+                        case "app.grapheneos.apps":
+                        case com.android.internal.gmscompat.GmsInfo.PACKAGE_PLAY_STORE:
+                            break;
+                        default:
+                            throw new PackageManagerException(PackageManager.INSTALL_FAILED_SESSION_INVALID,
+                                    "Installation/updates of " + mPackageName +
+                                            " are disallowed to prevent breaking gmscompat");
+                    }
+            }
+        }
+
         return packageLite;
     }
 
