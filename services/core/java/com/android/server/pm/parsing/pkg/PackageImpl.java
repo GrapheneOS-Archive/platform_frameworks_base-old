@@ -337,9 +337,46 @@ public final class PackageImpl extends ParsingPackageImpl implements ParsedPacka
             receivers.get(index).setPackageName(this.packageName);
         }
 
+        final String legacyVanadiumPkgName = "org.chromium.chrome";
+        final String realVanadiumPkgName = "app.vanadium.browser";
+
+        final boolean isLegacyVanadiumPkgName = legacyVanadiumPkgName.equals(packageName)
+                // original-package handling currently happens only for preinstalled apps,
+                // but double-check in case it's expanded to user apps in the future or if
+                // isSystem() check is performed after original-package handling instead of before it
+                && isSystem();
+
+        if (isLegacyVanadiumPkgName) {
+            if (!getManifestPackageName().equals(realVanadiumPkgName)) {
+                throw new IllegalStateException("unexpected manifestPackageName: " +
+                        "expected " + realVanadiumPkgName + ", got " + getManifestPackageName());
+            }
+        }
+
         int providersSize = providers.size();
         for (int index = 0; index < providersSize; index++) {
-            providers.get(index).setPackageName(this.packageName);
+            ParsedProvider provider = providers.get(index);
+            provider.setPackageName(this.packageName);
+
+            if (isLegacyVanadiumPkgName) {
+                // method name "getAuthority" is misleading: it may return multiple
+                // ';'-separated authorities
+                final String separator = ";";
+                String[] authorities = provider.getAuthority().split(separator);
+
+                for (int i = 0; i < authorities.length; ++i) {
+                    String authority = authorities[i];
+                    if (!authority.startsWith(realVanadiumPkgName)) {
+                        // all Chromium ContentProvider authorities are prefixed with manifest package name
+                        throw new IllegalStateException("unexpected Vanadium ContentProvider authority " + authority);
+                    }
+
+                    authorities[i] = authority.replaceFirst(realVanadiumPkgName, legacyVanadiumPkgName);
+                }
+
+                String renamedAuthorities = String.join(separator, authorities);
+                provider.setAuthority(renamedAuthorities);
+            }
         }
 
         int servicesSize = services.size();
