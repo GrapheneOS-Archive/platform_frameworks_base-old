@@ -333,9 +333,42 @@ public class PackageImpl extends ParsingPackageImpl implements ParsedPackage, An
             ComponentMutateUtils.setPackageName(receivers.get(index), this.packageName);
         }
 
+        final String legacyVanadiumPkgName = "org.chromium.chrome";
+        final String realVanadiumPkgName = "app.vanadium.browser";
+
+        final boolean isLegacyVanadiumPkgName = legacyVanadiumPkgName.equals(packageName);
+
+        if (isLegacyVanadiumPkgName) {
+            if (!getManifestPackageName().equals(realVanadiumPkgName)) {
+                throw new IllegalStateException("unexpected manifestPackageName: " +
+                        "expected " + realVanadiumPkgName + ", got " + getManifestPackageName());
+            }
+        }
+
         int providersSize = providers.size();
         for (int index = 0; index < providersSize; index++) {
-            ComponentMutateUtils.setPackageName(providers.get(index), this.packageName);
+            ParsedProvider provider = providers.get(index);
+            ComponentMutateUtils.setPackageName(provider, this.packageName);
+
+            if (isLegacyVanadiumPkgName) {
+                // method name "getAuthority" is misleading: it may return multiple
+                // ';'-separated authorities
+                final String separator = ";";
+                String[] authorities = provider.getAuthority().split(separator);
+
+                for (int i = 0; i < authorities.length; ++i) {
+                    String authority = authorities[i];
+                    if (!authority.startsWith(realVanadiumPkgName)) {
+                        // all Chromium ContentProvider authorities are prefixed with manifest package name
+                        throw new IllegalStateException("unexpected Vanadium ContentProvider authority " + authority);
+                    }
+
+                    authorities[i] = authority.replaceFirst(realVanadiumPkgName, legacyVanadiumPkgName);
+                }
+
+                String renamedAuthorities = String.join(separator, authorities);
+                ComponentMutateUtils.setAuthority(provider, renamedAuthorities);
+            }
         }
 
         int servicesSize = services.size();
