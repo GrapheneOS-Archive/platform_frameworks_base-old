@@ -103,7 +103,7 @@ public final class PlayStoreHooks {
                     PendingIntent.FLAG_CANCEL_CURRENT |
                         PendingIntent.FLAG_MUTABLE);
 
-            context.registerReceiver(sf, new IntentFilter(intentAction));
+            context.registerReceiver(sf, new IntentFilter(intentAction), Context.RECEIVER_NOT_EXPORTED);
             return sf.pendingIntent;
         }
 
