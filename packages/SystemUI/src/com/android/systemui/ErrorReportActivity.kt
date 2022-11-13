@@ -22,6 +22,7 @@ import android.content.ClipData
 import android.content.ClipDescription
 import android.content.ClipboardManager
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
@@ -44,12 +45,13 @@ class ErrorReportActivity : Activity() {
         val title: String
         val reportText: String
         try {
-            val report = intent.getParcelableExtra<ApplicationErrorReport>(Intent.EXTRA_BUG_REPORT)!!
+            val intent = getIntent()
+            val report = intent.getParcelableExtra(Intent.EXTRA_BUG_REPORT, ApplicationErrorReport::class.java)!!
             val pm = packageManager
-            val ai = pm.getApplicationInfo(report.packageName, 0)
+            val ai = pm.getApplicationInfo(report.packageName, PackageManager.ApplicationInfoFlags.of(0L))
             title = getString(R.string.error_report_title, ai.loadLabel(pm))
-
-            reportText = errorReportToText(report)
+            val headerExt = intent.getStringExtra(Intent.EXTRA_TEXT)
+            reportText = errorReportToText(report, headerExt)
         } catch (e: Exception) {
             e.printStackTrace()
             finishAndRemoveTask()
@@ -120,12 +122,17 @@ class ErrorReportActivity : Activity() {
     fun px(dp: Int) = TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_PX, dp.toFloat(), resources.displayMetrics).toInt()
 
-    fun errorReportToText(r: ApplicationErrorReport) =
+    fun errorReportToText(r: ApplicationErrorReport, headerExt: String?) =
 
 """type: ${reportTypeToString(r.type)}
 osVersion: ${Build.FINGERPRINT}
 package: ${r.packageName}:${r.packageVersion}
-process: ${r.processName}
+process: ${r.processName}${
+    if (r.type == ApplicationErrorReport.TYPE_CRASH)
+        "\nprocessUptime: ${r.crashInfo.processUptimeMs} + ${r.crashInfo.processStartupLatencyMs} ms"
+    else
+        ""
+}${if (headerExt != null) "\n$headerExt" else ""}
 
 ${reportInfoToString(r)}"""
 
