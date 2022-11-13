@@ -25,6 +25,8 @@ import android.content.pm.ResolveInfo;
 import android.os.Binder;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.os.Process;
+import android.os.SystemClock;
 import android.os.SystemProperties;
 import android.provider.Settings;
 import android.util.Printer;
@@ -349,6 +351,11 @@ public class ApplicationErrorReport implements Parcelable {
          */
         public String crashTag;
 
+        /** @hide */
+        public long processUptimeMs;
+        /** @hide */
+        public long processStartupLatencyMs;
+
         /**
          * Create an uninitialized instance of CrashInfo.
          */
@@ -394,6 +401,9 @@ public class ApplicationErrorReport implements Parcelable {
             }
 
             exceptionMessage = sanitizeString(exceptionMessage);
+
+            processUptimeMs = SystemClock.elapsedRealtime() - Process.getStartElapsedRealtime();
+            processStartupLatencyMs = Process.getStartElapsedRealtime() - Process.getStartRequestedElapsedRealtime();
         }
 
         /** {@hide} */
@@ -434,6 +444,8 @@ public class ApplicationErrorReport implements Parcelable {
             throwLineNumber = in.readInt();
             stackTrace = in.readString();
             crashTag = in.readString();
+            processUptimeMs = in.readLong();
+            processStartupLatencyMs = in.readLong();
         }
 
         /**
@@ -449,6 +461,8 @@ public class ApplicationErrorReport implements Parcelable {
             dest.writeInt(throwLineNumber);
             dest.writeString(stackTrace);
             dest.writeString(crashTag);
+            dest.writeLong(processUptimeMs);
+            dest.writeLong(processStartupLatencyMs);
             int total = dest.dataPosition()-start;
             if (Binder.CHECK_PARCEL_SIZE && total > 20*1024) {
                 Slog.d("Error", "ERR: exClass=" + exceptionClassName);
