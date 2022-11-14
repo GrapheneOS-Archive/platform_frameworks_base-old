@@ -186,6 +186,7 @@ public class StubDef implements Parcelable {
                 return false;
         }
 
+        p.setDataPosition(0);
         return true;
     }
 
