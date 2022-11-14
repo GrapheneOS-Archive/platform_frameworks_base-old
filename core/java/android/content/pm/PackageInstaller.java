@@ -1490,18 +1490,6 @@ public class PackageInstaller {
          */
         public void commit(@NonNull IntentSender statusReceiver) {
             if (GmsCompat.isPlayStore()) {
-                statusReceiver = PlayStoreHooks.commitSession(this, statusReceiver);
-                if (statusReceiver == null) {
-                    return;
-                }
-            }
-
-            commitInner(statusReceiver);
-        }
-
-        /** @hide */
-        public void commitInner(@NonNull IntentSender statusReceiver) {
-            if (GmsCompat.isPlayStore()) {
                 long waitMs = 0;
                 try {
                     waitMs = mSession.getSilentUpdateWaitMillis();
@@ -1517,6 +1505,8 @@ public class PackageInstaller {
                     Log.d("GmsCompat", "PackageInstaller.Session.getSilentUpdateWaitMillis returned " + waitMs + ", sleeping...");
                     SystemClock.sleep(waitMs + 100);
                 }
+
+                statusReceiver = PlayStoreHooks.commitSession(this, statusReceiver);
             }
 
             try {
