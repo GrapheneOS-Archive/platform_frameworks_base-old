@@ -576,7 +576,7 @@ public final class GmsHooks {
             return false;
         }
 
-        StubDef stub = StubDef.find(e, config());
+        StubDef stub = StubDef.find(e.getStackTrace(), config(), StubDef.FIND_MODE_Parcel);
 
         if (stub == null) {
             return false;
