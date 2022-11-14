@@ -349,8 +349,13 @@ final class DexOptHelper {
             pkgs.add(pkgSettings.get(index).getPkg());
         }
 
+        // Show the post-upgrade "Optimizing apps" UI.
+        // Note that this dialog is fully disabled elsewhere during the first boot.
+        boolean shouldShowDialog = causeUpgrade;
+
         final long startTime = System.nanoTime();
-        final int[] stats = performDexOptUpgrade(pkgs, mPm.isPreNUpgrade() /* showDialog */,
+        final int[] stats = performDexOptUpgrade(pkgs,
+                shouldShowDialog,
                 causeFirstBoot ? REASON_FIRST_BOOT : REASON_BOOT_AFTER_OTA,
                 false /* bootComplete */);
 
