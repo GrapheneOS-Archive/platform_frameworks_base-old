@@ -7,12 +7,16 @@ package com.android.internal.gmscompat;
 
 import android.annotation.Nullable;
 import android.app.compat.gms.GmsCompat;
+import android.content.pm.ParceledListSlice;
+import android.content.pm.StringParceledListSlice;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.ArrayMap;
 import android.util.Log;
 
+import java.lang.reflect.Method;
 import java.util.Collections;
+import java.util.List;
 
 import libcore.util.SneakyThrow;
 
@@ -23,6 +27,7 @@ public class StubDef implements Parcelable {
     public long integerVal;
     public double doubleVal;
     public String stringVal;
+    private volatile Class parcelListType;
 
     public static final int VOID = 0;
     public static final int NULL = 1; // only for types that implement Parcelable
@@ -48,20 +53,36 @@ public class StubDef implements Parcelable {
     // see com.android.modules.utils.SynchronousResultReceiver.Result#getValue()
     public static final int DEFAULT = 18;
 
+    public static final int FIND_MODE_Parcel = 0;
+    public static final int FIND_MODE_SynchronousResultReceiver = 1;
+
     @Nullable
-    public static StubDef find(Throwable e, GmsCompatConfig config) {
-        StackTraceElement[] steArr = e.getStackTrace();
+    public static StubDef find(StackTraceElement[] stackTrace, GmsCompatConfig config, int mode) {
+        int firstIndex;
+        if (mode == FIND_MODE_Parcel) {
+            // first four stack trace entries are known:
+            // android.os.Parcel.createExceptionOrNull
+            // android.os.Parcel.createException
+            // android.os.Parcel.readException
+            // android.os.Parcel.readException
+            firstIndex = 4;
+        } else if (mode == FIND_MODE_SynchronousResultReceiver) {
+            // first entry is from GmsModuleHooks method
+            firstIndex = 1;
+        } else {
+            return null;
+        }
+
         ClassLoader defaultClassLoader = GmsCompat.appContext().getClassLoader();
 
-        // first 2 elements are guaranteed to be inside the Parcel class
-        final int firstIndex = 2;
-
         StackTraceElement targetMethod = null;
+        Class stubProxyClass = null;
+        String stubProxyMethodName = null;
 
         // To find out which API call caused the exception, iterate through the stack trace until
         // the first app's class (app's classes are loaded with PathClassLoader)
-        for (int i = firstIndex; i < steArr.length; ++i) {
-            StackTraceElement ste = steArr[i];
+        for (int i = firstIndex; i < stackTrace.length; ++i) {
+            StackTraceElement ste = stackTrace[i];
             String className = ste.getClassName();
             Class class_;
             try {
@@ -75,13 +96,21 @@ public class StubDef implements Parcelable {
                 return null;
             }
 
-            String clName = classLoader.getClass().getName();
+            String loaderName = classLoader.getClass().getName();
 
-            if ("java.lang.BootClassLoader".equals(clName)) {
+            if ("java.lang.BootClassLoader".equals(loaderName)) {
+                if (stubProxyClass == null && className.endsWith("$Stub$Proxy")) {
+                    stubProxyClass = class_;
+                    stubProxyMethodName = ste.getMethodName();
+                }
                 continue;
             }
 
-            if (!"dalvik.system.PathClassLoader".equals(clName)) {
+            if (mode == FIND_MODE_Parcel && stubProxyClass == null) {
+                return null;
+            }
+
+            if (!"dalvik.system.PathClassLoader".equals(loaderName)) {
                 return null;
             }
 
@@ -89,7 +118,7 @@ public class StubDef implements Parcelable {
                 return null;
             }
 
-            targetMethod = steArr[i - 1];
+            targetMethod = stackTrace[i - 1];
             break;
         }
 
@@ -97,17 +126,38 @@ public class StubDef implements Parcelable {
             return null;
         }
 
-        return find(targetMethod.getClassName(), targetMethod.getMethodName(), config);
-    }
+        ArrayMap<String, StubDef> classStubs = config.stubs.get(targetMethod.getClassName());
 
-    @Nullable
-    private static StubDef find(String className, String methodName, GmsCompatConfig config) {
-        ArrayMap<String, StubDef> classStubs = config.stubs.get(className);
         if (classStubs == null) {
             return null;
         }
 
-        return classStubs.get(methodName);
+        StubDef stub = classStubs.get(targetMethod.getMethodName());
+
+        if (stub == null) {
+            return null;
+        }
+
+        if (stub.type == EMPTY_LIST && stub.parcelListType == null) {
+            if (stubProxyClass == null) {
+                Log.d(TAG, "stub proxy class not found for " + targetMethod);
+                return null;
+            }
+
+            for (Method m : stubProxyClass.getDeclaredMethods()) {
+                if (stubProxyMethodName.equals(m.getName())) {
+                    stub.parcelListType = m.getReturnType();
+                    break;
+                }
+            }
+
+            if (stub.parcelListType == null) {
+                Log.d(TAG, "stub proxy method not found for " + targetMethod);
+                return null;
+            }
+        }
+
+        return stub;
     }
 
     public boolean stubOutMethod(Parcel p) {
@@ -140,9 +190,20 @@ public class StubDef implements Parcelable {
             case EMPTY_STRING:
                 p.writeString("");
                 break;
-            case EMPTY_LIST:
-                p.writeList(Collections.emptyList());
+            case EMPTY_LIST: {
+                Class t = parcelListType;
+                if (t == List.class) {
+                    p.writeList(Collections.emptyList());
+                } else if (t == ParceledListSlice.class) {
+                    p.writeTypedObject(ParceledListSlice.emptyList(), 0);
+                } else if (t == StringParceledListSlice.class) {
+                    p.writeTypedObject(StringParceledListSlice.emptyList(), 0);
+                } else {
+                    Log.d(TAG, "unknown parcel list type " + type);
+                    return false;
+                }
                 break;
+            }
             case EMPTY_MAP:
                 p.writeMap(Collections.emptyMap());
                 break;
