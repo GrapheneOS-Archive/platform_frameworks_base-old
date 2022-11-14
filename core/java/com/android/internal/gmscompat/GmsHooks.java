@@ -22,7 +22,6 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningAppProcessInfo;
-import android.app.ActivityThread;
 import android.app.Application;
 import android.app.ApplicationErrorReport;
 import android.app.BroadcastOptions;
@@ -58,6 +57,7 @@ import android.webkit.WebView;
 
 import com.android.internal.gmscompat.client.ClientPriorityManager;
 import com.android.internal.gmscompat.flags.GmsFlag;
+import com.android.internal.gmscompat.util.GmcActivityUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -506,10 +506,12 @@ public final class GmsHooks {
 
     // NfcAdapter#enable()
     public static void enableNfc() {
-        if (ActivityThread.currentActivityThread().hasAtLeastOneResumedActivity()) {
-            Intent i = new Intent(Settings.ACTION_NFC_SETTINGS);
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            GmsCompat.appContext().startActivity(i);
+        Activity activity = GmcActivityUtils.getMostRecentVisibleActivity();
+        if (activity != null) {
+            activity.runOnUiThread(() -> {
+                Intent i = new Intent(Settings.ACTION_NFC_SETTINGS);
+                activity.startActivity(i);
+            });
         }
     }
 
