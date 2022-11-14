@@ -7968,15 +7968,4 @@ public final class ActivityThread extends ClientTransactionHandler
     // ------------------ Regular JNI ------------------------
     private native void nPurgePendingResources();
     private native void nInitZygoteChildHeapProfiling();
-
-    public boolean hasAtLeastOneResumedActivity() {
-        synchronized (mResourcesManager) {
-            for (int i = 0; i < mActivities.size(); ++i) {
-                if (mActivities.valueAt(i).getLifecycleState() == ActivityLifecycleItem.ON_RESUME) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
 }
