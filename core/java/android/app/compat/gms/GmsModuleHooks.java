@@ -19,7 +19,6 @@ package android.app.compat.gms;
 import android.Manifest;
 import android.annotation.NonNull;
 import android.annotation.SystemApi;
-import android.app.ActivityThread;
 import android.os.Build;
 import android.os.RemoteException;
 import android.util.Log;
@@ -27,6 +26,7 @@ import android.util.Log;
 import com.android.internal.gmscompat.GmsCompatApp;
 import com.android.internal.gmscompat.GmsHooks;
 import com.android.internal.gmscompat.StubDef;
+import com.android.internal.gmscompat.util.GmcActivityUtils;
 
 /**
  * Hooks that are accessed from APEX modules.
@@ -44,7 +44,7 @@ public class GmsModuleHooks {
             return true;
         }
 
-        if (ActivityThread.currentActivityThread().hasAtLeastOneResumedActivity()) {
+        if (GmcActivityUtils.getMostRecentVisibleActivity() != null) {
             String pkgName = GmsCompat.appContext().getPackageName();
             try {
                 GmsCompatApp.iGms2Gca().showGmsMissingNearbyDevicesPermissionGeneric(pkgName);
