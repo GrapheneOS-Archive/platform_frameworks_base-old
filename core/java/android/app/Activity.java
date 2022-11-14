@@ -2008,10 +2008,6 @@ public class Activity extends ContextThemeWrapper
         notifyContentCaptureManagerIfNeeded(CONTENT_CAPTURE_RESUME);
 
         mCalled = true;
-
-        if (GmsCompat.isPlayStore()) {
-            PlayStoreHooks.activityResumed(this);
-        }
     }
 
     /**
