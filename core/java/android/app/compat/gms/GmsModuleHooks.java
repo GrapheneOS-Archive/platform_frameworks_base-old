@@ -64,7 +64,7 @@ public class GmsModuleHooks {
 
         // origException contains service-side stack trace, need to obtain an app-side one
         var stackTrace = new Throwable();
-        StubDef stub = StubDef.find(stackTrace, GmsHooks.config());
+        StubDef stub = StubDef.find(stackTrace.getStackTrace(), GmsHooks.config(), StubDef.FIND_MODE_SynchronousResultReceiver);
 
         if (stub == null) {
             return false;
