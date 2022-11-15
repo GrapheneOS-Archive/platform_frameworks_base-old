@@ -3,6 +3,7 @@ package com.android.internal.gmscompat.util;
 import android.annotation.Nullable;
 import android.app.Activity;
 import android.app.Application;
+import android.app.compat.gms.GmsCompat;
 import android.os.Bundle;
 
 import com.android.internal.gmscompat.PlayStoreHooks;
@@ -23,7 +24,9 @@ public class GmcActivityUtils implements Application.ActivityLifecycleCallbacks 
     @Override
     public void onActivityResumed(Activity activity) {
         mostRecentVisibleActivity = activity;
-        PlayStoreHooks.activityStarted(activity);
+        if (GmsCompat.isPlayStore()) {
+            PlayStoreHooks.activityStarted(activity);
+        }
     }
 
     @Override
