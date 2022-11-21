@@ -194,13 +194,23 @@ public class StubDef implements Parcelable {
                 Class t = parcelListType;
                 if (t == List.class) {
                     p.writeList(Collections.emptyList());
-                } else if (t == ParceledListSlice.class) {
-                    p.writeTypedObject(ParceledListSlice.emptyList(), 0);
-                } else if (t == StringParceledListSlice.class) {
-                    p.writeTypedObject(StringParceledListSlice.emptyList(), 0);
                 } else {
-                    Log.d(TAG, "unknown parcel list type " + type);
-                    return false;
+                    String listTypeName = t.getName();
+                    // There is android.content.pm.ParceledListSlice and
+                    // com.android.modules.utils.ParceledListSlice.
+                    // Moreover, when the latter is used in an APEX, it's prefixed like this:
+                    // com.android.wifi.x.com.android.modules.utils.ParceledListSlice
+
+                    // Same applies to StringParceledListSlice.
+
+                    if (listTypeName.endsWith(".ParceledListSlice")) {
+                        p.writeTypedObject(ParceledListSlice.emptyList(), 0);
+                    } else if (listTypeName.endsWith(".StringParceledListSlice")) {
+                        p.writeTypedObject(StringParceledListSlice.emptyList(), 0);
+                    } else {
+                        Log.d(TAG, "unknown parcel list type " + listTypeName);
+                        return false;
+                    }
                 }
                 break;
             }
