@@ -811,4 +811,6 @@ interface IPackageManager {
     android.content.pm.GosPackageState setGosPackageState(String packageName, int flags, in byte[] storageScopes, boolean killUid, int userId);
 
     void skipSpecialRuntimePermissionAutoGrantsForPackage(String packageName, int userId, in List<String> permissions);
+
+    PackageInfo findPackage(String packageName, long minVersion, in Bundle validSignaturesSha256);
 }
