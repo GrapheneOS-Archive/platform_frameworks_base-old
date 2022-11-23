@@ -25,7 +25,7 @@ public class GmcActivityUtils implements Application.ActivityLifecycleCallbacks 
     public void onActivityResumed(Activity activity) {
         mostRecentVisibleActivity = activity;
         if (GmsCompat.isPlayStore()) {
-            PlayStoreHooks.activityStarted(activity);
+            PlayStoreHooks.onActivityResumed(activity);
         }
     }
 
@@ -35,7 +35,6 @@ public class GmcActivityUtils implements Application.ActivityLifecycleCallbacks 
             mostRecentVisibleActivity = null;
         }
     }
-
 
     @Override public void onActivityCreated(Activity activity, @Nullable Bundle savedInstanceState) {}
     @Override public void onActivityStarted(Activity activity) {}
