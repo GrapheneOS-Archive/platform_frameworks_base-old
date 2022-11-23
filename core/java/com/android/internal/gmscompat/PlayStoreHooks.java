@@ -69,7 +69,7 @@ public final class PlayStoreHooks {
                 .getIntentSender();
     }
 
-    public static void activityStarted(Activity activity) {
+    public static void onActivityResumed(Activity activity) {
         if (pendingConfirmationIntents.size() != 0) {
             Intent i = pendingConfirmationIntents.removeLast();
             activity.startActivity(i);
