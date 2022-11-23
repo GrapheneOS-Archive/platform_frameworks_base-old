@@ -21,6 +21,7 @@ import android.annotation.UserIdInt;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManagerInternal;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ShortcutInfo;
 import android.content.res.TypedArray;
@@ -35,6 +36,8 @@ import android.util.Xml;
 
 import com.android.internal.R;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.server.LocalServices;
+import com.android.server.pm.parsing.pkg.AndroidPackage;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -292,6 +295,21 @@ public class ShortcutParser {
                         currentShortcut = null; // Invalidate the current shortcut.
                         continue;
                     }
+
+                    // Handle packages that were renamed via original-package feature.
+                    // "packageName" variable refers to the effective package name in this context.
+                    ComponentName intentComponent = intent.getComponent();
+                    if (intentComponent != null) {
+                        String intentPackage = intentComponent.getPackageName();
+                        if (intentPackage != null && !packageName.equals(intentPackage)) {
+                            var pm = LocalServices.getService(PackageManagerInternal.class);
+                            AndroidPackage pkg = pm.getPackage(packageName);
+                            if (pkg != null && intentPackage.equals(pkg.getManifestPackageName())) {
+                                intent.setComponent(new ComponentName(packageName, intentComponent.getClassName()));
+                            }
+                        }
+                    }
+
                     intents.add(intent);
                     continue;
                 }
