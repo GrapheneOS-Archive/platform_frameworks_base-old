@@ -274,6 +274,10 @@ public final class GmsHooks {
                     // at least 1 GiB of free storage space.
                     map.put("finsky.AutoUpdatePolicies__auto_deploy_disk_space_threshold_bytes",
                             "" + Long.MAX_VALUE);
+
+                    // make sure PhenotypeFlags are overridable by Gservices flags. Overriding Play Store (finsky) PhenotypeFlags
+                    // directly is much more complex than overriding Gservices flags.
+                    map.put("finsky.kill_switch_phenotype_gservices_check", "0");
                 };
             }
         }
