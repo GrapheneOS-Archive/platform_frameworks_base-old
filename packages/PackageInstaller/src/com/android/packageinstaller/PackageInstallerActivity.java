@@ -51,6 +51,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.TextView;
 
 import com.android.internal.app.AlertActivity;
 
@@ -152,6 +153,16 @@ public class PackageInstallerActivity extends AlertActivity {
                 if (perms != null && Arrays.asList(perms).contains(Manifest.permission.INTERNET)) {
                     mGrantInternetPermission = requireViewById(R.id.install_allow_INTERNET_permission);
                     mGrantInternetPermission.setVisibility(View.VISIBLE);
+
+                    // sharedUserLabel field is optional and may have misleading contents
+                    String sharedUserId = mPkgInfo.sharedUserId;
+                    if (sharedUserId != null) {
+                        // Both "sharedUid" and "sharedUserId" terms refer to the same thing, but
+                        // the former avoids the confusion with UserManager IDs
+                        TextView noticeView = requireViewById(R.id.install_sharedUid_notice);
+                        noticeView.setText(getString(R.string.sharedUid_permission_notice, sharedUserId));
+                        noticeView.setVisibility(View.VISIBLE);
+                    }
                 }
             }
         }

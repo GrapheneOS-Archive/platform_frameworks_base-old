@@ -239,4 +239,6 @@
     <string name="more_options_button">More options</string>
 
     <string name="allow_network_permission_checkbox">Allow Network permission</string>
+
+    <string name="sharedUid_permission_notice">Applies to all apps in the \u201c%1$s\u201d group.</string>
 </resources>

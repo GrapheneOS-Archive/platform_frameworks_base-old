@@ -93,6 +93,13 @@
             android:checked="true"
             android:visibility="gone" />
 
+        <TextView
+            android:id="@+id/install_sharedUid_notice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            style="@android:style/TextAppearance.Material.Caption"
+            android:visibility="gone" />
     </LinearLayout>
 
     <TextView
