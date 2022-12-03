@@ -2790,29 +2790,13 @@ public class PermissionManagerServiceImpl implements PermissionManagerServiceInt
                         mRegistry.addAppOpPermissionPackage(perm, pkg.getPackageName());
                     }
 
-                    boolean shouldGrantNormalPermission = true;
-                    if (bp.isNormal() && !origState.isPermissionGranted(perm)) {
-                        // If this is an existing, non-system package, then
-                        // we can't add any new permissions to it. Runtime
-                        // permissions can be added any time - they are dynamic.
-                        if (!ps.isSystem() && userState.areInstallPermissionsFixed(
-                                ps.getPackageName())) {
-                            // Except...  if this is a permission that was added
-                            // to the platform (note: need to only do this when
-                            // updating the platform).
-                            if (!isCompatPlatformPermissionForPackage(perm, pkg)) {
-                                shouldGrantNormalPermission = false;
-                            }
-                        }
-                    }
-
                     if (DEBUG_PERMISSIONS) {
                         Slog.i(TAG, "Considering granting permission " + perm + " to package "
                                 + pkg.getPackageName());
                     }
 
                     if (bp.isNormal() || bp.isSignature() || bp.isInternal()) {
-                        if ((bp.isNormal() && shouldGrantNormalPermission)
+                        if (bp.isNormal()
                                 || (bp.isSignature()
                                         && (!bp.isPrivileged() || CollectionUtils.contains(
                                                 isPrivilegedPermissionAllowlisted, permName))
