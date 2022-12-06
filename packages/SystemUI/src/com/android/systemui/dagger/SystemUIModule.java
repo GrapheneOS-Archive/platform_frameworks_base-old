@@ -34,6 +34,7 @@ import com.android.systemui.assist.AssistModule;
 import com.android.systemui.biometrics.AlternateUdfpsTouchProvider;
 import com.android.systemui.biometrics.FingerprintInteractiveToAuthProvider;
 import com.android.systemui.biometrics.UdfpsDisplayModeProvider;
+import com.android.systemui.biometrics.UdfpsTouchProvider;
 import com.android.systemui.biometrics.dagger.BiometricsModule;
 import com.android.systemui.biometrics.dagger.UdfpsModule;
 import com.android.systemui.classifier.FalsingModule;
@@ -260,6 +261,10 @@ public abstract class SystemUIModule {
 
     @BindsOptionalOf
     abstract SystemStatusAnimationScheduler optionalSystemStatusAnimationScheduler();
+
+    @SysUISingleton
+    @Binds
+    abstract AlternateUdfpsTouchProvider bindUdfpsTouchProvider(UdfpsTouchProvider provider);
 
     @SysUISingleton
     @Binds
