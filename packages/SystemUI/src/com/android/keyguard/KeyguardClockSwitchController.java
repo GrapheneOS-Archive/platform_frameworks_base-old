@@ -133,7 +133,7 @@ public class KeyguardClockSwitchController extends ViewController<KeyguardClockS
         mDumpManager = dumpManager;
         mClockEventController = clockEventController;
 
-        mClockRegistry.setEnabled(featureFlags.isEnabled(Flags.LOCKSCREEN_CUSTOM_CLOCKS));
+        mClockRegistry.setEnabled(true);
         mClockChangedListener = () -> {
             setClock(mClockRegistry.createCurrentClock());
         };

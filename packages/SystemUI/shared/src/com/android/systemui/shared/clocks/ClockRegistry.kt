@@ -54,7 +54,7 @@ open class ClockRegistry(
         fun onClockChanged()
     }
 
-    var isEnabled: Boolean = false
+    var isEnabled: Boolean = true
 
     private val gson = Gson()
     private val availableClocks = mutableMapOf<ClockId, ClockInfo>()
