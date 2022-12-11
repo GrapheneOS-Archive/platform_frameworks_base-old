@@ -64,7 +64,7 @@ public final class PlayStoreHooks {
     }
 
     // PackageInstaller.Session#commit(IntentSender)
-    public static IntentSender commitSession(PackageInstaller.Session session, IntentSender statusReceiver) {
+    public static IntentSender wrapCommitStatusReceiver(PackageInstaller.Session session, IntentSender statusReceiver) {
         return PackageInstallerStatusForwarder.register((intent, extras) -> sendIntent(intent, statusReceiver))
                 .getIntentSender();
     }

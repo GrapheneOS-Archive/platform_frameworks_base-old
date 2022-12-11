@@ -1506,7 +1506,7 @@ public class PackageInstaller {
                     SystemClock.sleep(waitMs + 100);
                 }
 
-                statusReceiver = PlayStoreHooks.commitSession(this, statusReceiver);
+                statusReceiver = PlayStoreHooks.wrapCommitStatusReceiver(this, statusReceiver);
             }
 
             try {
