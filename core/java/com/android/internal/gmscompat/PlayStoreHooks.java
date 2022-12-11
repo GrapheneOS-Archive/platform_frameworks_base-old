@@ -44,6 +44,7 @@ import com.android.internal.gmscompat.util.GmcActivityUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayDeque;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
 
@@ -61,6 +62,20 @@ public final class PlayStoreHooks {
         playStoreObbDir = obbDir + '/' + GmsInfo.PACKAGE_PLAY_STORE;
         File.mkdirsFailedHook = PlayStoreHooks::mkdirsFailed;
         packageManager = GmsCompat.appContext().getPackageManager();
+    }
+
+    // PackageInstaller#createSession
+    public static void adjustSessionParams(PackageInstaller.SessionParams params) {
+        String pkg = Objects.requireNonNull(params.appPackageName);
+
+        switch (pkg) {
+            case GmsInfo.PACKAGE_GMS_CORE:
+                params.maxAllowedVersion = GmsHooks.config().maxGmsCoreVersion;
+                break;
+            case GmsInfo.PACKAGE_PLAY_STORE:
+                params.maxAllowedVersion = GmsHooks.config().maxPlayStoreVersion;
+                break;
+        }
     }
 
     // PackageInstaller.Session#commit(IntentSender)
@@ -268,26 +283,6 @@ public final class PlayStoreHooks {
             target.sendIntent(GmsCompat.appContext(), 0, intent, null, null);
         } catch (IntentSender.SendIntentException e) {
             Log.d(TAG, "", e);
-        }
-    }
-
-    static void setupGservicesFlags(GmsCompatConfig config) {
-        ContentResolver cr = GmsCompat.appContext().getContentResolver();
-        final String prefPrefix = "gmscompat_play_store_unrestrict_pkg_";
-
-        // Disables auto updates of GMS Core, not of all GMS components.
-        // Updates that don't change version of GMS Core (eg downloading a new APK split
-        // for new device locale) and manual updates are allowed
-        if (Settings.Secure.getInt(cr, prefPrefix + GmsInfo.PACKAGE_GMS_CORE, 0) != 1) {
-            config.addGservicesFlag("finsky.AutoUpdateCodegen__gms_auto_update_enabled", "0");
-        }
-
-        if (Settings.Secure.getInt(cr, prefPrefix + GmsInfo.PACKAGE_PLAY_STORE, 0) != 1) {
-            // prevent auto-updates of Play Store, self-update files are still downloaded
-            config.addGservicesFlag("finsky.SelfUpdate__do_not_install", "1");
-            // don't re-download update files after failed self-update
-            config.addGservicesFlag("finsky.SelfUpdate__self_update_download_max_valid_time_ms",
-                    "" + Long.MAX_VALUE);
         }
     }
 

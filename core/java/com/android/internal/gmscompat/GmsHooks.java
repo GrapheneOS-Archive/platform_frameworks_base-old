@@ -114,10 +114,6 @@ public final class GmsHooks {
     static Object configUpdateLock;
 
     static void setConfig(GmsCompatConfig c) {
-        if (GmsCompat.isPlayStore()) {
-            PlayStoreHooks.setupGservicesFlags(c);
-        }
-
         // configUpdateLock should never be null at this point, it's initialized before GmsCompatApp
         // gets a handle to BinderGca2Gms that is used for updating GmsCompatConfig
         synchronized (configUpdateLock) {

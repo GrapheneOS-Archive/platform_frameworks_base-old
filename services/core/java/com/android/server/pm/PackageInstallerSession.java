@@ -3014,24 +3014,44 @@ public class PackageInstallerSession extends IPackageInstallerSession.Stub {
         mValidatedTargetSdk = packageLite.getTargetSdk();
 
         String initiatingPackageName = mInstallSource.initiatingPackageName;
-        if (initiatingPackageName != null && !isInstallerShell && !Build.isDebuggable()) {
+        if (initiatingPackageName != null && !isInstallerShell && !areUnknownGmsUpdatesAllowed()) {
+            final int errorCode = PackageManager.INSTALL_FAILED_SESSION_INVALID;
             switch (mPackageName) {
                 case com.android.internal.gmscompat.GmsInfo.PACKAGE_GSF:
                 case com.android.internal.gmscompat.GmsInfo.PACKAGE_GMS_CORE:
                 case com.android.internal.gmscompat.GmsInfo.PACKAGE_PLAY_STORE:
                     switch (initiatingPackageName) {
                         case "app.grapheneos.apps":
-                        case com.android.internal.gmscompat.GmsInfo.PACKAGE_PLAY_STORE:
                             break;
-                        default:
-                            throw new PackageManagerException(PackageManager.INSTALL_FAILED_SESSION_INVALID,
-                                    "Installation/updates of " + mPackageName +
-                                            " are disallowed to prevent breaking gmscompat");
+                        case com.android.internal.gmscompat.GmsInfo.PACKAGE_PLAY_STORE: {
+                            if (mVersionCode <= params.maxAllowedVersion) {
+                                break;
+                            }
+                            String msg = "Installation of " + mPackageName + " version " + mVersionCode
+                                        + " is disallowed to prevent breaking gmscompat. " +
+                                        "Max allowed version is " + params.maxAllowedVersion;
+                            throw new PackageManagerException(errorCode, msg);
+                        }
+                        default: {
+                            String msg = "Installation of " + mPackageName
+                                    + " is disallowed to prevent breaking gmscompat";
+                            throw new PackageManagerException(errorCode, msg);
+                        }
                     }
             }
         }
 
         return packageLite;
+    }
+
+    private boolean areUnknownGmsUpdatesAllowed() {
+        if (!Build.isDebuggable()) {
+            return false;
+        }
+        var cr = mContext.getContentResolver();
+        var key = "gmscompat_allow_unknown_updates";
+        int def = 0;
+        return android.provider.Settings.Global.getInt(cr, key, def) == 1;
     }
 
     @GuardedBy("mLock")
