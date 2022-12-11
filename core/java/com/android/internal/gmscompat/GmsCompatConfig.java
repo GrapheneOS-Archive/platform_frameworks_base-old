@@ -18,6 +18,9 @@ public class GmsCompatConfig implements Parcelable {
     public ArrayMap<String, GmsFlag> gservicesFlags;
     public final ArrayMap<String, ArrayMap<String, StubDef>> stubs = new ArrayMap<>();
 
+    public long maxGmsCoreVersion;
+    public long maxPlayStoreVersion;
+
     public void addFlag(String namespace, GmsFlag flag) {
         ArrayMap<String, GmsFlag> nsFlags = flags.get(namespace);
         if (nsFlags == null) {
@@ -68,6 +71,9 @@ public class GmsCompatConfig implements Parcelable {
             p.writeString(stubs.keyAt(i));
             p.writeTypedArrayMap(stubs.valueAt(i), 0);
         }
+
+        p.writeLong(maxGmsCoreVersion);
+        p.writeLong(maxPlayStoreVersion);
     }
 
     public static final Creator<GmsCompatConfig> CREATOR = new Creator<>() {
@@ -92,6 +98,9 @@ public class GmsCompatConfig implements Parcelable {
             for (int i = 0; i < classCnt; ++i) {
                 r.stubs.put(p.readString(), p.createTypedArrayMap(StubDef.CREATOR));
             }
+
+            r.maxGmsCoreVersion = p.readLong();
+            r.maxPlayStoreVersion = p.readLong();
 
             return r;
         }
