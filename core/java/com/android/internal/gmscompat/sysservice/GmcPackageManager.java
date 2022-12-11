@@ -28,9 +28,11 @@ import android.content.pm.PackageInfo;
 import android.content.pm.SharedLibraryInfo;
 import android.content.pm.VersionedPackage;
 import android.os.UserHandle;
+import android.util.ArraySet;
 
 import com.android.internal.gmscompat.PlayStoreHooks;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @SuppressLint("WrongConstant") // lint doesn't like "flags & ~" expressions
@@ -102,24 +104,47 @@ public class GmcPackageManager extends ApplicationPackageManager {
         return super.getSharedLibraries(filterFlags(flags));
     }
 
+    private static final ArraySet<String> HIDDEN_PACKAGES = new ArraySet<>(new String[] {
+            "app.attestation.auditor",
+    });
+
+    private static void throwIfHidden(String pkgName) throws NameNotFoundException {
+        if (HIDDEN_PACKAGES.contains(pkgName)) {
+            throw new NameNotFoundException();
+        }
+    }
+
     @Override
     public PackageInfo getPackageInfo(String packageName, PackageInfoFlags flags) throws NameNotFoundException {
+        throwIfHidden(packageName);
         return super.getPackageInfo(packageName, filterFlags(flags));
     }
 
     @Override
     public PackageInfo getPackageInfo(VersionedPackage versionedPackage, PackageInfoFlags flags) throws NameNotFoundException {
+        throwIfHidden(versionedPackage.getPackageName());
         return super.getPackageInfo(versionedPackage, filterFlags(flags));
     }
 
     @Override
     public PackageInfo getPackageInfoAsUser(String packageName, PackageInfoFlags flags, int userId) throws NameNotFoundException {
+        throwIfHidden(packageName);
         return super.getPackageInfoAsUser(packageName, filterFlags(flags), userId);
     }
 
     @Override
     public List<PackageInfo> getInstalledPackagesAsUser(PackageInfoFlags flags, int userId) {
-        return super.getInstalledPackagesAsUser(filterFlags(flags), userId);
+        List<PackageInfo> ret = super.getInstalledPackagesAsUser(filterFlags(flags), userId);
+        List<PackageInfo> res = new ArrayList<>(ret.size());
+
+        for (PackageInfo pi : ret) {
+            if (HIDDEN_PACKAGES.contains(pi.packageName)) {
+                continue;
+            }
+            res.add(pi);
+        }
+
+        return res;
     }
 
     @Override
