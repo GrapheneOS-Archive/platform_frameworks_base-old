@@ -42,7 +42,6 @@ import android.app.ActivityManager;
 import android.app.AppGlobals;
 import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.UnsupportedAppUsage;
-import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager.DeleteFlags;
@@ -62,7 +61,6 @@ import android.os.RemoteException;
 import android.os.SystemClock;
 import android.os.SystemProperties;
 import android.os.UserHandle;
-import android.provider.Settings;
 import android.system.ErrnoException;
 import android.system.Os;
 import android.text.TextUtils;
@@ -70,7 +68,6 @@ import android.util.ArraySet;
 import android.util.ExceptionUtils;
 import android.util.Log;
 
-import com.android.internal.gmscompat.GmsInfo;
 import com.android.internal.gmscompat.PlayStoreHooks;
 import com.android.internal.util.IndentingPrintWriter;
 import com.android.internal.util.Preconditions;
@@ -510,22 +507,7 @@ public class PackageInstaller {
      */
     public int createSession(@NonNull SessionParams params) throws IOException {
         if (GmsCompat.isPlayStore()) {
-            String pkg = Objects.requireNonNull(params.appPackageName);
-            /*
-            GMS Core and Play Store aren't blocked here anymore, internal configuration of Play Store
-            is changed instead to prevent it from retrying failed updates.
-            Also, Play Store is able to update APK splits of GMS Core (eg when device switches to
-            a new locale) without updating GMS Core version.
-             */
-            switch (pkg) {
-                case "app.attestation.auditor":
-                case GmsInfo.PACKAGE_GSF:
-                    ContentResolver cr = GmsCompat.appContext().getContentResolver();
-                    String pref = "gmscompat_play_store_unrestrict_pkg_" + pkg;
-                    if (Settings.Secure.getInt(cr, pref, 0) != 1) {
-                        throw new IOException("installation / updates of " + pkg + " are disallowed");
-                    }
-            }
+            PlayStoreHooks.adjustSessionParams(params);
         }
 
         try {
@@ -1835,6 +1817,12 @@ public class PackageInstaller {
         public boolean forceQueryableOverride;
         /** {@hide} */
         public int requireUserAction = USER_ACTION_UNSPECIFIED;
+        /**
+         * {@hide}
+         *
+         *  Used only by gmscompat, to disallow updates to unknown versions of GmsCore and Play Store.
+         */
+        public long maxAllowedVersion = Long.MAX_VALUE;
 
         /**
          * Construct parameters for a new package install session.
@@ -1883,6 +1871,7 @@ public class PackageInstaller {
             rollbackDataPolicy = source.readInt();
             requireUserAction = source.readInt();
             packageSource = source.readInt();
+            maxAllowedVersion = source.readLong();
         }
 
         /** {@hide} */
@@ -1913,6 +1902,7 @@ public class PackageInstaller {
             ret.rollbackDataPolicy = rollbackDataPolicy;
             ret.requireUserAction = requireUserAction;
             ret.packageSource = packageSource;
+            ret.maxAllowedVersion = maxAllowedVersion;
             return ret;
         }
 
@@ -2467,6 +2457,7 @@ public class PackageInstaller {
             dest.writeInt(rollbackDataPolicy);
             dest.writeInt(requireUserAction);
             dest.writeInt(packageSource);
+            dest.writeLong(maxAllowedVersion);
         }
 
         public static final Parcelable.Creator<SessionParams>
