@@ -5534,7 +5534,7 @@
     <string name="deprecated_target_sdk_app_store">Check for update</string>
 
     <!-- Message displayed in dialog when app is 32 bit on a 64 bit system. [CHAR LIMIT=NONE] -->
-    <string name="deprecated_abi_message">This app needs to be updated by its developer to improve compatibility. Try checking for updates, or contact the developer.</string>
+    <string name="deprecated_abi_message">This app is 32 bit and needs to be updated by its developer to be 64 bit. It may stop working on future devices. Try checking for updates, or contact the developer.</string>
 
     <!-- Notification title shown when new SMS/MMS is received while the device is locked [CHAR LIMIT=NONE] -->
     <string name="new_sms_notification_title">You have new messages</string>
