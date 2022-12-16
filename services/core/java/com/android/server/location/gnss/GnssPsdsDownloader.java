@@ -56,12 +56,12 @@ class GnssPsdsDownloader {
     private static final int REALTIME_PSDS_SERVER_INDEX = 3;
     private static final int MAX_PSDS_TYPE_INDEX = 3;
 
-    // GNSS almanac proxy URLs for 6th generation Pixel devices
-    private static final String GRAPHENEOS_LONGTERM_PSDS_SERVER_1 = "https://google.psds.grapheneos.org/lto2.dat";
+    // GNSS almanac proxy URLs for Pixel 6, Pixel 6 Pro, Pixel 6a, Pixel 7 and Pixel 7 Pro
+    private static final String GRAPHENEOS_LONGTERM_PSDS_SERVER_1 = "https://broadcom.psds.grapheneos.org/lto2.dat";
     private static final String GRAPHENEOS_LONGTERM_PSDS_SERVER_2 = null;
     private static final String GRAPHENEOS_LONGTERM_PSDS_SERVER_3 = null;
-    private static final String GRAPHENEOS_NORMAL_PSDS_SERVER = "https://google.psds.grapheneos.org/rto.dat";
-    private static final String GRAPHENEOS_REALTIME_PSDS_SERVER = "https://google.psds.grapheneos.org/rtistatus.dat";
+    private static final String GRAPHENEOS_NORMAL_PSDS_SERVER = "https://broadcom.psds.grapheneos.org/rto.dat";
+    private static final String GRAPHENEOS_REALTIME_PSDS_SERVER = "https://broadcom.psds.grapheneos.org/rtistatus.dat";
 
     private final String[] mLongTermPsdsServers;
     private final String[] mPsdsServers;
