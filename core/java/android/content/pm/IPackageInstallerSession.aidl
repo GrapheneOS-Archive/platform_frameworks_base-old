@@ -56,4 +56,6 @@ interface IPackageInstallerSession {
 
     boolean isStaged();
     int getInstallFlags();
+
+    long getSilentUpdateWaitMillis();
 }

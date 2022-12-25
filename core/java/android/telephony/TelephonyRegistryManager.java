@@ -19,6 +19,7 @@ import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.RequiresPermission;
+import android.app.compat.gms.GmsCompat;
 import android.compat.Compatibility;
 import android.compat.annotation.ChangeId;
 import android.compat.annotation.EnabledAfter;
@@ -41,6 +42,7 @@ import android.telephony.ims.ImsReasonInfo;
 import android.util.ArraySet;
 import android.util.Log;
 
+import com.android.internal.gmscompat.sysservice.GmcTelephonyManager;
 import com.android.internal.telephony.IOnSubscriptionsChangedListener;
 import com.android.internal.telephony.ITelephonyRegistry;
 
@@ -247,6 +249,14 @@ public class TelephonyRegistryManager {
             } else if (listener.mSubId != null) {
                 subId = listener.mSubId;
             }
+
+            if (GmsCompat.isEnabled()) {
+                eventsList = GmcTelephonyManager.filterTelephonyCallbackEvents(eventsList);
+
+                if (eventsList.length == 0) {
+                    return;
+                }
+            }
             sRegistry.listenWithEventList(
                     subId, pkg, featureId, listener.callback, eventsList, notifyNow);
         } catch (RemoteException e) {
@@ -266,6 +276,15 @@ public class TelephonyRegistryManager {
     private void listenFromCallback(int subId, @NonNull String pkg, @NonNull String featureId,
             @NonNull TelephonyCallback telephonyCallback, @NonNull int[] events,
             boolean notifyNow) {
+
+        if (GmsCompat.isEnabled()) {
+            events = GmcTelephonyManager.filterTelephonyCallbackEvents(events);
+
+            if (events.length == 0) {
+                return;
+            }
+        }
+
         try {
             sRegistry.listenWithEventList(
                     subId, pkg, featureId, telephonyCallback.callback, events, notifyNow);

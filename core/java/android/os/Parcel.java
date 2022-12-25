@@ -20,6 +20,7 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.TestApi;
 import android.app.AppOpsManager;
+import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.text.TextUtils;
 import android.util.ArrayMap;
@@ -34,6 +35,7 @@ import android.util.SparseBooleanArray;
 import android.util.SparseIntArray;
 
 import com.android.internal.annotations.GuardedBy;
+import com.android.internal.gmscompat.GmsHooks;
 import com.android.internal.gmscompat.HybridBinder;
 import com.android.internal.util.ArrayUtils;
 
@@ -2398,6 +2400,13 @@ public final class Parcel {
                     "Remote stack trace:\n" + remoteStackTrace, null, false, false);
             ExceptionUtils.appendCause(e, cause);
         }
+
+        if (GmsCompat.isEnabled()) {
+            if (GmsHooks.interceptException(e, this)) {
+                return;
+            }
+        }
+
         SneakyThrow.sneakyThrow(e);
     }
 

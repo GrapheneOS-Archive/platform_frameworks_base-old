@@ -16,6 +16,7 @@
 
 package com.android.internal.gmscompat.sysservice;
 
+import android.annotation.NonNull;
 import android.annotation.SuppressLint;
 import android.app.ApplicationPackageManager;
 import android.app.compat.gms.GmsCompat;
@@ -26,9 +27,12 @@ import android.content.pm.IPackageManager;
 import android.content.pm.PackageInfo;
 import android.content.pm.SharedLibraryInfo;
 import android.content.pm.VersionedPackage;
+import android.os.UserHandle;
+import android.util.ArraySet;
 
 import com.android.internal.gmscompat.PlayStoreHooks;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @SuppressLint("WrongConstant") // lint doesn't like "flags & ~" expressions
@@ -84,26 +88,74 @@ public class GmcPackageManager extends ApplicationPackageManager {
     public void addOnPermissionsChangeListener(OnPermissionsChangedListener listener) {}
 
     // MATCH_ANY_USER flag requires privileged INTERACT_ACROSS_USERS permission
-
-    @Override
-    public List<SharedLibraryInfo> getSharedLibraries(int flags) {
-        return super.getSharedLibraries(flags & ~MATCH_ANY_USER);
+    private static int filterFlags(int flags) {
+        if ((flags & MATCH_ANY_USER) != 0) {
+            return flags & ~MATCH_ANY_USER;
+        }
+        return flags;
     }
 
     @Override
-    public PackageInfo getPackageInfo(VersionedPackage versionedPackage, int flags)
-            throws NameNotFoundException {
-        return super.getPackageInfo(versionedPackage, flags & ~MATCH_ANY_USER);
+    public @NonNull List<SharedLibraryInfo> getSharedLibraries(int flags) {
+        return super.getSharedLibraries(filterFlags(flags));
+    }
+
+    private static final ArraySet<String> HIDDEN_PACKAGES = new ArraySet<>(new String[] {
+            "app.attestation.auditor",
+    });
+
+    private static void throwIfHidden(String pkgName) throws NameNotFoundException {
+        if (HIDDEN_PACKAGES.contains(pkgName)) {
+            throw new NameNotFoundException();
+        }
     }
 
     @Override
-    public PackageInfo getPackageInfoAsUser(String packageName, int flags, int userId)
-            throws NameNotFoundException {
-        return super.getPackageInfoAsUser(packageName, flags & ~MATCH_ANY_USER, userId);
+    public PackageInfo getPackageInfo(String packageName, int flags) throws NameNotFoundException {
+        throwIfHidden(packageName);
+        return super.getPackageInfo(packageName, filterFlags(flags));
     }
 
     @Override
-    public List<PackageInfo> getInstalledPackages(int flags) {
-        return super.getInstalledPackages(flags & ~MATCH_ANY_USER);
+    public PackageInfo getPackageInfo(VersionedPackage versionedPackage, int flags) throws NameNotFoundException {
+        throwIfHidden(versionedPackage.getPackageName());
+        return super.getPackageInfo(versionedPackage, filterFlags(flags));
+    }
+
+    @Override
+    public PackageInfo getPackageInfoAsUser(String packageName, int flags, int userId) throws NameNotFoundException {
+        throwIfHidden(packageName);
+        return super.getPackageInfoAsUser(packageName, filterFlags(flags), userId);
+    }
+
+    @Override
+    public List<PackageInfo> getInstalledPackagesAsUser(int flags, int userId) {
+        List<PackageInfo> ret = super.getInstalledPackagesAsUser(filterFlags(flags), userId);
+        List<PackageInfo> res = new ArrayList<>(ret.size());
+
+        for (PackageInfo pi : ret) {
+            if (HIDDEN_PACKAGES.contains(pi.packageName)) {
+                continue;
+            }
+            res.add(pi);
+        }
+
+        return res;
+    }
+
+    @Override
+    public String[] getPackagesForUid(int uid) {
+        int userId = UserHandle.getUserId(uid);
+        int myUserId = UserHandle.myUserId();
+
+        if (userId != myUserId) {
+            if (userId != 0) {
+                throw new IllegalArgumentException("uid from unexpected userId: " + uid);
+            }
+            // querying uids from other userIds requires a privileged permission
+            uid = UserHandle.getUid(myUserId, UserHandle.getAppId(uid));
+        }
+
+        return super.getPackagesForUid(uid);
     }
 }
