@@ -16,15 +16,24 @@
 
 package com.android.internal.gmscompat;
 
+import android.Manifest;
+import android.accounts.AccountManager;
+import android.annotation.Nullable;
 import android.app.compat.gms.GmsCompat;
 import android.content.Context;
-import android.os.Binder;
+import android.database.ContentObserver;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.provider.DeviceConfig;
+import android.provider.Settings;
+import android.util.ArraySet;
 import android.util.Log;
 
 import com.android.internal.gmscompat.dynamite.server.FileProxyService;
+
+import static com.android.internal.gmscompat.GmsHooks.inPersistentGmsCoreProcess;
 
 public final class GmsCompatApp {
     private static final String TAG = "GmsCompat/GCA";
@@ -32,7 +41,7 @@ public final class GmsCompatApp {
 
     @SuppressWarnings("FieldCanBeLocal")
     // written to fields to prevent GC from collecting them
-    private static Binder localBinder;
+    private static BinderGca2Gms binderGca2Gms;
     @SuppressWarnings("FieldCanBeLocal")
     private static FileProxyService dynamiteFileProxyService;
 
@@ -40,9 +49,11 @@ public final class GmsCompatApp {
 
     public static final String KEY_BINDER = "binder";
 
-    static void connect(Context ctx, String processName) {
-        Binder local = new Binder();
-        localBinder = local;
+    static GmsCompatConfig connect(Context ctx, String processName) {
+        registeredContentObservers = new ArraySet<>();
+
+        BinderGca2Gms gca2Gms = new BinderGca2Gms();
+        binderGca2Gms = gca2Gms;
 
         try {
             IGms2Gca iGms2Gca = IGms2Gca.Stub.asInterface(getBinder(BINDER_IGms2Gca));
@@ -50,16 +61,18 @@ public final class GmsCompatApp {
 
             if (GmsCompat.isGmsCore()) {
                 FileProxyService fileProxyService = null;
-                if ("com.google.android.gms.persistent".equals(processName)) {
+                if (inPersistentGmsCoreProcess) {
                     // FileProxyService binder needs to be always available to the Dynamite clients.
                     // "persistent" process launches at bootup and is kept alive by the ServiceConnection
                     // from the GmsCompatApp, which makes it fit for the purpose of hosting the FileProxyService
                     fileProxyService = new FileProxyService(ctx);
                     dynamiteFileProxyService = fileProxyService;
+
+                    ctx.getMainThreadHandler().postDelayed(GmsCompatApp::maybeShowContactsSyncNotification, 3000L);
                 }
-                iGms2Gca.connectGmsCore(processName, local, fileProxyService);
+                return iGms2Gca.connectGmsCore(processName, gca2Gms, fileProxyService);
             } else {
-                iGms2Gca.connect(ctx.getPackageName(), processName, local);
+                return iGms2Gca.connect(ctx.getPackageName(), processName, gca2Gms);
             }
         } catch (RemoteException e) {
             throw callFailed(e);
@@ -134,6 +147,139 @@ public final class GmsCompatApp {
         // unreachable, needed for control flow checks by the compiler
         // (Java doesn't have a concept of "noreturn")
         return e.rethrowAsRuntimeException();
+    }
+
+    public static final String NS_DeviceConfig = "config";
+
+    public static String deviceConfigNamespace(String namespace) {
+        // last path component of DeviceConfig.CONTENT_URI
+        String topNs = "config";
+        return NS_DeviceConfig + ':' + namespace;
+    }
+
+    public static String getString(String ns, String key) {
+        try {
+            return iGms2Gca().privSettingsGetString(ns, key);
+        } catch (RemoteException e) {
+            throw callFailed(e);
+        }
+    }
+
+    public static boolean putString(String ns, String key, @Nullable String value) {
+        try {
+            return iGms2Gca().privSettingsPutString(ns, key, value);
+        } catch (RemoteException e) {
+            throw callFailed(e);
+        }
+    }
+
+    public static boolean setProperties(DeviceConfig.Properties props) {
+        String[] keys = props.getKeyset().toArray(new String[0]);
+        String[] values = new String[keys.length];
+
+        for (int i = 0; i < keys.length; ++i) {
+            values[i] = props.getString(keys[i], null);
+        }
+
+        String ns = deviceConfigNamespace(props.getNamespace());
+
+        try {
+            return iGms2Gca().privSettingsPutStrings(ns, keys, values);
+        } catch (RemoteException e) {
+            throw callFailed(e);
+        }
+    }
+
+    private static ArraySet<ContentObserver> registeredContentObservers;
+
+    public static boolean registerObserver(Uri uri, ContentObserver observer) {
+        String s = uri.toString();
+
+        String prefix = "content://settings/";
+
+        if (!s.startsWith(prefix)) {
+            return false;
+        }
+
+        int nsStart = prefix.length();
+        int nsEnd = s.indexOf('/', nsStart);
+
+        if (nsEnd < 0 || nsStart == nsEnd) {
+            return false;
+        }
+
+        String ns = s.substring(nsStart, nsEnd);
+        String key = s.substring(nsEnd + 1);
+
+        switch (ns) {
+            // keep in sync with Settings.NameValueCache#maybeGetGmsCompatNamespace
+            case "global":
+                if (Settings.Global.isKnownKey(key)) {
+                    return false;
+                }
+                break;
+            case "secure":
+                if (Settings.Secure.isKnownKey(key)) {
+                    return false;
+                }
+                break;
+            default:
+                return false;
+        }
+
+        android.database.IContentObserver iObserver = observer.getContentObserver();
+
+        try {
+            iGms2Gca().privSettingsRegisterObserver(ns, key, iObserver);
+        } catch (RemoteException e) {
+            throw callFailed(e);
+        }
+
+        synchronized (registeredContentObservers) {
+            registeredContentObservers.add(observer);
+        }
+
+        return true;
+    }
+
+    public static boolean unregisterObserver(ContentObserver observer) {
+        synchronized (registeredContentObservers) {
+            if (registeredContentObservers.contains(observer)) {
+                registeredContentObservers.remove(observer);
+            } else {
+                return false;
+            }
+        }
+
+        android.database.IContentObserver iObserver = observer.getContentObserver();
+
+        try {
+            iGms2Gca().privSettingsUnregisterObserver(iObserver);
+        } catch (RemoteException e) {
+            throw callFailed(e);
+        }
+        return true;
+    }
+
+    static void maybeShowContactsSyncNotification() {
+        if (GmsCompat.hasPermission(Manifest.permission.WRITE_CONTACTS)) {
+            return;
+        }
+
+        Context ctx = GmsCompat.appContext();
+        AccountManager am = ctx.getSystemService(AccountManager.class);
+
+        am.addOnAccountsUpdatedListener(accounts -> {
+            // invoked only for Google accounts, "updateImmediately" arg ensures that it'll be called
+            // even if account is already added
+            if (accounts.length != 0) {
+                try {
+                    iGms2Gca().maybeShowContactsSyncNotification();
+                } catch (RemoteException e) {
+                    callFailed(e);
+                }
+            }
+        }, ctx.getMainThreadHandler(), true);
     }
 
     private GmsCompatApp() {}

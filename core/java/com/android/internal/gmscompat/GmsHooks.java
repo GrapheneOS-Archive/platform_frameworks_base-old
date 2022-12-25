@@ -17,31 +17,37 @@
 package com.android.internal.gmscompat;
 
 import android.Manifest;
+import android.annotation.Nullable;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningAppProcessInfo;
-import android.app.ActivityThread;
 import android.app.Application;
+import android.app.ApplicationErrorReport;
 import android.app.BroadcastOptions;
 import android.app.PendingIntent;
+import android.app.RemoteServiceException;
 import android.app.compat.gms.GmsCompat;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.MatrixCursor;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.DeadSystemException;
+import android.os.Parcel;
 import android.os.PowerExemptionManager;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.SystemClock;
-import android.provider.BaseColumns;
-import android.provider.ContactsContract;
+import android.os.UserHandle;
 import android.provider.Downloads;
 import android.provider.Settings;
 import android.util.ArrayMap;
@@ -50,20 +56,30 @@ import android.util.SparseArray;
 import android.webkit.WebView;
 
 import com.android.internal.gmscompat.client.ClientPriorityManager;
+import com.android.internal.gmscompat.flags.GmsFlag;
+import com.android.internal.gmscompat.util.GmcActivityUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Consumer;
 
-/**
- * API shims for GMS compatibility. Hooks that are more complicated than a simple
- * constant return value should be delegated to this class for easier maintenance.
- *
- * @hide
- */
+import static com.android.internal.gmscompat.GmsInfo.PACKAGE_GMS_CORE;
+
 public final class GmsHooks {
     private static final String TAG = "GmsCompat/Hooks";
+
+    private static volatile GmsCompatConfig config;
+
+    public static final String PERSISTENT_GmsCore_PROCESS = PACKAGE_GMS_CORE + ".persistent";
+    public static boolean inPersistentGmsCoreProcess;
+
+    public static GmsCompatConfig config() {
+        // thread-safe: immutable after publication
+        return config;
+    }
 
     public static void init(Context ctx, String packageName) {
         String processName = Application.getProcessName();
@@ -74,11 +90,86 @@ public final class GmsHooks {
             WebView.setDataDirectorySuffix("process-shim--" + processName);
         }
 
+        if (GmsCompat.isGmsCore()) {
+            inPersistentGmsCoreProcess = processName.equals(PERSISTENT_GmsCore_PROCESS);
+        }
+
         if (GmsCompat.isPlayStore()) {
             PlayStoreHooks.init();
         }
 
-        GmsCompatApp.connect(ctx, processName);
+        configUpdateLock = new Object();
+
+        // Locking is needed to prevent a race that would occur if config is updated via
+        // BinderGca2Gms#updateConfig in the time window between BinderGms2Gca#connect and setConfig()
+        // call below. Older GmsCompatConfig would overwrite the newer one in that case.
+        synchronized (configUpdateLock) {
+            GmsCompatConfig config = GmsCompatApp.connect(ctx, processName);
+            setConfig(config);
+        }
+
+        Thread.setUncaughtExceptionPreHandler(new UncaughtExceptionPreHandler());
+    }
+
+    static Object configUpdateLock;
+
+    static void setConfig(GmsCompatConfig c) {
+        // configUpdateLock should never be null at this point, it's initialized before GmsCompatApp
+        // gets a handle to BinderGca2Gms that is used for updating GmsCompatConfig
+        synchronized (configUpdateLock) {
+            config = c;
+        }
+    }
+
+    static class UncaughtExceptionPreHandler implements Thread.UncaughtExceptionHandler {
+        final Thread.UncaughtExceptionHandler orig = Thread.getUncaughtExceptionPreHandler();
+
+        @Override
+        public void uncaughtException(Thread t, Throwable e) {
+            Context ctx = GmsCompat.appContext();
+
+            ApplicationErrorReport aer = new ApplicationErrorReport();
+            aer.type = ApplicationErrorReport.TYPE_CRASH;
+            aer.crashInfo = new ApplicationErrorReport.ParcelableCrashInfo(e);
+
+            ApplicationInfo ai = ctx.getApplicationInfo();
+            aer.packageName = ai.packageName;
+            aer.packageVersion = ai.longVersionCode;
+            aer.processName = Application.getProcessName();
+
+            // In some cases, GMS kills its process when it receives an uncaught exception, which
+            // bypasses the standard crash handling infrastructure.
+            // Send the report to GmsCompatApp before GMS receives the uncaughtException() callback.
+
+            if (!shouldSkipException(e)) {
+                try {
+                    GmsCompatApp.iGms2Gca().onUncaughtException(aer);
+                } catch (RemoteException re) {
+                    Log.e(TAG, "", re);
+                }
+            }
+
+            if (orig != null) {
+                orig.uncaughtException(t, e);
+            }
+        }
+
+        private static boolean shouldSkipException(Throwable e) {
+            for (;;) {
+                if (e == null) {
+                    return false;
+                }
+
+                boolean skip = e instanceof DeadSystemException
+                        || e instanceof RemoteServiceException.CannotDeliverBroadcastException;
+
+                if (skip) {
+                    return true;
+                }
+
+                e = e.getCause();
+            }
+        }
     }
 
     // ContextImpl#getSystemService(String)
@@ -92,6 +183,8 @@ public final class GmsHooks {
             case Context.PERSISTENT_DATA_BLOCK_SERVICE:
             // used for updateable fonts
             case Context.FONT_SERVICE:
+            // requires privileged permissions
+            case Context.STATS_MANAGER:
                 return true;
         }
         return false;
@@ -167,8 +260,8 @@ public final class GmsHooks {
     }
 
     // In some cases (Play Games Services, Play {Asset, Feature} Delivery)
-    // GMS Core relies on getRunningAppProcesses() to figure out whether its client is running.
-    // This workaround is racy, because unprivileged apps don't know whether arbitrary pid is alive.
+    // GMS relies on getRunningAppProcesses() to figure out whether its client is running.
+    // This workaround is racy, because unprivileged apps can't know whether an arbitrary pid is alive.
     // ActivityManager#getRunningAppProcesses()
     public static ArrayList<RunningAppProcessInfo> addRecentlyBoundPids(Context context,
                                                                         List<RunningAppProcessInfo> orig) {
@@ -193,6 +286,14 @@ public final class GmsHooks {
             RecentBinderPid rbp = binderPids[i];
             String[] pkgs = rbp.packageNames;
             if (pkgs == null) {
+                if (UserHandle.getUserId(rbp.uid) != UserHandle.myUserId()) {
+                    // SystemUI from userId 0 sends callbacks to apps from all userIds via
+                    // android.window.IOnBackInvokedCallback.
+                    // getPackagesForUid() will fail due to missing privileged
+                    // INTERACT_ACROSS_USERS permission
+                    continue;
+                }
+
                 pkgs = pm.getPackagesForUid(rbp.uid);
                 if (pkgs == null || pkgs.length == 0) {
                     continue;
@@ -213,73 +314,56 @@ public final class GmsHooks {
     }
 
     // ContentResolver#query(Uri, String[], Bundle, CancellationSignal)
-    public static Cursor interceptQuery(Uri uri, String[] projection) {
-        String authority = uri.getAuthority();
-        if (ContactsContract.AUTHORITY.equals(authority)
-                // com.android.internal.telephony.IccProvider
-                || "icc".equals(authority))
-        {
-            if (!GmsCompat.hasPermission(Manifest.permission.READ_CONTACTS)) {
-                if (projection == null) {
-                    projection = new String[] { BaseColumns._ID };
-                }
-                return new MatrixCursor(projection);
-            }
-        }
-        return null;
-    }
+    public static Cursor maybeModifyQueryResult(Uri uri, @Nullable String[] projection, @Nullable Bundle queryArgs,
+                                                Cursor origCursor) {
+        String uriString = uri.toString();
 
-    // ContentResolver#query(Uri, String[], Bundle, CancellationSignal)
-    public static Cursor maybeModifyQueryResult(Uri uri, Cursor origCursor) {
         Consumer<ArrayMap<String, String>> mutator = null;
 
-        if (GmsCompat.isGmsCore()) {
-            if ("content://com.google.android.gms.phenotype/com.google.android.gms.fido".equals(uri.toString())) {
-                mutator = map -> {
-                    String key = "Fido2ApiKnownBrowsers__fingerprints";
-                    String origValue = map.get(key);
-
-                    if (origValue == null) {
-                        Log.w(TAG, key + " not found");
-                        return;
-                    }
-
-                    String newValue = origValue + ",C6ADB8B83C6D4C17D292AFDE56FD488A51D316FF8F2C11C5410223BFF8A7DBB3";
-                    map.put(key, newValue);
-                };
+        if (GmsFlag.GSERVICES_URI.equals(uriString)) {
+            if (queryArgs == null) {
+                return null;
             }
-        } else if (GmsCompat.isPlayStore()) {
-            if ("content://com.google.android.gsf.gservices/prefix".equals(uri.toString())) {
-                mutator = map -> {
-                    // same as in PackageInstaller#createSession
-                    final String prefPrefix = "gmscompat_play_store_unrestrict_pkg_";
-                    ContentResolver cr = GmsCompat.appContext().getContentResolver();
-
-                    // Disables auto updates of GMS Core, not of all GMS components.
-                    // Updates that don't change version of GMS Core (eg downloading a new APK split
-                    // for new device locale) and manual updates are allowed
-                    if (Settings.Secure.getInt(cr, prefPrefix + GmsInfo.PACKAGE_GMS_CORE, 0) != 1) {
-                        map.put("finsky.AutoUpdateCodegen__gms_auto_update_enabled", "0");
-                    }
-
-                    if (Settings.Secure.getInt(cr, prefPrefix + GmsInfo.PACKAGE_PLAY_STORE, 0) != 1) {
-                        // prevent auto-updates of Play Store, self-update files are still downloaded
-                        map.put("finsky.SelfUpdate__do_not_install", "1");
-                        // don't re-download update files after failed self-update
-                        map.put("finsky.SelfUpdate__self_update_download_max_valid_time_ms", "" + Long.MAX_VALUE);
-                    }
-
-                    // Disable auto-deploying of packages (eg of AR Core ("Google Play Services for AR")).
-                    // By default, Play Store attempts to auto-deploy packages only if the device has
-                    // at least 1 GiB of free storage space.
-                    map.put("finsky.AutoUpdatePolicies__auto_deploy_disk_space_threshold_bytes",
-                            "" + Long.MAX_VALUE);
-
-                    // make sure PhenotypeFlags are overridable by Gservices flags. Overriding Play Store (finsky) PhenotypeFlags
-                    // directly is much more complex than overriding Gservices flags.
-                    map.put("finsky.kill_switch_phenotype_gservices_check", "0");
-                };
+            String[] selectionArgs = queryArgs.getStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS);
+            if (selectionArgs == null) {
+                return null;
             }
+
+            ArrayMap<String, GmsFlag> flags = config().gservicesFlags;
+            if (flags == null) {
+                return null;
+            }
+
+            mutator = map -> {
+                for (GmsFlag f : flags.values()) {
+                    for (String sel : selectionArgs) {
+                        if (f.name.startsWith(sel)) {
+                            f.applyToGservicesMap(map);
+                            break;
+                        }
+                    }
+                }
+            };
+        } else if (uriString.startsWith(GmsFlag.PHENOTYPE_URI_PREFIX)) {
+            List<String> path = uri.getPathSegments();
+            if (path.size() != 1) {
+                Log.e(TAG, "unknown phenotype uri " + uriString, new Throwable());
+                return null;
+            }
+
+            String namespace = path.get(0);
+
+            ArrayMap<String, GmsFlag> nsFlags = config().flags.get(namespace);
+
+            if (nsFlags == null) {
+                return null;
+            }
+
+            mutator = map -> {
+                for (GmsFlag f : nsFlags.values()) {
+                    f.applyToPhenotypeMap(map);
+                }
+            };
         }
 
         if (mutator != null) {
@@ -331,16 +415,36 @@ public final class GmsHooks {
         return result;
     }
 
+    // SharedPreferencesImpl#getAll
+    public static void maybeModifySharedPreferencesValues(String name, HashMap<String, Object> map) {
+        // some PhenotypeFlags are stored in SharedPreferences instead of phenotype.db database
+        ArrayMap<String, GmsFlag> flags = GmsHooks.config().flags.get(name);
+        if (flags == null) {
+            return;
+        }
+
+        for (GmsFlag f : flags.values()) {
+            f.applyToPhenotypeMap(map);
+        }
+    }
+
     // Instrumentation#execStartActivity(Context, IBinder, IBinder, Activity, Intent, int, Bundle)
-    public static void onActivityStart(int resultCode, Intent intent, Bundle options) {
+    public static void onActivityStart(int resultCode, Intent intent, int requestCode, Bundle options) {
         if (resultCode != ActivityManager.START_ABORTED) {
             return;
         }
 
         // handle background activity starts, which normally require a privileged permission
 
-        Context ctx = GmsCompat.appContext();
+        if (requestCode >= 0) {
+            Log.d(TAG, "attempt to call startActivityForResult() from the background " + intent, new Throwable());
+            return;
+        }
 
+        // needed to prevent invalid reuse of PendingIntents, see PendingIntent doc
+        intent.setIdentifier(UUID.randomUUID().toString());
+
+        Context ctx = GmsCompat.appContext();
         PendingIntent pendingIntent = PendingIntent.getActivity(ctx, 0, intent,
                 PendingIntent.FLAG_IMMUTABLE, options);
         try {
@@ -381,17 +485,19 @@ public final class GmsHooks {
     }
 
     private static boolean hasNearbyDevicesPermission() {
-        // "Nearby devices" permission grants
-        // BLUETOOTH_CONNECT, BLUETOOTH_ADVERTISE and BLUETOOTH_SCAN, checking one is enough
+        // "Nearby devices" user-facing permission grants multiple underlying permissions,
+        // checking one is enough
         return GmsCompat.hasPermission(Manifest.permission.BLUETOOTH_SCAN);
     }
 
     // NfcAdapter#enable()
     public static void enableNfc() {
-        if (ActivityThread.currentActivityThread().hasAtLeastOneResumedActivity()) {
-            Intent i = new Intent(Settings.ACTION_NFC_SETTINGS);
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            GmsCompat.appContext().startActivity(i);
+        Activity activity = GmcActivityUtils.getMostRecentVisibleActivity();
+        if (activity != null) {
+            activity.runOnUiThread(() -> {
+                Intent i = new Intent(Settings.ACTION_NFC_SETTINGS);
+                activity.startActivity(i);
+            });
         }
     }
 
@@ -444,6 +550,52 @@ public final class GmsHooks {
                 PowerExemptionManager.REASON_UNKNOWN, null);
         return bo.toBundle();
     }
+
+    // Parcel#readException
+    public static boolean interceptException(Exception e, Parcel p) {
+        if (!(e instanceof SecurityException)) {
+            return false;
+        }
+
+        if (p.dataAvail() != 0) {
+            Log.w(TAG, "malformed Parcel: dataAvail() " + p.dataAvail() + " after exception", e);
+            return false;
+        }
+
+        StubDef stub = StubDef.find(e.getStackTrace(), config(), StubDef.FIND_MODE_Parcel);
+
+        if (stub == null) {
+            return false;
+        }
+
+        boolean res = stub.stubOutMethod(p);
+
+        if (Build.isDebuggable()) {
+            Log.i(TAG, res ? "intercepted" : "stubOut failed", e);
+        }
+
+        return res;
+    }
+
+    public static void onSQLiteOpenHelperConstructed(SQLiteOpenHelper h, @Nullable Context context) {
+        if (context == null) {
+            return;
+        }
+
+        if (GmsCompat.isGmsCore()) {
+            if (inPersistentGmsCoreProcess) {
+                if ("phenotype.db".equals(h.getDatabaseName()) && !context.isDeviceProtectedStorage()) {
+                    if (phenotypeDb != null) {
+                        Log.w(TAG, "reassigning phenotypeDb", new Throwable());
+                    }
+                    phenotypeDb = h;
+                }
+            }
+        }
+    }
+
+    private static volatile SQLiteOpenHelper phenotypeDb;
+    public static SQLiteOpenHelper getPhenotypeDb() { return phenotypeDb; }
 
     private GmsHooks() {}
 }

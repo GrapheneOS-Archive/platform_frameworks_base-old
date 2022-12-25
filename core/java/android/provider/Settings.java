@@ -89,6 +89,7 @@ import android.view.Window;
 import android.view.WindowManager.LayoutParams;
 
 import com.android.internal.annotations.GuardedBy;
+import com.android.internal.gmscompat.GmsCompatApp;
 import com.android.internal.util.Preconditions;
 import com.android.internal.widget.ILockSettings;
 
@@ -2848,11 +2849,29 @@ public final class Settings {
                     mReadableFieldsWithMaxTargetSdk);
         }
 
+        // Returns last path component of the relevant Uri.
+        // Keep in sync with GmsCompatApp#registerObserver
+        private String maybeGetGmsCompatNamespace() {
+            Uri uri = mUri;
+            // no need to use expensive equals() method in this case
+            if (uri == Global.CONTENT_URI) {
+                return "global";
+            }
+            if (uri == Secure.CONTENT_URI) {
+                return "secure";
+            }
+            return null;
+        }
+
         public boolean putStringForUser(ContentResolver cr, String name, String value,
                 String tag, boolean makeDefault, final int userHandle,
                 boolean overrideableByRestore) {
             if (GmsCompat.isEnabled()) {
-                return true;
+                String ns = maybeGetGmsCompatNamespace();
+                if (ns != null && !mAllFields.contains(name)) {
+                    return GmsCompatApp.putString(ns, name, value);
+                }
+                return false;
             }
 
             try {
@@ -2901,6 +2920,15 @@ public final class Settings {
 
         @UnsupportedAppUsage
         public String getStringForUser(ContentResolver cr, String name, final int userHandle) {
+            if (GmsCompat.isEnabled()) {
+                String ns = maybeGetGmsCompatNamespace();
+                if (ns != null) {
+                    if (!mAllFields.contains(name) && !name.startsWith("gmscompat")) {
+                        return GmsCompatApp.getString(ns, name);
+                    }
+                }
+            }
+
             // Check if the target settings key is readable. Reject if the caller is not system and
             // is trying to access a settings key defined in the Settings.Secure, Settings.System or
             // Settings.Global and is not annotated as @Readable.
@@ -5691,6 +5719,11 @@ public final class Settings {
                 CALL_METHOD_PUT_SECURE,
                 sProviderHolder,
                 Secure.class);
+
+        /** @hide */
+        public static boolean isKnownKey(String key) {
+            return sNameValueCache.mAllFields.contains(key);
+        }
 
         private static ILockSettings sLockSettings = null;
 
@@ -15231,6 +15264,11 @@ public final class Settings {
                     CALL_METHOD_PUT_GLOBAL,
                     sProviderHolder,
                     Global.class);
+
+        /** @hide */
+        public static boolean isKnownKey(String key) {
+            return sNameValueCache.mAllFields.contains(key);
+        }
 
         // Certain settings have been moved from global to the per-user secure namespace
         @UnsupportedAppUsage

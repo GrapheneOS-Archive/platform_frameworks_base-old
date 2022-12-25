@@ -72,6 +72,7 @@ import android.util.Size;
 import android.util.SparseArray;
 
 import com.android.internal.annotations.GuardedBy;
+import com.android.internal.gmscompat.GmsCompatApp;
 import com.android.internal.gmscompat.GmsHooks;
 import com.android.internal.gmscompat.PlayStoreHooks;
 import com.android.internal.gmscompat.dynamite.GmsDynamiteClientHooks;
@@ -1196,13 +1197,6 @@ public abstract class ContentResolver implements ContentInterface {
             @Nullable CancellationSignal cancellationSignal) {
         Objects.requireNonNull(uri, "uri");
 
-        if (GmsCompat.isEnabled()) {
-            Cursor c = GmsHooks.interceptQuery(uri, projection);
-            if (c != null) {
-                return c;
-            }
-        }
-
         try {
             if (mWrapped != null) {
                 return mWrapped.query(uri, projection, queryArgs, cancellationSignal);
@@ -1258,7 +1252,7 @@ public abstract class ContentResolver implements ContentInterface {
             qCursor = null;
 
             if (GmsCompat.isEnabled()) {
-                Cursor modified = GmsHooks.maybeModifyQueryResult(uri, wrapper);
+                Cursor modified = GmsHooks.maybeModifyQueryResult(uri, projection, queryArgs, wrapper);
                 if (modified != null) {
                     return modified;
                 }
@@ -1269,7 +1263,14 @@ public abstract class ContentResolver implements ContentInterface {
             // Arbitrary and not worth documenting, as Activity
             // Manager will kill this process shortly anyway.
             return null;
-        } finally {
+        } catch (SecurityException se) {
+            if (GmsCompat.isEnabled()) {
+                Log.d("GmsCompat", "", se);
+                return null;
+            }
+            throw se;
+        }
+        finally {
             if (qCursor != null) {
                 qCursor.close();
             }
@@ -2576,7 +2577,18 @@ public abstract class ContentResolver implements ContentInterface {
      */
     public final @Nullable ContentProviderClient acquireContentProviderClient(@NonNull Uri uri) {
         Objects.requireNonNull(uri, "uri");
-        IContentProvider provider = acquireProvider(uri);
+
+        IContentProvider provider;
+        try {
+            provider = acquireProvider(uri);
+        } catch (SecurityException se) {
+            if (GmsCompat.isEnabled()) {
+                Log.d("GmsCompat", "uri: " + uri, se);
+                return null;
+            }
+            throw se;
+        }
+
         if (provider != null) {
             return new ContentProviderClient(this, provider, uri.getAuthority(), true);
         }
@@ -2692,17 +2704,17 @@ public abstract class ContentResolver implements ContentInterface {
     @UnsupportedAppUsage
     public final void registerContentObserver(Uri uri, boolean notifyForDescendents,
             ContentObserver observer, @UserIdInt int userHandle) {
+        if (GmsCompat.isEnabled()) {
+            if (GmsCompatApp.registerObserver(uri, observer)) {
+                return;
+            }
+        }
+
         try {
             getContentService().registerContentObserver(uri, notifyForDescendents,
                     observer.getContentObserver(), userHandle, mTargetSdkVersion);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
-        } catch (SecurityException se) {
-            if (GmsCompat.isEnabled()) {
-                return;
-            }
-
-            throw se;
         }
     }
 
@@ -2714,6 +2726,13 @@ public abstract class ContentResolver implements ContentInterface {
      */
     public final void unregisterContentObserver(@NonNull ContentObserver observer) {
         Objects.requireNonNull(observer, "observer");
+
+        if (GmsCompat.isEnabled()) {
+            if (GmsCompatApp.unregisterObserver(observer)) {
+                return;
+            }
+        }
+
         try {
             IContentObserver contentObserver = observer.releaseContentObserver();
             if (contentObserver != null) {

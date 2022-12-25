@@ -16,9 +16,7 @@
 
 package com.android.internal.gmscompat;
 
-import android.Manifest;
 import android.app.Activity;
-import android.app.ActivityThread;
 import android.app.PendingIntent;
 import android.app.compat.gms.GmsCompat;
 import android.app.usage.StorageStats;
@@ -32,8 +30,6 @@ import android.content.pm.IPackageDataObserver;
 import android.content.pm.IPackageDeleteObserver;
 import android.content.pm.PackageInstaller;
 import android.content.pm.PackageManager;
-import android.content.pm.parsing.ParsingPackage;
-import android.content.pm.parsing.component.ParsedUsesPermission;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -42,11 +38,13 @@ import android.os.storage.StorageManager;
 import android.provider.Settings;
 import android.util.Log;
 
+import com.android.internal.gmscompat.util.GmcActivityUtils;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.function.BiConsumer;
 
 public final class PlayStoreHooks {
@@ -65,115 +63,27 @@ public final class PlayStoreHooks {
         packageManager = GmsCompat.appContext().getPackageManager();
     }
 
-    // ParsingPackageUtils#parseBaseApplication
-    public static void maybeAddUsesPermission(ParsingPackage pkg) {
-        if (!GmsInfo.PACKAGE_PLAY_STORE.equals(pkg.getPackageName())) {
-            return;
-        }
+    // PackageInstaller#createSession
+    public static void adjustSessionParams(PackageInstaller.SessionParams params) {
+        String pkg = Objects.requireNonNull(params.appPackageName);
 
-        String[] perms = {
-                Manifest.permission.REQUEST_INSTALL_PACKAGES,
-                Manifest.permission.REQUEST_DELETE_PACKAGES,
-                Manifest.permission.UPDATE_PACKAGES_WITHOUT_USER_ACTION,
-        };
-        for (String perm : perms) {
-            pkg.addUsesPermission(new ParsedUsesPermission(perm, 0));
+        switch (pkg) {
+            case GmsInfo.PACKAGE_GMS_CORE:
+                params.maxAllowedVersion = GmsHooks.config().maxGmsCoreVersion;
+                break;
+            case GmsInfo.PACKAGE_PLAY_STORE:
+                params.maxAllowedVersion = GmsHooks.config().maxPlayStoreVersion;
+                break;
         }
     }
 
     // PackageInstaller.Session#commit(IntentSender)
-    public static IntentSender commitSession(PackageInstaller.Session session, IntentSender statusReceiver) {
-        if (!session.isMultiPackage()) {
-            return PackageInstallerStatusForwarder.register((intent, extras) -> sendIntent(intent, statusReceiver))
-                    .getIntentSender();
-        }
-
-        // multiPackage sessions do not work without the privileged INSTALL_PACKAGES permission,
-        // commit their children separately instead.
-
-        // Chrome {Stable, Beta, Dev, Canary} (and their "Android System WebView" counterparts)
-        // are the only known users of multiPackage sessions, enable this workaround only for them.
-        // Installing a Chrome variant or its WebView counterpart installs Trichrome static shared
-        // library together in a single multiPackage session. Committing child sessions separately
-        // should be fully safe (despite broken atomicity) given that:
-        // - PackageManager will not allow installation of Chrome if Trichrome of the right version
-        // isn't installed yet
-        // - multiple versions of static shared libraries can be installed at the same time, so
-        // installing a Trichrome update will not break the current Chrome + Trichrome combination:
-        // both previous and new versions of Trichrome will be present after update completes
-        // - when Chrome is updated in the subsequent session, older version of Trichrome will
-        // become unused and will be deleted by the OS automatically after an OS-defined delay
-
-        // Note that unprivileged package installers can't remove static shared libraries.
-        // Privileged Play Store, despite being able to through the DELETE_PACKAGES permission,
-        // doesn't do this either, relying on the OS instead.
-
-        int[] sessionIds = session.getChildSessionIds();
-        Deque<PackageInstaller.Session> sessions = new ArrayDeque<>(sessionIds.length);
-        PackageInstaller installer = packageManager.getPackageInstaller();
-
-        boolean trichromelibraryFound = false;
-        for (int id : sessionIds) {
-            session.removeChildSessionId(id);
-
-            PackageInstaller.Session childSession;
-            String[] names;
-            try {
-                childSession = installer.openSession(id);
-                names = childSession.getNames();
-            } catch (IOException e) {
-                // child sessions should be already opened by the Play Store
-                throw new IllegalStateException(e);
-            }
-            if (names.length == 1 && names[0].contains("com.google.android.trichromelibrary")) {
-                if (trichromelibraryFound) {
-                    throw new IllegalStateException("trichromelibrary already found");
-                }
-                trichromelibraryFound = true;
-                sessions.addFirst(childSession);
-            } else {
-                sessions.addLast(childSession);
-            }
-        }
-        if (!trichromelibraryFound) {
-            // this approach breaks atomicity of multiPackage sessions, restrict it to installs
-            // of Chrome and "Android System WebView";
-            // there are no other known users of multiPackage sessions as of August 2022
-            throw new IllegalStateException("trichromelibrary not found");
-        }
-
-        session.abandon();
-        multiCommitStep(sessions, statusReceiver);
-
-        // commit of the parent session is a no-op
-        return null;
+    public static IntentSender wrapCommitStatusReceiver(PackageInstaller.Session session, IntentSender statusReceiver) {
+        return PackageInstallerStatusForwarder.register((intent, extras) -> sendIntent(intent, statusReceiver))
+                .getIntentSender();
     }
 
-    static void multiCommitStep(Deque<PackageInstaller.Session> sessions, IntentSender finalCallback) {
-        PackageInstaller.Session session = sessions.removeFirst();
-        PendingIntent pi = PackageInstallerStatusForwarder.register(multiCommitListener(sessions, finalCallback));
-        session.commitInner(pi.getIntentSender());
-    }
-
-    private static BiConsumer<Intent, Bundle> multiCommitListener(Deque<PackageInstaller.Session> sessions, IntentSender finalCallback) {
-        return (intent, extras) -> {
-            if (sessions.size() == 0) {
-                sendIntent(intent, finalCallback);
-            } else {
-                if (getIntFromBundle(extras, PackageInstaller.EXTRA_STATUS) == PackageInstaller.STATUS_SUCCESS) {
-                    multiCommitStep(sessions, finalCallback);
-                } else {
-                    for (PackageInstaller.Session s : sessions) {
-                        s.abandon();
-                    }
-                    sendIntent(intent, finalCallback);
-                }
-            }
-        };
-    }
-
-    // call at the end of Activity#onResume()
-    public static void activityResumed(Activity activity) {
+    public static void onActivityResumed(Activity activity) {
         if (pendingConfirmationIntents.size() != 0) {
             Intent i = pendingConfirmationIntents.removeLast();
             activity.startActivity(i);
@@ -191,8 +101,6 @@ public final class PlayStoreHooks {
         private PendingIntent pendingIntent;
         private BiConsumer<Intent, Bundle> target;
 
-        private static final AtomicLong lastId = new AtomicLong();
-
         static PendingIntent register(BiConsumer<Intent, Bundle> target) {
             PackageInstallerStatusForwarder sf = new PackageInstallerStatusForwarder();
             Context context = GmsCompat.appContext();
@@ -201,7 +109,7 @@ public final class PlayStoreHooks {
 
             String intentAction = context.getPackageName()
                 + "." + PackageInstallerStatusForwarder.class.getName() + "."
-                + lastId.getAndIncrement();
+                + UUID.randomUUID();
 
             sf.pendingIntent = PendingIntent.getBroadcast(context, 0, new Intent(intentAction),
                     PendingIntent.FLAG_CANCEL_CURRENT |
@@ -218,11 +126,9 @@ public final class PlayStoreHooks {
             if (status == PackageInstaller.STATUS_PENDING_USER_ACTION) {
                 Intent confirmationIntent = intent.getParcelableExtra(Intent.EXTRA_INTENT);
 
-                // there is no public API that I'm aware of (as of API 31)
-                // that would allow to *reliably* find this out
-                if (ActivityThread.currentActivityThread().hasAtLeastOneResumedActivity()) {
-                    confirmationIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    context.startActivity(confirmationIntent);
+                Activity activity = GmcActivityUtils.getMostRecentVisibleActivity();
+                if (activity != null) {
+                    activity.startActivity(confirmationIntent);
                 } else {
                     pendingConfirmationIntents.addLast(confirmationIntent);
                     try {
@@ -324,7 +230,7 @@ public final class PlayStoreHooks {
     // ApplicationPackageManager#setApplicationEnabledSetting
     public static void setApplicationEnabledSetting(String packageName, int newState) {
         if (newState == PackageManager.COMPONENT_ENABLED_STATE_ENABLED
-                    && ActivityThread.currentActivityThread().hasAtLeastOneResumedActivity())
+                    && GmcActivityUtils.getMostRecentVisibleActivity() != null)
         {
             openAppSettings(packageName);
         }
