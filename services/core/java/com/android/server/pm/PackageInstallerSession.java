@@ -27,6 +27,7 @@ import static android.content.pm.PackageManager.INSTALL_FAILED_INTERNAL_ERROR;
 import static android.content.pm.PackageManager.INSTALL_FAILED_INVALID_APK;
 import static android.content.pm.PackageManager.INSTALL_FAILED_MEDIA_UNAVAILABLE;
 import static android.content.pm.PackageManager.INSTALL_FAILED_MISSING_SPLIT;
+import static android.content.pm.PackageManager.INSTALL_FAILED_VERIFICATION_FAILURE;
 import static android.content.pm.PackageManager.INSTALL_PARSE_FAILED_NO_CERTIFICATES;
 import static android.content.pm.PackageManager.INSTALL_STAGED;
 import static android.content.pm.PackageManager.INSTALL_SUCCEEDED;
@@ -55,6 +56,7 @@ import android.app.NotificationManager;
 import android.app.admin.DevicePolicyEventLogger;
 import android.app.admin.DevicePolicyManagerInternal;
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.IIntentReceiver;
 import android.content.IIntentSender;
@@ -2300,16 +2302,19 @@ public class PackageInstallerSession extends IPackageInstallerSession.Stub {
 
     private void verifyNonStaged()
             throws PackageManagerException {
-        final PackageManagerService.VerificationParams verifyingSession =
-                prepareForVerification();
-        if (verifyingSession == null) {
-            return;
-        }
         if (isMultiPackage()) {
             final List<PackageInstallerSession> childSessions;
             synchronized (mLock) {
                 childSessions = getChildSessionsLocked();
             }
+
+            for (int i = 0; i < childSessions.size(); ++i) {
+                if (childSessions.get(i).maybeSendPendingUserActionIntent()) {
+                    // will retry after pending user action
+                    return;
+                }
+            }
+
             // Spot check to reject a non-staged multi package install of APEXes and APKs.
             if (!params.isStaged && containsApkSession()
                     && sessionContains(s -> s.isApexSession())) {
@@ -2328,6 +2333,9 @@ public class PackageInstallerSession extends IPackageInstallerSession.Stub {
                             session.prepareForVerification();
                     if (verifyingChildSession != null) {
                         verifyingChildSessions.add(verifyingChildSession);
+                    } else {
+                        throw new PackageManagerException(INSTALL_FAILED_VERIFICATION_FAILURE,
+                                "unable to verify child session " + session.sessionId);
                     }
                 } catch (PackageManagerException e) {
                     failure = e;
@@ -2344,8 +2352,19 @@ public class PackageInstallerSession extends IPackageInstallerSession.Stub {
                         failure.error, failure.getLocalizedMessage(), null);
                 return;
             }
+            final PackageManagerService.VerificationParams verifyingSession = prepareForVerification();
+            if (verifyingSession == null) {
+                // multi-package session itself should never fail to prepare for verification, only
+                // its child sessions can
+                throw new PackageManagerException(INSTALL_FAILED_INTERNAL_ERROR,
+                        "prepareForVerification() unexpectedly failed");
+            }
             mPm.verifyStage(verifyingSession, verifyingChildSessions);
         } else {
+            final PackageManagerService.VerificationParams verifyingSession = prepareForVerification();
+            if (verifyingSession == null) {
+                return;
+            }
             mPm.verifyStage(verifyingSession);
         }
     }
@@ -2412,6 +2431,13 @@ public class PackageInstallerSession extends IPackageInstallerSession.Stub {
     @Nullable
     private PackageManagerService.VerificationParams prepareForVerification()
             throws PackageManagerException {
+        if (maybeSendPendingUserActionIntent()) {
+            return null;
+        }
+        return makeVerificationParams();
+    }
+
+    private boolean maybeSendPendingUserActionIntent() throws PackageManagerException {
         assertNotLocked("makeSessionActive");
 
         @UserActionRequirement
@@ -2421,7 +2447,7 @@ public class PackageInstallerSession extends IPackageInstallerSession.Stub {
             userActionRequirement = computeUserActionRequirement();
             if (userActionRequirement == USER_ACTION_REQUIRED) {
                 sendPendingUserActionIntent();
-                return null;
+                return true;
             } // else, we'll wait until we parse to determine if we need to
         }
 
@@ -2453,7 +2479,7 @@ public class PackageInstallerSession extends IPackageInstallerSession.Stub {
                 if (userActionRequirement == USER_ACTION_PENDING_APK_PARSING) {
                     if (result.getTargetSdk() < Build.VERSION_CODES.Q) {
                         sendPendingUserActionIntent();
-                        return null;
+                        return true;
                     }
                     if (params.requireUserAction == SessionParams.USER_ACTION_NOT_REQUIRED) {
                         silentUpdatePolicyEnforceable = true;
@@ -2467,10 +2493,14 @@ public class PackageInstallerSession extends IPackageInstallerSession.Stub {
                 // Fall back to the non-silent update if a repeated installation is invoked within
                 // the throttle time.
                 sendPendingUserActionIntent();
-                return null;
+                return true;
             }
             mSilentUpdatePolicy.track(getInstallerPackageName(), getPackageName());
         }
+        return false;
+    }
+
+    private PackageManagerService.VerificationParams makeVerificationParams() {
         synchronized (mLock) {
             return makeVerificationParamsLocked();
         }
@@ -3663,15 +3693,19 @@ public class PackageInstallerSession extends IPackageInstallerSession.Stub {
             throw new SecurityException("Must be sealed to accept permissions");
         }
 
+        PackageInstallerSession root = hasParentSessionId()
+                ? mSessionProvider.getSession(getParentSessionId()) : this;
+
         if (accepted) {
             // Mark and kick off another install pass
             synchronized (mLock) {
                 mPermissionsManuallyAccepted = true;
-                mHandler.obtainMessage(MSG_INSTALL).sendToTarget();
             }
+            root.mHandler.obtainMessage(MSG_INSTALL).sendToTarget();
         } else {
-            destroyInternal();
-            dispatchSessionFinished(INSTALL_FAILED_ABORTED, "User rejected permissions", null);
+            root.destroyInternal();
+            root.dispatchSessionFinished(INSTALL_FAILED_ABORTED, "User rejected permissions", null);
+            root.maybeCleanUpChildSessions();
         }
     }
 
