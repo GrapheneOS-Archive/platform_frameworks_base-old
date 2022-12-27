@@ -1539,6 +1539,21 @@ final class InstallPackageHelper {
                     throw new PrepareFailure(INSTALL_FAILED_INTERNAL_ERROR, message);
                 }
             }
+
+            if (parsedPackage.getLongVersionCode() == systemPackage.getLongVersionCode()) {
+                String message = "Not allowed to update system package to the same versionCode";
+                boolean abortInstall = true;
+
+                if (Build.IS_DEBUGGABLE) {
+                    if (SystemProperties.getBoolean("persist.disable_same_versionCode_sys_pkg_update_check", false)) {
+                        Slog.d(TAG, message + ": " + parsedPackage.getManifestPackageName());
+                        abortInstall = false;
+                    }
+                }
+                if (abortInstall) {
+                    throw new PrepareFailure(INSTALL_FAILED_INTERNAL_ERROR, message);
+                }
+            }
         }
 
         final PackageFreezer freezer =
