@@ -44,7 +44,7 @@ public final class GmsInfo {
             "com.google.android.euicc",
     };
 
-    public static final String[] DEPENDENCIES_OF_EUICC_PACKAGES = { PACKAGE_GSF, PACKAGE_GMS_CORE };
+    public static final String[] DEPENDENCIES_OF_EUICC_PACKAGES = { PACKAGE_GSF, PACKAGE_GMS_CORE, PACKAGE_PLAY_STORE };
 
     private GmsInfo() { }
 }
