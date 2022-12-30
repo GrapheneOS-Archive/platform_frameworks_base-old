@@ -1819,6 +1819,7 @@ public class AppOpsService extends IAppOpsService.Stub {
                     }
 
                     Ops removedOps = uidState.pkgOps.remove(pkgName);
+                    Slog.d(TAG_OP_RESET_DEBUG, "removed ops for " + pkgName + ", reason: ACTION_PACKAGE_REMOVED");
                     if (removedOps != null) {
                         scheduleFastWriteLocked();
                     }
@@ -1913,6 +1914,7 @@ public class AppOpsService extends IAppOpsService.Stub {
 
                 String[] pkgsInUid = getPackagesForUid(uidState.uid);
                 if (ArrayUtils.isEmpty(pkgsInUid)) {
+                    Slog.d(TAG_OP_RESET_DEBUG, "no pkgs in uid " + uidState.uid + ", clearing its state");
                     uidState.clear();
                     mUidStates.removeAt(uidNum);
                     scheduleFastWriteLocked();
@@ -2039,16 +2041,20 @@ public class AppOpsService extends IAppOpsService.Stub {
                 return;
             }
 
+            Slog.d(TAG_OP_RESET_DEBUG, "packageRemoved " + packageName + " uid " + uid);
+
             Ops ops = null;
 
             // Remove any package state if such.
             if (uidState.pkgOps != null) {
+                Slog.d(TAG_OP_RESET_DEBUG, "packageRemoved " + packageName + " uid " + uid + ", removing pkgOps");
                 ops = uidState.pkgOps.remove(packageName);
             }
 
             // If we just nuked the last package state check if the UID is valid.
             if (ops != null && uidState.pkgOps.isEmpty()
                     && getPackagesForUid(uid).length <= 0) {
+                Slog.d(TAG_OP_RESET_DEBUG, "packageRemoved " + packageName + " uid " + uid + ", removing uidState");
                 mUidStates.remove(uid);
             }
 
@@ -2082,6 +2088,7 @@ public class AppOpsService extends IAppOpsService.Stub {
     public void uidRemoved(int uid) {
         synchronized (this) {
             if (mUidStates.indexOfKey(uid) >= 0) {
+                Slog.d(TAG_OP_RESET_DEBUG, "uidRemoved " + uid);
                 mUidStates.remove(uid);
                 scheduleFastWriteLocked();
             }
@@ -2952,6 +2959,7 @@ public class AppOpsService extends IAppOpsService.Stub {
 
     @Override
     public void resetAllModes(int reqUserId, String reqPackageName) {
+        Slog.d(TAG, "resetAllModes for " + reqPackageName + " userId " + reqUserId, new Throwable());
         final int callingPid = Binder.getCallingPid();
         final int callingUid = Binder.getCallingUid();
         reqUserId = ActivityManager.handleIncomingUser(callingPid, callingUid, reqUserId,
@@ -4933,6 +4941,7 @@ public class AppOpsService extends IAppOpsService.Stub {
                     Slog.w(TAG, "Failed parsing " + e);
                 } finally {
                     if (!success) {
+                        Slog.d(TAG_OP_RESET_DEBUG, "parsing failed, clearing uid states");
                         mUidStates.clear();
                     }
                     try {
@@ -6691,6 +6700,7 @@ public class AppOpsService extends IAppOpsService.Stub {
                 ClientUserRestrictionState opRestrictions = mOpUserRestrictions.valueAt(i);
                 opRestrictions.removeUser(userHandle);
             }
+            Slog.d(TAG_OP_RESET_DEBUG, "removeUser " + userHandle, new Throwable());
             removeUidsForUserLocked(userHandle);
         }
     }
@@ -6773,6 +6783,7 @@ public class AppOpsService extends IAppOpsService.Stub {
                 return;
             }
             Ops removedOps = uidState.pkgOps.remove(packageName);
+            Slog.d(TAG_OP_RESET_DEBUG, "removed ops for " + packageName, new Throwable());
             if (removedOps != null) {
                 scheduleFastWriteLocked();
             }
@@ -7128,6 +7139,8 @@ public class AppOpsService extends IAppOpsService.Stub {
         return -1;
     }
 
+    private static volatile Throwable prevThrowable;
+
     private static String[] getPackagesForUid(int uid) {
         String[] packageNames = null;
 
@@ -7138,6 +7151,13 @@ public class AppOpsService extends IAppOpsService.Stub {
                 packageNames = AppGlobals.getPackageManager().getPackagesForUid(uid);
             } catch (RemoteException e) {
                 /* ignore - local call */
+            }
+        } else {
+            var t = new Throwable();
+            var prev = prevThrowable;
+            if (prev == null || !Arrays.equals(prev.getStackTrace(), t.getStackTrace())) {
+                prevThrowable = t;
+                Slog.d(TAG_OP_RESET_DEBUG, "AppGlobals.getPackageManager() is null", t);
             }
         }
         if (packageNames == null) {
@@ -7812,4 +7832,6 @@ public class AppOpsService extends IAppOpsService.Stub {
             return null;
         }
     }
+
+    public static final String TAG_OP_RESET_DEBUG = "AppOpResetDebug";
 }
