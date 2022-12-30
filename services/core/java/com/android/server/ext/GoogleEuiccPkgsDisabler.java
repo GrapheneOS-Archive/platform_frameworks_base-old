@@ -61,8 +61,9 @@ class GoogleEuiccPkgsDisabler extends BroadcastReceiver {
         f.addAction(Intent.ACTION_PACKAGE_FULLY_REMOVED);
 
         f.addDataScheme("package");
-        f.addDataSchemeSpecificPart(GmsInfo.PACKAGE_GSF, PatternMatcher.PATTERN_LITERAL);
-        f.addDataSchemeSpecificPart(GmsInfo.PACKAGE_GMS_CORE, PatternMatcher.PATTERN_LITERAL);
+        for (String pkg : GmsInfo.DEPENDENCIES_OF_EUICC_PACKAGES) {
+            f.addDataSchemeSpecificPart(pkg, PatternMatcher.PATTERN_LITERAL);
+        }
 
         sse.registerReceiver(this, f, sse.bgHandler);
     }
