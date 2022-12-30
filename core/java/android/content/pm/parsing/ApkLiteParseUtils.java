@@ -599,8 +599,19 @@ public class ApkLiteParseUtils {
                         }
                     }
                 } else {
-                    targetVer = minVer;
-                    targetCode = minCode;
+                    int targetSdkIndex = -1;
+                    for (int i = 0, m = parser.getAttributeCount(); i < m; ++i) {
+                        if (parser.getAttributeNameResource(i) == com.android.internal.R.attr.targetSdkVersion) {
+                            targetSdkIndex = i;
+                            break;
+                        }
+                    }
+                    if (targetSdkIndex >= 0) {
+                        targetVer = parser.getAttributeIntValue(targetSdkIndex, targetVer);
+                    } else {
+                        targetVer = minVer;
+                        targetCode = minCode;
+                    }
                 }
 
                 boolean allowUnknownCodenames = false;
