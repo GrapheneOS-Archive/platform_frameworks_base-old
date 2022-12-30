@@ -27,10 +27,12 @@ import android.app.BroadcastOptions;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.PowerExemptionManager;
+import android.util.Slog;
 import android.util.SparseArray;
 
 import com.android.internal.util.ArrayUtils;
 import com.android.server.LocalServices;
+import com.android.server.appop.AppOpsService;
 
 final class PackageRemovedInfo {
     final PackageSender mPackageSender;
@@ -151,6 +153,7 @@ final class PackageRemovedInfo {
             // If a system app's updates are uninstalled the UID is not actually removed. Some
             // services need to know the package name affected.
             if (isReplace) {
+                Slog.d(AppOpsService.TAG_OP_RESET_DEBUG, "sendPackageRemovedBroadcastInternal " + mRemovedPackage, new Throwable());
                 extras.putString(Intent.EXTRA_PACKAGE_NAME, mRemovedPackage);
             }
 
