@@ -21,7 +21,6 @@ import android.app.PendingIntent;
 import android.app.compat.gms.GmsCompat;
 import android.app.usage.StorageStats;
 import android.content.BroadcastReceiver;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -155,45 +154,73 @@ public final class PlayStoreHooks {
         if (flags != 0) {
             throw new IllegalStateException("unexpected flags: " + flags);
         }
-        PendingIntent pi = PackageInstallerStatusForwarder.register(uninstallListener(packageName, observer));
+
+        // Play Store expects call to deletePackage() to always succeed, which almost always happens
+        // when it has the privileged DELETE_PACKAGES permission.
+        // This is not the case when Play Store has only the unprivileged REQUEST_DELETE_PACKAGES
+        // permission, which requires confirmation from the user.
+        // There are two difficulties:
+        // - user may reject the confirmation prompt, which produces DELETE_FAILED_ABORTED error code,
+        // which Play Store ignores
+        // - user may dismiss the confirmation prompt without making a choice, which doesn't make
+        // any callback at all
+        // In both cases, Play Store remains stuck in "Uninstalling..." state for that package.
+        // This state is written to persistent storage, it remains stuck even after device reboot.
+        //
+        // To work-around all these issues, pretend that the package was uninstalled and then installed
+        // again, which moves the package state from "Uninstalling..." to "Installed" state, and
+        // launch the uninstall request separately.
+
+        PendingIntent pi = PackageInstallerStatusForwarder.register((BiConsumer<Intent, Bundle>) (intent, extras) -> {
+            Log.d(TAG, "uninstall status " + extras.getString(PackageInstaller.EXTRA_STATUS_MESSAGE));
+        });
         pm.getPackageInstaller().uninstall(packageName, pi.getIntentSender());
-    }
 
-    private static BiConsumer<Intent, Bundle> uninstallListener(String packageName, IPackageDeleteObserver target) {
-        return (intent, extras) -> {
-            // EXTRA_STATUS returns PackageInstaller constant,
-            // EXTRA_LEGACY_STATUS returns PackageManager constant
-            int status = getIntFromBundle(extras, PackageInstaller.EXTRA_LEGACY_STATUS);
-
+        GmsCompat.appContext().getMainThreadHandler().postDelayed(() -> {
             try {
-                target.packageDeleted(packageName, status);
+                // Play Store ignores this callback as of version 33.6.13, but provide it anyway
+                // in case it's fixed
+                observer.packageDeleted(packageName, PackageManager.DELETE_FAILED_ABORTED);
             } catch (RemoteException e) {
                 throw e.rethrowAsRuntimeException();
             }
 
-            if (status != PackageManager.DELETE_SUCCEEDED) {
-                // Play Store doesn't expect uninstallation to fail
-                // and ends up in an inconsistent UI state if the following workaround isn't applied
+            resetPackageState(packageName);
+        }, 100L); // delay the callback for to workaround a race condition in Play Store
+    }
 
-                String[] broadcasts = { Intent.ACTION_PACKAGE_REMOVED, Intent.ACTION_PACKAGE_ADDED };
+    // If state transition that is expected to never fail by Play Store does fail, it may get stuck
+    // in the old state. This happens, for example, when package uninstall fails.
+    // To work-around this, pretend that the package was removed and installed again
+    private static void resetPackageState(String packageName) {
+        String[] broadcasts = { Intent.ACTION_PACKAGE_REMOVED, Intent.ACTION_PACKAGE_ADDED };
+        Context context = GmsCompat.appContext();
 
-                Context context = GmsCompat.appContext();
+        // default ClassLoader fails to load the needed class
+        ClassLoader cl = context.getClassLoader();
 
-                // default ClassLoader fails to load the needed class
-                ClassLoader cl = context.getClassLoader();
-                try {
-                    Class cls = Class.forName("com.google.android.finsky.packagemanager.impl.PackageMonitorReceiverImpl$RegisteredReceiver", true, cl);
-
-                    for (String action : broadcasts) {
-                        // don't reuse BroadcastReceiver, it's expected that a new instance is made each time
-                        BroadcastReceiver br = (BroadcastReceiver) cls.newInstance();
-                        br.onReceive(context, new Intent(action, packageUri(packageName)));
-                    }
-                } catch (ReflectiveOperationException e) {
-                    throw new RuntimeException(e);
-                }
-            }
+        // Depending on Play Store version, target class can be in packagemonitor or in
+        // packagemanager package, support both
+        String[] classNames = {
+            "com.google.android.finsky.packagemonitor.impl.PackageMonitorReceiverImpl$RegisteredReceiver",
+            "com.google.android.finsky.packagemanager.impl.PackageMonitorReceiverImpl$RegisteredReceiver",
         };
+
+        for (String className : classNames) {
+            try {
+                Class cls = Class.forName(className, true, cl);
+
+                for (String action : broadcasts) {
+                    // don't reuse BroadcastReceiver, it's expected that a new instance is made each time
+                    BroadcastReceiver br = (BroadcastReceiver) cls.newInstance();
+                    br.onReceive(context, new Intent(action, packageUri(packageName)));
+                }
+            } catch (ReflectiveOperationException e) {
+                Log.d(TAG, "", e);
+                continue;
+            }
+            break;
+        }
     }
 
     // Called during self-update sequence because PackageManager requires
