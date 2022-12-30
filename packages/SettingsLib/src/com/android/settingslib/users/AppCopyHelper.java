@@ -150,10 +150,12 @@ public class AppCopyHelper {
         addSystemApps(mVisibleApps, widgetIntent);
 
         // Add all downloaded apps of the current user
-        final List<ApplicationInfo> installedApps = mPackageManager.getInstalledApplications(0);
+        final List<ApplicationInfo> installedApps =
+                mPackageManager.getInstalledApplications(
+                    PackageManager.ApplicationInfoFlags.of(PackageManager.MATCH_ANY_USER)
+                );
         for (ApplicationInfo app : installedApps) {
             // If it's not installed, skip
-            if ((app.flags & ApplicationInfo.FLAG_INSTALLED) == 0) continue;
 
             if ((app.flags & ApplicationInfo.FLAG_SYSTEM) == 0
                     && (app.flags & ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) == 0) {
