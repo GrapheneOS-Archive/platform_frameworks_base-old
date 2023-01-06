@@ -40,7 +40,7 @@
     <bool name="def_wifi_display_on">false</bool>
     <bool name="def_install_non_market_apps">false</bool>
     <!-- 0 == off, 3 == on -->
-    <integer name="def_location_mode">3</integer>
+    <integer name="def_location_mode">0</integer>
     <bool name="assisted_gps_enabled">true</bool>
     <bool name="def_netstats_enabled">true</bool>
     <bool name="def_usb_mass_storage_enabled">true</bool>
