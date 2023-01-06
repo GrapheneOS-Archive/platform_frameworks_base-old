@@ -696,6 +696,9 @@ public class AppOpsService extends IAppOpsService.Stub {
         final @NonNull ArraySet<String> validAttributionTags = new ArraySet<>();
 
         Ops(String _packageName, UidState _uidState) {
+            if (_packageName == null) {
+                Slog.d(TAG, "Ops with invalid null packageName constructed", new Throwable());
+            }
             packageName = _packageName;
             uidState = _uidState;
         }
