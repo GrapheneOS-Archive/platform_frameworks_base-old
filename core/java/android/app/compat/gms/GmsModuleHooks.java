@@ -19,6 +19,9 @@ package android.app.compat.gms;
 import android.Manifest;
 import android.annotation.NonNull;
 import android.annotation.SystemApi;
+import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
+import android.content.Intent;
 import android.os.Build;
 import android.os.RemoteException;
 import android.util.Log;
@@ -39,21 +42,21 @@ public class GmsModuleHooks {
 
     // BluetoothAdapter#enable()
     // BluetoothAdapter#enableBLE()
-    public static boolean canEnableBluetoothAdapter() {
-        if (GmsCompat.hasPermission(Manifest.permission.BLUETOOTH_CONNECT)) {
-            return true;
-        }
+    public static void enableBluetoothAdapter() {
+        Activity activity = GmcActivityUtils.getMostRecentVisibleActivity();
 
-        if (GmcActivityUtils.getMostRecentVisibleActivity() != null) {
-            String pkgName = GmsCompat.appContext().getPackageName();
-            try {
-                GmsCompatApp.iGms2Gca().showGmsMissingNearbyDevicesPermissionGeneric(pkgName);
-            } catch (RemoteException e) {
-                GmsCompatApp.callFailed(e);
+        if (activity != null) {
+            if (GmsCompat.hasPermission(Manifest.permission.BLUETOOTH_CONNECT)) {
+                activity.startActivity(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE));
+            } else {
+                String pkgName = GmsCompat.appContext().getPackageName();
+                try {
+                    GmsCompatApp.iGms2Gca().showGmsMissingNearbyDevicesPermissionGeneric(pkgName);
+                } catch (RemoteException e) {
+                    GmsCompatApp.callFailed(e);
+                }
             }
         } // else don't bother the user
-
-        return false;
     }
 
     // com.android.modules.utils.SynchronousResultReceiver.Result#getValue()
