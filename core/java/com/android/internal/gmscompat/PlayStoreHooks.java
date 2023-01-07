@@ -69,6 +69,22 @@ public final class PlayStoreHooks {
 
         switch (pkg) {
             case GmsInfo.PACKAGE_GMS_CORE:
+            case GmsInfo.PACKAGE_PLAY_STORE:
+                String updateRequestReason = "Play Store created PackageInstaller SessionParams for " + pkg;
+                GmsCompatConfig config;
+                try {
+                    config = GmsCompatApp.iGms2Gca().requestConfigUpdate(updateRequestReason);
+                } catch (RemoteException e) {
+                    throw GmsCompatApp.callFailed(e);
+                }
+                if (GmsHooks.config().version != config.version) {
+                    GmsHooks.setConfig(config);
+                }
+                break;
+        }
+
+        switch (pkg) {
+            case GmsInfo.PACKAGE_GMS_CORE:
                 params.maxAllowedVersion = GmsHooks.config().maxGmsCoreVersion;
                 break;
             case GmsInfo.PACKAGE_PLAY_STORE:
