@@ -3027,6 +3027,14 @@ public class PackageInstallerSession extends IPackageInstallerSession.Stub {
                             if (mVersionCode <= params.maxAllowedVersion) {
                                 break;
                             }
+
+                            // lock that is held at this point is per-session lock, call into
+                            // PackageManager is safe
+                            AndroidPackage pkg = mPm.snapshotComputer().getPackage(mPackageName);
+                            if (pkg != null && pkg.getLongVersionCode() == mVersionCode) {
+                                break;
+                            }
+
                             String msg = "Installation of " + mPackageName + " version " + mVersionCode
                                         + " is disallowed to prevent breaking gmscompat. " +
                                         "Max allowed version is " + params.maxAllowedVersion;
