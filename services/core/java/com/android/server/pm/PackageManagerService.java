@@ -5987,7 +5987,7 @@ public class PackageManagerService extends IPackageManager.Stub
      * Return the cached computer.  The method will rebuild the cached computer if necessary.
      * The live computer will be returned if snapshots are disabled.
      */
-    private Computer snapshotComputer() {
+    public Computer snapshotComputer() {
         if (!mSnapshotEnabled) {
             return mLiveComputer;
         }
