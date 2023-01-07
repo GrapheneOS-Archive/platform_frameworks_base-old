@@ -27,6 +27,7 @@ interface IGms2Gca {
     oneway void maybeShowContactsSyncNotification();
 
     void onUncaughtException(in ApplicationErrorReport aer);
+    GmsCompatConfig requestConfigUpdate(String reason);
 
     @nullable String privSettingsGetString(String ns, String key);
     boolean privSettingsPutString(String ns, String key, @nullable String value);
