@@ -208,8 +208,11 @@ public final class PlayStoreHooks {
     // If state transition that is expected to never fail by Play Store does fail, it may get stuck
     // in the old state. This happens, for example, when package uninstall fails.
     // To work-around this, pretend that the package was removed and installed again
-    private static void resetPackageState(String packageName) {
-        String[] broadcasts = { Intent.ACTION_PACKAGE_REMOVED, Intent.ACTION_PACKAGE_ADDED };
+    public static void resetPackageState(String packageName) {
+        updatePackageState(packageName, Intent.ACTION_PACKAGE_REMOVED, Intent.ACTION_PACKAGE_ADDED);
+    }
+
+    public static void updatePackageState(String packageName, String... broadcasts) {
         Context context = GmsCompat.appContext();
 
         // default ClassLoader fails to load the needed class
