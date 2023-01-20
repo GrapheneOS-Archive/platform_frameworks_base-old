@@ -79,8 +79,7 @@ public class StubDef implements Parcelable {
         Class stubProxyClass = null;
         String stubProxyMethodName = null;
 
-        // To find out which API call caused the exception, iterate through the stack trace until
-        // the first app's class (app's classes are loaded with PathClassLoader)
+        // Iterate through the stack trace to find out which API call caused the exception
         for (int i = firstIndex; i < stackTrace.length; ++i) {
             StackTraceElement ste = stackTrace[i];
             String className = ste.getClassName();
@@ -88,29 +87,30 @@ public class StubDef implements Parcelable {
             try {
                 class_ = Class.forName(className, false, defaultClassLoader);
             } catch (ClassNotFoundException cnfe) {
-                return null;
+                class_ = null;
             }
 
-            ClassLoader classLoader = class_.getClassLoader();
-            if (classLoader == null) {
-                return null;
-            }
-
-            String loaderName = classLoader.getClass().getName();
-
-            if ("java.lang.BootClassLoader".equals(loaderName)) {
-                if (stubProxyClass == null && className.endsWith("$Stub$Proxy")) {
-                    stubProxyClass = class_;
-                    stubProxyMethodName = ste.getMethodName();
+            if (class_ != null) {
+                ClassLoader classLoader = class_.getClassLoader();
+                if (classLoader == null) {
+                    return null;
                 }
-                continue;
+
+                String loaderName = classLoader.getClass().getName();
+
+                if ("java.lang.BootClassLoader".equals(loaderName)) {
+                    if (stubProxyClass == null && className.endsWith("$Stub$Proxy")) {
+                        stubProxyClass = class_;
+                        stubProxyMethodName = ste.getMethodName();
+                    }
+                    if (!className.startsWith("java.lang.reflect.")) {
+                        // app classes are never loaded with BootClassLoader
+                        continue;
+                    } // else target method is the previous entry that was invoked via reflection
+                }
             }
 
             if (mode == FIND_MODE_Parcel && stubProxyClass == null) {
-                return null;
-            }
-
-            if (!"dalvik.system.PathClassLoader".equals(loaderName)) {
                 return null;
             }
 
