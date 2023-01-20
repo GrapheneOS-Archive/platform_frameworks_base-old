@@ -851,12 +851,8 @@ public class PackageInstallerService extends IPackageInstaller.Stub implements
             }
         }
 
-        if ((params.installFlags & PackageManager.INSTALL_INSTANT_APP) != 0
-                && !PackageManagerServiceUtils.isSystemOrRootOrShell(callingUid)
-                && (snapshot.getFlagsForUid(callingUid) & ApplicationInfo.FLAG_SYSTEM)
-                == 0) {
-            throw new SecurityException(
-                    "Only system apps could use the PackageManager.INSTALL_INSTANT_APP flag.");
+        if ((params.installFlags & PackageManager.INSTALL_INSTANT_APP) != 0) {
+            throw new SecurityException("Installing instant apps is forbidden");
         }
 
         if (params.isStaged && !PackageManagerServiceUtils.isSystemOrRootOrShell(callingUid)) {
