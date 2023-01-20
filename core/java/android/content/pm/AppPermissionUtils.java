@@ -45,6 +45,7 @@ public class AppPermissionUtils {
     // android.app.AppOpsManager#checkOpNoThrow
     // android.app.AppOpsManager#noteOpNoThrow
     // android.app.AppOpsManager#noteProxyOpNoThrow
+    // android.app.AppOpsManager#unsafeCheckOpRawNoThrow
     public static boolean shouldSpoofSelfAppOpCheck(int op) {
         if (StorageScopesAppHooks.shouldSpoofSelfAppOpCheck(op)) {
             return true;

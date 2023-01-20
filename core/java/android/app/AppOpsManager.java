@@ -8369,7 +8369,13 @@ public class AppOpsManager {
      */
     public int unsafeCheckOpRawNoThrow(int op, int uid, @NonNull String packageName) {
         try {
-            return mService.checkOperationRaw(op, uid, packageName, null);
+            final int mode = mService.checkOperationRaw(op, uid, packageName, null);
+            if (mode != MODE_ALLOWED && uid == Process.myUid()) {
+                if (AppPermissionUtils.shouldSpoofSelfAppOpCheck(op)) {
+                    return MODE_ALLOWED;
+                }
+            }
+            return mode;
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
