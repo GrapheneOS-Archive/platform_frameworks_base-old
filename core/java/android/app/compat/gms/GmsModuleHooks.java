@@ -27,6 +27,7 @@ import android.os.RemoteException;
 import android.util.Log;
 
 import com.android.internal.gmscompat.GmsCompatApp;
+import com.android.internal.gmscompat.util.GmsCoreActivityLauncher;
 import com.android.internal.gmscompat.GmsHooks;
 import com.android.internal.gmscompat.StubDef;
 import com.android.internal.gmscompat.util.GmcActivityUtils;
@@ -57,6 +58,14 @@ public class GmsModuleHooks {
                 }
             }
         } // else don't bother the user
+    }
+
+    // BluetoothAdapter#setScanMode()
+    public static void makeBluetoothAdapterDiscoverable() {
+        Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+        // Currently used only by Nearby Share.
+        // Ignore other requests, if there are any, to prevent spamming the user with these requests.
+        GmsCoreActivityLauncher.maybeLaunch(intent, ".+nearby\\.sharing.+");
     }
 
     // com.android.modules.utils.SynchronousResultReceiver.Result#getValue()

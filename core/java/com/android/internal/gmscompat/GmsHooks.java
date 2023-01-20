@@ -58,6 +58,7 @@ import android.webkit.WebView;
 import com.android.internal.gmscompat.client.ClientPriorityManager;
 import com.android.internal.gmscompat.flags.GmsFlag;
 import com.android.internal.gmscompat.util.GmcActivityUtils;
+import com.android.internal.gmscompat.util.GmsCoreActivityLauncher;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -75,6 +76,7 @@ public final class GmsHooks {
 
     public static final String PERSISTENT_GmsCore_PROCESS = PACKAGE_GMS_CORE + ".persistent";
     public static boolean inPersistentGmsCoreProcess;
+    public static final String UI_GmsCore_PROCESS = PACKAGE_GMS_CORE + ".ui";
 
     public static GmsCompatConfig config() {
         // thread-safe: immutable after publication
@@ -92,6 +94,7 @@ public final class GmsHooks {
 
         if (GmsCompat.isGmsCore()) {
             inPersistentGmsCoreProcess = processName.equals(PERSISTENT_GmsCore_PROCESS);
+            GmsCoreActivityLauncher.maybeRegister(processName, ctx);
         }
 
         if (GmsCompat.isPlayStore()) {

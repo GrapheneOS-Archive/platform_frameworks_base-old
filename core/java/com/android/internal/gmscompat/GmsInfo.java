@@ -26,6 +26,10 @@ public final class GmsInfo {
     // "Google" app. "GSA" (G Search App) is its internal name
     public static final String PACKAGE_GSA = "com.google.android.googlequicksearchbox";
 
+    // Used for restricting accessibility of exported components, reducing the scope of broadcasts, etc.
+    // Held by GSF, GmsCore, Play Store.
+    public static final String SIGNATURE_PROTECTED_PERMISSION = "com.google.android.providers.gsf.permission.WRITE_GSERVICES";
+
     // Shared user ID for GMS Core and GSF
     public static final String SHARED_USER_ID = "com.google.uid.shared";
 
