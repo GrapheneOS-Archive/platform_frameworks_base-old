@@ -64,7 +64,7 @@ public final class BinderRedirector implements Parcelable {
         if (!GmsInfo.PACKAGE_GMS_CORE.equals(intent.getPackage())) {
             return;
         }
-        if (GmsCompat.isEnabled()) {
+        if (GmsCompat.isGmsCore()) {
             return;
         }
         synchronized (BinderRedirector.class) {
