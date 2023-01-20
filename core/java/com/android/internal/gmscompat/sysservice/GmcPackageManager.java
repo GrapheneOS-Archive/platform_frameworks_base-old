@@ -34,6 +34,7 @@ import android.content.pm.VersionedPackage;
 import android.os.UserHandle;
 import android.util.ArraySet;
 
+import com.android.internal.gmscompat.GmsInfo;
 import com.android.internal.gmscompat.PlayStoreHooks;
 
 import java.util.ArrayList;
@@ -46,6 +47,30 @@ public class GmcPackageManager extends ApplicationPackageManager {
         super(context, pm);
 
         maybeInitPseudoDisabledPackages();
+    }
+
+    public static void maybeAdjustPackageInfo(PackageInfo pi) {
+        ApplicationInfo ai = pi.applicationInfo;
+        if (ai != null) {
+            maybeAdjustApplicationInfo(ai);
+        }
+    }
+
+    public static void maybeAdjustApplicationInfo(ApplicationInfo ai) {
+        String packageName = ai.packageName;
+
+        if (GmsInfo.PACKAGE_GMS_CORE.equals(packageName)) {
+            // Checked before accessing com.google.android.gms.phenotype content provider
+            // in com.google.android.libraries.phenotype.client
+            // .PhenotypeClientHelper#validateContentProvider() -> isGmsCorePreinstalled()
+            // PhenotypeFlags will always return their default values if these flags aren't set.
+            //
+            // Also need to be set to allow updates of GmsCore through Play Store without a
+            // logged-in Google account
+            if (GmsCompat.isGmsCore() || GmsCompat.isClientOfGmsCore()) {
+                ai.flags |= ApplicationInfo.FLAG_SYSTEM | ApplicationInfo.FLAG_UPDATED_SYSTEM_APP;
+            }
+        }
     }
 
     @Override
@@ -138,7 +163,9 @@ public class GmcPackageManager extends ApplicationPackageManager {
         throwIfHidden(versionedPackage.getPackageName());
         flags = filterFlags(flags);
         try {
-            return super.getPackageInfo(versionedPackage, flags);
+            PackageInfo pi = super.getPackageInfo(versionedPackage, flags);
+            maybeAdjustPackageInfo(pi);
+            return pi;
         } catch (NameNotFoundException e) {
             return makePseudoDisabledPackageInfoOrThrow(versionedPackage.getPackageName(), flags);
         }
@@ -149,7 +176,9 @@ public class GmcPackageManager extends ApplicationPackageManager {
         throwIfHidden(packageName);
         flags = filterFlags(flags);
         try {
-            return super.getPackageInfoAsUser(packageName, flags, userId);
+            PackageInfo pi = super.getPackageInfoAsUser(packageName, flags, userId);
+            maybeAdjustPackageInfo(pi);
+            return pi;
         } catch (NameNotFoundException e) {
             return makePseudoDisabledPackageInfoOrThrow(packageName, flags);
         }
@@ -158,7 +187,9 @@ public class GmcPackageManager extends ApplicationPackageManager {
     @Override
     public ApplicationInfo getApplicationInfoAsUser(String packageName, ApplicationInfoFlags flags, int userId) throws NameNotFoundException {
         try {
-            return super.getApplicationInfoAsUser(packageName, flags, userId);
+            ApplicationInfo ai = super.getApplicationInfoAsUser(packageName, flags, userId);
+            maybeAdjustApplicationInfo(ai);
+            return ai;
         } catch (NameNotFoundException e) {
             return makePseudoDisabledApplicationInfoOrThrow(packageName, flags);
         }
@@ -177,6 +208,7 @@ public class GmcPackageManager extends ApplicationPackageManager {
                 continue;
             }
             pseudoDisabledPackages.remove(pkgName);
+            maybeAdjustApplicationInfo(ai);
             res.add(ai);
         }
 
@@ -204,6 +236,7 @@ public class GmcPackageManager extends ApplicationPackageManager {
                 continue;
             }
             pseudoDisabledPackages.remove(pkgName);
+            maybeAdjustPackageInfo(pi);
             res.add(pi);
         }
 

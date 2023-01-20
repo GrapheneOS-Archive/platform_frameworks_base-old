@@ -121,7 +121,7 @@ import android.util.Log;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.Immutable;
 import com.android.internal.annotations.VisibleForTesting;
-import com.android.internal.gmscompat.GmsInfo;
+import com.android.internal.gmscompat.sysservice.GmcPackageManager;
 import com.android.internal.os.SomeArgs;
 import com.android.internal.util.UserIcons;
 
@@ -255,6 +255,7 @@ public class ApplicationPackageManager extends PackageManager {
         if (pi == null) {
             throw new NameNotFoundException(packageName);
         }
+        GmcPackageManager.maybeAdjustPackageInfo(pi);
         return pi;
     }
 
@@ -507,15 +508,7 @@ public class ApplicationPackageManager extends PackageManager {
             throw new NameNotFoundException(packageName);
         }
 
-        if (GmsInfo.PACKAGE_GMS_CORE.equals(packageName)) {
-            // checked before accessing com.google.android.gms.phenotype content provider
-            // in com.google.android.libraries.phenotype.client
-            // .PhenotypeClientHelper#validateContentProvider() -> isGmsCorePreinstalled()
-            // PhenotypeFlags will always return their default values if these flags aren't set
-            if (GmsCompat.isGmsCore() || GmsCompat.isClientOfGmsCore()) {
-                ai.flags |= ApplicationInfo.FLAG_SYSTEM | ApplicationInfo.FLAG_UPDATED_SYSTEM_APP;
-            }
-        }
+        GmcPackageManager.maybeAdjustApplicationInfo(ai);
 
         return maybeAdjustApplicationInfo(ai);
     }
