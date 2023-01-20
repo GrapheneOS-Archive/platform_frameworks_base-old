@@ -27,12 +27,15 @@ import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.content.pm.SigningInfo;
 import android.os.Binder;
+import android.os.Build;
 import android.os.Process;
 import android.os.RemoteException;
+import android.os.SystemProperties;
 import android.os.UserHandle;
 
 import com.android.internal.gmscompat.GmsHooks;
 import com.android.internal.gmscompat.GmsInfo;
+import com.android.internal.util.ArrayUtils;
 
 /**
  * This class provides helpers for GMS ("Google Mobile Services") compatibility.
@@ -179,6 +182,12 @@ public final class GmsCompat {
 
     /** @hide */
     public static boolean isGmsApp(@NonNull String packageName, int userId, boolean matchDisabledApp) {
+        if (Build.isDebuggable()) {
+            if (isTestPackage(packageName, userId, matchDisabledApp)) {
+                return true;
+            }
+        }
+
         if (!isGmsPackageName(packageName)) {
             return false;
         }
@@ -234,5 +243,33 @@ public final class GmsCompat {
 
     public static boolean hasPermission(@NonNull String perm) {
         return appContext().checkSelfPermission(perm) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    // call only when Build.isDebuggable() is true
+    /** @hide */
+    public static boolean isTestPackage(String packageName, int userId, boolean matchDisabledApp) {
+        if (!Build.isDebuggable()) {
+            return false;
+        }
+        String testPkgs = SystemProperties.get("persist.gmscompat_test_pkgs");
+
+        if (!ArrayUtils.contains(testPkgs.split(","), packageName)) {
+            return false;
+        }
+
+        IPackageManager pm = ActivityThread.getPackageManager();
+        ApplicationInfo ai;
+        long token = Binder.clearCallingIdentity();
+        try {
+            ai = pm.getApplicationInfo(packageName, 0, userId);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        } finally {
+            Binder.restoreCallingIdentity(token);
+        }
+        if (ai == null) {
+            return false;
+        }
+        return ai.enabled || matchDisabledApp;
     }
 }
