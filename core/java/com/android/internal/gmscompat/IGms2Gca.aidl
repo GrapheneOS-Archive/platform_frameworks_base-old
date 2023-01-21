@@ -13,7 +13,7 @@ interface IGms2Gca {
     GmsCompatConfig connectGmsCore(String processName, IGca2Gms iGca2Gms, @nullable IFileProxyService dynamiteFileProxyService);
     GmsCompatConfig connect(String packageName, String processName, IGca2Gms iGca2Gms);
 
-    oneway void showPlayStorePendingUserActionNotification();
+    oneway void showPlayStorePendingUserActionNotification(@nullable String pkgName);
     oneway void dismissPlayStorePendingUserActionNotification();
 
     oneway void showPlayStoreMissingObbPermissionNotification();
