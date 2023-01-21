@@ -144,13 +144,24 @@ public final class PlayStoreHooks {
             if (status == PackageInstaller.STATUS_PENDING_USER_ACTION) {
                 Intent confirmationIntent = intent.getParcelableExtra(Intent.EXTRA_INTENT);
 
+                String packageName = null;
+
+                if (extras.containsKey(PackageInstaller.EXTRA_SESSION_ID)) {
+                    int sessionId = getIntFromBundle(extras, PackageInstaller.EXTRA_SESSION_ID);
+                    PackageInstaller pkgInstaller = packageManager.getPackageInstaller();
+                    PackageInstaller.SessionInfo si = pkgInstaller.getSessionInfo(sessionId);
+                    if (si != null) {
+                        packageName = si.getAppPackageName();
+                    }
+                }
+
                 Activity activity = GmcActivityUtils.getMostRecentVisibleActivity();
                 if (activity != null) {
                     activity.startActivity(confirmationIntent);
                 } else {
                     pendingConfirmationIntents.addLast(confirmationIntent);
                     try {
-                        GmsCompatApp.iGms2Gca().showPlayStorePendingUserActionNotification();
+                        GmsCompatApp.iGms2Gca().showPlayStorePendingUserActionNotification(packageName);
                     } catch (RemoteException e) {
                         GmsCompatApp.callFailed(e);
                     }
