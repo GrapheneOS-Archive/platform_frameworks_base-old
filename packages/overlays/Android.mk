@@ -30,7 +30,6 @@ LOCAL_REQUIRED_MODULES := \
 	DisplayCutoutEmulationWideOverlay \
 	FontNotoSerifSourceOverlay \
 	NavigationBarMode3ButtonOverlay \
-	NavigationBarMode2ButtonOverlay \
 	NavigationBarModeGesturalOverlay \
 	NavigationBarModeGesturalOverlayNarrowBack \
 	NavigationBarModeGesturalOverlayWideBack \
