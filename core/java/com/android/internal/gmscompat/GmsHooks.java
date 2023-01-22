@@ -27,6 +27,7 @@ import android.app.ApplicationErrorReport;
 import android.app.BroadcastOptions;
 import android.app.PendingIntent;
 import android.app.RemoteServiceException;
+import android.app.Service;
 import android.app.compat.gms.GmsCompat;
 import android.content.ComponentName;
 import android.content.ContentResolver;
@@ -56,6 +57,7 @@ import android.util.SparseArray;
 import android.webkit.WebView;
 
 import com.android.internal.gmscompat.client.ClientPriorityManager;
+import com.android.internal.gmscompat.client.GmsCompatClientService;
 import com.android.internal.gmscompat.flags.GmsFlag;
 import com.android.internal.gmscompat.util.GmcActivityUtils;
 import com.android.internal.gmscompat.util.GmsCoreActivityLauncher;
@@ -605,6 +607,19 @@ public final class GmsHooks {
                 }
             }
         }
+    }
+
+    @Nullable
+    public static Service maybeInstantiateService(String className) {
+        if (GmsCompatClientService.class.getName().equals(className)) {
+            return new GmsCompatClientService();
+        }
+
+        if (GmcMediaProjectionService.class.getName().equals(className)) {
+            return new GmcMediaProjectionService();
+        }
+
+        return null;
     }
 
     private static volatile SQLiteOpenHelper phenotypeDb;
