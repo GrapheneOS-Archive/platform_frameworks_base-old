@@ -1,6 +1,7 @@
 package com.android.internal.gmscompat;
 
 import android.app.ApplicationErrorReport;
+import android.app.Notification;
 import android.app.PendingIntent;
 import android.database.IContentObserver;
 
@@ -34,4 +35,6 @@ interface IGms2Gca {
     boolean privSettingsPutStrings(String ns, in String[] keys, in String[] values);
     void privSettingsRegisterObserver(String ns, String key, IContentObserver observer);
     void privSettingsUnregisterObserver(IContentObserver observer);
+
+    Notification getMediaProjectionNotification();
 }
