@@ -161,7 +161,12 @@ public class MediaProjectionPermissionActivity extends Activity
                     paint, MAX_APP_NAME_SIZE_PX, TextUtils.TruncateAt.END).toString();
             appName = BidiFormatter.getInstance().unicodeWrap(unsanitizedAppName);
 
-            String actionText = getString(R.string.media_projection_dialog_text, appName);
+            boolean appCanRecordAudio = packageManager.checkPermission(android.Manifest.permission.RECORD_AUDIO,
+                    mPackageName) == PackageManager.PERMISSION_GRANTED;
+
+            String actionText = getString(appCanRecordAudio ?
+                    R.string.media_projection_dialog_text :
+                    R.string.media_projection_dialog_text_no_audio, appName);
             SpannableString message = new SpannableString(actionText);
 
             int appNameIndex = actionText.indexOf(appName);
