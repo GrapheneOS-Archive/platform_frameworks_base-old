@@ -981,6 +981,9 @@
     <!-- Media projection permission dialog warning text. [CHAR LIMIT=NONE] -->
     <string name="media_projection_dialog_text"><xliff:g id="app_seeking_permission" example="Hangouts">%s</xliff:g> will have access to all of the information that is visible on your screen or played from your device while recording or casting. This includes information such as passwords, payment details, photos, messages, and audio that you play.</string>
 
+    <!-- Media projection permission dialog warning text. [CHAR LIMIT=NONE] -->
+    <string name="media_projection_dialog_text_no_audio"><xliff:g id="app_seeking_permission" example="Hangouts">%s</xliff:g> will have access to all of the information that is visible on your screen while casting. This includes information such as passwords, payment details, photos, and messages.</string>
+
     <!-- Media projection permission dialog warning text for system services. [CHAR LIMIT=NONE] -->
     <string name="media_projection_dialog_service_text">The service providing this function will have access to all of the information that is visible on your screen or played from your device while recording or casting. This includes information such as passwords, payment details, photos, messages, and audio that you play.</string>
 
