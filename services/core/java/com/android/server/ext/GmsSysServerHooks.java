@@ -17,9 +17,12 @@
 package com.android.server.ext;
 
 import android.Manifest;
+import android.content.pm.ServiceInfo;
 import android.os.Bundle;
 
+import com.android.internal.gmscompat.GmsHooks;
 import com.android.internal.gmscompat.GmsInfo;
+import com.android.internal.gmscompat.GmcMediaProjectionService;
 import com.android.internal.gmscompat.client.GmsCompatClientService;
 import com.android.server.pm.pkg.component.ParsedPermission;
 import com.android.server.pm.pkg.component.ParsedServiceImpl;
@@ -89,6 +92,7 @@ public class GmsSysServerHooks {
         }
 
         if (GmsInfo.PACKAGE_GMS_CORE.equals(pkg.getPackageName())) {
+            addMediaProjectionService(pkg);
             return;
         }
 
@@ -99,6 +103,17 @@ public class GmsSysServerHooks {
 
         s.setDirectBootAware(pkg.isPartiallyDirectBootAware());
         s.setExported(true);
+
+        pkg.addService(s);
+    }
+
+    private static void addMediaProjectionService(ParsingPackage pkg) {
+        ParsedServiceImpl s = new ParsedServiceImpl();
+        s.setPackageName(pkg.getPackageName());
+        s.setName(GmcMediaProjectionService.class.getName());
+        s.setProcessName(GmsHooks.PERSISTENT_GmsCore_PROCESS);
+        s.setForegroundServiceType(ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION);
+        s.setExported(false);
 
         pkg.addService(s);
     }
