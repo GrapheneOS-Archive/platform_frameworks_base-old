@@ -379,7 +379,6 @@ class ActivityStarter {
         Configuration globalConfig;
         int userId;
         WaitResult waitResult;
-        int filterCallingUid;
         PendingIntentRecord originatingPendingIntent;
         boolean allowBackgroundActivityStart;
         /**
@@ -439,7 +438,6 @@ class ActivityStarter {
             waitResult = null;
             avoidMoveToFront = false;
             allowPendingRemoteAnimationRegistryLookup = true;
-            filterCallingUid = UserHandle.USER_NULL;
             originatingPendingIntent = null;
             allowBackgroundActivityStart = false;
             errorCallbackToken = null;
@@ -482,7 +480,6 @@ class ActivityStarter {
             avoidMoveToFront = request.avoidMoveToFront;
             allowPendingRemoteAnimationRegistryLookup
                     = request.allowPendingRemoteAnimationRegistryLookup;
-            filterCallingUid = request.filterCallingUid;
             originatingPendingIntent = request.originatingPendingIntent;
             allowBackgroundActivityStart = request.allowBackgroundActivityStart;
             errorCallbackToken = request.errorCallbackToken;
@@ -540,7 +537,7 @@ class ActivityStarter {
 
             resolveInfo = supervisor.resolveIntent(intent, resolvedType, userId,
                     0 /* matchFlags */,
-                    computeResolveFilterUid(callingUid, realCallingUid, filterCallingUid));
+                    computeResolveFilterUid(callingUid, realCallingUid));
             if (resolveInfo == null) {
                 final UserInfo userInfo = supervisor.getUserInfo(userId);
                 if (userInfo != null && userInfo.isManagedProfile()) {
@@ -562,8 +559,7 @@ class ActivityStarter {
                         resolveInfo = supervisor.resolveIntent(intent, resolvedType, userId,
                                 PackageManager.MATCH_DIRECT_BOOT_AWARE
                                         | PackageManager.MATCH_DIRECT_BOOT_UNAWARE,
-                                computeResolveFilterUid(callingUid, realCallingUid,
-                                        filterCallingUid));
+                                computeResolveFilterUid(callingUid, realCallingUid));
                     }
                 }
             }
@@ -824,8 +820,7 @@ class ActivityStarter {
         mRequest.componentSpecified = true;
         mRequest.resolveInfo = mSupervisor.resolveIntent(mRequest.intent, null /* resolvedType */,
                 mRequest.userId, 0 /* matchFlags */,
-                computeResolveFilterUid(mRequest.callingUid, mRequest.realCallingUid,
-                        mRequest.filterCallingUid));
+                computeResolveFilterUid(mRequest.callingUid, mRequest.realCallingUid));
         mRequest.activityInfo =
                 mRequest.resolveInfo != null ? mRequest.resolveInfo.activityInfo : null;
         if (mRequest.activityInfo != null) {
@@ -1150,8 +1145,7 @@ class ActivityStarter {
                 callingPid = realCallingPid;
 
                 rInfo = mSupervisor.resolveIntent(intent, resolvedType, userId, 0,
-                        computeResolveFilterUid(
-                                callingUid, realCallingUid, request.filterCallingUid));
+                        computeResolveFilterUid(callingUid, realCallingUid));
                 aInfo = mSupervisor.resolveActivity(intent, rInfo, startFlags,
                         null /*profilerInfo*/);
 
@@ -1641,14 +1635,10 @@ class ActivityStarter {
      *
      * @param customCallingUid The UID on whose behalf to make the call.
      * @param actualCallingUid The UID actually making the call.
-     * @param filterCallingUid The UID to be used to filter for instant apps.
      * @return The logical UID making the call.
      */
-    static int computeResolveFilterUid(int customCallingUid, int actualCallingUid,
-            int filterCallingUid) {
-        return filterCallingUid != UserHandle.USER_NULL
-                ? filterCallingUid
-                : (customCallingUid >= 0 ? customCallingUid : actualCallingUid);
+    static int computeResolveFilterUid(int customCallingUid, int actualCallingUid) {
+        return customCallingUid >= 0 ? customCallingUid : actualCallingUid;
     }
 
     /**
@@ -3293,11 +3283,6 @@ class ActivityStarter {
 
     ActivityStarter setIgnoreTargetSecurity(boolean ignoreTargetSecurity) {
         mRequest.ignoreTargetSecurity = ignoreTargetSecurity;
-        return this;
-    }
-
-    ActivityStarter setFilterCallingUid(int filterCallingUid) {
-        mRequest.filterCallingUid = filterCallingUid;
         return this;
     }
 
