@@ -1673,7 +1673,6 @@ public class ActivityTaskManagerService extends IActivityTaskManager.Stub {
                     .setActivityOptions(bOptions)
                     .setUserId(userId)
                     .setIgnoreTargetSecurity(ignoreTargetSecurity)
-                    .setFilterCallingUid(isResolver ? 0 /* system */ : targetUid)
                     // The target may well be in the background, which would normally prevent it
                     // from starting an activity. Here we definitely want the start to succeed.
                     .setAllowBackgroundActivityStart(true)
@@ -1895,8 +1894,7 @@ public class ActivityTaskManagerService extends IActivityTaskManager.Stub {
             int userId, int callingUid) {
         ActivityInfo aInfo = mTaskSupervisor.resolveActivity(intent, resolvedType,
                 0 /* startFlags */, null /* profilerInfo */, userId,
-                ActivityStarter.computeResolveFilterUid(callingUid, callingUid,
-                        UserHandle.USER_NULL));
+                ActivityStarter.computeResolveFilterUid(callingUid, callingUid));
         return mAmInternal.getActivityInfoForUser(aInfo, userId);
     }
 
