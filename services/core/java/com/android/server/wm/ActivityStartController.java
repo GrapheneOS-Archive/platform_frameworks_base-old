@@ -381,7 +381,7 @@ public class ActivityStartController {
             callingPid = callingUid = -1;
         }
         final int filterCallingUid = ActivityStarter.computeResolveFilterUid(
-                callingUid, realCallingUid, UserHandle.USER_NULL);
+                callingUid, realCallingUid);
         final SparseArray<String> startingUidPkgs = new SparseArray<>();
         final long origId = Binder.clearCallingIdentity();
 
