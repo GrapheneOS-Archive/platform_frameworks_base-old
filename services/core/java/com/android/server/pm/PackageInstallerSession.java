@@ -2660,6 +2660,20 @@ public class PackageInstallerSession extends IPackageInstallerSession.Stub {
         mHasDeviceAdminReceiver = apk.isHasDeviceAdminReceiver();
     }
 
+    private static boolean isSystemApp(@Nullable PackageInfo pkgInfo) throws PackageManagerException {
+        if (pkgInfo == null) {
+            return false;
+        }
+        ApplicationInfo applicationInfo = pkgInfo.applicationInfo;
+
+        if (applicationInfo == null) {
+            // ApplicationInfo should always be filled out
+            throw new PackageManagerException(INSTALL_FAILED_INTERNAL_ERROR, "missing ApplicationInfo");
+        }
+
+        return applicationInfo.isSystemApp();
+    }
+
     /**
      * Validate install by confirming that all application packages are have
      * consistent package name, version code, and signing certificates.
@@ -2697,10 +2711,12 @@ public class PackageInstallerSession extends IPackageInstallerSession.Stub {
                     "Missing existing base package");
         }
 
-        // Default to require only if existing base apk has fs-verity.
+        // Require fs-verity if this is a system app or if existing base apk has fs-verity.
         mVerityFoundForApks = PackageManagerServiceUtils.isApkVerityEnabled()
-                && params.mode == SessionParams.MODE_INHERIT_EXISTING
-                && VerityUtils.hasFsverity(pkgInfo.applicationInfo.getBaseCodePath());
+                && (isSystemApp(pkgInfo) || (
+                        params.mode == SessionParams.MODE_INHERIT_EXISTING
+                        && VerityUtils.hasFsverity(pkgInfo.applicationInfo.getBaseCodePath()))
+                );
 
         final List<File> removedFiles = getRemovedFilesLocked();
         final List<String> removeSplitList = new ArrayList<>();
