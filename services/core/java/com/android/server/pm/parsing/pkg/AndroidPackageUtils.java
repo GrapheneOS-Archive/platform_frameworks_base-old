@@ -27,6 +27,7 @@ import android.content.pm.dex.DexMetadataHelper;
 import android.content.pm.parsing.result.ParseResult;
 import android.content.pm.parsing.result.ParseTypeImpl;
 import android.os.incremental.IncrementalManager;
+import android.util.Slog;
 
 import com.android.internal.content.NativeLibraryHelper;
 import com.android.internal.pm.parsing.PackageParserException;
@@ -39,6 +40,7 @@ import com.android.internal.pm.pkg.component.ParsedService;
 import com.android.internal.pm.pkg.parsing.ParsingPackageHidden;
 import com.android.internal.util.ArrayUtils;
 import com.android.server.SystemConfig;
+import com.android.server.pm.PackageVerityExt;
 import com.android.server.pm.pkg.AndroidPackage;
 import com.android.server.pm.pkg.PackageState;
 import com.android.server.pm.pkg.PackageStateInternal;
@@ -304,11 +306,39 @@ public class AndroidPackageUtils {
      */
     @Nullable
     public static String getRealPackageOrNull(@NonNull AndroidPackage pkg, boolean isSystem) {
-        if (pkg.getOriginalPackages().isEmpty() || !isSystem) {
+        if (pkg.getOriginalPackages().isEmpty() || (!isSystem &&
+                !isAlwaysAllowedToUseOriginalPackage(pkg))) {
             return null;
         }
 
         return pkg.getManifestPackageName();
+    }
+
+    private static boolean isAlwaysAllowedToUseOriginalPackage(AndroidPackage pkg) {
+        // These packages are included in the system image, but updates of them reside on /data partition.
+        // This means that isSystem in getRealPackageOrNull() above is false for them after update,
+        // which makes the boot-time package verification roll them back to the system image version
+        switch (pkg.getManifestPackageName()) {
+            case "app.vanadium.browser":
+            case "app.grapheneos.pdfviewer":
+                break;
+            default:
+                return false;
+        }
+
+        AndroidPackage systemPackage = PackageVerityExt.getSystemPackage(pkg);
+        final String TAG = "OriginalPackageUpdate";
+        if (systemPackage == null) {
+            Slog.w(TAG, "isAlwaysAllowedToUseOriginalPackage: " + pkg.getManifestPackageName()
+                    + " is not a system package update");
+            return false;
+        }
+
+        boolean res = systemPackage.getOriginalPackages().equals(pkg.getOriginalPackages());
+        if (!res) {
+            Slog.w(TAG, "getOriginalPackages() mismatch for " + pkg.getManifestPackageName());
+        }
+        return res;
     }
 
     public static void fillVersionCodes(@NonNull AndroidPackage pkg, @NonNull PackageInfo info) {
