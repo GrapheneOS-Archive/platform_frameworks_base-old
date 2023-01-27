@@ -332,10 +332,22 @@ public class AndroidPackageUtils {
      */
     @Nullable
     public static String getRealPackageOrNull(AndroidPackage pkg) {
-        if (pkg.getOriginalPackages().isEmpty() || !pkg.isSystem()) {
+        if (pkg.getOriginalPackages().isEmpty() || (!pkg.isSystem() && !isAlwaysAllowedToUseOriginalPackage(pkg))) {
             return null;
         }
 
         return pkg.getManifestPackageName();
+    }
+
+    // These packages are included in the system image, but updates of them reside on /data partition.
+    // This means that pkg.isSystem() above is false for them after update, which makes the boot-time
+    // package verification roll them back to the system image version
+    private static boolean isAlwaysAllowedToUseOriginalPackage(AndroidPackage pkg) {
+        switch (pkg.getManifestPackageName()) {
+            case "app.vanadium.browser":
+            case "app.grapheneos.pdfviewer":
+                return true;
+        }
+        return false;
     }
 }
