@@ -161,7 +161,7 @@ public class PackageManagerServiceUtils {
     /**
      * The initial enabled state of the cache before other checks are done.
      */
-    private static final boolean DEFAULT_PACKAGE_PARSER_CACHE_ENABLED = true;
+    private static final boolean DEFAULT_PACKAGE_PARSER_CACHE_ENABLED = false;
 
     /**
      * Whether to skip all other checks and force the cache to be enabled.
@@ -1310,6 +1310,7 @@ public class PackageManagerServiceUtils {
             boolean isUserDebugBuild, String incrementalVersion) {
         if (!FORCE_PACKAGE_PARSED_CACHE_ENABLED) {
             if (!DEFAULT_PACKAGE_PARSER_CACHE_ENABLED) {
+                FileUtils.deleteContentsAndDir(Environment.getPackageCacheDirectory());
                 return null;
             }
 
