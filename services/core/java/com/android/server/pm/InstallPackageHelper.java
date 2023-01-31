@@ -1517,6 +1517,30 @@ final class InstallPackageHelper {
                     "Failed to set up verity: " + e);
         }
 
+        final AndroidPackage systemPackage = PackageVerityExt.getSystemPackage(parsedPackage);
+
+        if (systemPackage != null) {
+            // this is an update to a system package
+
+            try {
+                PackageVerityExt.checkFsVerity(parsedPackage);
+            } catch (PackageManagerException e) {
+                String message = "fs-verity not set up for system package update " + e;
+                boolean abortInstall = true;
+
+                if (Build.IS_DEBUGGABLE) {
+                    if (SystemProperties.getBoolean("persist.disable_install_time_fsverity_check", false)) {
+                        Slog.d(TAG, message);
+                        abortInstall = false;
+                    }
+                }
+
+                if (abortInstall) {
+                    throw new PrepareFailure(INSTALL_FAILED_INTERNAL_ERROR, message);
+                }
+            }
+        }
+
         final PackageFreezer freezer =
                 freezePackageForInstall(pkgName, installFlags, "installPackageLI");
         boolean shouldCloseFreezerBeforeReturn = true;
