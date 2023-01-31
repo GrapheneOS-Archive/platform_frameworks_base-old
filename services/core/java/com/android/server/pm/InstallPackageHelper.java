@@ -3812,6 +3812,13 @@ final class InstallPackageHelper {
             @Nullable UserHandle user) throws PackageManagerException {
         final boolean scanSystemPartition =
                 (parseFlags & ParsingPackageUtils.PARSE_IS_SYSTEM_DIR) != 0;
+        if ((scanFlags & SCAN_BOOTING) != 0) {
+            if (scanSystemPartition) {
+                PackageVerityExt.addSystemPackage(parsedPackage);
+            } else {
+                PackageVerityExt.checkSystemPackageUpdate(parsedPackage);
+            }
+        }
         final ScanRequest initialScanRequest = prepareInitialScanRequest(parsedPackage, parseFlags,
                 scanFlags, user, null);
         final PackageSetting installedPkgSetting = initialScanRequest.mPkgSetting;
