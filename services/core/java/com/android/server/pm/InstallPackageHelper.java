@@ -135,6 +135,7 @@ import android.os.Message;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.SELinux;
+import android.os.SystemProperties;
 import android.os.Trace;
 import android.os.UserHandle;
 import android.os.UserManager;
@@ -1666,6 +1667,30 @@ final class InstallPackageHelper {
             // Use the path returned by apexd
             parsedPackage.setPath(request.getApexInfo().modulePath);
             parsedPackage.setBaseApkPath(request.getApexInfo().modulePath);
+        }
+
+        final AndroidPackage systemPackage = PackageVerityExt.getSystemPackage(parsedPackage);
+
+        if (systemPackage != null) {
+            // this is an update to a system package
+
+            try {
+                PackageVerityExt.checkFsVerity(parsedPackage);
+            } catch (PackageManagerException e) {
+                String message = "fs-verity not set up for system package update " + e;
+                boolean abortInstall = true;
+
+                if (Build.IS_DEBUGGABLE) {
+                    if (SystemProperties.getBoolean("persist.disable_install_time_fsverity_check", false)) {
+                        Slog.d(TAG, message);
+                        abortInstall = false;
+                    }
+                }
+
+                if (abortInstall) {
+                    throw new PrepareFailure(INSTALL_FAILED_INTERNAL_ERROR, message);
+                }
+            }
         }
 
         PackageFreezer freezer = null;
