@@ -257,11 +257,6 @@ public class UserSwitcherControllerOldImpl implements UserSwitcherController {
             @Override
             public void onChange(boolean selfChange) {
                 mSimpleUserSwitcher = shouldUseSimpleUserSwitcher();
-                mAddUsersFromLockScreen.setValue(
-                        mGlobalSettings.getIntForUser(
-                                Settings.Global.ADD_USERS_WHEN_LOCKED,
-                                0,
-                                UserHandle.USER_SYSTEM) != 0);
                 mUserSwitcherEnabled = mGlobalSettings.getIntForUser(
                         Settings.Global.USER_SWITCHER_ENABLED, 0, UserHandle.USER_SYSTEM) != 0;
                 refreshUsers(UserHandle.USER_NULL);
