@@ -3846,10 +3846,10 @@ final class InstallPackageHelper {
 
         final boolean newPkgChangedPaths = pkgAlreadyExists
                 && !pkgSetting.getPathString().equals(parsedPackage.getPath());
-        final boolean newPkgVersionGreaterOrEqual = pkgAlreadyExists
-                && parsedPackage.getLongVersionCode() >= pkgSetting.getVersionCode();
+        final boolean newPkgVersionGreater = pkgAlreadyExists
+                && parsedPackage.getLongVersionCode() > pkgSetting.getVersionCode();
         final boolean isSystemPkgBetter = scanSystemPartition && isSystemPkgUpdated
-                && newPkgChangedPaths && newPkgVersionGreaterOrEqual;
+                && newPkgChangedPaths && newPkgVersionGreater;
         if (isSystemPkgBetter) {
             // The version of the application on /system is greater than the version on
             // /data. Switch back to the application on /system.
@@ -3877,8 +3877,8 @@ final class InstallPackageHelper {
             }
         }
 
-        // The version of the application on the /system partition is less than
-        // the version on the /data partition. Throw an exception and use
+        // The version of the application on the /system partition is less than or
+        // equal to the version on the /data partition. Throw an exception and use
         // the application already installed on the /data partition.
         if (scanSystemPartition && isSystemPkgUpdated && !isSystemPkgBetter) {
             // In the case of a skipped package, commitReconciledScanResultLocked is not called to
@@ -3942,7 +3942,7 @@ final class InstallPackageHelper {
                     deletePackageHelper.deletePackageLIF(parsedPackage.getPackageName(), null, true,
                             mPm.mUserManager.getUserIds(), 0, null, false);
                 }
-            } else if (newPkgVersionGreaterOrEqual) {
+            } else if (newPkgVersionGreater) {
                 // The application on /system is newer than the application on /data.
                 // Simply remove the application on /data [keeping application data]
                 // and replace it with the version on /system.
