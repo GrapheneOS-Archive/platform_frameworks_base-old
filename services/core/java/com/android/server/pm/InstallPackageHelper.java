@@ -1517,6 +1517,22 @@ final class InstallPackageHelper {
                     "Failed to set up verity: " + e);
         }
 
+        boolean checkVerity = true;
+        if (Build.IS_DEBUGGABLE) {
+            if (SystemProperties.getBoolean("persist.disable_install_time_fsverity_check", false)) {
+                checkVerity = false;
+            }
+        }
+
+        if (checkVerity && PackageVerityExt.getSystemPackage(parsedPackage) != null) {
+            try {
+                PackageVerityExt.checkFsVerity(parsedPackage);
+            } catch (PackageManagerException e) {
+                throw new PrepareFailure(INSTALL_FAILED_INTERNAL_ERROR,
+                        "fs-verity not set up for system package update " + e);
+            }
+        }
+
         final PackageFreezer freezer =
                 freezePackageForInstall(pkgName, installFlags, "installPackageLI");
         boolean shouldCloseFreezerBeforeReturn = true;
