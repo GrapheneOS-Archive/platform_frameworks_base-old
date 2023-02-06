@@ -336,11 +336,7 @@ public class PackageImpl extends ParsingPackageImpl implements ParsedPackage, An
         final String legacyVanadiumPkgName = "org.chromium.chrome";
         final String realVanadiumPkgName = "app.vanadium.browser";
 
-        final boolean isLegacyVanadiumPkgName = legacyVanadiumPkgName.equals(packageName)
-                // original-package handling currently happens only for preinstalled apps,
-                // but double-check in case it's expanded to user apps in the future or if
-                // isSystem() check is performed after original-package handling instead of before it
-                && isSystem();
+        final boolean isLegacyVanadiumPkgName = legacyVanadiumPkgName.equals(packageName);
 
         if (isLegacyVanadiumPkgName) {
             if (!getManifestPackageName().equals(realVanadiumPkgName)) {
