@@ -159,6 +159,10 @@ public class TransportManager {
                 return;
             }
             switch (enabled) {
+                case PackageManager.COMPONENT_ENABLED_STATE_DEFAULT:
+                    if (!"com.stevesoltys.seedvault".equals(packageName)) {
+                        return;
+                    }
                 case COMPONENT_ENABLED_STATE_ENABLED: {
                     if (MORE_DEBUG) {
                         Slog.d(TAG, "Package " + packageName + " was enabled.");
@@ -166,6 +170,10 @@ public class TransportManager {
                     onPackageEnabled(packageName);
                     return;
                 }
+                case PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER:
+                    if (!"com.stevesoltys.seedvault".equals(packageName)) {
+                        return;
+                    }
                 case COMPONENT_ENABLED_STATE_DISABLED: {
                     if (MORE_DEBUG) {
                         Slog.d(TAG, "Package " + packageName + " was disabled.");
