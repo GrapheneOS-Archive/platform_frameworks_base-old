@@ -18,11 +18,11 @@ package android.content.pm;
 
 import android.Manifest;
 import android.annotation.SystemApi;
+import android.app.ActivityThread;
 import android.app.AppGlobals;
+import android.content.Context;
 import android.os.Binder;
-import android.os.Process;
 import android.os.RemoteException;
-import android.permission.PermissionManager;
 
 /** @hide */
 @SystemApi
@@ -33,10 +33,16 @@ public class SpecialRuntimePermAppUtils {
 
     private static volatile int cachedFlags;
 
+    /** @hide */
+    public static boolean isInternetPermissionCheckSpoofed;
+
     private static boolean hasInternetPermission() {
-        // checkSelfPermission() is spoofed, query the underlying API directly
-        return PermissionManager.checkPermission(Manifest.permission.INTERNET, Process.myPid(), Process.myUid())
-                == PackageManager.PERMISSION_GRANTED;
+        Context ctx = ActivityThread.currentApplication();
+        boolean res = ctx.checkSelfPermission(Manifest.permission.INTERNET) == PackageManager.PERMISSION_GRANTED;
+        if (res && isInternetPermissionCheckSpoofed) {
+            res = false;
+        }
+        return res;
     }
 
     public static boolean requestsInternetPermission() {
