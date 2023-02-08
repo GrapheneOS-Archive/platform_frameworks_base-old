@@ -39,6 +39,7 @@ public class AppPermissionUtils {
                 && SpecialRuntimePermAppUtils.requestsInternetPermission()
                 && !SpecialRuntimePermAppUtils.awareOfRuntimeInternetPermission())
         {
+            SpecialRuntimePermAppUtils.isInternetPermissionCheckSpoofed = true;
             return true;
         }
 
