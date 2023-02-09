@@ -805,4 +805,6 @@ interface IPackageManager {
     boolean canPackageQuery(String sourcePackageName, String targetPackageName, int userId);
 
     @nullable Bundle getExtraAppBindArgs(String packageName);
+
+    void skipSpecialRuntimePermissionAutoGrantsForPackage(String packageName, int userId, in List<String> permissions);
 }
