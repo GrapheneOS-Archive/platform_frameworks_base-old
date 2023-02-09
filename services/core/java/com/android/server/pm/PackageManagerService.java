@@ -235,6 +235,7 @@ import com.android.server.pm.permission.LegacyPermissionManagerService;
 import com.android.server.pm.permission.LegacyPermissionSettings;
 import com.android.server.pm.permission.PermissionManagerService;
 import com.android.server.pm.permission.PermissionManagerServiceInternal;
+import com.android.server.pm.permission.SpecialRuntimePermUtils;
 import com.android.server.pm.pkg.AndroidPackage;
 import com.android.server.pm.pkg.ArchiveState;
 import com.android.server.pm.pkg.GosPackageStatePm;
@@ -6588,6 +6589,12 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
         @Override
         public Bundle getExtraAppBindArgs(String packageName) {
             return PackageManagerHooks.getExtraAppBindArgs(PackageManagerService.this, packageName);
+        }
+
+        @Override
+        public void skipSpecialRuntimePermissionAutoGrantsForPackage(String packageName, int userId, List<String> permissions) {
+            mContext.enforceCallingPermission(Manifest.permission.INSTALL_PACKAGES, null);
+            SpecialRuntimePermUtils.skipAutoGrantsForPackage(packageName, userId, permissions);
         }
 
         @Override
