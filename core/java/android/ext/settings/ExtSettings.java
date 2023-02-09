@@ -22,6 +22,9 @@ public class ExtSettings {
     public static final BoolSysProperty EXEC_SPAWNING = new BoolSysProperty(
             "persist.security.exec_spawn", true);
 
+    public static final BoolSetting AUTO_GRANT_OTHER_SENSORS_PERMISSION = new BoolSetting(
+            Setting.Scope.PER_USER, "auto_grant_OTHER_SENSORS_perm", true);
+
     // AppCompatConfig specifies which hardening features are compatible/incompatible with a
     // specific app.
     // This setting controls whether incompatible hardening features would be disabled by default
