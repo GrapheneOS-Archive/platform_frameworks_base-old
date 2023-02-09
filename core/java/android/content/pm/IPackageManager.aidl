@@ -800,4 +800,6 @@ interface IPackageManager {
     boolean waitForHandler(long timeoutMillis, boolean forBackgroundHandler);
 
     @nullable Bundle getExtraAppBindArgs(String packageName);
+
+    void skipSpecialRuntimePermissionAutoGrantsForPackage(String packageName, int userId, in List<String> permissions);
 }
