@@ -1,6 +1,7 @@
 package android.app;
 
 import android.content.Context;
+import android.content.pm.SrtPermissions;
 import android.os.Bundle;
 import android.os.Process;
 import android.os.RemoteException;
@@ -40,6 +41,8 @@ class ActivityThreadHooks {
         }
 
         int[] flags = Objects.requireNonNull(args.getIntArray(AppBindArgs.KEY_FLAGS_ARRAY));
+
+        SrtPermissions.setFlags(flags[AppBindArgs.FLAGS_IDX_SPECIAL_RUNTIME_PERMISSIONS]);
 
         return args;
     }
