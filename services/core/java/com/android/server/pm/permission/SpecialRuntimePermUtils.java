@@ -20,9 +20,10 @@ import android.Manifest;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.PackageManagerInternal;
+import android.ext.settings.ExtSettings;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.Settings;
+import android.os.UserHandle;
 import android.util.LruCache;
 import android.util.Slog;
 import android.util.SparseArray;
@@ -41,14 +42,32 @@ public class SpecialRuntimePermUtils {
 
     public static boolean isSpecialRuntimePermission(String permission) {
         switch (permission) {
-            default:
-                return false;
+            case Manifest.permission.OTHER_SENSORS:
+                return true;
         }
+        return false;
     }
 
     public static boolean shouldAutoGrant(Context ctx, String packageName, int userId, String perm) {
         if (!isSpecialRuntimePermission(perm)) {
             return false;
+        }
+
+        if (Manifest.permission.OTHER_SENSORS.equals(perm)) {
+            if (ActivityManager.getService() == null) {
+                // a failsafe: should never happen
+                Slog.d(TAG, "AMS is null");
+                if (Build.isDebuggable()) {
+                    throw new IllegalStateException();
+                }
+                return false;
+            }
+
+            var um = LocalServices.getService(UserManagerInternal.class);
+            // use parent profile settings for work profile
+            int userIdForSettings = um.getProfileParentId(userId);
+
+            return ExtSettings.AUTO_GRANT_OTHER_SENSORS_PERMISSION.get(ctx, userIdForSettings);
         }
 
         return !isAutoGrantSkipped(packageName, userId, perm);
