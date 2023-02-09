@@ -737,6 +737,7 @@ final class InstallPackageHelper {
                         permissionParamsBuilder.setAllowlistedRestrictedPermissions(
                                 new ArrayList<>(pkgSetting.getPkg().getRequestedPermissions()));
                     }
+                    permissionParamsBuilder.setNewlyInstalledInUserId(userId);
                     mPm.mPermissionManager.onPackageInstalled(pkgSetting.getPkg(),
                             Process.INVALID_UID /* previousAppId */,
                             permissionParamsBuilder.build(), userId);
@@ -2396,16 +2397,22 @@ final class InstallPackageHelper {
                     }
                 }
 
+                final PermissionManagerServiceInternal.PackageInstalledParams.Builder
+                        permissionParamsBuilder =
+                        new PermissionManagerServiceInternal.PackageInstalledParams.Builder();
+
                 // Set install reason for users that are having the package newly installed.
                 if (userId == UserHandle.USER_ALL) {
                     for (int currentUserId : allUsers) {
                         if (!previousUserIds.contains(currentUserId)
                                 && ps.getInstalled(currentUserId)) {
                             ps.setInstallReason(installReason, currentUserId);
+                            permissionParamsBuilder.setNewlyInstalledInUserId(currentUserId);
                         }
                     }
                 } else if (!previousUserIds.contains(userId)) {
                     ps.setInstallReason(installReason, userId);
+                    permissionParamsBuilder.setNewlyInstalledInUserId(userId);
                 }
 
                 // TODO(b/169721400): generalize Incremental States and create a Callback object
@@ -2426,9 +2433,6 @@ final class InstallPackageHelper {
 
                 mPm.mSettings.writeKernelMappingLPr(ps);
 
-                final PermissionManagerServiceInternal.PackageInstalledParams.Builder
-                        permissionParamsBuilder =
-                        new PermissionManagerServiceInternal.PackageInstalledParams.Builder();
                 final boolean grantRequestedPermissions = (installRequest.getInstallFlags()
                         & PackageManager.INSTALL_GRANT_ALL_REQUESTED_PERMISSIONS) != 0;
                 if (grantRequestedPermissions) {
