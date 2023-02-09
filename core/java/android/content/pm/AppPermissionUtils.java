@@ -30,6 +30,10 @@ public class AppPermissionUtils {
     // android.permission.PermissionManager#checkPermissionUncached
     /** @hide */
     public static boolean shouldSpoofSelfCheck(String permName) {
+        if (SrtPermissions.shouldSpoofSelfCheck(permName)) {
+            return true;
+        }
+
         return false;
     }
 
