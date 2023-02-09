@@ -42,14 +42,45 @@ public class SpecialRuntimePermUtils {
 
     public static boolean isSpecialRuntimePermission(String permission) {
         switch (permission) {
-            default:
-                return false;
+            case Manifest.permission.OTHER_SENSORS:
+                return true;
         }
+        return false;
     }
 
     public static boolean shouldAutoGrant(Context ctx, String packageName, int userId, String perm) {
         if (!isSpecialRuntimePermission(perm)) {
             return false;
+        }
+
+        if (Manifest.permission.OTHER_SENSORS.equals(perm)) {
+            if (ActivityManager.getService() == null) {
+                // a failsafe: should never happen
+                Slog.d(TAG, "AMS is null");
+                if (Build.isDebuggable()) {
+                    throw new IllegalStateException();
+                }
+                return false;
+            }
+
+            var um = LocalServices.getService(UserManagerInternal.class);
+            // use parent profile settings for work profile
+            int userIdForSettings = um.getProfileParentId(userId);
+
+            var cr = ctx.getContentResolver();
+            String key = Settings.Secure.AUTO_GRANT_OTHER_SENSORS_PERMISSION;
+            int def = Settings.Secure.AUTO_GRANT_OTHER_SENSORS_PERMISSION_DEFAULT;
+
+            try {
+                return Settings.Secure.getIntForUser(cr, key, def, userIdForSettings) == 1;
+            } catch (Exception e) {
+                // a failsafe: should never happen
+                Slog.d(TAG, "", e);
+                if (Build.isDebuggable()) {
+                    throw new IllegalStateException(e);
+                }
+                return false;
+            }
         }
 
         return !isAutoGrantSkipped(packageName, userId, perm);
