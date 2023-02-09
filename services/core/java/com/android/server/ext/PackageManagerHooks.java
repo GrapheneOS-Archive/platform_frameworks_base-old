@@ -13,6 +13,7 @@ import android.util.ArraySet;
 
 import com.android.server.pm.PackageManagerService;
 import com.android.server.pm.parsing.pkg.AndroidPackage;
+import com.android.server.pm.permission.SpecialRuntimePermUtils;
 import com.android.server.pm.pkg.PackageStateInternal;
 import com.android.server.pm.pkg.parsing.ParsingPackage;
 
@@ -71,6 +72,8 @@ public class PackageManagerHooks {
         }
 
         int[] flagsArr = new int[AppBindArgs.FLAGS_ARRAY_LEN];
+        flagsArr[AppBindArgs.FLAGS_IDX_SPECIAL_RUNTIME_PERMISSIONS] =
+                SpecialRuntimePermUtils.getFlags(pm, pkg, pkgState, userId);
 
         var b = new Bundle();
         b.putIntArray(AppBindArgs.KEY_FLAGS_ARRAY, flagsArr);
