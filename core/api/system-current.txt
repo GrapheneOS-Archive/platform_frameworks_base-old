@@ -4746,6 +4746,76 @@ package android.ext {
 
 }
 
+package android.ext.settings {
+
+  public class BoolSetting extends android.ext.settings.Setting<android.ext.settings.BoolSetting> {
+    ctor public BoolSetting(@NonNull android.ext.settings.Setting.Scope, @NonNull String, boolean);
+    ctor public BoolSetting(@NonNull android.ext.settings.Setting.Scope, @NonNull String, @NonNull java.util.function.Function<android.content.Context,java.lang.Boolean>);
+    method public final boolean get(@NonNull android.content.Context);
+    method public final boolean get(@NonNull android.content.Context, int);
+    method public final boolean put(@NonNull android.content.Context, boolean);
+  }
+
+  public class BoolSysProperty extends android.ext.settings.BoolSetting {
+    ctor public BoolSysProperty(@NonNull String, boolean);
+    ctor public BoolSysProperty(@NonNull String, @NonNull java.util.function.Function<android.content.Context,java.lang.Boolean>);
+    method public boolean get();
+    method public boolean put(boolean);
+  }
+
+  public class IntSetting extends android.ext.settings.Setting<android.ext.settings.IntSetting> {
+    ctor public IntSetting(@NonNull android.ext.settings.Setting.Scope, @NonNull String, int);
+    ctor public IntSetting(@NonNull android.ext.settings.Setting.Scope, @NonNull String, int, @NonNull int...);
+    ctor public IntSetting(@NonNull android.ext.settings.Setting.Scope, @NonNull String, @NonNull java.util.function.ToIntFunction<android.content.Context>);
+    ctor public IntSetting(@NonNull android.ext.settings.Setting.Scope, @NonNull String, @NonNull java.util.function.ToIntFunction<android.content.Context>, @NonNull int...);
+    method public final int get(@NonNull android.content.Context);
+    method public final int get(@NonNull android.content.Context, int);
+    method public final boolean put(@NonNull android.content.Context, int);
+    method public boolean validateValue(int);
+  }
+
+  public class IntSysProperty extends android.ext.settings.IntSetting {
+    ctor public IntSysProperty(@NonNull String, int);
+    ctor public IntSysProperty(@NonNull String, int, @NonNull int...);
+    ctor public IntSysProperty(@NonNull String, @NonNull java.util.function.ToIntFunction<android.content.Context>);
+    ctor public IntSysProperty(@NonNull String, @NonNull java.util.function.ToIntFunction<android.content.Context>, @NonNull int...);
+    method public int get();
+    method public boolean put(int);
+  }
+
+  public abstract class Setting<SelfType extends android.ext.settings.Setting> {
+    method public final boolean canObserveState();
+    method @NonNull public final String getKey();
+    method @NonNull public final android.ext.settings.Setting.Scope getScope();
+    method @NonNull public final Object registerObserver(@NonNull android.content.Context, @NonNull android.os.Handler, @NonNull java.util.function.Consumer<SelfType>);
+    method @NonNull public final Object registerObserver(@NonNull android.content.Context, int, @NonNull android.os.Handler, @NonNull java.util.function.Consumer<SelfType>);
+    method public final void unregisterObserver(@NonNull android.content.Context, @NonNull Object);
+  }
+
+  public enum Setting.Scope {
+    enum_constant public static final android.ext.settings.Setting.Scope GLOBAL;
+    enum_constant public static final android.ext.settings.Setting.Scope PER_USER;
+    enum_constant public static final android.ext.settings.Setting.Scope SYSTEM_PROPERTY;
+  }
+
+  public class StringSetting extends android.ext.settings.Setting<android.ext.settings.StringSetting> {
+    ctor public StringSetting(@NonNull android.ext.settings.Setting.Scope, @NonNull String, @NonNull String);
+    ctor public StringSetting(@NonNull android.ext.settings.Setting.Scope, @NonNull String, @NonNull java.util.function.Function<android.content.Context,java.lang.String>);
+    method @NonNull public final String get(@NonNull android.content.Context);
+    method @NonNull public final String get(@NonNull android.content.Context, int);
+    method public final boolean put(@NonNull android.content.Context, @NonNull String);
+    method public boolean validateValue(@NonNull String);
+  }
+
+  public class StringSysProperty extends android.ext.settings.StringSetting {
+    ctor public StringSysProperty(@NonNull String, @NonNull String);
+    ctor public StringSysProperty(@NonNull String, @NonNull java.util.function.Function<android.content.Context,java.lang.String>);
+    method @NonNull public String get();
+    method public boolean put(@NonNull String);
+  }
+
+}
+
 package android.graphics.fonts {
 
   public final class FontFamilyUpdateRequest {
