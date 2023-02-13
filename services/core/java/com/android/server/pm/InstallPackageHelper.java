@@ -2216,16 +2216,6 @@ final class InstallPackageHelper {
                     if (DEBUG_INSTALL) {
                         Slog.d(TAG, "Implicitly enabling system package on upgrade: " + pkgName);
                     }
-                    // Enable system package for requested users
-                    if (installedForUsers != null
-                            && !installRequest.isApplicationEnabledSettingPersistent()) {
-                        for (int origUserId : installedForUsers) {
-                            if (userId == UserHandle.USER_ALL || userId == origUserId) {
-                                ps.setEnabled(COMPONENT_ENABLED_STATE_DEFAULT,
-                                        origUserId, installerPackageName);
-                            }
-                        }
-                    }
                     // Also convey the prior install/uninstall state
                     if (allUsers != null && installedForUsers != null) {
                         for (int currentUserId : allUsers) {
@@ -2271,10 +2261,6 @@ final class InstallPackageHelper {
                     // be installed and enabled. The caller, however, can explicitly specify to
                     // keep the existing enabled state.
                     ps.setInstalled(true, userId);
-                    if (!installRequest.isApplicationEnabledSettingPersistent()) {
-                        ps.setEnabled(COMPONENT_ENABLED_STATE_DEFAULT, userId,
-                                installerPackageName);
-                    }
                     // Clear any existing archive state.
                     ps.setArchiveState(null, userId);
                 } else if (allUsers != null) {
@@ -2295,10 +2281,6 @@ final class InstallPackageHelper {
                                         UserManager.DISALLOW_DEBUGGING_FEATURES);
                         if (installedForCurrentUser || !restrictedByPolicy) {
                             ps.setInstalled(true, currentUserId);
-                            if (!installRequest.isApplicationEnabledSettingPersistent()) {
-                                ps.setEnabled(COMPONENT_ENABLED_STATE_DEFAULT, currentUserId,
-                                        installerPackageName);
-                            }
                             // Clear any existing archive state.
                             ps.setArchiveState(null, currentUserId);
                         } else {
