@@ -513,10 +513,6 @@ final class InstallRequest {
         return mScanResult.mChangedAbiCodePath;
     }
 
-    public boolean isApplicationEnabledSettingPersistent() {
-        return mInstallArgs == null ? false : mInstallArgs.mApplicationEnabledSettingPersistent;
-    }
-
     public boolean isForceQueryableOverride() {
         return mInstallArgs != null && mInstallArgs.mForceQueryableOverride;
     }
