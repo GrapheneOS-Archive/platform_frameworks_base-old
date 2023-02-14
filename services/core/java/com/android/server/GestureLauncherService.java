@@ -28,6 +28,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
 import android.database.ContentObserver;
+import android.ext.settings.ExtSettings;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -658,10 +659,8 @@ public class GestureLauncherService extends SystemService {
     boolean handleCameraGesture(boolean useWakelock, int source) {
         Trace.traceBegin(Trace.TRACE_TAG_ACTIVITY_MANAGER, "GestureLauncher:handleCameraGesture");
         try {
-            if (!SystemProperties.getBoolean("persist.keyguard.camera", true)) {
-                final KeyguardManager manager = (KeyguardManager) getContext().getSystemService(
-                        Context.KEYGUARD_SERVICE);
-                if (manager.inKeyguardRestrictedInputMode()) {
+            if (!ExtSettings.ALLOW_KEYGUARD_CAMERA.get(mContext)) {
+                if (mContext.getSystemService(KeyguardManager.class).isKeyguardLocked()) {
                     return false;
                 }
             }
