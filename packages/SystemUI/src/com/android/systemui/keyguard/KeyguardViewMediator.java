@@ -51,6 +51,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.UserInfo;
+import android.ext.settings.ExtSettings;
 import android.graphics.Matrix;
 import android.hardware.biometrics.BiometricSourceType;
 import android.media.AudioAttributes;
@@ -1939,7 +1940,7 @@ public class KeyguardViewMediator extends CoreStartable implements Dumpable,
 
         if (DEBUG) Log.d(TAG, "doKeyguard: showing the lock screen");
         showLocked(options);
-        final long rebootAfterTimeout = Settings.Global.getLong(mContext.getContentResolver(), Settings.Global.SETTINGS_REBOOT_AFTER_TIMEOUT, 0);
+        final long rebootAfterTimeout = ExtSettings.AUTO_REBOOT_TIMEOUT.get(mContext);
         if (rebootAfterTimeout >= 1) {
             doRebootForOwnerAfterTimeoutIfEnabled(rebootAfterTimeout);
         }
