@@ -20,9 +20,10 @@ import android.Manifest;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.PackageManagerInternal;
+import android.ext.settings.ExtSettings;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.Settings;
+import android.os.UserHandle;
 import android.util.LruCache;
 import android.util.Slog;
 import android.util.SparseArray;
@@ -68,20 +69,8 @@ public class SpecialRuntimePermUtils {
             // use parent profile settings for work profile
             int userIdForSettings = um.getProfileParentId(userId);
 
-            var cr = ctx.getContentResolver();
-            String key = Settings.Secure.AUTO_GRANT_OTHER_SENSORS_PERMISSION;
-            int def = Settings.Secure.AUTO_GRANT_OTHER_SENSORS_PERMISSION_DEFAULT;
-
-            try {
-                return Settings.Secure.getIntForUser(cr, key, def, userIdForSettings) == 1;
-            } catch (Exception e) {
-                // a failsafe: should never happen
-                Slog.d(TAG, "", e);
-                if (Build.isDebuggable()) {
-                    throw new IllegalStateException(e);
-                }
-                return false;
-            }
+            Context settingsCtx = ctx.createContextAsUser(UserHandle.of(userIdForSettings), 0);
+            return ExtSettings.AUTO_GRANT_OTHER_SENSORS_PERMISSION.get(settingsCtx);
         }
 
         return !isAutoGrantSkipped(packageName, userId, perm);
