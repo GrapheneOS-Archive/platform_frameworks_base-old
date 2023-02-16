@@ -11,12 +11,16 @@ import android.util.ArrayMap;
 
 import com.android.internal.gmscompat.flags.GmsFlag;
 
+import java.util.ArrayList;
+
 // Instances of this object should be immutable after publication, make sure to never change it afterwards
 public class GmsCompatConfig implements Parcelable {
     public long version;
     public final ArrayMap<String, ArrayMap<String, GmsFlag>> flags = new ArrayMap<>();
     public ArrayMap<String, GmsFlag> gservicesFlags;
     public final ArrayMap<String, ArrayMap<String, StubDef>> stubs = new ArrayMap<>();
+    // keys are namespaces, values are regexes of flag names that should be forced to default value
+    public final ArrayMap<String, ArrayList<String>> forceDefaultFlagsMap = new ArrayMap<>();
 
     public long maxGmsCoreVersion;
     public long maxPlayStoreVersion;
@@ -74,6 +78,15 @@ public class GmsCompatConfig implements Parcelable {
 
         p.writeLong(maxGmsCoreVersion);
         p.writeLong(maxPlayStoreVersion);
+
+        {
+            int cnt = forceDefaultFlagsMap.size();
+            p.writeInt(cnt);
+            for (int i = 0; i < cnt; ++i) {
+                p.writeString(forceDefaultFlagsMap.keyAt(i));
+                p.writeStringList(forceDefaultFlagsMap.valueAt(i));
+            }
+        }
     }
 
     public static final Creator<GmsCompatConfig> CREATOR = new Creator<>() {
@@ -101,7 +114,14 @@ public class GmsCompatConfig implements Parcelable {
 
             r.maxGmsCoreVersion = p.readLong();
             r.maxPlayStoreVersion = p.readLong();
-
+            {
+                int cnt = p.readInt();
+                r.forceDefaultFlagsMap.ensureCapacity(cnt);
+                for (int i = 0; i < cnt; ++i) {
+                    String namespace = p.readString();
+                    r.forceDefaultFlagsMap.put(namespace, p.createStringArrayList());
+                }
+            }
             return r;
         }
 
