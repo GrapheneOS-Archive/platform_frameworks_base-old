@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
+import android.util.ArraySet;
 import android.util.Log;
 
 import static com.android.internal.gmscompat.GmsHooks.inPersistentGmsCoreProcess;
@@ -63,7 +64,10 @@ class BinderGca2Gms extends IGca2Gms.Stub {
         String[] columns = { "androidPackageName" };
         String selection = "packageName = ?";
 
-        for (String configPackageName : newConfig.flags.keySet()) {
+        ArraySet<String> configPackageNames = new ArraySet<>(newConfig.flags.keySet());
+        configPackageNames.addAll(newConfig.forceDefaultFlagsMap.keySet());
+
+        for (String configPackageName : configPackageNames) {
             String[] selectionArgs = { configPackageName };
             String packageName = null;
             try (Cursor c = db.query("Packages", columns, selection, selectionArgs, null, null, null, "1")) {
