@@ -68,6 +68,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
 
 import static com.android.internal.gmscompat.GmsInfo.PACKAGE_GMS_CORE;
 
@@ -368,15 +369,42 @@ public final class GmsHooks {
 
             String namespace = path.get(0);
 
-            ArrayMap<String, GmsFlag> nsFlags = config().flags.get(namespace);
+            GmsCompatConfig config = config();
 
-            if (nsFlags == null) {
+            ArrayList<String> forceDefaultFlagsRegexes = config.forceDefaultFlagsMap.get(namespace);
+
+            ArrayMap<String, GmsFlag> nsFlags = config.flags.get(namespace);
+
+            if (forceDefaultFlagsRegexes == null && nsFlags == null) {
                 return null;
             }
 
             mutator = map -> {
-                for (GmsFlag f : nsFlags.values()) {
-                    f.applyToPhenotypeMap(map);
+                if (forceDefaultFlagsRegexes != null) {
+                    int patternCnt = forceDefaultFlagsRegexes.size();
+                    Pattern[] patterns = new Pattern[patternCnt];
+                    for (int i = 0; i < patternCnt; ++i) {
+                        patterns[i] = Pattern.compile(forceDefaultFlagsRegexes.get(i));
+                    }
+                    ArrayMap filteredMap = new ArrayMap<>(map.size());
+
+                    outer:
+                    for (int entryIdx = 0, entryCnt = map.size(); entryIdx < entryCnt; ++entryIdx) {
+                        String key = map.keyAt(entryIdx);
+                        for (int patternIdx = 0; patternIdx < patternCnt; ++patternIdx) {
+                            if (patterns[patternIdx].matcher(key).matches()) {
+                                continue outer;
+                            }
+                        }
+                        filteredMap.put(key, map.valueAt(entryIdx));
+                    }
+                    map.clear();
+                    map.putAll(filteredMap);
+                }
+                if (nsFlags != null) {
+                    for (GmsFlag f : nsFlags.values()) {
+                        f.applyToPhenotypeMap(map);
+                    }
                 }
             };
         }
