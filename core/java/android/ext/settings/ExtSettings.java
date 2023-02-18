@@ -21,6 +21,9 @@ public class ExtSettings {
             // default value: 3 days
             (int) TimeUnit.DAYS.toMillis(3));
 
+    public static final BoolSetting SCREENSHOT_TIMESTAMP_EXIF = new BoolSetting(
+            Setting.Scope.PER_USER, "screenshot_timestamp_exif", false);
+
     private ExtSettings() {}
 
     // used for making settings defined in this class unreadable by third-party apps
