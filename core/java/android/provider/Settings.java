@@ -10680,13 +10680,6 @@ public final class Settings {
         public static final String PEOPLE_STRIP = "people_strip";
 
         /**
-         * Whether to scramble a pin unlock layout
-         * @hide
-         */
-        public static final String SCRAMBLE_PIN_LAYOUT =
-            "lockscreen_scramble_pin_layout";
-
-        /**
          * Toggle to control adding a timestamp to screenshot EXIF
          * @hide
          */
