@@ -33,6 +33,9 @@ public class ExtSettings {
             // default value: 18 hours
             (int) TimeUnit.HOURS.toMillis(18));
 
+    public static final BoolSetting SCREENSHOT_TIMESTAMP_EXIF = new BoolSetting(
+            Setting.Scope.PER_USER, "screenshot_timestamp_exif", false);
+
     // AppCompatConfig specifies which hardening features are compatible/incompatible with a
     // specific app.
     // This setting controls whether incompatible hardening features would be disabled by default
