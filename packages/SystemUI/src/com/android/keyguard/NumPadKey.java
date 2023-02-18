@@ -18,10 +18,12 @@ package com.android.keyguard;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
+import android.ext.settings.ExtSettings;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.PowerManager;
 import android.os.SystemClock;
+import android.os.UserHandle;
 import android.util.AttributeSet;
 import android.view.HapticFeedbackConstants;
 import android.view.LayoutInflater;
@@ -34,6 +36,7 @@ import android.widget.TextView;
 import androidx.annotation.Nullable;
 
 import com.android.internal.widget.LockPatternUtils;
+import com.android.keyguard.KeyguardUpdateMonitor;
 import com.android.settingslib.Utils;
 import com.android.systemui.R;
 
@@ -117,22 +120,7 @@ public class NumPadKey extends ViewGroup implements NumPadAnimationListener {
         mDigitText.setText(Integer.toString(mDigit));
         mKlondikeText = (TextView) findViewById(R.id.klondike_text);
 
-        if (mDigit >= 0) {
-            if (sKlondike == null) {
-                sKlondike = getResources().getStringArray(R.array.lockscreen_num_pad_klondike);
-            }
-            if (sKlondike != null && sKlondike.length > mDigit) {
-                String klondike = sKlondike[mDigit];
-                final int len = klondike.length();
-                if (len > 0) {
-                    mKlondikeText.setText(klondike);
-                } else if (mKlondikeText.getVisibility() != View.GONE) {
-                    mKlondikeText.setVisibility(View.INVISIBLE);
-                }
-            }
-        }
-
-        setContentDescription(mDigitText.getText().toString());
+        updateText();
 
         Drawable background = getBackground();
         if (background instanceof GradientDrawable) {
@@ -141,6 +129,33 @@ public class NumPadKey extends ViewGroup implements NumPadAnimationListener {
         } else {
             mAnimator = null;
         }
+    }
+
+    private void updateText() {
+        Context settingsCtx = mContext.createContextAsUser(UserHandle.of(KeyguardUpdateMonitor.getCurrentUser()), 0);
+        boolean scramblePin = ExtSettings.SCRAMBLE_PIN_LAYOUT.get(settingsCtx);
+
+        if (mDigit >= 0) {
+            mDigitText.setText(Integer.toString(mDigit));
+            if (sKlondike == null) {
+                sKlondike = getResources().getStringArray(R.array.lockscreen_num_pad_klondike);
+            }
+            if (sKlondike != null && sKlondike.length > mDigit) {
+                String klondike = sKlondike[mDigit];
+                final int len = klondike.length();
+                if (len > 0 || scramblePin) {
+                    mKlondikeText.setText(klondike);
+                } else if (mKlondikeText.getVisibility() != View.GONE) {
+                    mKlondikeText.setVisibility(View.INVISIBLE);
+                }
+            }
+        }
+        setContentDescription(mDigitText.getText().toString());
+    }
+
+    public void setDigit(int digit) {
+        mDigit = digit;
+        updateText();
     }
 
     @Override
