@@ -19,7 +19,6 @@ package com.android.systemui.screenshot;
 import static android.os.FileUtils.closeQuietly;
 
 import android.annotation.IntRange;
-import android.annotation.Nullable;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.graphics.Bitmap;
@@ -31,7 +30,6 @@ import android.os.ParcelFileDescriptor;
 import android.os.SystemClock;
 import android.os.Trace;
 import android.provider.MediaStore;
-import android.provider.Settings;
 import android.util.Log;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
@@ -54,9 +52,6 @@ import java.util.UUID;
 import java.util.concurrent.Executor;
 
 import javax.inject.Inject;
-
-import static android.provider.Settings.Secure.DISABLE_SCREENSHOT_TIMESTAMP_EXIF;
-import static android.provider.Settings.Secure.ENABLE_SCREENSHOT_TIMESTAMP_EXIF;
 
 class ImageExporter {
     private static final String TAG = LogConfig.logTag(ImageExporter.class);
@@ -351,11 +346,6 @@ class ImageExporter {
                 throw new ImageExportException(EXIF_READ_EXCEPTION, e);
             }
 
-            if (Settings.Secure.getInt(resolver, Settings.Secure.SCREENSHOT_TIMESTAMP_EXIF,
-                    DISABLE_SCREENSHOT_TIMESTAMP_EXIF) != ENABLE_SCREENSHOT_TIMESTAMP_EXIF) {
-                captureTime = null;
-            }
-
             updateExifAttributes(exif, requestId, width, height, captureTime);
             try {
                 exif.saveAttributes();
@@ -406,15 +396,11 @@ class ImageExporter {
     }
 
     static void updateExifAttributes(ExifInterface exif, UUID uniqueId, int width, int height,
-            @Nullable ZonedDateTime captureTime) {
+            ZonedDateTime captureTime) {
         exif.setAttribute(ExifInterface.TAG_IMAGE_UNIQUE_ID, uniqueId.toString());
 
         exif.setAttribute(ExifInterface.TAG_IMAGE_WIDTH, Integer.toString(width));
         exif.setAttribute(ExifInterface.TAG_IMAGE_LENGTH, Integer.toString(height));
-
-        if (captureTime == null) {
-            return;
-        }
 
         String dateTime = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss").format(captureTime);
         String subSec = DateTimeFormatter.ofPattern("SSS").format(captureTime);
