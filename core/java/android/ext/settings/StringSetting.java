@@ -6,13 +6,11 @@
 package android.ext.settings;
 
 import android.content.Context;
-import android.os.Handler;
 
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /** @hide */
-public class StringSetting extends Setting {
+public class StringSetting extends Setting<StringSetting> {
     private String defaultValue;
     private volatile Supplier<String> defaultValueSupplier;
 
@@ -31,7 +29,12 @@ public class StringSetting extends Setting {
     }
 
     public final String get(Context ctx) {
-        String s = getRaw(ctx);
+        return get(ctx, ctx.getUserId());
+    }
+
+    // use only if this is a per-user setting and the context is not a per-user one
+    public final String get(Context ctx, int userId) {
+        String s = getRaw(ctx, userId);
         if (s == null || !validateValue(s)) {
             return getDefaultValue();
         }
@@ -43,10 +46,6 @@ public class StringSetting extends Setting {
             throw new IllegalStateException("invalid value " + val);
         }
         return putRaw(ctx, val);
-    }
-
-    public final Object registerObserver(Context ctx, Consumer<StringSetting> callback, Handler handler) {
-        return registerObserverInner(ctx, callback, handler);
     }
 
     private void setDefaultValue(String val) {
