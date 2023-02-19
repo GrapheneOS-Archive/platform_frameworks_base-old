@@ -65,6 +65,8 @@ import android.os.Process;
 import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.UserHandle;
+import android.provider.Settings;
+import android.util.Log;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.listeners.ListenerExecutor;
@@ -1558,6 +1560,16 @@ public class LocationManager {
             locationRequest.setLocationSettingsIgnored(false);
             // requires privileged UPDATE_DEVICE_STATS permission
             locationRequest.setWorkSource(null);
+
+            if (Build.IS_DEBUGGABLE) {
+                var cr = mContext.getContentResolver();
+                String key = "gmscompat_skip_gnss_location_updates";
+                if (Settings.Global.getInt(cr, key, 0) == 1) {
+                    Log.d("GmsCompat", "requestLocationUpdates is skipped because "
+                            + key + " global setting is enabled");
+                    return;
+                }
+            }
         }
         Preconditions.checkArgument(provider != null, "invalid null provider");
         Preconditions.checkArgument(locationRequest != null, "invalid null location request");
