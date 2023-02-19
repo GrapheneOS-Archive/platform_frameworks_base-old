@@ -69,8 +69,7 @@ public class SpecialRuntimePermUtils {
             // use parent profile settings for work profile
             int userIdForSettings = um.getProfileParentId(userId);
 
-            Context settingsCtx = ctx.createContextAsUser(UserHandle.of(userIdForSettings), 0);
-            return ExtSettings.AUTO_GRANT_OTHER_SENSORS_PERMISSION.get(settingsCtx);
+            return ExtSettings.AUTO_GRANT_OTHER_SENSORS_PERMISSION.get(ctx, userIdForSettings);
         }
 
         return !isAutoGrantSkipped(packageName, userId, perm);
