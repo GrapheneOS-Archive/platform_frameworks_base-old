@@ -21,10 +21,9 @@ import static com.android.systemui.statusbar.policy.DevicePostureController.DEVI
 import static com.android.systemui.statusbar.policy.DevicePostureController.DEVICE_POSTURE_UNKNOWN;
 
 import android.animation.ValueAnimator;
-import android.app.ActivityManager;
 import android.content.Context;
 import android.content.res.Configuration;
-import android.provider.Settings;
+import android.ext.settings.ExtSettings;
 import android.util.AttributeSet;
 import android.util.MathUtils;
 import android.view.View;
@@ -34,15 +33,16 @@ import android.view.animation.Interpolator;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
 
-import java.security.SecureRandom;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
+import com.android.keyguard.KeyguardUpdateMonitor;
 import com.android.settingslib.animation.DisappearAnimationUtils;
 import com.android.systemui.R;
 import com.android.systemui.animation.Interpolators;
 import com.android.systemui.statusbar.policy.DevicePostureController.DevicePostureInt;
+
+import java.security.SecureRandom;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Displays a PIN pad for unlocking.
@@ -177,8 +177,7 @@ public class KeyguardPINView extends KeyguardPinBasedInputView {
                         null, mEcaView, null
                 }};
 
-        mScramblePin = Settings.Secure.getIntForUser(mContext.getContentResolver(),
-                Settings.Secure.SCRAMBLE_PIN_LAYOUT, 0, ActivityManager.getCurrentUser()) == 1;
+        mScramblePin = ExtSettings.SCRAMBLE_PIN_LAYOUT.get(mContext, KeyguardUpdateMonitor.getCurrentUser());
 
         if (mScramblePin) {
             Collections.shuffle(mDigits, new SecureRandom());

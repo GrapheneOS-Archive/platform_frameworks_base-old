@@ -15,5 +15,8 @@ public class ExtSettings {
     public static final BoolSetting SCREENSHOT_TIMESTAMP_EXIF = new BoolSetting(
             Setting.Scope.PER_USER, "screenshot_timestamp_exif", false);
 
+    public static final BoolSetting SCRAMBLE_PIN_LAYOUT = new BoolSetting(
+            Setting.Scope.PER_USER, "lockscreen_scramble_pin_layout", false);
+
     private ExtSettings() {}
 }

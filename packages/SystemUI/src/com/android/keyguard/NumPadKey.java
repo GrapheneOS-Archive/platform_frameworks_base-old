@@ -15,15 +15,14 @@
  */
 package com.android.keyguard;
 
-import android.app.ActivityManager;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.TypedArray;
+import android.ext.settings.ExtSettings;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.os.PowerManager;
 import android.os.SystemClock;
-import android.provider.Settings;
 import android.util.AttributeSet;
 import android.view.HapticFeedbackConstants;
 import android.view.LayoutInflater;
@@ -36,6 +35,7 @@ import android.widget.TextView;
 import androidx.annotation.Nullable;
 
 import com.android.internal.widget.LockPatternUtils;
+import com.android.keyguard.KeyguardUpdateMonitor;
 import com.android.settingslib.Utils;
 import com.android.systemui.R;
 
@@ -131,8 +131,8 @@ public class NumPadKey extends ViewGroup implements NumPadAnimationListener {
     }
 
     private void updateText() {
-        boolean scramblePin = Settings.Secure. getIntForUser(mContext.getContentResolver(),
-                Settings.Secure.SCRAMBLE_PIN_LAYOUT, 0, ActivityManager.getCurrentUser()) == 1;
+        boolean scramblePin = ExtSettings.SCRAMBLE_PIN_LAYOUT.get(mContext, KeyguardUpdateMonitor.getCurrentUser());
+
         if (mDigit >= 0) {
             mDigitText.setText(Integer.toString(mDigit));
             if (sKlondike == null) {
