@@ -16,7 +16,7 @@ import android.provider.Settings;
 import java.util.function.Consumer;
 
 /** @hide */
-public abstract class Setting<T> {
+public abstract class Setting<SelfType extends Setting> {
 
     public enum Scope {
         SYSTEM_PROPERTY, // android.os.SystemProperties, doesn't support state observers
@@ -41,7 +41,7 @@ public abstract class Setting<T> {
     }
 
     @Nullable
-    protected final String getRaw(Context ctx) {
+    protected final String getRaw(Context ctx, int userId) {
         try {
             switch (scope) {
                 case SYSTEM_PROPERTY: {
@@ -54,7 +54,7 @@ public abstract class Setting<T> {
                 case GLOBAL:
                     return Settings.Global.getString(ctx.getContentResolver(), key);
                 case PER_USER:
-                    return Settings.Secure.getString(ctx.getContentResolver(), key);
+                    return Settings.Secure.getStringForUser(ctx.getContentResolver(), key, userId);
             }
         } catch (Throwable e) {
             e.printStackTrace();
@@ -100,7 +100,11 @@ public abstract class Setting<T> {
     }
 
     // pass the return value to unregisterObserver() to remove the observer
-    protected final Object registerObserverInner(Context ctx, Consumer callback, Handler handler) {
+    public final Object registerObserver(Context ctx, Consumer<SelfType> callback, Handler handler) {
+        return registerObserver(ctx, ctx.getUserId(), callback, handler);
+    }
+
+    public final Object registerObserver(Context ctx, int userId, Consumer<SelfType> callback, Handler handler) {
         if (scope == Scope.SYSTEM_PROPERTY) {
             // SystemProperties.addChangeCallback() doesn't work unless the change is actually
             // reported elsewhere in the same process with SystemProperties.callChangeCallbacks()
@@ -116,7 +120,7 @@ public abstract class Setting<T> {
                         // change callback is dispatched whenever any change to system props occurs
                         if (!prev.equals(value)) {
                             prev = value;
-                            handler.post(() -> callback.accept(Setting.this));
+                            handler.post(() -> callback.accept((SelfType) Setting.this));
                         }
                     }
                 };
@@ -141,10 +145,10 @@ public abstract class Setting<T> {
         ContentObserver observer = new ContentObserver(handler) {
             @Override
             public void onChange(boolean selfChange) {
-                callback.accept(Setting.this);
+                callback.accept((SelfType) Setting.this);
             }
         };
-        ctx.getContentResolver().registerContentObserver(uri, false, observer);
+        ctx.getContentResolver().registerContentObserver(uri, false, observer, userId);
 
         return observer;
     }

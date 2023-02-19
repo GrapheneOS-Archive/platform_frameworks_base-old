@@ -7,13 +7,11 @@ package android.ext.settings;
 
 import android.annotation.Nullable;
 import android.content.Context;
-import android.os.Handler;
 
-import java.util.function.Consumer;
 import java.util.function.IntSupplier;
 
 /** @hide */
-public class IntSetting extends Setting {
+public class IntSetting extends Setting<IntSetting> {
     private int defaultValue;
     private volatile IntSupplier defaultValueSupplier;
 
@@ -58,7 +56,12 @@ public class IntSetting extends Setting {
     }
 
     public final int get(Context ctx) {
-        String valueStr = getRaw(ctx);
+        return get(ctx, ctx.getUserId());
+    }
+
+    // use only if this is a per-user setting and the context is not a per-user one
+    public final int get(Context ctx, int userId) {
+        String valueStr = getRaw(ctx, userId);
 
         if (valueStr == null) {
             return getDefaultValue();
@@ -84,10 +87,6 @@ public class IntSetting extends Setting {
             throw new IllegalArgumentException(Integer.toString(val));
         }
         return putRaw(ctx, Integer.toString(val));
-    }
-
-    public final Object registerObserver(Context ctx, Consumer<IntSetting> callback, Handler handler) {
-        return registerObserverInner(ctx, callback, handler);
     }
 
     private void setDefaultValue(int val) {
