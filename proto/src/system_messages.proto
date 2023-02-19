@@ -306,6 +306,10 @@ message SystemMessage {
     // Package: android
     NOTE_PROTOTYPE_DETECTED = 75;
 
+    // Inform the user that the device bootloader is not locked.
+    // Package: android
+    NOTE_UNLOCKED_BOOTLOADER_DETECTED = 76;
+
     // See com.android.server.ext.MissingSpecialRuntimePermissionNotification
     // Package: android
     NOTE_MISSING_PERMISSION_OTHER_SENSORS = 500;
