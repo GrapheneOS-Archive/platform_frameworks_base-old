@@ -6,13 +6,11 @@
 package android.ext.settings;
 
 import android.content.Context;
-import android.os.Handler;
 
 import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
 
 /** @hide */
-public class BoolSetting extends Setting {
+public class BoolSetting extends Setting<BoolSetting> {
     private boolean defaultValue;
     private volatile BooleanSupplier defaultValueSupplier;
 
@@ -27,7 +25,12 @@ public class BoolSetting extends Setting {
     }
 
     public final boolean get(Context ctx) {
-        String valueStr = getRaw(ctx);
+        return get(ctx, ctx.getUserId());
+    }
+
+    // use only if this is a per-user setting and the context is not a per-user one
+    public final boolean get(Context ctx, int userId) {
+        String valueStr = getRaw(ctx, userId);
 
         if (valueStr == null) {
             return getDefaultValue();
@@ -49,10 +52,6 @@ public class BoolSetting extends Setting {
 
     public final boolean put(Context ctx, boolean val) {
         return putRaw(ctx, val ? "1" : "0");
-    }
-
-    public final Object registerObserver(Context ctx, Consumer<BoolSetting> callback, Handler handler) {
-        return registerObserverInner(ctx, callback, handler);
     }
 
     private boolean getDefaultValue() {
