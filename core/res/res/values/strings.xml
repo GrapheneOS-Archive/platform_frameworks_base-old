@@ -3912,6 +3912,11 @@
     <!-- Message of notification shown when a prototype device is detected. [CHAR LIMIT=NONE] -->
     <string name="prototype_device_notification_message">Device security may be affected.</string>
 
+    <!-- Title of notification shown when OEM unlocking is left enabled. [CHAR LIMIT=NONE] -->
+    <string name="oem_unlocking_notification_title">OEM unlocking is enabled</string>
+    <!-- Message of notification shown when OEM unlocking is left enabled. [CHAR LIMIT=NONE] -->
+    <string name="oem_unlocking_notification_message">Device security may be affected.</string>
+
     <!-- Title of notification shown when contaminant is detected on the USB port. [CHAR LIMIT=NONE] -->
     <string name="usb_contaminant_detected_title">Liquid or debris in USB port</string>
     <!-- Message of notification shown when contaminant is detected on the USB port. [CHAR LIMIT=NONE] -->

@@ -5167,6 +5167,8 @@ public class ActivityManagerService extends IActivityManager.Stub
         showMteOverrideNotificationIfActive();
         // If device is not a mass production (MP) variant, send a warning notification.
         showPrototypeNotificationIfPrototype();
+        // If device OEM unlocking is left enabled, send a warning notification.
+        showOemUnlockingNotificationIfEnabled();
 
         t.traceEnd();
     }
@@ -5237,6 +5239,42 @@ public class ActivityManagerService extends IActivityManager.Stub
                 mContext.getSystemService(NotificationManager.class);
         notificationManager.notifyAsUser(
                 null, SystemMessage.NOTE_PROTOTYPE_DETECTED, notification, UserHandle.ALL);
+    }
+
+    private static boolean isOemUnlockingEnabled() {
+        // sys.oem_unlock_allowed does not exist on emulator, check if we're a physical device.
+        // adb shell getprop sys.oem_unlock_allowed
+        // 0 == no unlocking allowed, 1 == unlocking allowed
+        // If sys.oem_unlock_allowed does not exist, assume unlocking allowed.
+        return isPixelDevice() && (SystemProperties.getBoolean("sys.oem_unlock_allowed", true));
+    }
+
+    private void showOemUnlockingNotificationIfEnabled() {
+        if (!isOemUnlockingEnabled()) {
+            return;
+        }
+        String title = mContext
+                .getString(com.android.internal.R.string.oem_unlocking_notification_title);
+        String message = mContext
+                .getString(com.android.internal.R.string.oem_unlocking_notification_message);
+        Notification notification =
+                new Notification.Builder(mContext, SystemNotificationChannels.DEVELOPER)
+                        .setSmallIcon(com.android.internal.R.drawable.stat_sys_adb)
+                        .setWhen(0)
+                        .setOngoing(true)
+                        .setTicker(title)
+                        .setColor(mContext.getColor(
+                                com.android.internal.R.color
+                                        .system_notification_accent_color))
+                        .setContentTitle(title)
+                        .setContentText(message)
+                        .setVisibility(Notification.VISIBILITY_PUBLIC)
+                        .build();
+
+        NotificationManager notificationManager =
+                mContext.getSystemService(NotificationManager.class);
+        notificationManager.notifyAsUser(
+                null, SystemMessage.NOTE_OEM_UNLOCKING_DETECTED, notification, UserHandle.ALL);
     }
 
     private void showConsoleNotificationIfActive() {
