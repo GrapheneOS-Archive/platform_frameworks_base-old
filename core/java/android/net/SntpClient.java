@@ -41,28 +41,31 @@ import java.util.Objects;
 import java.util.Random;
 import java.util.function.Supplier;
 
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-import javax.net.ssl.SSLContext;
 import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
 
 import java.security.cert.X509Certificate;
 
+import java.io.InputStream;
+import java.math.BigInteger;
 import java.util.Date;
 import java.util.Set;
-import java.math.BigInteger;
-import java.security.KeyStore;
-import java.security.Principal;
-import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
-import java.security.SignatureException;
-import java.security.NoSuchProviderException;
-import java.security.InvalidKeyException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
+import java.security.GeneralSecurityException;
+import java.security.InvalidKeyException;
+import java.security.KeyStore;
+import java.security.Principal;
+import java.security.PublicKey;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.SignatureException;
 
 import static android.os.Build.TIME;
 
@@ -290,7 +293,6 @@ public class SntpClient {
         final int oldTag = TrafficStats.getAndSetThreadStatsTag(
                 TrafficStatsConstants.TAG_SYSTEM_NTP);
         final Network networkForResolv = network.getPrivateDnsBypassingCopy();
-        if (DBG) Log.d(TAG, "requestHttpTime() getting time using https");
         try {
             TrustManagerFactory tmf = TrustManagerFactory
                 .getInstance(TrustManagerFactory.getDefaultAlgorithm());
@@ -463,13 +465,13 @@ public class SntpClient {
 
                 @Override
                 public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-                        // replace the top-level certificate with a certificate validation routine that
-                        // ignores expired certificates due to clock drift.
-                        X509Certificate[] timeLeewayChain = new X509Certificate[chain.length];
-                        for (int i = 0; i < chain.length; i++) {
-                            timeLeewayChain[i] = new TimeLeewayCertificate(chain[i]);
-                        }
-                        finalTm.checkServerTrusted(timeLeewayChain, authType);
+                    // replace the top-level certificate with a certificate validation routine that
+                    // ignores expired certificates due to clock drift.
+                    X509Certificate[] timeLeewayChain = new X509Certificate[chain.length];
+                    for (int i = 0; i < chain.length; i++) {
+                        timeLeewayChain[i] = new TimeLeewayCertificate(chain[i]);
+                    }
+                    finalTm.checkServerTrusted(timeLeewayChain, authType);
                 }
 
                 @Override
@@ -479,55 +481,52 @@ public class SntpClient {
                 }
             };
 
-            if (DBG) Log.d(TAG, "requestHttpTime() setting up URL connection");
-            URLConnection urlConnection = networkForResolv.openConnection(url);
             SSLContext sslContext = SSLContext.getInstance("SSL");
             sslContext.init(null, new TrustManager[] { customTm }, null);
+            SSLSocketFactory socketFactory = sslContext.getSocketFactory();
+            HttpsURLConnection connection = (HttpsURLConnection) networkForResolv.openConnection(url);
+            try {
+                connection.setSSLSocketFactory(socketFactory);
+                connection.setConnectTimeout(timeout);
+                connection.setReadTimeout(timeout);
+                connection.getInputStream().close();
 
-            if (urlConnection instanceof HttpsURLConnection) {
-                HttpsURLConnection httpsUrlConnection = (HttpsURLConnection) urlConnection;
+                connection = (HttpsURLConnection) networkForResolv.openConnection(url);
+                connection.setSSLSocketFactory(socketFactory);
+                connection.setConnectTimeout(timeout);
+                connection.setReadTimeout(timeout);
+                connection.setRequestProperty("Connection", "close");
+
+                final long requestTime = System.currentTimeMillis();
+                final long requestTicks = SystemClock.elapsedRealtime();
+                connection.getInputStream();
+                long serverTime;
                 try {
-                    // change the SSLSocketFactory to use custom trust manager
-                    httpsUrlConnection.setSSLSocketFactory(sslContext.getSocketFactory());
-                    httpsUrlConnection.setConnectTimeout(timeout);
-                    httpsUrlConnection.setReadTimeout(timeout);
-                    httpsUrlConnection.setRequestProperty("Connection", "close");
-                    final long requestTime = System.currentTimeMillis();
-                    final long requestTicks = SystemClock.elapsedRealtime();
-                    // implicitly fires GET request.
-                    httpsUrlConnection.getInputStream();
-                    long transmitTime = urlConnection.getDate();
-                    // http servers dont log originate/receive time (imprecise offset).
-                    long receiveTime = urlConnection.getDate();
-                    final long responseTicks = SystemClock.elapsedRealtime();
-                    final long responseTime = requestTime + (responseTicks - requestTicks);
-                    long roundTripTime = responseTicks - requestTicks - (transmitTime - receiveTime);
-                    long clockOffset = ((receiveTime - requestTime) + (transmitTime - responseTime))/2;
-                    if (DBG) {
-                        Log.d(TAG, "https method -- round trip: " + roundTripTime + "ms, " +
-                                "clock offset: " + clockOffset + "ms");
-                    }
-                    if (receiveTime < TIME) {
-                        Log.w(TAG, "https method received timestamp before BUILD unix time, rejecting");
-                        return false;
-                    }
-                    EventLogTags.writeNtpSuccess(url.toString(), roundTripTime, clockOffset);
-                    // save our results - use the times on this side of the network latency
-                    // (response rather than request time)
-                    mNtpTime = responseTime + clockOffset;
-                    mNtpTimeReference = responseTicks;
-                    mRoundTripTime = roundTripTime;
-                } catch (Exception e) {
-                    Log.e(TAG, "request https time failed: " + e.toString());
-                    if (DBG) e.printStackTrace();
-                    return false;
-                } finally {
-                    httpsUrlConnection.disconnect();
+                    serverTime = Long.parseLong(connection.getHeaderField("X-Time"));
+                } catch (final NumberFormatException e) {
+                    Log.w(TAG, "https method received response without X-Time header resulting in low precision");
+                    serverTime = connection.getDate();
                 }
-            } else {
-                EventLogTags.writeNtpFailure(url.toString(), "did not receive HttpsURLConnection from Android Network");
-                if (DBG) Log.d(TAG, "request time failed: did not receive HttpsURLConnection from Android Network");
-                return false;
+                final long responseTicks = SystemClock.elapsedRealtime();
+                final long roundTripTime = responseTicks - requestTicks;
+                final long responseTime = requestTime + roundTripTime;
+                final long clockOffset = ((serverTime - requestTime) + (serverTime - responseTime)) / 2;
+                if (DBG) {
+                    Log.d(TAG, "https method -- round trip: " + roundTripTime + "ms, " +
+                            "clock offset: " + clockOffset + "ms");
+                }
+                if (serverTime < TIME) {
+                    throw new GeneralSecurityException("https method received timestamp before BUILD unix time, rejecting");
+                }
+                EventLogTags.writeNtpSuccess(url.toString(), roundTripTime, clockOffset);
+                // save our results - use the times on this side of the network latency
+                // (response rather than request time)
+                mClockOffset = clockOffset;
+                mNtpTime = responseTime + clockOffset;
+                mNtpTimeReference = responseTicks;
+                mRoundTripTime = roundTripTime;
+            } finally {
+                connection.disconnect();
             }
         } catch (Exception e) {
             EventLogTags.writeNtpFailure(url.toString(), e.toString());
