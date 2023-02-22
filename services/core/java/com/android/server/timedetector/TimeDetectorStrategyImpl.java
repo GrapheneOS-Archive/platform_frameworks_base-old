@@ -78,7 +78,7 @@ public final class TimeDetectorStrategyImpl implements TimeDetectorStrategy {
      * actual system clock time before a warning is logged. Used to help identify situations where
      * there is something other than this class setting the system clock.
      */
-    private static final long SYSTEM_CLOCK_PARANOIA_THRESHOLD_MILLIS = 2 * 1000;
+    private static final long SYSTEM_CLOCK_PARANOIA_THRESHOLD_MILLIS = 250;
 
     /**
      * The number of suggestions to keep. These are logged in bug reports to assist when debugging
