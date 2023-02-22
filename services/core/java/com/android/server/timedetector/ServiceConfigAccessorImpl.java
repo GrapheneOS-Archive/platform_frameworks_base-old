@@ -65,7 +65,7 @@ import java.util.function.Supplier;
  */
 final class ServiceConfigAccessorImpl implements ServiceConfigAccessor {
 
-    private static final int SYSTEM_CLOCK_UPDATE_THRESHOLD_MILLIS_DEFAULT = 2 * 1000;
+    private static final int SYSTEM_CLOCK_UPDATE_THRESHOLD_MILLIS_DEFAULT = 50;
 
     /**
      * An absolute threshold at/below which the system clock confidence can be upgraded. i.e. if the
