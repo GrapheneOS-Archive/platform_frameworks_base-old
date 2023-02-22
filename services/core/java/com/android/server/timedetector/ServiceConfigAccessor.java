@@ -46,7 +46,7 @@ import java.util.function.Supplier;
  */
 final class ServiceConfigAccessor {
 
-    private static final int SYSTEM_CLOCK_UPDATE_THRESHOLD_MILLIS_DEFAULT = 2 * 1000;
+    private static final int SYSTEM_CLOCK_UPDATE_THRESHOLD_MILLIS_DEFAULT = 50;
 
     /**
      * By default telephony and network only suggestions are accepted and telephony takes
