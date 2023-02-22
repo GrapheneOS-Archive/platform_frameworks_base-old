@@ -186,9 +186,6 @@ public final class TimeDetectorStrategyImpl implements TimeDetectorStrategy {
 
         /** Release the wake lock acquired by a call to {@link #acquireWakeLock()}. */
         void releaseWakeLock();
-
-        /** Returns true if NITZ time updates is enabled. */
-        boolean isNITZTimeDetectionEnabled();
     }
 
     static TimeDetectorStrategy create(
@@ -248,7 +245,7 @@ public final class TimeDetectorStrategyImpl implements TimeDetectorStrategy {
 
     @Override
     public synchronized void suggestNetworkTime(@NonNull NetworkTimeSuggestion timeSuggestion) {
-        if (timeSuggestion == null || !validateAutoSuggestionTime(timeSuggestion.getUnixEpochTime(), timeSuggestion)) {
+        if (!validateAutoSuggestionTime(timeSuggestion.getUnixEpochTime(), timeSuggestion)) {
             return;
         }
 
@@ -272,11 +269,6 @@ public final class TimeDetectorStrategyImpl implements TimeDetectorStrategy {
 
     @Override
     public synchronized void suggestTelephonyTime(@NonNull TelephonyTimeSuggestion timeSuggestion) {
-        // if config_nitzUpdate is set to false, we disallow telephony time suggestions.
-        if (!mEnvironment.isNITZTimeDetectionEnabled()) {
-            return;
-        }
-
         // Empty time suggestion means that telephony network connectivity has been lost.
         // The passage of time is relentless, and we don't expect our users to use a time machine,
         // so we can continue relying on previous suggestions when we lose connectivity. This is
@@ -461,7 +453,7 @@ public final class TimeDetectorStrategyImpl implements TimeDetectorStrategy {
         for (int origin : originPriorities) {
             TimestampedValue<Long> newUnixEpochTime = null;
             String cause = null;
-            if (mEnvironment.isNITZTimeDetectionEnabled() && origin == ORIGIN_TELEPHONY) {
+            if (origin == ORIGIN_TELEPHONY) {
                 TelephonyTimeSuggestion bestTelephonySuggestion = findBestTelephonySuggestion();
                 if (bestTelephonySuggestion != null) {
                     newUnixEpochTime = bestTelephonySuggestion.getUnixEpochTime();
