@@ -6703,6 +6703,12 @@ public final class Settings {
         /** @hide */
         public static final String SCREENSHOT_TIMESTAMP_EXIF = "screenshot_timestamp_exif";
 
+        /** @hide */
+        public static final String SCRAMBLE_PIN_LAYOUT = "lockscreen_scramble_pin_layout";
+
+        /** @hide */
+        public static final String SCRAMBLE_SIM_PIN_LAYOUT = "scramble_sim_pin_layout";
+
         // ExtSettings END
 
         // NOTE: If you add new settings here, be sure to add them to
