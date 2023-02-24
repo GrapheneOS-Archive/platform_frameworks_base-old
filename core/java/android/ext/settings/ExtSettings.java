@@ -46,6 +46,9 @@ public class ExtSettings {
             SUPL_SERVER_STANDARD, SUPL_DISABLED, SUPL_SERVER_GRAPHENEOS_PROXY // valid values
     );
 
+    public static final BoolSetting SCRAMBLE_PIN_LAYOUT = new BoolSetting(
+            Setting.Scope.PER_USER, "lockscreen_scramble_pin_layout", false);
+
     // AppCompatConfig specifies which hardening features are compatible/incompatible with a
     // specific app.
     // This setting controls whether incompatible hardening features would be disabled by default
