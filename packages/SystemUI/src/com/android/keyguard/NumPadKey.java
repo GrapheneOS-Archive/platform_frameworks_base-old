@@ -112,25 +112,9 @@ public class NumPadKey extends ViewGroup implements NumPadAnimationListener {
         inflater.inflate(contentResource, this, true);
 
         mDigitText = (TextView) findViewById(R.id.digit_text);
-        mDigitText.setText(Integer.toString(mDigit));
         mKlondikeText = (TextView) findViewById(R.id.klondike_text);
 
-        if (mDigit >= 0) {
-            if (sKlondike == null) {
-                sKlondike = getResources().getStringArray(R.array.lockscreen_num_pad_klondike);
-            }
-            if (sKlondike != null && sKlondike.length > mDigit) {
-                String klondike = sKlondike[mDigit];
-                final int len = klondike.length();
-                if (len > 0) {
-                    mKlondikeText.setText(klondike);
-                } else if (mKlondikeText.getVisibility() != View.GONE) {
-                    mKlondikeText.setVisibility(View.INVISIBLE);
-                }
-            }
-        }
-
-        setContentDescription(mDigitText.getText().toString());
+        updateText();
 
         Drawable background = getBackground();
         if (background instanceof GradientDrawable) {
@@ -235,5 +219,31 @@ public class NumPadKey extends ViewGroup implements NumPadAnimationListener {
      */
     public void setAnimationEnabled(boolean enabled) {
         mAnimationsEnabled = enabled;
+    }
+
+    private void updateText() {
+        if (mDigit >= 0) {
+            if (sKlondike == null) {
+                sKlondike = getResources().getStringArray(R.array.lockscreen_num_pad_klondike);
+            }
+            if (sKlondike != null && sKlondike.length > mDigit) {
+                mKlondikeText.setText(sKlondike[mDigit]);
+
+                if (mKlondikeText.getVisibility() != View.GONE) {
+                    mKlondikeText.setVisibility(View.INVISIBLE);
+                }
+            }
+
+            mDigitText.setText(Integer.toString(mDigit));
+        }
+
+        setContentDescription(mDigitText.getText().toString());
+    }
+
+    void setDigit(int digit) {
+        if (digit != mDigit) {
+            mDigit = digit;
+            updateText();
+        }
     }
 }
