@@ -34,6 +34,9 @@ public class ExtSettings {
             SUPL_SERVER_STANDARD, SUPL_DISABLED, SUPL_SERVER_GRAPHENEOS_PROXY // valid values
     );
 
+    public static final BoolSetting SCRAMBLE_PIN_LAYOUT = new BoolSetting(
+            Setting.Scope.PER_USER, "lockscreen_scramble_pin_layout", false);
+
     private ExtSettings() {}
 
     // used for making settings defined in this class unreadable by third-party apps

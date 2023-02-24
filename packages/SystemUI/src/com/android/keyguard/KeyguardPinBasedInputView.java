@@ -29,8 +29,10 @@ import android.animation.Animator;
 import android.animation.AnimatorSet;
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.ext.settings.ExtSettings;
 import android.graphics.Rect;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 
@@ -38,7 +40,9 @@ import com.android.internal.widget.LockscreenCredential;
 import com.android.systemui.R;
 import com.android.systemui.animation.Interpolators;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -135,7 +139,7 @@ public abstract class KeyguardPinBasedInputView extends KeyguardAbsKeyInputView 
 
     private void performNumberClick(int number) {
         if (number >= 0 && number <= 9) {
-            mButtons[number].performClick();
+            mButtons[digitToViewIndexMap[number]].performClick();
         }
     }
 
@@ -241,5 +245,33 @@ public abstract class KeyguardPinBasedInputView extends KeyguardAbsKeyInputView 
         }
         animatorSet.playTogether(animators);
         animatorSet.start();
+    }
+
+    private final SecureRandom secureRandom = new SecureRandom();
+
+    private final int[] digitToViewIndexMap = new int[mButtons.length];
+
+    void updateScrambling() {
+        boolean scramblePin = ExtSettings.SCRAMBLE_PIN_LAYOUT.get(mContext,
+                KeyguardUpdateMonitor.getCurrentUser());
+
+        NumPadKey[] buttons = mButtons;
+        int numButtons = buttons.length;
+
+        var digits = new ArrayList<Integer>(numButtons);
+
+        for (int i = 0; i < numButtons; ++i) {
+            digits.add(i);
+        }
+
+        if (scramblePin) {
+            Collections.shuffle(digits, secureRandom);
+        }
+
+        for (int i = 0; i < numButtons; ++i) {
+            int digit = digits.get(i);
+            buttons[i].setDigit(digit);
+            digitToViewIndexMap[digit] = i;
+        }
     }
 }
