@@ -148,8 +148,10 @@ public class PackageInstallerActivity extends AlertActivity {
             viewToEnable = requireViewById(R.id.install_confirm_question);
 
             if (mPkgInfo != null) {
+                ApplicationInfo ai = mPkgInfo.applicationInfo;
+                boolean isSystemApp = ai != null && ai.isSystemApp();
                 String[] perms = mPkgInfo.requestedPermissions;
-                if (perms != null && Arrays.asList(perms).contains(Manifest.permission.INTERNET)) {
+                if (!isSystemApp && perms != null && Arrays.asList(perms).contains(Manifest.permission.INTERNET)) {
                     mGrantInternetPermission = requireViewById(R.id.install_allow_INTERNET_permission);
                     mGrantInternetPermission.setVisibility(View.VISIBLE);
                 }
