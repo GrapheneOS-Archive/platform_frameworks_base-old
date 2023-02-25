@@ -6088,6 +6088,9 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
             pi.applicationInfo.setBaseCodePath(pkg.getBaseApkPath());
             pi.applicationInfo.setSplitCodePaths(pkg.getSplitCodePaths());
 
+            if (pkg.isSystem()) {
+                pi.applicationInfo.flags |= ApplicationInfo.FLAG_SYSTEM;
+            }
             return pi;
         }
     }
