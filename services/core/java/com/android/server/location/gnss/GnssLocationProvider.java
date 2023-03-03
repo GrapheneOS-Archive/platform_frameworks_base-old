@@ -60,6 +60,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.database.ContentObserver;
+import android.ext.settings.ExtSettings;
+import android.ext.settings.IntSetting;
 import android.location.GnssCapabilities;
 import android.location.GnssStatus;
 import android.location.INetInitiatedListener;
@@ -100,6 +102,7 @@ import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.util.Log;
+import android.util.Slog;
 import android.util.TimeUtils;
 
 import com.android.internal.annotations.GuardedBy;
@@ -127,6 +130,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
  * A GNSS implementation of LocationProvider used by LocationManager.
@@ -481,6 +485,13 @@ public class GnssLocationProvider extends AbstractLocationProvider implements
         mGnssNative.setNotificationCallbacks(this);
         mGnssNative.setLocationRequestCallbacks(this);
         mGnssNative.setTimeCallbacks(this);
+
+        Consumer<IntSetting> suplSettingObserver = setting -> {
+            Slog.d(TAG, "SUPL setting changed, value: " + setting.get(mContext));
+            reloadGpsProperties();
+        };
+
+        ExtSettings.GNSS_SUPL.registerObserver(mContext, suplSettingObserver, mHandler);
     }
 
     /** Called when system is ready. */
