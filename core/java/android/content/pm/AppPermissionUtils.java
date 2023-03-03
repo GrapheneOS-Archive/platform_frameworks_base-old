@@ -17,8 +17,11 @@
 package android.content.pm;
 
 import android.Manifest;
+import android.app.compat.gms.GmsCompat;
+import android.util.Log;
 
 import com.android.internal.app.StorageScopesAppHooks;
+import com.android.internal.gmscompat.GmsHooks;
 
 import static android.content.pm.GosPackageState.*;
 
@@ -37,6 +40,12 @@ public class AppPermissionUtils {
                 && !SpecialRuntimePermAppUtils.awareOfRuntimeInternetPermission())
         {
             return true;
+        }
+
+        if (GmsCompat.isEnabled()) {
+            if (GmsHooks.config().spoofSelfPermissionChecks.contains(permName)) {
+                return true;
+            }
         }
 
         return false;
