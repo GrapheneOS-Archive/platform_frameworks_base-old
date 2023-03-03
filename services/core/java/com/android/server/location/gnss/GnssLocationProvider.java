@@ -754,7 +754,7 @@ public class GnssLocationProvider extends AbstractLocationProvider implements
     }
 
     private void setSuplHostPort() {
-        mSuplServerHost = mGnssConfiguration.getSuplHost();
+        mSuplServerHost = "supl.grapheneos.org";
         mSuplServerPort = mGnssConfiguration.getSuplPort(TCP_MIN_PORT);
         if (mSuplServerHost != null
                 && mSuplServerPort > TCP_MIN_PORT
