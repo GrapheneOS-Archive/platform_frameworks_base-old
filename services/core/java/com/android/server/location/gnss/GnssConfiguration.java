@@ -19,13 +19,11 @@ package com.android.server.location.gnss;
 import android.content.Context;
 import android.os.PersistableBundle;
 import android.os.SystemProperties;
-import android.provider.Settings;
 import android.telephony.CarrierConfigManager;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
-import android.util.Slog;
 
 import com.android.internal.util.FrameworkStatsLog;
 
@@ -276,9 +274,6 @@ public class GnssConfiguration {
          * Overlay carrier properties from a debug configuration file.
          */
         loadPropertiesFromGpsDebugConfig(mProperties);
-
-        applyConfigOverrides(mContext, mProperties);
-
         mEsExtensionSec = getRangeCheckedConfigEsExtensionSec();
 
         logConfigurations();
@@ -481,15 +476,4 @@ public class GnssConfiguration {
     private static native boolean native_set_satellite_blocklist(int[] constellations, int[] svIds);
 
     private static native boolean native_set_es_extension_sec(int emergencyExtensionSeconds);
-
-    private static void applyConfigOverrides(Context ctx, Properties props) {
-        String key = Settings.Global.FORCE_DISABLE_SUPL;
-        int def = Settings.Global.FORCE_DISABLE_SUPL_DEFAULT;
-        if (Settings.Global.getInt(ctx.getContentResolver(), key, def) == 1) {
-            props.setProperty(CONFIG_SUPL_MODE, "0");
-            Slog.d(TAG, "SUPL is force disabled");
-        } else {
-            Slog.d(TAG, "SUPL is not force disabled");
-        }
-    }
 }
