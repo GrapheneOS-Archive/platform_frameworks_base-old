@@ -16,6 +16,10 @@ import java.util.function.BooleanSupplier;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
+import static android.ext.settings.GnssConstants.SUPL_DISABLED;
+import static android.ext.settings.GnssConstants.SUPL_SERVER_GRAPHENEOS_PROXY;
+import static android.ext.settings.GnssConstants.SUPL_SERVER_STANDARD;
+
 /** @hide */
 public class ExtSettings {
 
@@ -35,6 +39,12 @@ public class ExtSettings {
 
     public static final BoolSetting SCREENSHOT_TIMESTAMP_EXIF = new BoolSetting(
             Setting.Scope.PER_USER, "screenshot_timestamp_exif", false);
+
+    public static final IntSetting GNSS_SUPL = new IntSetting(
+            Setting.Scope.GLOBAL, "force_disable_supl", // historical name
+            SUPL_SERVER_GRAPHENEOS_PROXY, // default
+            SUPL_SERVER_STANDARD, SUPL_DISABLED, SUPL_SERVER_GRAPHENEOS_PROXY // valid values
+    );
 
     // AppCompatConfig specifies which hardening features are compatible/incompatible with a
     // specific app.
