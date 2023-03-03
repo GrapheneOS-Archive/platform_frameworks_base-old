@@ -12569,6 +12569,9 @@ public final class Settings {
         /** @hide */
         public static final String AUTO_REBOOT_TIMEOUT = "settings_reboot_after_timeout";
 
+        /** @hide */
+        public static final String GNSS_SUPL = "force_disable_supl"; // historical name
+
         // ExtSettings END
 
         // NOTE: If you add new settings here, be sure to add them to
