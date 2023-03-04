@@ -813,4 +813,6 @@ interface IPackageManager {
     void skipSpecialRuntimePermissionAutoGrantsForPackage(String packageName, int userId, in List<String> permissions);
 
     PackageInfo findPackage(String packageName, long minVersion, in Bundle validSignaturesSha256);
+
+    boolean updateListOfBusyPackages(boolean add, in List<String> packageNames, IBinder callerBinder);
 }
