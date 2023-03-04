@@ -6119,6 +6119,14 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
             }
             return pi;
         }
+
+        private final PrivilegedInstallerHelper privInstallerHelper =
+                new PrivilegedInstallerHelper(PackageManagerService.this);
+
+        @Override
+        public boolean updateListOfBusyPackages(boolean add, List<String> packageNames, IBinder callerBinder) {
+            return privInstallerHelper.updateListOfBusyPackages(add, packageNames, callerBinder);
+        }
     }
 
     private class PackageManagerLocalImpl implements PackageManagerLocal {
