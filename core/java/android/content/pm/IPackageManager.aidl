@@ -803,4 +803,6 @@ interface IPackageManager {
     boolean setGosPackageState(String packageName, int userId, in android.content.pm.GosPackageState updatedPs, int editorFlags);
 
     PackageInfo findPackage(String packageName, long minVersion, in Bundle validSignaturesSha256);
+
+    boolean updateListOfBusyPackages(boolean add, in List<String> packageNames, IBinder callerBinder);
 }
