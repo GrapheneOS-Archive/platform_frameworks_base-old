@@ -17,8 +17,9 @@
 package android.content.pm;
 
 import android.Manifest;
+import android.annotation.NonNull;
+import android.annotation.SystemApi;
 import android.app.compat.gms.GmsCompat;
-import android.util.Log;
 
 import com.android.internal.app.StorageScopesAppHooks;
 import com.android.internal.gmscompat.GmsHooks;
@@ -26,6 +27,7 @@ import com.android.internal.gmscompat.GmsHooks;
 import static android.content.pm.GosPackageState.*;
 
 /** @hide */
+@SystemApi
 public class AppPermissionUtils {
 
     // If the list of spoofed permissions changes at runtime, make sure to invalidate the permission
@@ -33,6 +35,7 @@ public class AppPermissionUtils {
     // Updates of GosPackageState invalidate this cache automatically.
     //
     // android.permission.PermissionManager#checkPermissionUncached
+    /** @hide */
     public static boolean shouldSpoofSelfCheck(String permName) {
         if (StorageScopesAppHooks.shouldSpoofSelfPermissionCheck(permName)) {
             return true;
@@ -59,6 +62,7 @@ public class AppPermissionUtils {
     // android.app.AppOpsManager#noteOpNoThrow
     // android.app.AppOpsManager#noteProxyOpNoThrow
     // android.app.AppOpsManager#unsafeCheckOpRawNoThrow
+    /** @hide */
     public static boolean shouldSpoofSelfAppOpCheck(int op) {
         if (StorageScopesAppHooks.shouldSpoofSelfAppOpCheck(op)) {
             return true;
@@ -67,28 +71,31 @@ public class AppPermissionUtils {
         return false;
     }
 
-    public static int getSpoofableStorageRuntimePermissionDflag(String permName) {
-        switch (permName) {
-            case Manifest.permission.READ_EXTERNAL_STORAGE:
-                return DFLAG_HAS_READ_EXTERNAL_STORAGE_DECLARATION;
-
-            case Manifest.permission.WRITE_EXTERNAL_STORAGE:
-                return DFLAG_HAS_WRITE_EXTERNAL_STORAGE_DECLARATION;
-
-            case Manifest.permission.ACCESS_MEDIA_LOCATION:
-                return DFLAG_HAS_ACCESS_MEDIA_LOCATION_DECLARATION;
-
-            case Manifest.permission.READ_MEDIA_AUDIO:
-                return DFLAG_HAS_READ_MEDIA_AUDIO_DECLARATION;
-
-            case Manifest.permission.READ_MEDIA_IMAGES:
-                return DFLAG_HAS_READ_MEDIA_IMAGES_DECLARATION;
-
-            case Manifest.permission.READ_MEDIA_VIDEO:
-                return DFLAG_HAS_READ_MEDIA_VIDEO_DECLARATION;
-
-            default:
-                return 0;
-        }
+    public static boolean shouldSkipPermissionRequestDialog(@NonNull GosPackageState ps, @NonNull String perm) {
+        // Don't check whether the app actually declared this permission:
+        // app can request a permission that isn't declared in its AndroidManifest and if that
+        // permission is split into multiple permissions (based on app's targetSdk), and at least
+        // one of of those split permissions is present in manifest, then permission prompt would be
+        // shown anyway.
+        return getSpoofablePermissionDflag(ps, perm) != 0;
     }
+
+    // Controls spoofing of Activity#onRequestPermissionsResult() callback
+    public static boolean shouldSpoofPermissionRequestResult(@NonNull GosPackageState ps, @NonNull String perm) {
+        int dflag = getSpoofablePermissionDflag(ps, perm);
+        return dflag != 0 && ps.hasDerivedFlag(dflag);
+    }
+
+    private static int getSpoofablePermissionDflag(GosPackageState ps, String perm) {
+        if (ps.hasFlag(FLAG_STORAGE_SCOPES_ENABLED)) {
+            int permDflag = StorageScopesAppHooks.getSpoofablePermissionDflag(perm);
+            if (permDflag != 0) {
+                return permDflag;
+            }
+        }
+
+        return 0;
+    }
+
+    private AppPermissionUtils() {}
 }
