@@ -188,31 +188,6 @@ public final class GosPackageState implements Parcelable {
         return attachableToPackage(UserHandle.getAppId(ai.uid));
     }
 
-    public boolean shouldSkipRuntimePermissionRequest(@NonNull String perm) {
-        // Don't check whether the app actually declared this permission:
-        // app can request a permission that isn't declared in its AndroidManifest and if that
-        // permission is split into multiple permissions (based on app's targetSdk), and at least
-        // one of of those split permissions is present in manifest, then permission prompt would be
-        // shown anyway.
-        return getSpoofableRuntimePermissionDflag(perm) != 0;
-    }
-
-    public boolean shouldSpoofRuntimePermissionCheck(@NonNull String perm) {
-        int dflag = AppPermissionUtils.getSpoofableStorageRuntimePermissionDflag(perm);
-        return dflag != 0 && hasDerivedFlag(dflag);
-    }
-
-    private int getSpoofableRuntimePermissionDflag(String perm) {
-        if (hasFlag(FLAG_STORAGE_SCOPES_ENABLED)) {
-            int dflag = AppPermissionUtils.getSpoofableStorageRuntimePermissionDflag(perm);
-            if (dflag != 0) {
-                return dflag;
-            }
-        }
-
-        return 0;
-    }
-
     // invalidated by PackageManager#invalidatePackageInfoCache() (eg when
     // PackageManagerService#setGosPackageState succeeds)
     private static final PropertyInvalidatedCache<String, Object> sCurrentUserCache =
