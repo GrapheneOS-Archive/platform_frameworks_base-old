@@ -3196,6 +3196,11 @@ package android.content.om {
 
 package android.content.pm {
 
+  public class AppPermissionUtils {
+    method public static boolean shouldSkipPermissionRequestDialog(@NonNull android.content.pm.GosPackageState, @NonNull String);
+    method public static boolean shouldSpoofPermissionRequestResult(@NonNull android.content.pm.GosPackageState, @NonNull String);
+  }
+
   public class ApplicationInfo extends android.content.pm.PackageItemInfo implements android.os.Parcelable {
     method public boolean isEncryptionAware();
     method public boolean isInstantApp();
@@ -3234,8 +3239,6 @@ package android.content.pm {
     method public boolean hasDerivedFlags(int);
     method public boolean hasFlag(int);
     method public boolean hasFlags(int);
-    method public boolean shouldSkipRuntimePermissionRequest(@NonNull String);
-    method public boolean shouldSpoofRuntimePermissionCheck(@NonNull String);
     method public void writeToParcel(@NonNull android.os.Parcel, int);
     field @NonNull public static final android.os.Parcelable.Creator<android.content.pm.GosPackageState> CREATOR;
     field public static final int DFLAGS_SET = 1; // 0x1
