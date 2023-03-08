@@ -28,8 +28,11 @@ import static android.content.pm.GosPackageState.*;
 /** @hide */
 public class AppPermissionUtils {
 
-    // android.app.ApplicationPackageManager#checkPermission(String permName, String pkgName)
-    // android.app.ContextImpl#checkPermission(String permission, int pid, int uid)
+    // If the list of spoofed permissions changes at runtime, make sure to invalidate the permission
+    // check cache, it's keyed on the PermissionManager.CACHE_KEY_PACKAGE_INFO system property.
+    // Updates of GosPackageState invalidate this cache automatically.
+    //
+    // android.permission.PermissionManager#checkPermissionUncached
     public static boolean shouldSpoofSelfCheck(String permName) {
         if (StorageScopesAppHooks.shouldSpoofSelfPermissionCheck(permName)) {
             return true;
