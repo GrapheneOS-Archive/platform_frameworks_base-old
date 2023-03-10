@@ -38,10 +38,7 @@ import dalvik.system.VMRuntime;
  * @hide
  */
 @SystemApi
-public final class GosPackageState implements Parcelable {
-    public final int flags;
-    @Nullable
-    public final byte[] storageScopes;
+public final class GosPackageState extends GosPackageStateBase implements Parcelable {
     public final int derivedFlags; // derived from persistent state, but not persisted themselves
 
     // packageName and userId are stored here for convenience, they don't get serialized
@@ -73,8 +70,7 @@ public final class GosPackageState implements Parcelable {
 
     /** @hide */
     public GosPackageState(int flags, @Nullable byte[] storageScopes, int derivedFlags) {
-        this.flags = flags;
-        this.storageScopes = storageScopes;
+        super(flags, storageScopes);
         this.derivedFlags = derivedFlags;
     }
 
@@ -150,10 +146,6 @@ public final class GosPackageState implements Parcelable {
 
     public boolean hasFlag(int flag) {
         return (flags & flag) != 0;
-    }
-
-    public boolean hasFlags(int flags) {
-        return (this.flags & flags) == flags;
     }
 
     public boolean hasDerivedFlag(int flag) {
@@ -295,28 +287,21 @@ public final class GosPackageState implements Parcelable {
         private boolean killUidAfterApply;
 
         /**
-         * Don't call directly, use GosPackageState#edit or GosPackageStatePm#edit
-         *
-         * @hide
-         *  */
-        public Editor(String packageName, int userId, int flags, byte[] storageScopes) {
-            this.packageName = packageName;
-            this.userId = userId;
-            this.flags = flags;
-            this.storageScopes = storageScopes;
-        }
-
-        /**
-         * Don't call directly, use GosPackageState#edit or GosPackageStatePm#edit
+         * Don't call directly, use GosPackageState#edit or GosPackageStatePm#getEditor
          *
          * @hide
          *  */
         public Editor(String packageName, int userId) {
-            this(packageName, userId, 0, null);
+            this.packageName = packageName;
+            this.userId = userId;
         }
 
-        Editor(GosPackageState s, String packageName, int userId) {
-            this(packageName, userId, s.flags, s.storageScopes);
+        /** @hide */
+        public Editor(GosPackageStateBase s, String packageName, int userId) {
+            this.packageName = packageName;
+            this.userId = userId;
+            this.flags = s.flags;
+            this.storageScopes = s.storageScopes;
         }
 
         @NonNull
