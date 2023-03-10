@@ -3238,7 +3238,7 @@ package android.content.pm {
     method public boolean hasDerivedFlag(int);
     method public boolean hasDerivedFlags(int);
     method public boolean hasFlag(int);
-    method public boolean hasFlags(int);
+    method public final boolean hasFlags(int);
     method public void writeToParcel(@NonNull android.os.Parcel, int);
     field @NonNull public static final android.os.Parcelable.Creator<android.content.pm.GosPackageState> CREATOR;
     field public static final int DFLAGS_SET = 1; // 0x1
@@ -3259,8 +3259,6 @@ package android.content.pm {
     field public static final int FLAG_ENABLE_COMPAT_VA_39_BIT = 8; // 0x8
     field public static final int FLAG_STORAGE_SCOPES_ENABLED = 1; // 0x1
     field public final int derivedFlags;
-    field public final int flags;
-    field @Nullable public final byte[] storageScopes;
   }
 
   public static class GosPackageState.Editor {
