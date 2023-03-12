@@ -24,9 +24,6 @@ import com.android.server.pm.PackageManagerService;
 
 import java.util.Arrays;
 
-import static android.content.pm.GosPackageState.FLAG_ALLOW_ACCESS_TO_OBB_DIRECTORY;
-import static android.content.pm.GosPackageState.FLAG_STORAGE_SCOPES_ENABLED;
-
 /**
  * GrapheneOS-specific package state, stored in PackageUserState (per-user, removed during uninstallation).
  *
@@ -148,18 +145,5 @@ public final class GosPackageStatePm {
         }
 
         return true;
-    }
-
-    public GosPackageState externalVersionForPrivilegedCallers(int derivedFlags) {
-        return new GosPackageState(flags, storageScopes, derivedFlags);
-    }
-
-    private static final int FLAGS_VISIBLE_TO_THE_TARGET_PACKAGE = FLAG_STORAGE_SCOPES_ENABLED
-            | FLAG_ALLOW_ACCESS_TO_OBB_DIRECTORY;
-    private static final int DFLAGS_VISIBLE_TO_THE_TARGET_PACKAGE = -1;
-
-    public GosPackageState externalVersionForTargetPackage(int derivedFlags) {
-        return new GosPackageState(flags & FLAGS_VISIBLE_TO_THE_TARGET_PACKAGE, null,
-                derivedFlags & DFLAGS_VISIBLE_TO_THE_TARGET_PACKAGE);
     }
 }

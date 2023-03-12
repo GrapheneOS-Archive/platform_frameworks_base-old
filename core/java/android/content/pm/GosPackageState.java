@@ -390,8 +390,9 @@ public final class GosPackageState implements Parcelable {
         @Nullable
         public GosPackageState apply() {
             try {
-                return AppGlobals.getPackageManager().setGosPackageState(packageName, flags,
-                        storageScopes, killUidAfterApply, userId);
+                return ActivityThread.getPackageManager().setGosPackageState(packageName, userId,
+                        new GosPackageState(flags, storageScopes, 0),
+                        killUidAfterApply);
             } catch (RemoteException e) {
                 throw e.rethrowFromSystemServer();
             }
