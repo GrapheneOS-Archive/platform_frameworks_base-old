@@ -19,17 +19,18 @@ package android.content.pm;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.SystemApi;
-import android.app.AppGlobals;
+import android.annotation.UserIdInt;
+import android.app.ActivityThread;
 import android.app.PropertyInvalidatedCache;
 import android.content.Context;
-import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.UserHandle;
 import android.permission.PermissionManager;
-import android.provider.Settings;
+
+import java.util.Objects;
 
 import dalvik.system.VMRuntime;
 
@@ -43,7 +44,9 @@ public final class GosPackageState implements Parcelable {
     public final byte[] storageScopes;
     public final int derivedFlags; // derived from persistent state, but not persisted themselves
 
-    String packageName; // needed for instantiation of Editor
+    // packageName and userId are stored here for convenience, they don't get serialized
+    private String packageName;
+    private int userId;
 
     public static final int FLAG_STORAGE_SCOPES_ENABLED = 1;
     // checked only if REQUEST_INSTALL_PACKAGES permission is granted
@@ -77,13 +80,34 @@ public final class GosPackageState implements Parcelable {
 
     @Nullable
     public static GosPackageState getForSelf() {
-        return get(AppGlobals.getInitialPackage());
+        String packageName = ActivityThread.currentPackageName();
+        if (packageName == null) {
+            // currentPackageName is null inside system_server
+            if (ActivityThread.isSystem()) {
+                return null;
+            } else {
+                throw new IllegalStateException("ActivityThread.currentPackageName() is null");
+            }
+        }
+        return get(packageName);
     }
 
     // uses current userId, don't use in places that deal with multiple users (eg system_server)
     @Nullable
     public static GosPackageState get(@NonNull String packageName) {
-        Object res = sCache.query(packageName);
+        Object res = sCurrentUserCache.query(packageName);
+        if (res instanceof GosPackageState) {
+            return (GosPackageState) res;
+        }
+        return null;
+    }
+
+    @Nullable
+    public static GosPackageState get(@NonNull String packageName, @UserIdInt int userId) {
+        if (userId == myUserId()) {
+            return get(packageName);
+        }
+        Object res = getOtherUsersCache().query(new CacheQuery(packageName, userId));
         if (res instanceof GosPackageState) {
             return (GosPackageState) res;
         }
@@ -115,6 +139,15 @@ public final class GosPackageState implements Parcelable {
         return 0;
     }
 
+    @NonNull
+    public String getPackageName() {
+        return packageName;
+    }
+
+    public int getUserId() {
+        return userId;
+    }
+
     public boolean hasFlag(int flag) {
         return (flags & flag) != 0;
     }
@@ -140,7 +173,7 @@ public final class GosPackageState implements Parcelable {
     }
 
     public static boolean attachableToPackage(@NonNull String pkg) {
-        Context ctx = AppGlobals.getInitialApplication();
+        Context ctx = ActivityThread.currentApplication();
         if (ctx == null) {
             return false;
         }
@@ -182,56 +215,94 @@ public final class GosPackageState implements Parcelable {
 
     // invalidated by PackageManager#invalidatePackageInfoCache() (eg when
     // PackageManagerService#setGosPackageState succeeds)
-    private static final PropertyInvalidatedCache<String, Object> sCache =
+    private static final PropertyInvalidatedCache<String, Object> sCurrentUserCache =
             new PropertyInvalidatedCache<String, Object>(
                     256, PermissionManager.CACHE_KEY_PACKAGE_INFO,
-                    "getGosPackageState") {
+                    "getGosPackageStateCurrentUser") {
 
                 @Override
-                public Object recompute(String s) {
-                    GosPackageState res = getUncached(s);
-                    if (res == null) {
-                        // return non-null to cache null results, see javadoc for recompute()
-                        return GosPackageState.class;
-                    }
-                    return res;
-                }
-
-                private int cachedUserId = -1;
-
-                @Nullable
-                private GosPackageState getUncached(@NonNull String packageName) {
-                    int userId = cachedUserId;
-                    if (userId < 0) {
-                        userId = getUserId();
-                        cachedUserId = userId;
-                    }
-
-                    try {
-                        GosPackageState s = AppGlobals.getPackageManager().getGosPackageState(packageName, userId);
-                        if (s != null) {
-                            s.packageName = packageName;
-                        }
-                        return s;
-                    } catch (RemoteException e) {
-                        throw e.rethrowFromSystemServer();
-                    }
+                public Object recompute(String packageName) {
+                    return getUncached(packageName, myUserId());
                 }
             };
 
+
+    static final class CacheQuery {
+        final String packageName;
+        final int userId;
+
+        CacheQuery(String packageName, int userId) {
+            this.packageName = packageName;
+            this.userId = userId;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(packageName.hashCode()) + 31 * userId;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof CacheQuery) {
+                CacheQuery o = (CacheQuery) obj;
+                return packageName.equals(o.packageName) && userId == o.userId;
+            }
+            return false;
+        }
+    }
+
+    private static volatile PropertyInvalidatedCache<CacheQuery, Object> sOtherUsersCache;
+
+    private static PropertyInvalidatedCache<CacheQuery, Object> getOtherUsersCache() {
+        var c = sOtherUsersCache;
+        if (c != null) {
+            return c;
+        }
+        return sOtherUsersCache = new PropertyInvalidatedCache<CacheQuery, Object>(
+                256, PermissionManager.CACHE_KEY_PACKAGE_INFO,
+                "getGosPackageStateOtherUsers") {
+
+            @Override
+            public Object recompute(CacheQuery query) {
+                return getUncached(query.packageName, query.userId);
+            }
+        };
+    }
+
+    @Nullable
+    static Object getUncached(String packageName, int userId) {
+        try {
+            GosPackageState s = ActivityThread.getPackageManager().getGosPackageState(packageName, userId);
+            if (s != null) {
+                s.packageName = packageName;
+                s.userId = userId;
+                return s;
+            }
+            // return non-null to cache null results, see javadoc for PropertyInvalidatedCache#recompute()
+            return GosPackageState.class;
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
     @NonNull
     public Editor edit() {
-        return new Editor(this, getUserId());
+        return new Editor(this, getPackageName(), getUserId());
     }
 
     @NonNull
     public static Editor edit(@NonNull String packageName) {
-        GosPackageState s = GosPackageState.get(packageName);
+        return edit(packageName, myUserId());
+    }
+
+    @NonNull
+    public static Editor edit(@NonNull String packageName, int userId) {
+        GosPackageState s = GosPackageState.get(packageName, userId);
         if (s != null) {
             return s.edit();
         }
 
-        return new Editor(packageName, getUserId());
+        return new Editor(packageName, userId);
     }
 
     /** @hide */
@@ -269,8 +340,8 @@ public final class GosPackageState implements Parcelable {
             this(packageName, userId, 0, null);
         }
 
-        Editor(GosPackageState s, int userId) {
-            this(s.packageName, userId, s.flags, s.storageScopes);
+        Editor(GosPackageState s, String packageName, int userId) {
+            this(packageName, userId, s.flags, s.storageScopes);
         }
 
         @NonNull
@@ -327,14 +398,16 @@ public final class GosPackageState implements Parcelable {
         }
     }
 
-    static int getUserId() {
-        if (Build.IS_DEBUGGABLE) {
-            if (Settings.isInSystemServer()) {
-                // system_server should use GosPackageStatePm instead
-                throw new IllegalStateException();
-            }
-        }
+    private static volatile int myUid;
+    private static int myUserId;
 
-        return UserHandle.myUserId();
+    private static int myUserId() {
+        if (myUid == 0) {
+            int uid = Process.myUid();
+            // order is important, volatile write to myUid publishes write to myUserId
+            myUserId = UserHandle.getUserId(uid);
+            myUid = uid;
+        }
+        return myUserId;
     }
 }
