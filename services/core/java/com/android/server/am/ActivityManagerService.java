@@ -5167,6 +5167,8 @@ public class ActivityManagerService extends IActivityManager.Stub
         showMteOverrideNotificationIfActive();
         // If device is not a mass production (MP) variant, send a warning notification.
         showPrototypeNotificationIfPrototype();
+        // If device boot loader is left unlocked, send a warning notification.
+        showDeviceBootloaderNotificationIfUnlocked();
 
         t.traceEnd();
     }
@@ -5237,6 +5239,48 @@ public class ActivityManagerService extends IActivityManager.Stub
                 mContext.getSystemService(NotificationManager.class);
         notificationManager.notifyAsUser(
                 null, SystemMessage.NOTE_PROTOTYPE_DETECTED, notification, UserHandle.ALL);
+    }
+
+    private static boolean isBootloaderUnlocked() {
+        // ro.boot.flash.locked does not exist on emulator (no dm-verity), check if we're a physical device.
+        //
+        // https://source.android.com/docs/core/architecture/bootloader/locking_unlocking#setting-properties
+        //
+        // "For devices that support dm-verity, use ro.boot.verifiedbootstate to set the value
+        // of *** ro.boot.flash.locked *** to 0; this unlocks the bootloader if the verified boot state is orange."
+        // 0 == unlocked bootloader, 1 == locked bootloader
+        //
+        // ro.boot.vbmeta.device_state also reports device state from vbmeta partition of "locked" or "unlocked"
+        // These two properties should never differ. If ro.boot.flash.locked does not exist, assume unlocked.
+        return isPixelDevice() && (!SystemProperties.getBoolean("ro.boot.flash.locked", false) && !SystemProperties.get("ro.boot.vbmeta.device_state").equals("locked"));
+    }
+
+    private void showDeviceBootloaderNotificationIfUnlocked() {
+        if (!isBootloaderUnlocked()) {
+            return;
+        }
+        String title = mContext
+                .getString(com.android.internal.R.string.unlocked_bootloader_notification_title);
+        String message = mContext
+                .getString(com.android.internal.R.string.unlocked_bootloader_notification_message);
+        Notification notification =
+                new Notification.Builder(mContext, SystemNotificationChannels.DEVELOPER)
+                        .setSmallIcon(com.android.internal.R.drawable.stat_sys_adb)
+                        .setWhen(0)
+                        .setOngoing(true)
+                        .setTicker(title)
+                        .setColor(mContext.getColor(
+                                com.android.internal.R.color
+                                        .system_notification_accent_color))
+                        .setContentTitle(title)
+                        .setContentText(message)
+                        .setVisibility(Notification.VISIBILITY_PUBLIC)
+                        .build();
+
+        NotificationManager notificationManager =
+                mContext.getSystemService(NotificationManager.class);
+        notificationManager.notifyAsUser(
+                null, SystemMessage.NOTE_UNLOCKED_BOOTLOADER_DETECTED, notification, UserHandle.ALL);
     }
 
     private void showConsoleNotificationIfActive() {

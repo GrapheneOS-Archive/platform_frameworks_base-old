@@ -3912,6 +3912,11 @@
     <!-- Message of notification shown when a prototype device is detected. [CHAR LIMIT=NONE] -->
     <string name="prototype_device_notification_message">Device security may be affected.</string>
 
+    <!-- Title of notification shown when the device bootloader is left unlocked. [CHAR LIMIT=NONE] -->
+    <string name="unlocked_bootloader_notification_title">Device bootloader is unlocked</string>
+    <!-- Message of notification shown when the device bootloader is left unlocked. [CHAR LIMIT=NONE] -->
+    <string name="unlocked_bootloader_notification_message">Device security is severely affected.</string>
+
     <!-- Title of notification shown when contaminant is detected on the USB port. [CHAR LIMIT=NONE] -->
     <string name="usb_contaminant_detected_title">Liquid or debris in USB port</string>
     <!-- Message of notification shown when contaminant is detected on the USB port. [CHAR LIMIT=NONE] -->
