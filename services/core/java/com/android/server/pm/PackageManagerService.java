@@ -4184,7 +4184,7 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
         // Prune unused static shared libraries which have been cached a period of time
         schedulePruneUnusedStaticSharedLibraries(false /* delay */);
 
-        initGosPackageStateAppIds();
+        GosPackageStatePmHooks.init(this);
     }
 
     //TODO: b/111402650
@@ -6060,8 +6060,10 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
         }
 
         @Override
-        public GosPackageState setGosPackageState(@NonNull String packageName, int flags, @Nullable byte[] storageScopes, boolean killUid, int userId) {
-            if (GosPackageStatePmHooks.set(PackageManagerService.this, packageName, flags, storageScopes, killUid, userId)) {
+        public GosPackageState setGosPackageState(@NonNull String packageName, int userId,
+                                                  @NonNull GosPackageState updatedPs, boolean killUid) {
+            if (GosPackageStatePmHooks.set(PackageManagerService.this, packageName, userId,
+                    updatedPs, killUid)) {
                 return GosPackageStatePmHooks.get(PackageManagerService.this, packageName, userId);
             }
             return null;
@@ -7411,30 +7413,6 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
     void addInstallerPackageName(InstallSource installSource) {
         synchronized (mLock) {
             mSettings.addInstallerPackageNames(installSource);
-        }
-    }
-
-    int mediaProviderAppId;
-    int permissionControllerAppId;
-    int sysLauncherAppId;
-
-    private void initGosPackageStateAppIds() {
-        synchronized (mLock) {
-            AndroidPackage mediaProvider = mPackages.get("com.android.providers.media.module");
-            if (mediaProvider != null) {
-                // getUid() confusingly returns appId
-                mediaProviderAppId = mediaProvider.getUid();
-            }
-
-            AndroidPackage permissionController = mPackages.get(mRequiredPermissionControllerPackage);
-            if (permissionController != null) {
-                permissionControllerAppId = permissionController.getUid();
-            }
-
-            var sysLauncher = mPackages.get("com.android.launcher3");
-            if (sysLauncher != null) {
-                sysLauncherAppId = sysLauncher.getUid();
-            }
         }
     }
 }
