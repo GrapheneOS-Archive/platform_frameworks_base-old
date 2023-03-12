@@ -3224,8 +3224,12 @@ package android.content.pm {
     method public int describeContents();
     method @NonNull public android.content.pm.GosPackageState.Editor edit();
     method @NonNull public static android.content.pm.GosPackageState.Editor edit(@NonNull String);
+    method @NonNull public static android.content.pm.GosPackageState.Editor edit(@NonNull String, int);
     method @Nullable public static android.content.pm.GosPackageState get(@NonNull String);
+    method @Nullable public static android.content.pm.GosPackageState get(@NonNull String, int);
     method @Nullable public static android.content.pm.GosPackageState getForSelf();
+    method @NonNull public String getPackageName();
+    method public int getUserId();
     method public boolean hasDerivedFlag(int);
     method public boolean hasDerivedFlags(int);
     method public boolean hasFlag(int);
