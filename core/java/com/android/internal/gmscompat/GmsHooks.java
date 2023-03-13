@@ -26,7 +26,6 @@ import android.app.Application;
 import android.app.ApplicationErrorReport;
 import android.app.BroadcastOptions;
 import android.app.PendingIntent;
-import android.app.RemoteServiceException;
 import android.app.Service;
 import android.app.compat.gms.GmsCompat;
 import android.content.ComponentName;
@@ -174,9 +173,6 @@ public final class GmsHooks {
     // (DeadObjectException is rethrown as DeadSystemRuntimeException by
     // android.os.RemoteException#rethrowFromSystemServer())
                     e instanceof DeadSystemRuntimeException
-    // Seems to be an OS bug, see
-    // https://cs.android.com/android/platform/superproject/+/android-13.0.0_r3:frameworks/base/services/core/java/com/android/server/am/BroadcastQueue.java;l=654
-                    || e instanceof RemoteServiceException.CannotDeliverBroadcastException
                 ;
 
                 if (skip) {
