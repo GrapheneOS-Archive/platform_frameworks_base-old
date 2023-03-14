@@ -32,6 +32,8 @@ public class KeyguardPinViewController
     private final DevicePostureController.Callback mPostureCallback = posture ->
             mView.onDevicePostureChanged(posture);
 
+    private final KeyguardPINView mKeyguardPINView;
+
     protected KeyguardPinViewController(KeyguardPINView view,
             KeyguardUpdateMonitor keyguardUpdateMonitor,
             SecurityMode securityMode, LockPatternUtils lockPatternUtils,
@@ -46,6 +48,13 @@ public class KeyguardPinViewController
                 emergencyButtonController, falsingCollector);
         mKeyguardUpdateMonitor = keyguardUpdateMonitor;
         mPostureController = postureController;
+        mKeyguardPINView = view;
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        mKeyguardPINView.reScramble();
     }
 
     @Override

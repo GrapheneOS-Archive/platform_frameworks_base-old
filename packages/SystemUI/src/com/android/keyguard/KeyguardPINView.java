@@ -178,11 +178,17 @@ public class KeyguardPINView extends KeyguardPinBasedInputView {
                         null, mEcaView, null
                 }};
 
+        reScramble();
+
+    }
+
+    public void reScramble() {
         mScramblePin = Settings.Secure.getIntForUser(mContext.getContentResolver(),
                 Settings.Secure.SCRAMBLE_PIN_LAYOUT, 0, ActivityManager.getCurrentUser()) == 1;
 
         if (mScramblePin) {
             Collections.shuffle(mDigits, new SecureRandom());
+
             int finished = 0;
             for (int i = 0; i < mContainer.getChildCount(); i++) {
                 View view = mContainer.getChildAt(i);
