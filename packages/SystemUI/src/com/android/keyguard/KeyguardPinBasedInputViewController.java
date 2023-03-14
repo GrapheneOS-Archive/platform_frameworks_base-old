@@ -112,8 +112,6 @@ public abstract class KeyguardPinBasedInputViewController<T extends KeyguardPinB
             });
             okButton.setOnHoverListener(mLiftToActivateListener);
         }
-
-        mView.updateScrambling();
     }
 
     @Override
@@ -134,7 +132,6 @@ public abstract class KeyguardPinBasedInputViewController<T extends KeyguardPinB
     @Override
     void resetState() {
         mView.setPasswordEntryEnabled(true);
-        mView.updateScrambling();
     }
 
     @Override
@@ -146,5 +143,11 @@ public abstract class KeyguardPinBasedInputViewController<T extends KeyguardPinB
     @Override
     protected int getInitialMessageResId() {
         return R.string.keyguard_enter_your_pin;
+    }
+
+    @Override
+    public void startAppearAnimation() {
+        super.startAppearAnimation();
+        mView.updateScrambling();
     }
 }
