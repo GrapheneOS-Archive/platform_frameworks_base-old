@@ -1727,38 +1727,7 @@ public class GnssLocationProvider extends AbstractLocationProvider implements
 
     @Override
     public void onRequestSetID(@GnssNative.AGpsCallbacks.AgpsSetIdFlags int flags) {
-        TelephonyManager phone = (TelephonyManager)
-                mContext.getSystemService(Context.TELEPHONY_SERVICE);
-        int type = AGPS_SETID_TYPE_NONE;
-        String setId = null;
-
-        /*
-         * We don't want to tell Google our IMSI or phone number to spy on us!
-         * As devices w/o SIM card also have working GPS, providing this data does
-         * not seem to add a lot of value, at least not for the device holder
-         *
-        int subId = SubscriptionManager.getDefaultDataSubscriptionId();
-        if (mNIHandler.getInEmergency() && mNetworkConnectivityHandler.getActiveSubId() >= 0) {
-            subId = mNetworkConnectivityHandler.getActiveSubId();
-        }
-        if (SubscriptionManager.isValidSubscriptionId(subId)) {
-            phone = phone.createForSubscriptionId(subId);
-        }
-        if ((flags & AGPS_REQUEST_SETID_IMSI) == AGPS_REQUEST_SETID_IMSI) {
-            setId = phone.getSubscriberId();
-            if (setId != null) {
-                // This means the framework has the SIM card.
-                type = AGPS_SETID_TYPE_IMSI;
-            }
-        } else if ((flags & AGPS_REQUEST_SETID_MSISDN) == AGPS_REQUEST_SETID_MSISDN) {
-            setId = phone.getLine1Number();
-            if (setId != null) {
-                // This means the framework has the SIM card.
-                type = AGPS_SETID_TYPE_MSISDN;
-            }
-        } */
-
-        mGnssNative.setAgpsSetId(type, (setId == null) ? "" : setId);
+        mGnssNative.setAgpsSetId(AGPS_SETID_TYPE_NONE, "");
     }
 
     @Override
