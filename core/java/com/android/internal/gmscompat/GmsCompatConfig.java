@@ -57,6 +57,10 @@ public class GmsCompatConfig implements Parcelable {
         map.put(flag.name, flag);
     }
 
+    public boolean shouldSpoofSelfPermissionCheck(String perm) {
+        return spoofSelfPermissionChecks.contains(perm);
+    }
+
     @Override
     public int describeContents() {
         return 0;
