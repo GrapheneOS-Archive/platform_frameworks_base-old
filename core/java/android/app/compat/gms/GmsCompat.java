@@ -242,7 +242,20 @@ public final class GmsCompat {
     }
 
     public static boolean hasPermission(@NonNull String perm) {
-        return appContext().checkSelfPermission(perm) == PackageManager.PERMISSION_GRANTED;
+        Context ctx = appContext();
+
+        if (GmsHooks.config().shouldSpoofSelfPermissionCheck(perm)) {
+            // result of checkSelfPermission() below would be spoofed, ask the PackageManager directly
+            IPackageManager pm = ActivityThread.getPackageManager();
+            try {
+                return pm.checkPermission(perm, ctx.getPackageName(), ctx.getUserId())
+                        == PackageManager.PERMISSION_GRANTED;
+            } catch (RemoteException e) {
+                throw e.rethrowFromSystemServer();
+            }
+        }
+
+        return ctx.checkSelfPermission(perm) == PackageManager.PERMISSION_GRANTED;
     }
 
     // call only when Build.isDebuggable() is true

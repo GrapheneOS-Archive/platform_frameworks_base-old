@@ -43,7 +43,7 @@ public class AppPermissionUtils {
         }
 
         if (GmsCompat.isEnabled()) {
-            if (GmsHooks.config().spoofSelfPermissionChecks.contains(permName)) {
+            if (GmsHooks.config().shouldSpoofSelfPermissionCheck(permName)) {
                 return true;
             }
         }
