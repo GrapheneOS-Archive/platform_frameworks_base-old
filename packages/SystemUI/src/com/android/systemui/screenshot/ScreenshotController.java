@@ -1049,6 +1049,10 @@ public class ScreenshotController {
     }
 
     private void playCameraSound() {
+        if (Settings.System.getInt(mContext.getContentResolver(), Settings.System.SOUND_EFFECTS_ENABLED, 0) != 1) {
+            return;
+        }
+
         mCameraSound.addListener(() -> {
             try {
                 MediaPlayer player = mCameraSound.get();
