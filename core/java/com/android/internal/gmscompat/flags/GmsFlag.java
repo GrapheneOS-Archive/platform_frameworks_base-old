@@ -98,8 +98,7 @@ public class GmsFlag implements Parcelable {
             throw new IllegalStateException();
         }
 
-        String orig = map.get(name);
-        map.put(name, stringVal(orig));
+        maybeOverrideString(map);
     }
 
     private static final int PHENOTYPE_BASE64_FLAGS = Base64.NO_PADDING | Base64.NO_WRAP;
@@ -135,8 +134,8 @@ public class GmsFlag implements Parcelable {
                 s = Double.toString(floatArg);
                 break;
             case TYPE_STRING:
-                s = stringVal(String.valueOf(map.get(name)));
-                break;
+                maybeOverrideString(map);
+                return;
             case TYPE_BYTES:
                 s = Base64.encodeToString(bytesArg, PHENOTYPE_BASE64_FLAGS);
                 break;
@@ -191,27 +190,39 @@ public class GmsFlag implements Parcelable {
         return floatArg;
     }
 
-    public String stringVal(String orig) {
+    public void maybeOverrideString(Map map) {
         if (type != TYPE_STRING) {
             logTypeMismatch();
-            return orig;
+            return;
         }
         if (valueSupplier != null) {
-            return (String) valueSupplier.get();
+            map.put(name, valueSupplier.get());
+            return;
         }
 
         if (action == ACTION_SET) {
-            return stringArg;
-        } else if (action == ACTION_APPEND) {
-            if (orig == null) {
-                Log.w(TAG, name + " orig value is null");
-                return null;
-            }
-            return orig + stringArg;
-        } else {
-            Log.d(TAG, "unknown action " + action + " for " + name);
-            return orig;
+            map.put(name, stringArg);
+            return;
         }
+
+        if (action == ACTION_APPEND) {
+            if (!map.containsKey(name)) {
+                Log.d(TAG, name + " is not present in the map, skipping ACTION_APPEND");
+                return;
+            }
+
+            Object orig = map.get(name);
+
+            if (!(orig instanceof String)) {
+                Log.w(TAG, "original value of " +  name + " is not a string, skipping ACTION_APPEND. Value: " + orig);
+                return;
+            }
+
+            map.put(name, (String) orig + stringArg);
+            return;
+        }
+
+        Log.d(TAG, "unknown action " + action + " for " + name);
     }
 
     public byte[] extensionVal(byte[] orig) {
