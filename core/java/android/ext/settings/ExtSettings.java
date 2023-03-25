@@ -7,6 +7,10 @@ import static android.ext.settings.GnssConstants.SUPL_DISABLED;
 import static android.ext.settings.GnssConstants.SUPL_SERVER_GRAPHENEOS_PROXY;
 import static android.ext.settings.GnssConstants.SUPL_SERVER_STANDARD;
 
+import static android.ext.settings.ConnectivityCheckConstants.GRAPHENEOS_CAPTIVE_PORTAL_HTTP_URL_INTVAL;
+import static android.ext.settings.ConnectivityCheckConstants.STANDARD_CAPTIVE_PORTAL_HTTP_URL_INTVAL;
+import static android.ext.settings.ConnectivityCheckConstants.DISABLED_CAPTIVE_PORTAL_INTVAL;
+
 /** @hide */
 public class ExtSettings {
 
@@ -30,6 +34,12 @@ public class ExtSettings {
 
     public static final BoolSetting SCRAMBLE_PIN_LAYOUT = new BoolSetting(
             Setting.Scope.PER_USER, "lockscreen_scramble_pin_layout", false);
+
+    public static final IntSetting CONNECTIVITY_CHECK_SERVER = new IntSetting(
+            Setting.Scope.GLOBAL, "connectivity_check_settings", // historical setting key string
+            GRAPHENEOS_CAPTIVE_PORTAL_HTTP_URL_INTVAL, // default
+            GRAPHENEOS_CAPTIVE_PORTAL_HTTP_URL_INTVAL, STANDARD_CAPTIVE_PORTAL_HTTP_URL_INTVAL, DISABLED_CAPTIVE_PORTAL_INTVAL // valid values
+    );
 
     private ExtSettings() {}
 
