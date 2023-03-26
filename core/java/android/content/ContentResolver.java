@@ -2713,6 +2713,11 @@ public abstract class ContentResolver implements ContentInterface {
                     observer.getContentObserver(), userHandle, mTargetSdkVersion);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
+        } catch (SecurityException se) {
+            if ("com.google.android.gsf.gservices".equals(uri.getAuthority())) {
+                return;
+            }
+            throw se;
         }
     }
 
