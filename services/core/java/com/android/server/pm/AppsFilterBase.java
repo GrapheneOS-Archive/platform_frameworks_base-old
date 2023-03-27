@@ -38,6 +38,7 @@ import android.util.SparseArray;
 
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.function.QuadFunction;
+import com.android.server.ext.PackageManagerHooks;
 import com.android.server.om.OverlayReferenceMapper;
 import com.android.server.pm.parsing.pkg.AndroidPackage;
 import com.android.server.pm.pkg.PackageStateInternal;
@@ -408,6 +409,11 @@ public abstract class AppsFilterBase implements AppsFilterSnapshot {
             }
             if (DEBUG_TRACING) {
                 Trace.traceEnd(TRACE_TAG_PACKAGE_MANAGER);
+            }
+
+            if (PackageManagerHooks.shouldFilterAccess(callingPkgSetting, callingSharedPkgSettings,
+                    targetPkgSetting)) {
+                return true;
             }
 
             if (callingPkgSetting != null) {
