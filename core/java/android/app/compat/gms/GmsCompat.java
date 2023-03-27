@@ -170,6 +170,12 @@ public final class GmsCompat {
     }
 
     private static boolean isGmsPackageName(String pkg) {
+        if (Build.IS_DEBUGGABLE) {
+            if (isTestPackage(pkg)) {
+                return true;
+            }
+        }
+
         return GmsInfo.PACKAGE_GMS_CORE.equals(pkg)
             || GmsInfo.PACKAGE_PLAY_STORE.equals(pkg)
             || GmsInfo.PACKAGE_GSF.equals(pkg)
@@ -258,15 +264,18 @@ public final class GmsCompat {
         return ctx.checkSelfPermission(perm) == PackageManager.PERMISSION_GRANTED;
     }
 
+    private static boolean isTestPackage(String packageName) {
+        String testPkgs = SystemProperties.get("persist.gmscompat_test_pkgs");
+        return ArrayUtils.contains(testPkgs.split(","), packageName);
+    }
+
     // call only when Build.isDebuggable() is true
     /** @hide */
     public static boolean isTestPackage(String packageName, int userId, boolean matchDisabledApp) {
         if (!Build.isDebuggable()) {
             return false;
         }
-        String testPkgs = SystemProperties.get("persist.gmscompat_test_pkgs");
-
-        if (!ArrayUtils.contains(testPkgs.split(","), packageName)) {
+        if (!isTestPackage(packageName)) {
             return false;
         }
 
