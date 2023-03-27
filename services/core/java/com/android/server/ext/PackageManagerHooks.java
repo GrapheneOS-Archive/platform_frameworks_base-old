@@ -32,6 +32,16 @@ public class PackageManagerHooks {
     @Nullable
     public static Integer maybeOverrideSystemPackageEnabledSetting(String pkgName, @UserIdInt int userId) {
         switch (pkgName) {
+            case PackageId.EUICC_SUPPORT_PIXEL_NAME:
+                if (userId == UserHandle.USER_SYSTEM) {
+                    // EuiccSupportPixel handles firmware updates of embedded secure element that is
+                    // used for eSIM, NFC, Felica, etc and should always be enabled.
+                    // It was previously unconditionally disabled after reboot.
+                    return PackageManager.COMPONENT_ENABLED_STATE_DEFAULT;
+                } else {
+                    // one of the previous OS versions enabled EuiccSupportPixel in all users
+                    return PackageManager.COMPONENT_ENABLED_STATE_DISABLED;
+                }
             default:
                 return null;
         }
