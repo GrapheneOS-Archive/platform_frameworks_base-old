@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.os.UserHandle;
 import android.util.ArraySet;
 
+import com.android.internal.util.GoogleEuicc;
 import com.android.server.pm.GosPackageStatePmHooks;
 import com.android.server.pm.PackageManagerService;
 import com.android.server.pm.parsing.pkg.AndroidPackage;
@@ -25,6 +26,15 @@ public class PackageManagerHooks {
     @Nullable
     public static Integer maybeOverridePackageEnabledSetting(String pkgName, @UserIdInt int userId) {
         switch (pkgName) {
+            case GoogleEuicc.EUICC_SUPPORT_PIXEL_PKG_NAME:
+                if (userId == UserHandle.USER_SYSTEM) {
+                    // EuiccSupportPixel handles firmware updates and should always be enabled.
+                    // It was previously unconditionally disabled after reboot.
+                    return PackageManager.COMPONENT_ENABLED_STATE_DEFAULT;
+                } else {
+                    // one of the previous OS versions enabled EuiccSupportPixel in all users
+                    return PackageManager.COMPONENT_ENABLED_STATE_DISABLED;
+                }
             default:
                 return null;
         }
@@ -35,6 +45,10 @@ public class PackageManagerHooks {
         String pkgName = pkg.getPackageName();
 
         switch (pkgName) {
+            case GoogleEuicc.EUICC_SUPPORT_PIXEL_PKG_NAME:
+                // EuiccSupportPixel uses INTERNET perm only as part of its dev mode
+                removeUsesPermissions(pkg, Manifest.permission.INTERNET);
+                return;
             default:
                 return;
         }
@@ -112,5 +126,6 @@ public class PackageManagerHooks {
 
     // Packages in this array are restricted from interacting with and being interacted by non-system apps
     private static final ArraySet<String> restrictedVisibilityPackages = new ArraySet<>(new String[] {
+        GoogleEuicc.EUICC_SUPPORT_PIXEL_PKG_NAME,
     });
 }
