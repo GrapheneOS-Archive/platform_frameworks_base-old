@@ -26,6 +26,9 @@ public class PackageManagerHooks {
                     // one of the previous OS versions enabled EuiccSupportPixel in all users
                     return PackageManager.COMPONENT_ENABLED_STATE_DISABLED;
                 }
+            case GoogleEuicc.LPA_PKG_NAME:
+                // Google's LPA should be always disabled after reboot
+                return PackageManager.COMPONENT_ENABLED_STATE_DISABLED;
             default:
                 return null;
         }
