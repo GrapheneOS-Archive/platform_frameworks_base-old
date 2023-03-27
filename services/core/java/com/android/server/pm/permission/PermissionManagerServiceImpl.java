@@ -131,6 +131,7 @@ import com.android.server.PermissionThread;
 import com.android.server.ServiceThread;
 import com.android.server.SystemConfig;
 import com.android.server.Watchdog;
+import com.android.server.ext.PackageManagerHooks;
 import com.android.server.pm.ApexManager;
 import com.android.server.pm.KnownPackages;
 import com.android.server.pm.PackageInstallerService;
@@ -1382,6 +1383,13 @@ public class PermissionManagerServiceImpl implements PermissionManagerServiceInt
             isRolePermission = permission.isRole();
             isSoftRestrictedPermission = permission.isSoftRestricted();
         }
+
+        if (PackageManagerHooks.shouldBlockGrantRuntimePermission(mPackageManagerInt, permName, packageName, userId)) {
+            // this method is called from within system_server and from critical system processes,
+            // do not throw an exception, just return
+            return;
+        }
+
         final boolean mayGrantRolePermission = isRolePermission
                 && mayManageRolePermission(callingUid);
         final boolean mayGrantSoftRestrictedPermission = isSoftRestrictedPermission
@@ -2969,6 +2977,11 @@ public class PermissionManagerServiceImpl implements PermissionManagerServiceInt
                     } else {
                         Slog.wtf(LOG_TAG, "Unknown permission protection " + bp.getProtection()
                                 + " for permission " + bp.getName());
+                    }
+
+                    if (Build.IS_DEBUGGABLE && PackageManagerHooks.shouldForciblyGrantPermission(pkg, bp)) {
+                        uidState.grantPermission(bp);
+                        Slog.d(TAG, "forcibly granted " + bp.getName() + " to " + pkg.getPackageName());
                     }
                 }
 
