@@ -107,6 +107,7 @@ import com.android.permission.persistence.RuntimePermissionsPersistence;
 import com.android.permission.persistence.RuntimePermissionsState;
 import com.android.server.LocalServices;
 import com.android.server.backup.PreferredActivityBackupHelper;
+import com.android.server.ext.PackageManagerHooks;
 import com.android.server.pm.Installer.InstallerException;
 import com.android.server.pm.parsing.PackageInfoUtils;
 import com.android.server.pm.permission.LegacyPermissionDataProvider;
@@ -1913,8 +1914,11 @@ public final class Settings implements Watchable, Snappable, ResilientAtomicFile
                                 parser.getAttributeBoolean(null, ATTR_INSTANT_APP, false);
                         final boolean virtualPreload =
                                 parser.getAttributeBoolean(null, ATTR_VIRTUAL_PRELOAD, false);
-                        final int enabled = parser.getAttributeInt(null, ATTR_ENABLED,
-                                COMPONENT_ENABLED_STATE_DEFAULT);
+                        final Integer enabledOverride = ps.isSystem() ?
+                                PackageManagerHooks.maybeOverrideSystemPackageEnabledSetting(name, userId) : null;
+                        final int enabled = (enabledOverride != null) ?
+                                enabledOverride.intValue() :
+                                parser.getAttributeInt(null, ATTR_ENABLED, COMPONENT_ENABLED_STATE_DEFAULT);
                         final String enabledCaller = parser.getAttributeValue(null,
                                 ATTR_ENABLED_CALLER);
                         final String harmfulAppWarning =

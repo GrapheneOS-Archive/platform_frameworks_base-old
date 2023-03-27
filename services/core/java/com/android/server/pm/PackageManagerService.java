@@ -7491,7 +7491,21 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
             boolean retainOnUpdate) {
         final AndroidPackage visiblePackage = snapshot.getPackage(visibleUid);
         final int recipientUid = UserHandle.getUid(userId, recipientAppId);
-        if (visiblePackage == null || snapshot.getPackage(recipientUid) == null) {
+        final AndroidPackage recipientPackage = snapshot.getPackage(recipientUid);
+        if (visiblePackage == null || recipientPackage == null) {
+            return;
+        }
+
+        final PackageStateInternal recipientPsi = snapshot.getPackageStateInternal(
+                recipientPackage.getPackageName(), Process.SYSTEM_UID);
+        final PackageStateInternal visiblePsi = snapshot.getPackageStateInternal(
+                visiblePackage.getPackageName(), Process.SYSTEM_UID);
+        if (recipientPsi == null || visiblePsi == null) {
+            return;
+        }
+
+        if (PackageManagerHooks.shouldFilterApplication(recipientPsi, null, userId,
+                visiblePsi, UserHandle.getUserId(visibleUid))) {
             return;
         }
 
