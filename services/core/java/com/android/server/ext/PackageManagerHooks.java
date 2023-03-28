@@ -43,6 +43,12 @@ public class PackageManagerHooks {
                 // EuiccSupportPixel uses INTERNET perm only as part of its dev mode
                 removeUsesPermissions(pkg, Manifest.permission.INTERNET);
                 return;
+            case GoogleEuicc.LPA_PKG_NAME:
+                // this is the same as android:enabled="false" in <application> AndroidManifest tag,
+                // it makes the package disabled by default on first boot, when there's no
+                // serialized package state
+                pkg.setEnabled(false);
+                return;
             default:
                 return;
         }
