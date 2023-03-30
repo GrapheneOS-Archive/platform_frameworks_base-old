@@ -84,6 +84,8 @@ public class ExecInit {
         }
     }
 
+    public static boolean isExecSpawned;
+
     /**
      * The main function called when an application is started with exec-based spawning.
      *
@@ -98,6 +100,8 @@ public class ExecInit {
         if (RuntimeInit.DEBUG) {
             Slog.d(RuntimeInit.TAG, "RuntimeInit: Starting application from exec");
         }
+
+        isExecSpawned = true;
 
         // Check whether the first argument is a "-cp" in argv, and assume the next argument is the
         // classpath. If found, create a PathClassLoader and use it for applicationInit.
