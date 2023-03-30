@@ -760,4 +760,6 @@ interface IActivityManager {
      * </p>
      */
     int getBackgroundRestrictionExemptionReason(int uid);
+
+    String[] getSystemIdmapPaths();
 }
