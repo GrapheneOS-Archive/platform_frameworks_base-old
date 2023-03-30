@@ -934,4 +934,6 @@ interface IActivityManager {
      * @param err The binder transaction error
      */
     oneway void frozenBinderTransactionDetected(int debugPid, int code, int flags, int err);
+
+    String[] getSystemIdmapPaths();
 }
