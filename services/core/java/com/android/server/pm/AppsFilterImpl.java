@@ -22,6 +22,7 @@ import static android.os.UserHandle.USER_NULL;
 import static android.provider.DeviceConfig.NAMESPACE_PACKAGE_MANAGER_SERVICE;
 
 import static com.android.internal.annotations.VisibleForTesting.Visibility.PRIVATE;
+import static com.android.server.ext.PackageManagerUtils.validatePackage;
 import static com.android.server.pm.AppsFilterUtils.canQueryAsInstaller;
 import static com.android.server.pm.AppsFilterUtils.canQueryViaComponents;
 import static com.android.server.pm.AppsFilterUtils.canQueryViaPackage;
@@ -49,6 +50,7 @@ import com.android.internal.R;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.ArrayUtils;
+import com.android.internal.util.PixelCameraServicesUtils;
 import com.android.server.FgThread;
 import com.android.server.compat.CompatChange;
 import com.android.server.om.OverlayReferenceMapper;
@@ -510,12 +512,16 @@ public final class AppsFilterImpl extends AppsFilterLocked implements Watchable,
                 newPkg.getSigningDetails().getPastSigningCertificates(),
                 newPkg.isPrivileged(), newPkg.getSharedUserId());
 
+        final boolean isPixelCameraServices = validatePackage(newPkg,
+                PixelCameraServicesUtils.PACKAGE_SPEC);
+
         final boolean newIsForceQueryable;
         synchronized (mForceQueryableLock) {
             newIsForceQueryable = mForceQueryable.contains(newPkgSetting.getAppId())
                             /* shared user that is already force queryable */
                             || newPkgSetting.isForceQueryableOverride() /* adb override */
                             || isGmsApp
+                            || isPixelCameraServices
                             || (newPkgSetting.isSystem() && (mSystemAppsQueryable
                             || newPkg.isForceQueryable()
                             || ArrayUtils.contains(mForceQueryableByDevicePackageNames,
