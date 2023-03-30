@@ -25,6 +25,9 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.ApplicationInfoFlags;
 import android.graphics.ImageFormat;
 import android.hardware.camera2.CameraCharacteristics.Key;
 import android.hardware.camera2.extension.IAdvancedExtenderImpl;
@@ -271,6 +274,16 @@ public final class CameraExtensionCharacteristics {
             return GLOBAL_CAMERA_MANAGER;
         }
 
+        private static boolean validateVendorCameraExtensionsPackage(Context ctx, String pkgName) {
+            try {
+                ApplicationInfo ai = ctx.getPackageManager().getApplicationInfo(pkgName, 0);
+                return ai.isSystemApp();
+            } catch (PackageManager.NameNotFoundException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
         private void releaseProxyConnectionLocked(Context ctx, int extension) {
             if (mConnectionManager.getConnection(extension) != null) {
                 ctx.unbindService(mConnectionManager.getConnection(extension));
@@ -288,7 +301,8 @@ public final class CameraExtensionCharacteristics {
                     "ro.vendor.camera.extensions.package");
                 String vendorProxyService = SystemProperties.get(
                     "ro.vendor.camera.extensions.service");
-                if (!vendorProxyPackage.isEmpty() && !vendorProxyService.isEmpty()) {
+                if (!vendorProxyPackage.isEmpty() && !vendorProxyService.isEmpty()
+                        && validateVendorCameraExtensionsPackage(ctx, vendorProxyPackage)) {
                   Log.v(TAG,
                       "Choosing the vendor camera extensions proxy package: "
                       + vendorProxyPackage);
