@@ -20887,4 +20887,10 @@ public class ActivityManagerService extends IActivityManager.Stub
         }
         mOomAdjuster.mCachedAppOptimizer.binderError(debugPid, app, code, flags, err);
     }
+
+    @Override
+    public String[] getSystemIdmapPaths() {
+        // see comment in AssetManager#createSystemAssetsInZygoteLocked()
+        return android.content.res.AssetManager.systemIdmapPaths_;
+    }
 }
