@@ -24,6 +24,7 @@ import android.annotation.Nullable;
 import android.annotation.StringRes;
 import android.annotation.StyleRes;
 import android.annotation.TestApi;
+import android.app.ActivityManager;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration.NativeConfig;
@@ -38,6 +39,7 @@ import android.util.TypedValue;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.content.om.OverlayConfig;
+import com.android.internal.os.ExecInit;
 
 import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
@@ -232,6 +234,9 @@ public final class AssetManager implements AutoCloseable {
         }
     }
 
+    /** @hide */
+    public static volatile String[] systemIdmapPaths_;
+
     /**
      * This must be called from Zygote so that system assets are shared by all applications.
      * @hide
@@ -248,8 +253,32 @@ public final class AssetManager implements AutoCloseable {
             final ArrayList<ApkAssets> apkAssets = new ArrayList<>();
             apkAssets.add(ApkAssets.loadFromPath(frameworkPath, ApkAssets.PROPERTY_SYSTEM));
 
-            final String[] systemIdmapPaths =
-                    OverlayConfig.getZygoteInstance().createImmutableFrameworkIdmapsInZygote();
+            // createImmutableFrameworkIdmapsInZygote() should be called only in zygote, it fails
+            // in regular processes and is unnecessary there.
+            // When it's called in zygote, overlay state is cached in /data/resource-cache/*@idmap
+            // files. These files are readable by regular app processes.
+            //
+            // When exec-based spawning in used, in-memory cache of assets is lost, and the spawned
+            // process is unable to recreate it, since it's not allowed to create idmaps.
+            //
+            // As a workaround, ask the ActivityManager to return paths of cached idmaps and use
+            // them directly. ActivityManager runs in system_server, which always uses zygote-based
+            // spawning.
+
+            String[] systemIdmapPaths;
+            if (ExecInit.isExecSpawned) {
+                try {
+                    systemIdmapPaths = ActivityManager.getService().getSystemIdmapPaths();
+                    Objects.requireNonNull(systemIdmapPaths);
+                } catch (Throwable t) {
+                    Log.e(TAG, "unable to retrieve systemIdmapPaths", t);
+                    systemIdmapPaths = new String[0];
+                }
+            } else {
+                systemIdmapPaths = OverlayConfig.getZygoteInstance().createImmutableFrameworkIdmapsInZygote();
+                systemIdmapPaths_ = systemIdmapPaths;
+            }
+
             for (String idmapPath : systemIdmapPaths) {
                 apkAssets.add(ApkAssets.loadOverlayFromPath(idmapPath, ApkAssets.PROPERTY_SYSTEM));
             }
