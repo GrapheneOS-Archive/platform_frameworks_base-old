@@ -138,4 +138,10 @@ public final class SigningInfo implements Parcelable {
             return new SigningInfo[size];
         }
     };
+
+    /** @hide */
+    public SigningDetails getSigningDetails() {
+        // SigningInfo doesn't expose the SigningDetails#hasSha256Certificate() method, among others
+        return mSigningDetails;
+    }
 }
