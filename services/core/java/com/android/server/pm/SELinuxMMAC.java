@@ -29,6 +29,7 @@ import android.util.Slog;
 import android.util.Xml;
 
 import com.android.server.compat.PlatformCompat;
+import com.android.server.ext.SeInfoOverride;
 import com.android.server.pm.parsing.pkg.AndroidPackageUtils;
 import com.android.server.pm.pkg.AndroidPackage;
 import com.android.server.pm.pkg.PackageState;
@@ -454,6 +455,12 @@ public final class SELinuxMMAC {
 
         if (isPrivileged) {
             seInfo += PRIVILEGED_APP_STR;
+        }
+
+        final String override = SeInfoOverride.maybeGet(pkg);
+
+        if (override != null) {
+            seInfo = override;
         }
 
         seInfo += TARGETSDKVERSION_STR + targetSdkVersion;
