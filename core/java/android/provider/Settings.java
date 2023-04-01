@@ -17306,11 +17306,6 @@ public final class Settings {
         public static final String REVIEW_PERMISSIONS_NOTIFICATION_STATE =
                 "review_permissions_notification_state";
 
-        /**
-         * Which server to use for attestation certificate rotation
-         * @hide
-         */
-        public static final String ATTEST_REMOTE_PROVISIONER_SERVER = "attest_remote_provisioner_server";
 
         /**
          * Which server to use for Broadcom GNSS almanacs
