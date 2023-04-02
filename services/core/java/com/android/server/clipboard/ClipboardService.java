@@ -43,6 +43,7 @@ import android.content.pm.IPackageManager;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.UserInfo;
+import android.ext.settings.ExtSettings;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Binder;
@@ -421,17 +422,15 @@ public class ClipboardService extends SystemService {
                                     intendingUid,
                                     userId);
                     mClipboardClearHandler.sendMessageDelayed(clearMessage,
-                            getTimeoutForAutoClear());
+                            getTimeoutForAutoClear(userId));
                 }
             } finally {
                 Binder.restoreCallingIdentity(oldIdentity);
             }
         }
 
-        private long getTimeoutForAutoClear() {
-            return DeviceConfig.getLong(DeviceConfig.NAMESPACE_CLIPBOARD,
-                    PROPERTY_AUTO_CLEAR_TIMEOUT,
-                    DEFAULT_CLIPBOARD_TIMEOUT_MILLIS);
+        private long getTimeoutForAutoClear(int userId) {
+            return ExtSettings.CLIPBOARD_AUTO_CLEAR_TIMEOUT.get(getContext(), userId);
         }
 
         @Override

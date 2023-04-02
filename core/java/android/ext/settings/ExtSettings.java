@@ -3,6 +3,7 @@ package android.ext.settings;
 import java.lang.reflect.Field;
 import java.util.Set;
 
+import static android.ext.settings.ClipboardConstants.DEFAULT_CLIPBOARD_TIMEOUT_MILLIS;
 import static android.ext.settings.GnssConstants.SUPL_DISABLED;
 import static android.ext.settings.GnssConstants.SUPL_SERVER_GRAPHENEOS_PROXY;
 import static android.ext.settings.GnssConstants.SUPL_SERVER_STANDARD;
@@ -39,6 +40,9 @@ public class ExtSettings {
         GRAPHENEOS_PROXY, // default
         STANDARD_SERVER, GRAPHENEOS_PROXY // valid values
     );
+
+    public static final IntSetting CLIPBOARD_AUTO_CLEAR_TIMEOUT = new IntSetting(
+            Setting.Scope.PER_USER, "clipboard_auto_clear_timeout", DEFAULT_CLIPBOARD_TIMEOUT_MILLIS);
 
     private ExtSettings() {}
 
