@@ -6,6 +6,9 @@ import java.util.Set;
 import static android.ext.settings.GnssConstants.SUPL_DISABLED;
 import static android.ext.settings.GnssConstants.SUPL_SERVER_GRAPHENEOS_PROXY;
 import static android.ext.settings.GnssConstants.SUPL_SERVER_STANDARD;
+import static android.ext.settings.RemoteProvisioningConstants.GRAPHENEOS_PROXY;
+import static android.ext.settings.RemoteProvisioningConstants.STANDARD_SERVER;
+import static android.ext.settings.RemoteProvisioningConstants.DISABLED;
 
 /** @hide */
 public class ExtSettings {
@@ -30,6 +33,12 @@ public class ExtSettings {
 
     public static final BoolSetting SCRAMBLE_PIN_LAYOUT = new BoolSetting(
             Setting.Scope.PER_USER, "lockscreen_scramble_pin_layout", false);
+
+    public static final IntSetting REMOTE_PROVISIONING_SERVER = new IntSetting(
+        Setting.Scope.GLOBAL, "attest_remote_provisioner_server", // historical setting key
+        GRAPHENEOS_PROXY, // default
+        STANDARD_SERVER, GRAPHENEOS_PROXY // valid values
+    );
 
     private ExtSettings() {}
 
