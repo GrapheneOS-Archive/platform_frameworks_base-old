@@ -177,7 +177,9 @@ public class QuickAccessWalletTile extends QSTileImpl<QSTile.State> {
         return mPackageManager.hasSystemFeature(PackageManager.FEATURE_NFC_HOST_CARD_EMULATION)
                 && !mPackageManager.hasSystemFeature(FEATURE_CHROME_OS)
                 && mSecureSettings.getStringForUser(NFC_PAYMENT_DEFAULT_COMPONENT,
-                    UserHandle.USER_CURRENT) != null;
+                    UserHandle.USER_CURRENT) != null
+                && mSecureSettings.getStringForUser(NFC_PAYMENT_DEFAULT_COMPONENT,
+                    UserHandle.USER_CURRENT) != "com.google.android.gms/com.google.android.gms.tapandpay.hce.service.TpHceService";
     }
 
     @Nullable
