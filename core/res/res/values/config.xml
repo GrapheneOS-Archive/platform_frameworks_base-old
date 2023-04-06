@@ -6060,4 +6060,7 @@
     <!-- Whether the lock screen is allowed to run its own live wallpaper,
          different from the home screen wallpaper. -->
     <bool name="config_independentLockscreenLiveWallpaper">false</bool>
+
+    <bool name="config_Google_apps_can_have_special_access_to_accelerators">false</bool>
+    <bool name="config_GoogleCamera_needs_seinfo_for_access_to_accelerators">false</bool>
 </resources>
