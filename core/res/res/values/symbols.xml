@@ -4934,4 +4934,7 @@
   <java-symbol type="string" name="notification_channel_missing_permission" />
   <java-symbol type="string" name="missing_sensors_permission_title" />
   <java-symbol type="string" name="missing_sensors_permission_message" />
+
+  <java-symbol type="bool" name="config_Google_apps_can_have_special_access_to_accelerators" />
+  <java-symbol type="bool" name="config_GoogleCamera_needs_seinfo_for_access_to_accelerators" />
 </resources>
