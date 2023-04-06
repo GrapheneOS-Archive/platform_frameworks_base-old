@@ -6150,4 +6150,7 @@
     <!-- Whether we should persist the brightness value in nits for the default display even if
          the underlying display device changes. -->
     <bool name="config_persistBrightnessNitsForDefaultDisplay">false</bool>
+
+    <bool name="config_Google_apps_can_have_special_access_to_accelerators">false</bool>
+    <bool name="config_GoogleCamera_needs_seinfo_for_access_to_accelerators">false</bool>
 </resources>
