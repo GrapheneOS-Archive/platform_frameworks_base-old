@@ -13,6 +13,7 @@ import android.os.RemoteException;
 import android.os.UserHandle;
 import android.util.SparseArray;
 
+import com.android.internal.util.GoogleCameraUtils;
 import com.android.server.pm.PackageManagerService;
 import com.android.server.pm.ext.PackageExt;
 import com.android.server.pm.pkg.AndroidPackage;
@@ -76,5 +77,8 @@ public class SeInfoOverride {
 
     static {
         Context ctx = ActivityThread.currentActivityThread().getSystemContext();
+        if (GoogleCameraUtils.isCustomSeInfoNeededForAccessToAccelerators(ctx)) {
+            add("GoogleCamera", PackageId.G_CAMERA, ExtSettings.ALLOW_GOOGLE_APPS_SPECIAL_ACCESS_TO_ACCELERATORS);
+        }
     }
 }
