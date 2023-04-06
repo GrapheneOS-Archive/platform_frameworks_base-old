@@ -237,19 +237,6 @@ public final class AppsFilterImpl extends AppsFilterLocked implements Watchable,
 
         @Override
         public void onSystemReady() {
-            mFeatureEnabled = DeviceConfig.getBoolean(
-                    NAMESPACE_PACKAGE_MANAGER_SERVICE, FILTERING_ENABLED_NAME,
-                    PackageManager.APP_ENUMERATION_ENABLED_BY_DEFAULT);
-            DeviceConfig.addOnPropertiesChangedListener(
-                    NAMESPACE_PACKAGE_MANAGER_SERVICE, FgThread.getExecutor(),
-                    properties -> {
-                        if (properties.getKeyset().contains(FILTERING_ENABLED_NAME)) {
-                            synchronized (FeatureConfigImpl.this) {
-                                mFeatureEnabled = properties.getBoolean(FILTERING_ENABLED_NAME,
-                                        PackageManager.APP_ENUMERATION_ENABLED_BY_DEFAULT);
-                            }
-                        }
-                    });
             mInjector.getCompatibility().registerListener(
                     PackageManager.FILTER_APPLICATION_QUERY, this);
         }
