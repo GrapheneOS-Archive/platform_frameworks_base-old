@@ -49,6 +49,10 @@ public class ExtSettings {
     public static final BoolSetting SCRAMBLE_PIN_LAYOUT = new BoolSetting(
             Setting.Scope.PER_USER, "lockscreen_scramble_pin_layout", false);
 
+    public static final BoolSysProperty ALLOW_GOOGLE_APPS_SPECIAL_ACCESS_TO_ACCELERATORS = new BoolSysProperty(
+            // also accessed in native code, in frameworks/native/cmds/servicemanager/Access.cpp
+            "persist.sys.allow_google_apps_special_access_to_accelerators", true);
+
     // AppCompatConfig specifies which hardening features are compatible/incompatible with a
     // specific app.
     // This setting controls whether incompatible hardening features would be disabled by default
