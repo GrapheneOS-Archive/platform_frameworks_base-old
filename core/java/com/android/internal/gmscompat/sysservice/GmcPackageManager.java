@@ -71,6 +71,12 @@ public class GmcPackageManager extends ApplicationPackageManager {
                 ai.flags |= ApplicationInfo.FLAG_SYSTEM | ApplicationInfo.FLAG_UPDATED_SYSTEM_APP;
             }
         }
+
+        if (!ai.enabled) {
+            if (shouldHideDisabledState(packageName)) {
+                ai.enabled = true;
+            }
+        }
     }
 
     @Override
@@ -266,10 +272,22 @@ public class GmcPackageManager extends ApplicationPackageManager {
         return super.getPackagesForUid(uid);
     }
 
+    @SuppressLint("SwitchIntDef")
     @Override
     public int getApplicationEnabledSetting(String packageName) {
         try {
-            return super.getApplicationEnabledSetting(packageName);
+            int res = super.getApplicationEnabledSetting(packageName);
+
+            switch (res) {
+                case COMPONENT_ENABLED_STATE_DISABLED:
+                case COMPONENT_ENABLED_STATE_DISABLED_USER:
+                case COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED:
+                    if (shouldHideDisabledState(packageName)) {
+                        res = COMPONENT_ENABLED_STATE_DEFAULT;
+                    }
+            }
+
+            return res;
         } catch (Exception e) {
             if (isPseudoDisabledPackage(packageName)) {
                 return COMPONENT_ENABLED_STATE_DISABLED_USER;
@@ -393,6 +411,20 @@ public class GmcPackageManager extends ApplicationPackageManager {
     private static boolean removePseudoDisabledPackage(String pkgName) {
         synchronized (pseudoDisabledPackages) {
             return pseudoDisabledPackages.remove(pkgName);
+        }
+    }
+
+    private static boolean shouldHideDisabledState(String pkgName) {
+        if (!GmsCompat.isPlayStore()) {
+            return false;
+        }
+
+        switch (pkgName) {
+            case GmsInfo.PACKAGE_GSF:
+            case GmsInfo.PACKAGE_GMS_CORE:
+                return false;
+            default:
+                return true;
         }
     }
 }
