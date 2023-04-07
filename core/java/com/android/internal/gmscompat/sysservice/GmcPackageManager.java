@@ -31,8 +31,10 @@ import android.content.pm.InstallSourceInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.SharedLibraryInfo;
 import android.content.pm.VersionedPackage;
+import android.os.Process;
 import android.os.UserHandle;
 import android.util.ArraySet;
+import android.util.Log;
 
 import com.android.internal.gmscompat.GmsInfo;
 import com.android.internal.gmscompat.PlayStoreHooks;
@@ -135,7 +137,31 @@ public class GmcPackageManager extends ApplicationPackageManager {
 
     // requires privileged OBSERVE_GRANT_REVOKE_PERMISSIONS permission
     @Override
-    public void addOnPermissionsChangeListener(OnPermissionsChangedListener listener) {}
+    public void addOnPermissionsChangeListener(OnPermissionsChangedListener listener) {
+        synchronized (onPermissionsChangedListeners) {
+            onPermissionsChangedListeners.add(listener);
+        }
+    }
+
+    @Override
+    public void removeOnPermissionsChangeListener(OnPermissionsChangedListener listener) {
+        synchronized (onPermissionsChangedListeners) {
+            onPermissionsChangedListeners.remove(listener);
+        }
+    }
+
+    public static void notifyPermissionsChangeListeners() {
+        Log.d("GmcPackageManager", "notifyPermissionsChangeListeners");
+        int myUid = Process.myUid();
+        synchronized (onPermissionsChangedListeners) {
+            for (OnPermissionsChangedListener l : onPermissionsChangedListeners) {
+                l.onPermissionsChanged(myUid);
+            }
+        }
+    }
+
+    private static final ArrayList<OnPermissionsChangedListener> onPermissionsChangedListeners =
+            new ArrayList<>();
 
     // MATCH_ANY_USER flag requires privileged INTERACT_ACROSS_USERS permission
 
