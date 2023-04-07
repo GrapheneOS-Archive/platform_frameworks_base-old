@@ -51,6 +51,7 @@ import android.os.UserHandle;
 import android.provider.Downloads;
 import android.provider.Settings;
 import android.util.ArrayMap;
+import android.util.ArraySet;
 import android.util.Log;
 import android.util.SparseArray;
 import android.webkit.WebView;
@@ -58,6 +59,7 @@ import android.webkit.WebView;
 import com.android.internal.gmscompat.client.ClientPriorityManager;
 import com.android.internal.gmscompat.client.GmsCompatClientService;
 import com.android.internal.gmscompat.flags.GmsFlag;
+import com.android.internal.gmscompat.sysservice.GmcPackageManager;
 import com.android.internal.gmscompat.util.GmcActivityUtils;
 import com.android.internal.gmscompat.util.GmsCoreActivityLauncher;
 
@@ -104,6 +106,7 @@ public final class GmsHooks {
         }
 
         configUpdateLock = new Object();
+        tlPermissionsToSpoof = new ThreadLocal<>();
 
         // Locking is needed to prevent a race that would occur if config is updated via
         // BinderGca2Gms#updateConfig in the time window between BinderGms2Gca#connect and setConfig()
@@ -648,6 +651,67 @@ public final class GmsHooks {
 
     private static volatile SQLiteOpenHelper phenotypeDb;
     public static SQLiteOpenHelper getPhenotypeDb() { return phenotypeDb; }
+
+    private static ThreadLocal<ArraySet<String>> tlPermissionsToSpoof;
+
+    public static boolean shouldSpoofSelfPermissionCheck(String perm) {
+        ArraySet<String> set = tlPermissionsToSpoof.get();
+        if (set == null) {
+            return false;
+        }
+
+        return set.contains(perm);
+    }
+
+    public static final String GMS_SERVICE_BROKER_INTERFACE_DESCRIPTOR =
+            "com.google.android.gms.common.internal.IGmsServiceBroker";
+
+    public static boolean onBeginGmsServiceBrokerCall(int transactionCode, Parcel data) {
+        if (transactionCode != 46) { // getService() method
+            return false;
+        }
+
+        try {
+            data.enforceInterface(GMS_SERVICE_BROKER_INTERFACE_DESCRIPTOR);
+            // IGmsCallbacks binder
+            data.readStrongBinder();
+
+            if (data.readInt() == 1) { // GetServiceRequest is present
+                // GetServiceRequest object header
+                data.readInt();
+                data.readInt();
+
+                // version
+                data.readInt();
+                data.readInt();
+
+                // id of serviceId property
+                data.readInt();
+
+                int serviceId = data.readInt();
+
+                ArraySet<String> permsToSpoof = config().gmsServiceBrokerPermissionBypasses.get(serviceId);
+                if (permsToSpoof != null) {
+                    Log.d(TAG, "start spoofing self permission checks for getService() call for API "
+                            + serviceId + ", perms: " + Arrays.toString(permsToSpoof.toArray()));
+                    tlPermissionsToSpoof.set(permsToSpoof);
+                    // there's a second layer of caching inside GmsCore, need to notify permission
+                    // change listener used by that cache
+                    GmcPackageManager.notifyPermissionsChangeListeners();
+                    return true;
+                }
+            }
+        } finally {
+            data.setDataPosition(0);
+        }
+
+        return false;
+    }
+
+    public static void onEndGmsServiceBrokerCall() {
+        Log.d(TAG, "end self permission check spoofing");
+        tlPermissionsToSpoof.set(null);
+    }
 
     private GmsHooks() {}
 }
