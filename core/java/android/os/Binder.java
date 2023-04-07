@@ -684,9 +684,14 @@ public class Binder implements IBinder {
         if (BinderRedirector.enabled()) {
             mPerformRedirectionCheck = "com.google.android.gms.common.internal.IGmsCallbacks".equals(descriptor);
         }
+
+        if (GmsCompat.isGmsCore()) {
+            mIsGmsServiceBroker = GmsHooks.GMS_SERVICE_BROKER_INTERFACE_DESCRIPTOR.equals(descriptor);
+        }
     }
 
     private boolean mPerformRedirectionCheck;
+    private boolean mIsGmsServiceBroker;
 
     /**
      * Default implementation returns an empty interface name.
@@ -1286,7 +1291,11 @@ public class Binder implements IBinder {
         final boolean tracingEnabled = Trace.isTagEnabled(Trace.TRACE_TAG_AIDL) &&
                 (Binder.isStackTrackingEnabled() || Binder.isTracingEnabled(callingUid));
         data.mPerformBinderRedirectionCheck = mPerformRedirectionCheck;
+        boolean onBeginGmsServiceBrokerCallRet = false;
         try {
+            if (mIsGmsServiceBroker) {
+                onBeginGmsServiceBrokerCallRet = GmsHooks.onBeginGmsServiceBrokerCall(code, data);
+            }
             final BinderCallHeavyHitterWatcher heavyHitterWatcher = sHeavyHitterWatcher;
             if (heavyHitterWatcher != null) {
                 // Notify the heavy hitter watcher, if it's enabled.
@@ -1328,6 +1337,9 @@ public class Binder implements IBinder {
             res = true;
         } finally {
             data.mPerformBinderRedirectionCheck = false;
+            if (onBeginGmsServiceBrokerCallRet) {
+                GmsHooks.onEndGmsServiceBrokerCall();
+            }
             if (tracingEnabled) {
                 Trace.traceEnd(Trace.TRACE_TAG_AIDL);
             }
