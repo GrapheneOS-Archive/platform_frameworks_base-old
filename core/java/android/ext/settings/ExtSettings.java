@@ -46,6 +46,9 @@ public class ExtSettings {
             // also accessed in native code, in frameworks/native/cmds/servicemanager/Access.cpp
             "persist.sys.allow_google_apps_special_access_to_accelerators", true);
 
+    public static final BoolSetting WINDOW_IGNORE_SECURE = new BoolSetting(
+            Setting.Scope.PER_USER, "window_ignore_secure", false);
+
     private ExtSettings() {}
 
     // used for making settings defined in this class unreadable by third-party apps
