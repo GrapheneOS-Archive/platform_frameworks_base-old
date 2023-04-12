@@ -17,7 +17,11 @@
 package com.android.server.location.gnss;
 
 import android.annotation.Nullable;
+import android.content.Context;
+import android.ext.settings.ExtSettings;
+import android.ext.settings.PsdsServerConstants;
 import android.net.TrafficStats;
+import android.os.Build;
 import android.util.Log;
 
 import com.android.internal.util.TrafficStatsConstants;
@@ -30,6 +34,12 @@ import java.net.URL;
 import java.util.Properties;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+
+import static android.ext.settings.PsdsServerConstants.GRAPHENEOS_LONGTERM_PSDS_SERVER_1;
+import static android.ext.settings.PsdsServerConstants.GRAPHENEOS_LONGTERM_PSDS_SERVER_2;
+import static android.ext.settings.PsdsServerConstants.GRAPHENEOS_LONGTERM_PSDS_SERVER_3;
+import static android.ext.settings.PsdsServerConstants.GRAPHENEOS_NORMAL_PSDS_SERVER;
+import static android.ext.settings.PsdsServerConstants.GRAPHENEOS_REALTIME_PSDS_SERVER;
 
 /**
  * A class for downloading GNSS PSDS data.
@@ -58,15 +68,31 @@ class GnssPsdsDownloader {
     // to load balance our server requests
     private int mNextServerIndex;
 
-    GnssPsdsDownloader(Properties properties) {
+    private static boolean shouldUseGrapheneOsServer(Context context) {
+        boolean supportedDevice = Build.DEVICE.equals("cheetah")
+                || Build.DEVICE.equals("panther")
+                || Build.DEVICE.equals("raven")
+                || Build.DEVICE.equals("oriole")
+                || Build.DEVICE.equals("bluejay");
+        return supportedDevice && ExtSettings.PSDS_SERVER.get(context) == PsdsServerConstants.PSDS_SERVER_GRAPHENEOS_PROXY;
+    }
+
+    GnssPsdsDownloader(Properties properties, Context context) {
         // read PSDS servers from the Properties object
         int count = 0;
-        String longTermPsdsServer1 = properties.getProperty(
-                GnssConfiguration.CONFIG_LONGTERM_PSDS_SERVER_1);
-        String longTermPsdsServer2 = properties.getProperty(
-                GnssConfiguration.CONFIG_LONGTERM_PSDS_SERVER_2);
-        String longTermPsdsServer3 = properties.getProperty(
-                GnssConfiguration.CONFIG_LONGTERM_PSDS_SERVER_3);
+        String longTermPsdsServer1;
+        String longTermPsdsServer2;
+        String longTermPsdsServer3;
+
+        if (shouldUseGrapheneOsServer(context)) {
+            longTermPsdsServer1 = GRAPHENEOS_LONGTERM_PSDS_SERVER_1;
+            longTermPsdsServer2 = GRAPHENEOS_LONGTERM_PSDS_SERVER_2;
+            longTermPsdsServer3 = GRAPHENEOS_LONGTERM_PSDS_SERVER_3;
+        } else {
+            longTermPsdsServer1 = properties.getProperty(GnssConfiguration.CONFIG_LONGTERM_PSDS_SERVER_1);
+            longTermPsdsServer2 = properties.getProperty(GnssConfiguration.CONFIG_LONGTERM_PSDS_SERVER_2);
+            longTermPsdsServer3 = properties.getProperty(GnssConfiguration.CONFIG_LONGTERM_PSDS_SERVER_3);
+        }
         if (longTermPsdsServer1 != null) count++;
         if (longTermPsdsServer2 != null) count++;
         if (longTermPsdsServer3 != null) count++;
@@ -86,10 +112,15 @@ class GnssPsdsDownloader {
             mNextServerIndex = random.nextInt(count);
         }
 
-        String normalPsdsServer = properties.getProperty(
-                GnssConfiguration.CONFIG_NORMAL_PSDS_SERVER);
-        String realtimePsdsServer = properties.getProperty(
-                GnssConfiguration.CONFIG_REALTIME_PSDS_SERVER);
+        String normalPsdsServer;
+        String realtimePsdsServer;
+        if (shouldUseGrapheneOsServer(context)) {
+            normalPsdsServer = GRAPHENEOS_NORMAL_PSDS_SERVER;
+            realtimePsdsServer = GRAPHENEOS_REALTIME_PSDS_SERVER;
+        } else {
+            normalPsdsServer = properties.getProperty(GnssConfiguration.CONFIG_NORMAL_PSDS_SERVER);
+            realtimePsdsServer = properties.getProperty(GnssConfiguration.CONFIG_REALTIME_PSDS_SERVER);
+        }
         mPsdsServers = new String[MAX_PSDS_TYPE_INDEX + 1];
         mPsdsServers[NORMAL_PSDS_SERVER_INDEX] = normalPsdsServer;
         mPsdsServers[REALTIME_PSDS_SERVER_INDEX] = realtimePsdsServer;

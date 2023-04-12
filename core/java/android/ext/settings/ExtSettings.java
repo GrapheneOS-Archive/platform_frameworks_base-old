@@ -9,6 +9,8 @@ import static android.ext.settings.GnssConstants.SUPL_SERVER_GRAPHENEOS_PROXY;
 import static android.ext.settings.GnssConstants.SUPL_SERVER_STANDARD;
 import static android.ext.settings.RemoteProvisioningConstants.GRAPHENEOS_PROXY;
 import static android.ext.settings.RemoteProvisioningConstants.STANDARD_SERVER;
+import static android.ext.settings.PsdsServerConstants.PSDS_SERVER_GRAPHENEOS_PROXY;
+import static android.ext.settings.PsdsServerConstants.PSDS_SERVER_STANDARD;
 
 /** @hide */
 public class ExtSettings {
@@ -45,6 +47,12 @@ public class ExtSettings {
     public static final BoolSysProperty ALLOW_GOOGLE_APPS_SPECIAL_ACCESS_TO_ACCELERATORS = new BoolSysProperty(
             // also accessed in native code, in frameworks/native/cmds/servicemanager/Access.cpp
             "persist.sys.allow_google_apps_special_access_to_accelerators", true);
+
+    public static final IntSetting PSDS_SERVER = new IntSetting(
+            Setting.Scope.GLOBAL, "psds_server", // historical setting key
+            PSDS_SERVER_GRAPHENEOS_PROXY, // default
+            PSDS_SERVER_STANDARD, PSDS_SERVER_GRAPHENEOS_PROXY // valid values
+    );
 
     private ExtSettings() {}
 
