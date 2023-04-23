@@ -1497,7 +1497,7 @@ public class SyntheticPasswordManager {
         return String.format("%s%x", LockPatternUtils.SYNTHETIC_PASSWORD_KEY_PREFIX, handle);
     }
 
-    private byte[] computePasswordToken(LockscreenCredential credential, PasswordData data) {
+    protected byte[] computePasswordToken(LockscreenCredential credential, PasswordData data) {
         final byte[] password = credential.isNone() ? DEFAULT_PASSWORD : credential.getCredential();
         return scrypt(password, data.salt, 1 << data.scryptN, 1 << data.scryptR, 1 << data.scryptP,
                 PASSWORD_TOKEN_LENGTH);
