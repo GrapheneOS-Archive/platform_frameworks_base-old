@@ -432,6 +432,50 @@ public class LockPatternUtils {
         }
     }
 
+    public boolean isDuressPassword(@NonNull LockscreenCredential credential) {
+        try {
+            return getLockSettings().isDuressPassword(credential, false);
+        } catch (RemoteException e) {
+            e.rethrowFromSystemServer();
+        }
+        return false;
+    }
+
+    public boolean validDuressPinExist() {
+        try {
+            return getLockSettings().validDuressPinExist();
+        } catch (RemoteException e) {
+            e.rethrowFromSystemServer();
+        }
+        return false;
+    }
+
+    public boolean validDuressPasswordExist() {
+        try {
+            return getLockSettings().validDuressPasswordExist();
+        } catch (RemoteException e) {
+            e.rethrowFromSystemServer();
+        }
+        return false;
+    }
+
+    public void deleteDuressConfig() {
+        try {
+            getLockSettings().deleteDuressConfig();
+        } catch (RemoteException e) {
+            e.rethrowFromSystemServer();
+        }
+    }
+
+    public void setDuressPassword(@NonNull LockscreenCredential userCredential,
+            @NonNull LockscreenCredential duressCredential) {
+        try {
+            getLockSettings().setDuressPassword(userCredential, duressCredential);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
     /**
      * With the Gatekeeper Password Handle returned via {@link #verifyCredential(
      * LockscreenCredential, int, int)}, request Gatekeeper to create a HardwareAuthToken wrapping
