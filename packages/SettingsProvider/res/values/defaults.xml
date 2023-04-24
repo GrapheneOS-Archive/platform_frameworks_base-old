@@ -323,4 +323,6 @@
 
     <bool name="def_text_show_password">false</bool>
 
+    <bool name="def_uwb_enabled">false</bool>
+
 </resources>
