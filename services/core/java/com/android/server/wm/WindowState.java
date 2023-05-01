@@ -195,6 +195,7 @@ import android.app.AppOpsManager;
 import android.app.admin.DevicePolicyCache;
 import android.content.Context;
 import android.content.res.Configuration;
+import android.ext.settings.ExtSettings;
 import android.graphics.Matrix;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
@@ -6302,6 +6303,10 @@ class WindowState extends WindowContainer<WindowState> implements WindowManagerP
 
     @Override
     public boolean canScreenshotIme() {
+        if (ExtSettings.SCREENSHOT_SECURE_WINDOWS.get(mContext)) {
+            return true;
+        }
+
         return !isSecureLocked();
     }
 

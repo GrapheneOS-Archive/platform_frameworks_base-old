@@ -47,6 +47,7 @@ import static com.android.server.wm.WindowStateAnimatorProto.SURFACE;
 import static com.android.server.wm.WindowStateAnimatorProto.SYSTEM_DECOR_RECT;
 
 import android.content.Context;
+import android.ext.settings.ExtSettings;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.os.Debug;
@@ -306,7 +307,7 @@ class WindowStateAnimator {
         int flags = SurfaceControl.HIDDEN;
         final WindowManager.LayoutParams attrs = w.mAttrs;
 
-        if (w.isSecureLocked()) {
+        if (w.isSecureLocked() && !ExtSettings.SCREENSHOT_SECURE_WINDOWS.get(mContext)) {
             flags |= SurfaceControl.SECURE;
         }
 
