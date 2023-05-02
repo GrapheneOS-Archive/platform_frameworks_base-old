@@ -35,6 +35,8 @@ import libcore.io.IoUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -536,5 +538,79 @@ public class GnssConfiguration {
                 props.setProperty(CONFIG_SUPL_PORT, "7275");
                 break;
         }
+
+        applyPsdsConfigOverrides(ctx, props);
+    }
+
+    private static void applyPsdsConfigOverrides(Context ctx, Properties props) {
+        final String psdsType = ctx.getString(com.android.internal.R.string.config_gnssPsdsType);
+        Slog.d(TAG, "PSDS type: " + psdsType);
+
+        final int psdsMode;
+        if (psdsType.isEmpty()) {
+            Slog.e(TAG, "PSDS type is not specified, disabling PSDS");
+            psdsMode = GnssSettings.PSDS_DISABLED;
+        } else {
+            psdsMode = GnssSettings.STANDARD_PSDS_SETTING.get(ctx);
+        }
+
+        switch (psdsMode) {
+            case GnssSettings.PSDS_SERVER_GRAPHENEOS:
+                final String hostname = psdsType + ".psds.grapheneos.org";
+                Slog.d(TAG, "PSDS: using GrapheneOS server " + hostname);
+
+                for (String propName : getPsdsPropNames()) {
+                    String origValue = props.getProperty(propName);
+                    if (TextUtils.isEmpty(origValue)) {
+                        continue;
+                    }
+
+                    final URL origUrl;
+                    try {
+                        origUrl = new URL(origValue);
+                    } catch (MalformedURLException e) {
+                        props.remove(propName);
+                        Slog.e(TAG, "malformed value of " + propName + ": " + origValue, e);
+                        continue;
+                    }
+
+                    final URL url;
+                    try {
+                        url = new URL("https", hostname, origUrl.getFile());
+                    } catch (MalformedURLException e) {
+                        throw new IllegalStateException(e);
+                    }
+                    final String urlString = url.toString();
+                    props.setProperty(propName, urlString);
+                    Slog.d(TAG, "overridden " + propName + " from " + origValue + " to " + urlString);
+                }
+                break;
+            case GnssSettings.PSDS_SERVER_STANDARD:
+                Slog.d(TAG, "PSDS: using the standard servers");
+                break;
+            case GnssSettings.PSDS_DISABLED:
+                Slog.d(TAG, "PSDS is disabled");
+                // a precaution, GnssLocationProvider.mSupportsPsds is set to false when PSDS is
+                // disabled, which should disable PSDS entirely
+                clearPsdsServerProps(props);
+                props.setProperty(CONFIG_ENABLE_PSDS_PERIODIC_DOWNLOAD, "0");
+                break;
+        }
+    }
+
+    private static void clearPsdsServerProps(Properties props) {
+        for (String n : getPsdsPropNames()) {
+            props.remove(n);
+        }
+    }
+
+    private static String[] getPsdsPropNames() {
+        return new String[] {
+                CONFIG_LONGTERM_PSDS_SERVER_1,
+                CONFIG_LONGTERM_PSDS_SERVER_2,
+                CONFIG_LONGTERM_PSDS_SERVER_3,
+                CONFIG_NORMAL_PSDS_SERVER,
+                CONFIG_REALTIME_PSDS_SERVER,
+        };
     }
 }
