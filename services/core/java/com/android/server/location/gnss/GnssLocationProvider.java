@@ -500,6 +500,18 @@ public class GnssLocationProvider extends AbstractLocationProvider implements
         };
 
         GnssSettings.SUPL_SETTING.registerObserver(mContext, mHandler, suplSettingObserver);
+
+        if (GnssSettings.isStandardPsds(mContext)) {
+            Consumer<IntSetting> psdsSettingObserver = setting -> {
+                Slog.d(TAG, "PSDS setting changed, value: " + setting.get(mContext));
+                if (!isPsdsEnabled()) {
+                    Slog.d(TAG, "PSDS is disabled");
+                }
+                reloadGpsProperties();
+            };
+
+            GnssSettings.STANDARD_PSDS_SETTING.registerObserver(mContext, mHandler, psdsSettingObserver);
+        }
     }
 
     /** Called when system is ready. */
@@ -679,7 +691,7 @@ public class GnssLocationProvider extends AbstractLocationProvider implements
     private void onNetworkAvailable() {
         mNetworkTimeHelper.onNetworkAvailable();
         // Download only if supported, (prevents an unnecessary on-boot download)
-        if (mSupportsPsds) {
+        if (mSupportsPsds && isPsdsEnabled()) {
             synchronized (mLock) {
                 for (int psdsType : mPendingDownloadPsdsTypes) {
                     postWithWakeLockHeld(() -> handleDownloadPsdsData(psdsType));
@@ -772,6 +784,10 @@ public class GnssLocationProvider extends AbstractLocationProvider implements
         if (!mSupportsPsds) {
             // native code reports psds not supported, don't try
             Log.d(TAG, "handleDownloadPsdsData() called when PSDS not supported");
+            return;
+        }
+        if (!isPsdsEnabled()) {
+            Log.d(TAG, "handleDownloadPsdsData() called when PSDS is disabled");
             return;
         }
         if (!mNetworkConnectivityHandler.isDataNetworkConnected()) {
@@ -1838,5 +1854,10 @@ public class GnssLocationProvider extends AbstractLocationProvider implements
         mGnssVisibilityControl.reportNfwNotification(proxyAppPackageName, protocolStack,
                 otherProtocolStackName, requestor, requestorId, responseType, inEmergencyMode,
                 isCachedLocation);
+    }
+
+    private boolean isPsdsEnabled() {
+        return GnssSettings.isStandardPsds(mContext) &&
+                GnssSettings.STANDARD_PSDS_SETTING.get(mContext) != GnssSettings.PSDS_DISABLED;
     }
 }
