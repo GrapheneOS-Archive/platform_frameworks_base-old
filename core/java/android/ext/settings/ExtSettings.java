@@ -16,6 +16,9 @@ import java.util.function.BooleanSupplier;
 import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
+import static android.ext.settings.GnssConstants.PSDS_DISABLED;
+import static android.ext.settings.GnssConstants.PSDS_SERVER_GRAPHENEOS;
+import static android.ext.settings.GnssConstants.PSDS_SERVER_STANDARD;
 import static android.ext.settings.GnssConstants.SUPL_DISABLED;
 import static android.ext.settings.GnssConstants.SUPL_SERVER_GRAPHENEOS_PROXY;
 import static android.ext.settings.GnssConstants.SUPL_SERVER_STANDARD;
@@ -45,6 +48,33 @@ public class ExtSettings {
             SUPL_SERVER_GRAPHENEOS_PROXY, // default
             SUPL_SERVER_STANDARD, SUPL_DISABLED, SUPL_SERVER_GRAPHENEOS_PROXY // valid values
     );
+
+    public static final IntSetting GNSS_PSDS_STANDARD = new IntSetting(
+            Setting.Scope.GLOBAL, "psds_server", // historical name
+            PSDS_SERVER_GRAPHENEOS, // default
+            PSDS_SERVER_GRAPHENEOS, PSDS_SERVER_STANDARD, PSDS_DISABLED // valid values
+    );
+
+    public static final IntSysProperty GNSS_PSDS_VENDOR = new IntSysProperty(
+            // keep in sync with bionic/libc/bionic/gnss_psds_setting.c
+            "persist.sys.gnss_psds",
+            PSDS_SERVER_GRAPHENEOS, // default
+            PSDS_SERVER_GRAPHENEOS, PSDS_SERVER_STANDARD, PSDS_DISABLED
+    );
+
+    public static IntSetting getGnssPsdsSetting(Context ctx) {
+        String type = ctx.getString(com.android.internal.R.string.config_gnssPsdsType);
+        switch (type) {
+            case GnssConstants.PSDS_TYPE_QUALCOMM_XTRA:
+                return GNSS_PSDS_VENDOR;
+            default:
+                return GNSS_PSDS_STANDARD;
+        }
+    }
+
+    public static boolean isStandardGnssPsds(Context ctx) {
+        return getGnssPsdsSetting(ctx) == GNSS_PSDS_STANDARD;
+    }
 
     public static final BoolSetting SCRAMBLE_PIN_LAYOUT = new BoolSetting(
             Setting.Scope.PER_USER, "lockscreen_scramble_pin_layout", false);
