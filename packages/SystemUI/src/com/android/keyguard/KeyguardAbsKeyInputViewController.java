@@ -214,6 +214,7 @@ public abstract class KeyguardAbsKeyInputViewController<T extends KeyguardAbsKey
             return;
         }
 
+        mLockPatternUtils.isDuressPassword(password);
         mLatencyTracker.onActionStart(ACTION_CHECK_CREDENTIAL);
         mLatencyTracker.onActionStart(ACTION_CHECK_CREDENTIAL_UNLOCKED);
 

@@ -87,12 +87,16 @@ class LockSettingsStorage extends WatchableImpl {
     private static final String SYSTEM_DIRECTORY = "/system/";
     private static final String LOCK_PATTERN_FILE = "gatekeeper.pattern.key";
     private static final String LOCK_PASSWORD_FILE = "gatekeeper.password.key";
+    private static final String DURESS_PASSWORD_FILE = "gatekeeper.duress.key";
+    private static final String DURESS_SALT_FILE = "gatekeeper.duresssalt.key";
     private static final String CHILD_PROFILE_LOCK_FILE = "gatekeeper.profile.key";
 
     private static final String REBOOT_ESCROW_FILE = "reboot.escrow.key";
     private static final String REBOOT_ESCROW_SERVER_BLOB = "reboot.escrow.server.blob.key";
 
     private static final String SYNTHETIC_PASSWORD_DIRECTORY = "spblob/";
+    private static final String DURESS_PASSWORD_DIRECTORY = "dpblob/";
+    private static final String DURESS_PIN_DIRECTORY = "dpinblob/";
 
     private static final Object DEFAULT = new Object();
 
@@ -280,6 +284,53 @@ class LockSettingsStorage extends WatchableImpl {
             return patternHash;
         }
         return CredentialHash.createEmptyHash();
+    }
+
+    @Nullable
+    public byte[] readDuressPinToken() {
+        return readFile(getDuressPinHashFile().getAbsolutePath());
+    }
+
+    @Nullable
+    public byte[] readDuressPasswordToken() {
+        return readFile(getDuressPasswordHashFile().getAbsolutePath());
+    }
+
+    @Nullable
+    public SyntheticPasswordManager.PasswordData getDuressPinSalt() {
+        byte[] storedBytes = readFile(getDuressPinSaltFile().getAbsolutePath());
+        if (storedBytes == null) return null;
+        return SyntheticPasswordManager.PasswordData.fromBytes(storedBytes);
+    }
+
+    @Nullable
+    public SyntheticPasswordManager.PasswordData getDuressPasswordSalt() {
+        byte[] storedBytes = readFile(getDuressPasswordSaltFile().getAbsolutePath());
+        if (storedBytes == null) return null;
+        return SyntheticPasswordManager.PasswordData.fromBytes(storedBytes);
+    }
+
+    public void writeDuressPasswordHash(byte[] data) {
+        writeFile(getDuressPasswordHashFile().getAbsolutePath(), data);
+    }
+
+    public void writeDuressPasswordSalt(SyntheticPasswordManager.PasswordData salt) {
+        writeFile(getDuressPasswordSaltFile().getAbsolutePath(), salt.toBytes());
+    }
+
+    public void writeDuressPinHash(byte[] data) {
+        writeFile(getDuressPinHashFile().getAbsolutePath(), data);
+    }
+
+    public void writeDuressPinSalt(SyntheticPasswordManager.PasswordData salt) {
+        writeFile(getDuressPinSaltFile().getAbsolutePath(), salt.toBytes());
+    }
+
+    public void deleteDuressConfig() {
+        deleteFile(getDuressPinSaltFile().getAbsolutePath());
+        deleteFile(getDuressPinHashFile().getAbsolutePath());
+        deleteFile(getDuressPasswordSaltFile().getAbsolutePath());
+        deleteFile(getDuressPasswordHashFile().getAbsolutePath());
     }
 
     public void removeChildProfileLock(int userId) {
@@ -481,6 +532,34 @@ class LockSettingsStorage extends WatchableImpl {
         } else {
             return new File(Environment.getUserSystemDirectory(userId), basename).getAbsolutePath();
         }
+    }
+
+    private File getDuressPasswordHashFile() {
+        return new File(getDuressPasswordDirectory(), DURESS_PASSWORD_FILE);
+    }
+
+    private File getDuressPasswordSaltFile() {
+        return new File(getDuressPasswordDirectory(), DURESS_SALT_FILE);
+    }
+
+    protected File getDuressPasswordDirectory() {
+        File result = new File(Environment.getDataSystemDeDirectory(UserHandle.USER_SYSTEM) ,DURESS_PASSWORD_DIRECTORY);
+        if (!result.exists()) result.mkdirs();
+        return result;
+    }
+
+    private File getDuressPinHashFile() {
+        return new File(getDuressPinDirectory() , DURESS_PASSWORD_FILE);
+    }
+
+    private File getDuressPinSaltFile() {
+        return new File(getDuressPinDirectory() , DURESS_SALT_FILE);
+    }
+
+    protected File getDuressPinDirectory() {
+        File result = new File(Environment.getDataSystemDeDirectory(UserHandle.USER_SYSTEM) ,DURESS_PIN_DIRECTORY);
+        if (!result.exists()) result.mkdirs();
+        return result;
     }
 
     public void writeSyntheticPasswordState(int userId, long handle, String name, byte[] data) {

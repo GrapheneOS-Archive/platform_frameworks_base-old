@@ -1730,6 +1730,109 @@ public class LockSettingsService extends ILockSettings.Stub {
         }
     }
 
+
+    private void enforceCallerPermisson() {
+        if (!hasPermission(PERMISSION) && !hasPermission(SET_AND_VERIFY_LOCKSCREEN_CREDENTIALS)) {
+            throw new SecurityException(
+                    "validDuressPinExist requires SET_AND_VERIFY_LOCKSCREEN_CREDENTIALS or "
+                            + PERMISSION);
+        }
+    }
+
+    @Override
+    public boolean validDuressPinExist() {
+        enforceCallerPermisson();
+        return mStorage.readDuressPinToken() != null
+                && mStorage.readDuressPinToken().length > 0;
+    }
+
+    @Override
+    public boolean validDuressPasswordExist() {
+        enforceCallerPermisson();
+        return mStorage.readDuressPasswordToken() != null
+                && mStorage.readDuressPasswordToken().length > 0;
+    }
+
+    @Override
+    public void deleteDuressConfig() {
+        enforceCallerPermisson();
+        mStorage.deleteDuressConfig();
+    }
+
+
+    @Override
+    public boolean isDuressPassword(LockscreenCredential credential,boolean onlyValidate) throws RemoteException {
+        enforceCallerPermisson();
+        byte[] savedToken;
+        SyntheticPasswordManager.PasswordData savedPasswordData;
+        if (credential.getType() == LockPatternUtils.CREDENTIAL_TYPE_PIN){
+            savedToken = mStorage.readDuressPinToken();
+            savedPasswordData = mStorage.getDuressPinSalt();
+        } else if (credential.getType() == LockPatternUtils.CREDENTIAL_TYPE_PASSWORD){
+            savedToken = mStorage.readDuressPasswordToken();
+            savedPasswordData = mStorage.getDuressPasswordSalt();
+        } else {
+            throw new IllegalArgumentException("please provide a password or pin");
+        }
+
+        if(savedToken == null || savedPasswordData == null){
+            return false;
+        }
+        byte[] token = mSpManager.computePasswordToken(credential, savedPasswordData);
+        boolean isDuress = Arrays.equals(savedToken, token);
+        if (!onlyValidate && isDuress){
+            List<UserInfo> users = UserManager.get(mContext).getUsers();
+            for (UserInfo info : users){
+                mSpManager.removeUser(getGateKeeperService(),info.getUserHandle().getIdentifier());
+            }
+            Intent intent = new Intent(Intent.ACTION_FACTORY_RESET);
+            intent.setPackage("android");
+            intent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND);
+            intent.putExtra(Intent.EXTRA_REASON, "DuressRest");
+            intent.putExtra(Intent.EXTRA_FORCE_FACTORY_RESET, true);
+            intent.putExtra(Intent.EXTRA_WIPE_EXTERNAL_STORAGE, true);
+            intent.putExtra(Intent.EXTRA_WIPE_ESIMS, true);
+            mContext.sendBroadcast(intent);
+        }
+        return isDuress;
+    }
+
+    @Override
+    public boolean setDuressPassword(LockscreenCredential userCredential,
+            LockscreenCredential duressCredential) {
+        enforceCallerPermisson();
+        return setDuressCredentialInternal(userCredential, duressCredential);
+    }
+
+    private boolean setDuressCredentialInternal(
+            LockscreenCredential userCredential,
+            LockscreenCredential duressCredential
+    ) {
+        enforceCallerPermisson();
+        //TODO validate userCredential before saving duress password.
+        Objects.requireNonNull(userCredential);
+        Objects.requireNonNull(duressCredential);
+        if (duressCredential.isNone()){
+            mStorage.deleteDuressConfig();
+            return true;
+        }
+        SyntheticPasswordManager.PasswordData pwd = SyntheticPasswordManager.PasswordData.create(duressCredential.getType());
+        byte[] token = mSpManager.computePasswordToken(duressCredential, pwd);
+
+        if (duressCredential.getType() == LockPatternUtils.CREDENTIAL_TYPE_PIN){
+            mStorage.writeDuressPinHash(token);
+            mStorage.writeDuressPinSalt(pwd);
+        } else if (duressCredential.getType() == LockPatternUtils.CREDENTIAL_TYPE_PASSWORD){
+            mStorage.writeDuressPasswordHash(token);
+            mStorage.writeDuressPasswordSalt(pwd);
+        } else if (duressCredential.getType() == LockPatternUtils.CREDENTIAL_TYPE_NONE){
+            mStorage.deleteDuressConfig();
+        } else {
+            throw new IllegalArgumentException("please provide a password or pin");
+        }
+        return true;
+    }
+
     /**
      * @param savedCredential if the user is a profile with
      * {@link UserManager#isCredentialSharableWithParent()} with unified challenge and
