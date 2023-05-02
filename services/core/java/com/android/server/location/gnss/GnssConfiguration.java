@@ -499,5 +499,48 @@ public class GnssConfiguration {
                 props.setProperty(CONFIG_SUPL_PORT, "7275");
                 break;
         }
+
+        applyPsdsConfigOverrides(ctx, props);
+    }
+
+    private static void applyPsdsConfigOverrides(Context ctx, Properties props) {
+        final int psdsMode = ExtSettings.GNSS_PSDS_STANDARD.get(ctx);
+
+        final String psdsType = ctx.getString(com.android.internal.R.string.config_gnssPsdsType);
+        Slog.d(TAG, "PSDS type: " + psdsType);
+
+        switch (psdsMode) {
+            case GnssConstants.PSDS_SERVER_GRAPHENEOS:
+                Slog.d(TAG, "PSDS: using the GrapheneOS server");
+                clearPsdsServerProps(props);
+
+                switch (psdsType) {
+                    case GnssConstants.PSDS_TYPE_BROADCOM:
+                        final String host = GnssConstants.PSDS_SERVER_GRAPHENEOS_BROADCOM;
+                        props.setProperty(CONFIG_LONGTERM_PSDS_SERVER_1, host + "/lto2.dat");
+                        props.setProperty(CONFIG_NORMAL_PSDS_SERVER, host + "/rto.dat");
+                        props.setProperty(CONFIG_REALTIME_PSDS_SERVER, host + "/rtistatus.dat");
+                        break;
+                }
+                break;
+            case GnssConstants.PSDS_SERVER_STANDARD:
+                Slog.d(TAG, "PSDS: using the standard servers");
+                break;
+            case GnssConstants.PSDS_DISABLED:
+                Slog.d(TAG, "PSDS is disabled");
+                // a precaution, GnssLocationProvider.mSupportsPsds is set to false when PSDS is
+                // disabled, which should disable PSDS entirely
+                clearPsdsServerProps(props);
+                props.setProperty(CONFIG_ENABLE_PSDS_PERIODIC_DOWNLOAD, "0");
+                break;
+        }
+    }
+
+    private static void clearPsdsServerProps(Properties props) {
+        props.remove(CONFIG_LONGTERM_PSDS_SERVER_1);
+        props.remove(CONFIG_LONGTERM_PSDS_SERVER_2);
+        props.remove(CONFIG_LONGTERM_PSDS_SERVER_3);
+        props.remove(CONFIG_NORMAL_PSDS_SERVER);
+        props.remove(CONFIG_REALTIME_PSDS_SERVER);
     }
 }
