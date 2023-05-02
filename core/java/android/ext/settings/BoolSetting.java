@@ -36,6 +36,14 @@ public class BoolSetting extends Setting<BoolSetting> {
             return getDefaultValue();
         }
 
+        if (valueStr.equals("true")) {
+            return true;
+        }
+
+        if (valueStr.equals("false")) {
+            return false;
+        }
+
         try {
             int valueInt = Integer.parseInt(valueStr);
             if (valueInt == 1) {
