@@ -5194,7 +5194,7 @@ public class ActivityManagerService extends IActivityManager.Stub
     }
 
     private static boolean isPixelDevice() {
-        String[] pixelDevices = {"cheetah", "panther", "bluejay", "raven", "oriole", "barbet", "redfin", "bramble", "sunfish", "coral", "flame"};
+        String[] pixelDevices = {"lynx", "cheetah", "panther", "bluejay", "raven", "oriole", "barbet", "redfin", "bramble", "sunfish", "coral", "flame"};
         for (String x : pixelDevices) {
             if (x.equals(Build.DEVICE)) {
                 return true;
