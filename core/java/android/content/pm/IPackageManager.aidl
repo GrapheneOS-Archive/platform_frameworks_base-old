@@ -803,4 +803,6 @@ interface IPackageManager {
     void setKeepUninstalledPackages(in List<String> packageList);
 
     boolean canPackageQuery(String sourcePackageName, String targetPackageName, int userId);
+
+    @nullable Bundle getExtraAppBindArgs(String packageName);
 }
