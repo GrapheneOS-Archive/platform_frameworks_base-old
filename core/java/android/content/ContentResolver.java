@@ -72,6 +72,7 @@ import android.util.Size;
 import android.util.SparseArray;
 
 import com.android.internal.annotations.GuardedBy;
+import com.android.internal.app.ContentProviderRedirector;
 import com.android.internal.gmscompat.GmsCompatApp;
 import com.android.internal.gmscompat.GmsHooks;
 import com.android.internal.gmscompat.PlayStoreHooks;
@@ -2764,6 +2765,11 @@ public abstract class ContentResolver implements ContentInterface {
     @UnsupportedAppUsage
     public final void registerContentObserver(Uri uri, boolean notifyForDescendents,
             ContentObserver observer, @UserIdInt int userHandle) {
+        if (ContentProviderRedirector.shouldSkipRegisterContentObserver(uri, notifyForDescendents,
+                observer, userHandle)) {
+            return;
+        }
+
         if (GmsCompat.isEnabled()) {
             if (GmsCompatApp.registerObserver(uri, observer)) {
                 return;
@@ -2791,6 +2797,10 @@ public abstract class ContentResolver implements ContentInterface {
      */
     public final void unregisterContentObserver(@NonNull ContentObserver observer) {
         Objects.requireNonNull(observer, "observer");
+
+        if (ContentProviderRedirector.shouldSkipUnregisterContentObserver(observer)) {
+            return;
+        }
 
         if (GmsCompat.isEnabled()) {
             if (GmsCompatApp.unregisterObserver(observer)) {
@@ -2892,6 +2902,11 @@ public abstract class ContentResolver implements ContentInterface {
     public void notifyChange(@NonNull Uri uri, @Nullable ContentObserver observer,
             @NotifyFlags int flags) {
         Objects.requireNonNull(uri, "uri");
+
+        if (ContentProviderRedirector.shouldSkipNotifyChange(uri, observer, flags)) {
+            return;
+        }
+
         notifyChange(
                 ContentProvider.getUriWithoutUserId(uri),
                 observer,
@@ -2939,6 +2954,10 @@ public abstract class ContentResolver implements ContentInterface {
         // Cluster based on user ID
         final SparseArray<ArrayList<Uri>> clusteredByUser = new SparseArray<>();
         for (Uri uri : uris) {
+            if (ContentProviderRedirector.shouldSkipNotifyChange(uri, observer, flags)) {
+                continue;
+            }
+
             final int userId = ContentProvider.getUserIdFromUri(uri, mContext.getUserId());
             ArrayList<Uri> list = clusteredByUser.get(userId);
             if (list == null) {
