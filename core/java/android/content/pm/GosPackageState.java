@@ -236,7 +236,6 @@ public final class GosPackageState extends GosPackageStateBase implements Parcel
         };
     }
 
-    @Nullable
     static Object getUncached(String packageName, int userId) {
         try {
             GosPackageState s = ActivityThread.getPackageManager().getGosPackageState(packageName, userId);
