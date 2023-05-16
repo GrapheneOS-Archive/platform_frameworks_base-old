@@ -296,12 +296,14 @@ public final class GosPackageState extends GosPackageStateBase implements Parcel
         return !ai.isSystemApp() && primaryAbi != null && VMRuntime.is64BitAbi(primaryAbi);
     }
 
+    public static final int EDITOR_FLAG_KILL_UID_AFTER_APPLY = 1;
+
     public static class Editor {
         private final String packageName;
         private final int userId;
         private int flags;
         private byte[] storageScopes;
-        private boolean killUidAfterApply;
+        private int editorFlags;
 
         /**
          * Don't call directly, use GosPackageState#edit or GosPackageStatePm#getEditor
@@ -350,14 +352,16 @@ public final class GosPackageState extends GosPackageStateBase implements Parcel
 
         @NonNull
         public Editor killUidAfterApply() {
-            this.killUidAfterApply = true;
-            return this;
+            return setKillUidAfterApply(true);
         }
 
-        // To simplify chaining of calls if the decision is made at runtime
         @NonNull
         public Editor setKillUidAfterApply(boolean v) {
-            this.killUidAfterApply = v;
+            if (v) {
+                this.editorFlags |= EDITOR_FLAG_KILL_UID_AFTER_APPLY;
+            } else {
+                this.editorFlags &= ~EDITOR_FLAG_KILL_UID_AFTER_APPLY;
+            }
             return this;
         }
 
@@ -367,7 +371,7 @@ public final class GosPackageState extends GosPackageStateBase implements Parcel
             try {
                 return ActivityThread.getPackageManager().setGosPackageState(packageName, userId,
                         new GosPackageState(flags, storageScopes, 0),
-                        killUidAfterApply);
+                        editorFlags);
             } catch (RemoteException e) {
                 throw e.rethrowFromSystemServer();
             }
