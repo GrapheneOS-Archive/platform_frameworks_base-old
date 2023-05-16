@@ -199,6 +199,7 @@ import com.android.server.Watchdog;
 import com.android.server.apphibernation.AppHibernationManagerInternal;
 import com.android.server.compat.CompatChange;
 import com.android.server.compat.PlatformCompat;
+import com.android.server.ext.PackageManagerHooks;
 import com.android.server.ext.SeInfoOverride;
 import com.android.server.pm.Installer.InstallerException;
 import com.android.server.pm.Settings.VersionInfo;
@@ -6143,6 +6144,12 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
         @Override
         public void updateSeInfo(String packageName) {
             SeInfoOverride.updateSeInfo(PackageManagerService.this, packageName);
+        }
+
+        @Nullable
+        @Override
+        public Bundle getExtraAppBindArgs(String packageName) {
+            return PackageManagerHooks.getExtraAppBindArgs(PackageManagerService.this, packageName);
         }
     }
 

@@ -817,4 +817,6 @@ interface IPackageManager {
     boolean updateListOfBusyPackages(boolean add, in List<String> packageNames, IBinder callerBinder);
 
     void updateSeInfo(String packageName);
+
+    @nullable Bundle getExtraAppBindArgs(String packageName);
 }
