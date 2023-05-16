@@ -129,7 +129,7 @@ class GosPackageStatePmHooks {
     }
 
     static boolean set(PackageManagerService pm, String packageName, int userId,
-                               GosPackageState update, boolean killUid) {
+                               GosPackageState update, int editorFlags) {
         final int callingUid = Binder.getCallingUid();
 
         GosPackageStatePm currentGosPs = GosPackageStatePm.get(pm.snapshotComputer(), packageName, userId);
@@ -176,7 +176,7 @@ class GosPackageStatePmHooks {
             pm.scheduleWritePackageRestrictions(userId);
         }
 
-        if (killUid) {
+        if ((editorFlags & EDITOR_FLAG_KILL_UID_AFTER_APPLY) != 0) {
             final long token = Binder.clearCallingIdentity();
             try {
                 // important to call outside the 'synchronized (pm.mLock)' section, may deadlock otherwise
