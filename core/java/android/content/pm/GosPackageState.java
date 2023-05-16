@@ -361,10 +361,9 @@ public final class GosPackageState extends GosPackageStateBase implements Parcel
             return this;
         }
 
-        // Returns null if the package is no longer installed.
-        // Note: persistence to storage is asynchronous.
-        @Nullable
-        public GosPackageState apply() {
+        // Returns true if the update was successfully applied and is scheduled to be written back
+        // to storage. Actual writeback is performed asynchronously.
+        public boolean apply() {
             try {
                 return ActivityThread.getPackageManager().setGosPackageState(packageName, userId,
                         new GosPackageState(flags, storageScopes, 0),
