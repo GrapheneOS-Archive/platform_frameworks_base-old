@@ -3260,6 +3260,7 @@ package android.content.pm {
     field public static final int DFLAG_HAS_WRITE_CONTACTS_DECLARATION = 2097152; // 0x200000
     field public static final int DFLAG_HAS_WRITE_EXTERNAL_STORAGE_DECLARATION = 32; // 0x20
     field public static final int EDITOR_FLAG_KILL_UID_AFTER_APPLY = 1; // 0x1
+    field public static final int EDITOR_FLAG_NOTIFY_UID_AFTER_APPLY = 2; // 0x2
     field public static final int FLAG_ALLOW_ACCESS_TO_OBB_DIRECTORY = 2; // 0x2
     field public static final int FLAG_CONTACT_SCOPES_ENABLED = 32; // 0x20
     field public static final int FLAG_DISABLE_HARDENED_MALLOC = 4; // 0x4
@@ -3276,6 +3277,7 @@ package android.content.pm {
     method @NonNull public android.content.pm.GosPackageState.Editor setContactScopes(@Nullable byte[]);
     method @NonNull public android.content.pm.GosPackageState.Editor setFlagsState(int, boolean);
     method @NonNull public android.content.pm.GosPackageState.Editor setKillUidAfterApply(boolean);
+    method @NonNull public android.content.pm.GosPackageState.Editor setNotifyUidAfterApply(boolean);
     method @NonNull public android.content.pm.GosPackageState.Editor setStorageScopes(@Nullable byte[]);
   }
 

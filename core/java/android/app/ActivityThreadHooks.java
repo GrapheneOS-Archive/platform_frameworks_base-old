@@ -1,6 +1,8 @@
 package android.app;
 
+import android.annotation.Nullable;
 import android.content.Context;
+import android.content.pm.GosPackageState;
 import android.os.Bundle;
 import android.os.Process;
 import android.os.RemoteException;
@@ -48,6 +50,14 @@ class ActivityThreadHooks {
     // of app's code
     // ActivityThread.handleBindApplication
     static void onBind2(Context appContext, Bundle appBindArgs) {
+        GosPackageState gosPs = appBindArgs.getParcelable(AppBindArgs.KEY_GOS_PACKAGE_STATE,
+                GosPackageState.class);
+        onGosPackageStateChanged(appContext, gosPs, true);
+    }
 
+    // called from both main and worker threads
+    static void onGosPackageStateChanged(Context ctx, @Nullable GosPackageState state, boolean fromBind) {
+        if (state != null) {
+        }
     }
 }
