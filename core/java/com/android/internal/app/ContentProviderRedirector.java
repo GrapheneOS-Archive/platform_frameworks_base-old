@@ -32,6 +32,10 @@ public class ContentProviderRedirector {
 
         String t = null;
 
+        if (t == null) {
+            t = ContactScopes.maybeTranslateAuthority(auth);
+        }
+
         return t != null ? t : auth;
     }
 
@@ -43,12 +47,20 @@ public class ContentProviderRedirector {
             return false;
         }
 
+        if (ContactScopes.maybeInterceptRegisterContentObserver(uri, observer)) {
+            return true;
+        }
+
         return false;
     }
 
     public static boolean shouldSkipUnregisterContentObserver(ContentObserver observer) {
         if (!isEnabled) {
             return false;
+        }
+
+        if (ContactScopes.maybeInterceptUnregisterContentObserver(observer)) {
+            return true;
         }
 
         return false;
@@ -58,6 +70,10 @@ public class ContentProviderRedirector {
                                                  @ContentResolver.NotifyFlags int flags) {
         if (!isEnabled) {
             return false;
+        }
+
+        if (ContactScopes.shouldSkipNotifyChange(uri)) {
+            return true;
         }
 
         return false;
