@@ -204,6 +204,7 @@ import com.android.server.art.DexUseManagerLocal;
 import com.android.server.art.model.DeleteResult;
 import com.android.server.compat.CompatChange;
 import com.android.server.compat.PlatformCompat;
+import com.android.server.ext.PackageManagerHooks;
 import com.android.server.pm.Installer.InstallerException;
 import com.android.server.pm.Installer.LegacyDexoptDisabledException;
 import com.android.server.pm.Settings.VersionInfo;
@@ -6436,6 +6437,12 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
                     knownPackages, mChangedPackagesTracker, availableFeatures, protectedBroadcasts,
                     getPerUidReadTimeouts(snapshot), mSnapshotStatistics
             ).doDump(snapshot, fd, pw, args);
+        }
+
+        @Nullable
+        @Override
+        public Bundle getExtraAppBindArgs(String packageName) {
+            return PackageManagerHooks.getExtraAppBindArgs(PackageManagerService.this, packageName);
         }
     }
 
