@@ -110,6 +110,24 @@ public final class GosPackageState extends GosPackageStateBase implements Parcel
         return null;
     }
 
+    @NonNull
+    public static GosPackageState getOrDefault(@NonNull String packageName) {
+        var s = get(packageName);
+        if (s == null) {
+            s = createDefault(packageName, myUserId());
+        }
+        return s;
+    }
+
+    @NonNull
+    public static GosPackageState getOrDefault(@NonNull String packageName, int userId) {
+        var s = get(packageName, userId);
+        if (s == null) {
+            s = createDefault(packageName, userId);
+        }
+        return s;
+    }
+
     @Override
     public void writeToParcel(@NonNull Parcel dest, int flags) {
         dest.writeInt(this.flags);
@@ -291,8 +309,7 @@ public final class GosPackageState extends GosPackageStateBase implements Parcel
          * @hide
          *  */
         public Editor(String packageName, int userId) {
-            this.packageName = packageName;
-            this.userId = userId;
+            this(createDefault(packageName, userId), packageName, userId);
         }
 
         /** @hide */
@@ -369,5 +386,12 @@ public final class GosPackageState extends GosPackageStateBase implements Parcel
             myUid = uid;
         }
         return myUserId;
+    }
+
+    private static GosPackageState createDefault(String pkgName, int userId) {
+        var ps = new GosPackageState(0, null, 0);
+        ps.packageName = pkgName;
+        ps.userId = userId;
+        return ps;
     }
 }
