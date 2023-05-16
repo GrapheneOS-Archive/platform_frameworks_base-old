@@ -304,6 +304,7 @@ public final class GosPackageState extends GosPackageStateBase implements Parcel
     }
 
     public static final int EDITOR_FLAG_KILL_UID_AFTER_APPLY = 1;
+    public static final int EDITOR_FLAG_NOTIFY_UID_AFTER_APPLY = 1 << 1;
 
     public static class Editor {
         private final String packageName;
@@ -376,6 +377,16 @@ public final class GosPackageState extends GosPackageStateBase implements Parcel
                 this.editorFlags |= EDITOR_FLAG_KILL_UID_AFTER_APPLY;
             } else {
                 this.editorFlags &= ~EDITOR_FLAG_KILL_UID_AFTER_APPLY;
+            }
+            return this;
+        }
+
+        @NonNull
+        public Editor setNotifyUidAfterApply(boolean v) {
+            if (v) {
+                this.editorFlags |= EDITOR_FLAG_NOTIFY_UID_AFTER_APPLY;
+            } else {
+                this.editorFlags &= ~EDITOR_FLAG_NOTIFY_UID_AFTER_APPLY;
             }
             return this;
         }
