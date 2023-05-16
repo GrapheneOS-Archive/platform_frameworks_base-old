@@ -13,10 +13,13 @@ public abstract class GosPackageStateBase {
     public final int flags;
     @Nullable
     public final byte[] storageScopes;
+    @Nullable
+    public final byte[] contactScopes;
 
-    protected GosPackageStateBase(int flags, @Nullable byte[] storageScopes) {
+    protected GosPackageStateBase(int flags, @Nullable byte[] storageScopes, @Nullable byte[] contactScopes) {
         this.flags = flags;
         this.storageScopes = storageScopes;
+        this.contactScopes = contactScopes;
     }
 
     public final boolean hasFlags(int flags) {
@@ -25,7 +28,7 @@ public abstract class GosPackageStateBase {
 
     @Override
     public final int hashCode() {
-        return 31 * flags + Arrays.hashCode(storageScopes);
+        return 31 * flags + Arrays.hashCode(storageScopes) + Arrays.hashCode(contactScopes);
     }
 
     @Override
@@ -40,6 +43,10 @@ public abstract class GosPackageStateBase {
         }
 
         if (!Arrays.equals(storageScopes, o.storageScopes)) {
+            return false;
+        }
+
+        if (!Arrays.equals(contactScopes, o.contactScopes)) {
             return false;
         }
 

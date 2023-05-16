@@ -39,7 +39,9 @@ import android.util.TypedXmlSerializer;
 import com.android.server.LocalServices;
 import com.android.server.pm.parsing.pkg.AndroidPackage;
 import com.android.server.pm.pkg.GosPackageStatePm;
+import com.android.server.pm.pkg.PackageState;
 import com.android.server.pm.pkg.PackageStateInternal;
+import com.android.server.pm.pkg.PackageUserState;
 import com.android.server.pm.pkg.PackageUserStateInternal;
 import com.android.server.pm.pkg.SharedUserApi;
 import com.android.server.pm.pkg.component.ParsedUsesPermission;
@@ -55,6 +57,7 @@ class GosPackageStatePmHooks {
 
     private static final String ATTR_GOS_FLAGS = "GrapheneOS-flags";
     private static final String ATTR_GOS_STORAGE_SCOPES = "GrapheneOS-storage-scopes";
+    private static final String ATTR_GOS_CONTACT_SCOPES = "GrapheneOS-contact-scopes";
 
     // com.android.server.pm.Settings#writePackageRestrictionsLPr
     static void serialize(PackageUserStateInternal packageUserState, TypedXmlSerializer serializer) throws IOException {
@@ -76,6 +79,13 @@ class GosPackageStatePmHooks {
                 serializer.attributeBytesHex(null, ATTR_GOS_STORAGE_SCOPES, s);
             }
         }
+
+        if ((flags & FLAG_CONTACT_SCOPES_ENABLED) != 0) {
+            byte[] s = ps.contactScopes;
+            if (s != null) {
+                serializer.attributeBytesHex(null, ATTR_GOS_CONTACT_SCOPES, s);
+            }
+        }
     }
 
     // com.android.server.pm.Settings#readPackageRestrictionsLPr
@@ -91,7 +101,12 @@ class GosPackageStatePmHooks {
             storageScopes = parser.getAttributeBytesHex(null, ATTR_GOS_STORAGE_SCOPES, null);
         }
 
-        return new GosPackageStatePm(flags, storageScopes);
+        byte[] contactScopes = null;
+        if ((flags & FLAG_CONTACT_SCOPES_ENABLED) != 0) {
+            contactScopes = parser.getAttributeBytesHex(null, ATTR_GOS_CONTACT_SCOPES, null);
+        }
+
+        return new GosPackageStatePm(flags, storageScopes, contactScopes);
     }
 
     @Nullable
@@ -192,8 +207,7 @@ class GosPackageStatePmHooks {
     }
 
     private static int maybeDeriveFlags(Computer snapshot, final GosPackageStatePm gosPs, PackageStateInternal pkgSetting) {
-        if ((gosPs.flags & FLAG_STORAGE_SCOPES_ENABLED) == 0) {
-            // derived flags are used only by StorageScopes for now
+        if ((gosPs.flags & (FLAG_STORAGE_SCOPES_ENABLED | FLAG_CONTACT_SCOPES_ENABLED)) == 0) {
             return 0;
         }
 
@@ -298,7 +312,19 @@ class GosPackageStatePmHooks {
                 case Manifest.permission.READ_MEDIA_VIDEO:
                     flags |= DFLAG_HAS_READ_MEDIA_VIDEO_DECLARATION;
                     continue;
-                }
+
+                case Manifest.permission.READ_CONTACTS:
+                    flags |= DFLAG_HAS_READ_CONTACTS_DECLARATION;
+                    continue;
+
+                case Manifest.permission.WRITE_CONTACTS:
+                    flags |= DFLAG_HAS_WRITE_CONTACTS_DECLARATION;
+                    continue;
+
+                case Manifest.permission.GET_ACCOUNTS:
+                    flags |= DFLAG_HAS_GET_ACCOUNTS_DECLARATION;
+                    continue;
+            }
         }
 
         if ((flags & DFLAG_HAS_MANAGE_MEDIA_DECLARATION) != 0) {
@@ -329,12 +355,38 @@ class GosPackageStatePmHooks {
         return flags;
     }
 
+    // IPackageManagerImpl.clearApplicationUserData
+    public static void onClearApplicationUserData(PackageManagerService pm, String packageName, int userId) {
+        switch (packageName) {
+            case CONTACTS_PROVIDER_PACKAGE:
+                // discard IDs that refer to entries in the contacts provider database
+                clearContactScopesStorage(pm, userId);
+                break;
+        }
+    }
+
+    private static final String CONTACTS_PROVIDER_PACKAGE = "com.android.providers.contacts";
+
+    private static void clearContactScopesStorage(PackageManagerService pm, int userId) {
+        for (PackageState ps : pm.snapshotComputer().getPackageStates().values()) {
+            PackageUserState us = ps.getUserStateOrDefault(userId);
+            GosPackageStatePm gosPs = us.getGosPackageState();
+            if (gosPs != null && gosPs.contactScopes != null) {
+                gosPs.edit(ps.getPackageName(), userId)
+                        .setContactScopes(null)
+                        .apply();
+            }
+        }
+    }
+
     static class Permission {
         // bitmask of flags that can be read/written
         final int readFlags;
         final int writeFlags;
 
         private static final int FIELD_STORAGE_SCOPES = 1;
+        private static final int FIELD_CONTACT_SCOPES = 1 << 1;
+
         // bitmask of fields that can be read/written
         final int readFields;
         final int writeFields;
@@ -449,6 +501,7 @@ class GosPackageStatePmHooks {
             }
             return new GosPackageState(flags,
                     (readFields & FIELD_STORAGE_SCOPES) != 0 ? ps.storageScopes : null,
+                    (readFields & FIELD_CONTACT_SCOPES) != 0 ? ps.contactScopes : null,
                     derivedFlags);
         }
 
@@ -460,15 +513,21 @@ class GosPackageStatePmHooks {
                 return null;
             }
             byte[] storageScopes = null;
+            byte[] contactScopes = null;
             if (current != null) {
                 storageScopes = current.storageScopes;
+                contactScopes = current.contactScopes;
             }
 
             if ((writeFields & FIELD_STORAGE_SCOPES) != 0) {
                 storageScopes = update.storageScopes;
             }
 
-            return new GosPackageStatePm(flags, storageScopes);
+            if ((writeFields & FIELD_CONTACT_SCOPES) != 0) {
+                contactScopes = update.contactScopes;
+            }
+
+            return new GosPackageStatePm(flags, storageScopes, contactScopes);
         }
 
         // Permission that each package has for accessing its own GosPackageState
@@ -484,6 +543,7 @@ class GosPackageStatePmHooks {
         static void init(PackageManagerService pm) {
             selfAccessPermission = Permission.readOnly(FLAG_STORAGE_SCOPES_ENABLED
                     | FLAG_ALLOW_ACCESS_TO_OBB_DIRECTORY
+                    | FLAG_CONTACT_SCOPES_ENABLED
                     ,0);
 
             // Used for callers that run as SYSTEM_UID, ie system_server and packages in the
@@ -498,15 +558,23 @@ class GosPackageStatePmHooks {
             grantPermission(pm, "com.android.providers.media.module",
                     Permission.readOnly(FLAG_STORAGE_SCOPES_ENABLED, FIELD_STORAGE_SCOPES));
 
+            grantPermission(pm, CONTACTS_PROVIDER_PACKAGE,
+                    Permission.readOnly(FLAG_CONTACT_SCOPES_ENABLED, FIELD_CONTACT_SCOPES));
+
             grantPermission(pm, "com.android.launcher3",
-                    Permission.readOnly(FLAG_STORAGE_SCOPES_ENABLED, 0,
+                    Permission.readOnly(FLAG_STORAGE_SCOPES_ENABLED
+                                    | FLAG_CONTACT_SCOPES_ENABLED
+                            , 0,
                             // work profile is handled by the launcher in profile's parent
                             Permission.ALLOW_CROSS_PROFILE_READS));
 
             grantPermission(pm, pm.mRequiredPermissionControllerPackage,
                     Permission.readWrite(
-                            FLAG_STORAGE_SCOPES_ENABLED,
-                            FIELD_STORAGE_SCOPES));
+                            FLAG_STORAGE_SCOPES_ENABLED
+                                | FLAG_CONTACT_SCOPES_ENABLED
+                                ,FIELD_STORAGE_SCOPES
+                                | FIELD_CONTACT_SCOPES
+                    ));
 
             final int settingsReadFlags = FLAG_STORAGE_SCOPES_ENABLED
                         | FLAG_ALLOW_ACCESS_TO_OBB_DIRECTORY

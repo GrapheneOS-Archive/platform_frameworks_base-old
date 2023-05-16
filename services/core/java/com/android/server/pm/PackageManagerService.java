@@ -4573,6 +4573,10 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
             mHandler.post(new Runnable() {
                 public void run() {
                     mHandler.removeCallbacks(this);
+
+                    GosPackageStatePmHooks.onClearApplicationUserData(
+                            PackageManagerService.this, packageName, userId);
+
                     final boolean succeeded;
                     try (PackageFreezer freezer = freezePackage(packageName,
                             "clearApplicationUserData")) {

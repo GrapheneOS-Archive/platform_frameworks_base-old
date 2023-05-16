@@ -51,6 +51,7 @@ public final class GosPackageState extends GosPackageStateBase implements Parcel
     public static final int FLAG_DISABLE_HARDENED_MALLOC = 1 << 2;
     public static final int FLAG_ENABLE_COMPAT_VA_39_BIT = 1 << 3;
     // 1 << 4 was used by a now-removed feature, do not reuse it
+    public static final int FLAG_CONTACT_SCOPES_ENABLED = 1 << 5;
 
     // to distinguish between the case when no dflags are set and the case when dflags weren't calculated yet
     public static final int DFLAGS_SET = 1;
@@ -68,9 +69,13 @@ public final class GosPackageState extends GosPackageStateBase implements Parcel
     public static final int DFLAG_HAS_READ_MEDIA_VIDEO_DECLARATION = 1 << 11;
     public static final int DFLAG_EXPECTS_LEGACY_EXTERNAL_STORAGE = 1 << 12;
 
+    public static final int DFLAG_HAS_READ_CONTACTS_DECLARATION = 1 << 20;
+    public static final int DFLAG_HAS_WRITE_CONTACTS_DECLARATION = 1 << 21;
+    public static final int DFLAG_HAS_GET_ACCOUNTS_DECLARATION = 1 << 22;
+
     /** @hide */
-    public GosPackageState(int flags, @Nullable byte[] storageScopes, int derivedFlags) {
-        super(flags, storageScopes);
+    public GosPackageState(int flags, @Nullable byte[] storageScopes, @Nullable byte[] contactScopes, int derivedFlags) {
+        super(flags, storageScopes, contactScopes);
         this.derivedFlags = derivedFlags;
     }
 
@@ -132,6 +137,7 @@ public final class GosPackageState extends GosPackageStateBase implements Parcel
     public void writeToParcel(@NonNull Parcel dest, int flags) {
         dest.writeInt(this.flags);
         dest.writeByteArray(storageScopes);
+        dest.writeByteArray(contactScopes);
         dest.writeInt(derivedFlags);
     }
 
@@ -139,7 +145,8 @@ public final class GosPackageState extends GosPackageStateBase implements Parcel
     public static final Creator<GosPackageState> CREATOR = new Creator<GosPackageState>() {
         @Override
         public GosPackageState createFromParcel(Parcel in) {
-            return new GosPackageState(in.readInt(), in.createByteArray(), in.readInt());
+            return new GosPackageState(in.readInt(), in.createByteArray(), in.createByteArray(),
+                    in.readInt());
         }
 
         @Override
@@ -303,6 +310,7 @@ public final class GosPackageState extends GosPackageStateBase implements Parcel
         private final int userId;
         private int flags;
         private byte[] storageScopes;
+        private byte[] contactScopes;
         private int editorFlags;
 
         /**
@@ -320,6 +328,7 @@ public final class GosPackageState extends GosPackageStateBase implements Parcel
             this.userId = userId;
             this.flags = s.flags;
             this.storageScopes = s.storageScopes;
+            this.contactScopes = s.contactScopes;
         }
 
         @NonNull
@@ -351,6 +360,12 @@ public final class GosPackageState extends GosPackageStateBase implements Parcel
         }
 
         @NonNull
+        public Editor setContactScopes(@Nullable byte[] contactScopes) {
+            this.contactScopes = contactScopes;
+            return this;
+        }
+
+        @NonNull
         public Editor killUidAfterApply() {
             return setKillUidAfterApply(true);
         }
@@ -370,7 +385,7 @@ public final class GosPackageState extends GosPackageStateBase implements Parcel
         public boolean apply() {
             try {
                 return ActivityThread.getPackageManager().setGosPackageState(packageName, userId,
-                        new GosPackageState(flags, storageScopes, 0),
+                        new GosPackageState(flags, storageScopes, contactScopes, 0),
                         editorFlags);
             } catch (RemoteException e) {
                 throw e.rethrowFromSystemServer();
@@ -392,7 +407,7 @@ public final class GosPackageState extends GosPackageStateBase implements Parcel
     }
 
     private static GosPackageState createDefault(String pkgName, int userId) {
-        var ps = new GosPackageState(0, null, 0);
+        var ps = new GosPackageState(0, null, null, 0);
         ps.packageName = pkgName;
         ps.userId = userId;
         return ps;
