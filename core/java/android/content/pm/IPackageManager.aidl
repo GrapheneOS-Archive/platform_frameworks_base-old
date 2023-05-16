@@ -848,4 +848,6 @@ interface IPackageManager {
     int getAppMetadataSource(String packageName, int userId);
 
     ComponentName getDomainVerificationAgent();
+
+    @nullable Bundle getExtraAppBindArgs(String packageName);
 }
