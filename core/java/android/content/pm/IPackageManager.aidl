@@ -793,4 +793,6 @@ interface IPackageManager {
     boolean[] canPackageQuery(String sourcePackageName, in String[] targetPackageNames, int userId);
 
     boolean waitForHandler(long timeoutMillis, boolean forBackgroundHandler);
+
+    @nullable Bundle getExtraAppBindArgs(String packageName);
 }
