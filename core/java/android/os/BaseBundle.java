@@ -20,6 +20,8 @@ import static java.util.Objects.requireNonNull;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.annotation.SuppressLint;
+import android.annotation.SystemApi;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.util.ArrayMap;
 import android.util.Log;
@@ -1911,5 +1913,26 @@ public class BaseBundle {
             dumpStats(pw, map.keyAt(i), map.valueAt(i));
         }
         pw.decreaseIndent();
+    }
+
+    /** @hide */
+    @SystemApi
+    @Nullable
+    public <T extends Number> T getNumber(@NonNull String key) {
+        // get{Boolean,Byte,Short,Int,Long,Float,Double}() methods do not distinguish between
+        // absence of value and value being invalid, and do not allow reliably detecting these cases
+        // at all
+        unparcel();
+        return (T) mMap.get(key);
+    }
+
+    /**@hide */
+    @SystemApi
+    @Nullable
+    @SuppressLint("AutoBoxing")
+    public Boolean getBoolean2(@NonNull String key) {
+        // see getNumber()
+        unparcel();
+        return (Boolean) mMap.get(key);
     }
 }
