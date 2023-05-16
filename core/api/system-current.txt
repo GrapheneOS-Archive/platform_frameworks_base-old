@@ -3256,6 +3256,7 @@ package android.content.pm {
     field public static final int DFLAG_HAS_READ_MEDIA_IMAGES_DECLARATION = 1024; // 0x400
     field public static final int DFLAG_HAS_READ_MEDIA_VIDEO_DECLARATION = 2048; // 0x800
     field public static final int DFLAG_HAS_WRITE_EXTERNAL_STORAGE_DECLARATION = 32; // 0x20
+    field public static final int EDITOR_FLAG_KILL_UID_AFTER_APPLY = 1; // 0x1
     field public static final int FLAG_ALLOW_ACCESS_TO_OBB_DIRECTORY = 2; // 0x2
     field public static final int FLAG_DISABLE_HARDENED_MALLOC = 4; // 0x4
     field public static final int FLAG_ENABLE_COMPAT_VA_39_BIT = 8; // 0x8
