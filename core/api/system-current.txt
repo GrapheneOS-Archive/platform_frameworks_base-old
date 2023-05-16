@@ -3265,7 +3265,7 @@ package android.content.pm {
 
   public static class GosPackageState.Editor {
     method @NonNull public android.content.pm.GosPackageState.Editor addFlags(int);
-    method @Nullable public android.content.pm.GosPackageState apply();
+    method public boolean apply();
     method @NonNull public android.content.pm.GosPackageState.Editor clearFlags(int);
     method @NonNull public android.content.pm.GosPackageState.Editor killUidAfterApply();
     method @NonNull public android.content.pm.GosPackageState.Editor setFlagsState(int, boolean);
