@@ -10241,6 +10241,11 @@ package android.nfc {
 
 package android.os {
 
+  public class BaseBundle {
+    method @Nullable public Boolean getBoolean2(@NonNull String);
+    method @Nullable public <T extends java.lang.Number> T getNumber(@NonNull String);
+  }
+
   public class BatteryManager {
     method @RequiresPermission(android.Manifest.permission.POWER_SAVER) public boolean setChargingStateUpdateDelayMillis(int);
     field @RequiresPermission(android.Manifest.permission.BATTERY_STATS) public static final int BATTERY_PROPERTY_CHARGING_POLICY = 9; // 0x9
