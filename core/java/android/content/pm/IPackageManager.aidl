@@ -843,4 +843,6 @@ interface IPackageManager {
     Bitmap getArchivedAppIcon(String packageName, in UserHandle user);
 
     boolean isAppArchivable(String packageName, in UserHandle user);
+
+    @nullable Bundle getExtraAppBindArgs(String packageName);
 }
