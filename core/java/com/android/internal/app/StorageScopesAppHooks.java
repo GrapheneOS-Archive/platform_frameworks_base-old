@@ -17,7 +17,7 @@
 package com.android.internal.app;
 
 import android.Manifest;
-import android.app.AppGlobals;
+import android.annotation.AnyThread;
 import android.app.AppOpsManager;
 import android.content.Context;
 import android.content.Intent;
@@ -32,20 +32,44 @@ import static android.content.pm.GosPackageState.*;
 public class StorageScopesAppHooks {
     private static final String TAG = "StorageScopesAppHooks";
 
-    private static boolean shouldSpoofSelfPermissionCheck(int permDerivedFlag) {
+    private static volatile boolean isEnabled;
+    private static int gosPsDerivedFlags;
+
+    @AnyThread
+    public static void maybeEnable(GosPackageState ps) {
+        if (isEnabled) {
+            return;
+        }
+
+        if (ps.hasFlag(FLAG_STORAGE_SCOPES_ENABLED)) {
+            gosPsDerivedFlags = ps.derivedFlags;
+            isEnabled = true;
+        }
+    }
+
+    // call only if isEnabled == true
+    private static boolean shouldSpoofSelfPermissionCheckInner(int permDerivedFlag) {
         if (permDerivedFlag == 0) {
             return false;
         }
-        GosPackageState ps = GosPackageState.getForSelf();
-        return ps != null && ps.hasFlag(FLAG_STORAGE_SCOPES_ENABLED) && ps.hasDerivedFlag(permDerivedFlag);
+
+        return (gosPsDerivedFlags & permDerivedFlag) != 0;
     }
 
     public static boolean shouldSpoofSelfPermissionCheck(String permName) {
-        return shouldSpoofSelfPermissionCheck(getSpoofablePermissionDflag(permName));
+        if (!isEnabled) {
+            return false;
+        }
+
+        return shouldSpoofSelfPermissionCheckInner(getSpoofablePermissionDflag(permName));
     }
 
     public static boolean shouldSpoofSelfAppOpCheck(int op) {
-        return shouldSpoofSelfPermissionCheck(getSpoofableAppOpPermissionDflag(op));
+        if (!isEnabled) {
+            return false;
+        }
+
+        return shouldSpoofSelfPermissionCheckInner(getSpoofableAppOpPermissionDflag(op));
     }
 
     // Instrumentation#execStartActivity(Context, IBinder, IBinder, Activity, Intent, int, Bundle)
