@@ -9220,6 +9220,11 @@ package android.nfc {
 
 package android.os {
 
+  public class BaseBundle {
+    method @Nullable public Boolean getBoolean2(@NonNull String);
+    method @Nullable public <T extends java.lang.Number> T getNumber(@NonNull String);
+  }
+
   public class BatteryManager {
     method @RequiresPermission(android.Manifest.permission.POWER_SAVER) public boolean setChargingStateUpdateDelayMillis(int);
     field public static final String EXTRA_EVENTS = "android.os.extra.EVENTS";
