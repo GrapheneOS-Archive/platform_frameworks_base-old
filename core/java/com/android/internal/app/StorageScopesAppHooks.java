@@ -78,7 +78,7 @@ public class StorageScopesAppHooks {
             return;
         }
 
-        if (!pkgName.equals(AppGlobals.getInitialPackage())) {
+        if (!pkgName.equals(ctx.getPackageName())) {
             return;
         }
 
