@@ -3249,15 +3249,19 @@ package android.content.pm {
     field public static final int DFLAG_EXPECTS_LEGACY_EXTERNAL_STORAGE = 4096; // 0x1000
     field public static final int DFLAG_EXPECTS_STORAGE_WRITE_ACCESS = 8; // 0x8
     field public static final int DFLAG_HAS_ACCESS_MEDIA_LOCATION_DECLARATION = 256; // 0x100
+    field public static final int DFLAG_HAS_GET_ACCOUNTS_DECLARATION = 4194304; // 0x400000
     field public static final int DFLAG_HAS_MANAGE_EXTERNAL_STORAGE_DECLARATION = 64; // 0x40
     field public static final int DFLAG_HAS_MANAGE_MEDIA_DECLARATION = 128; // 0x80
+    field public static final int DFLAG_HAS_READ_CONTACTS_DECLARATION = 1048576; // 0x100000
     field public static final int DFLAG_HAS_READ_EXTERNAL_STORAGE_DECLARATION = 16; // 0x10
     field public static final int DFLAG_HAS_READ_MEDIA_AUDIO_DECLARATION = 512; // 0x200
     field public static final int DFLAG_HAS_READ_MEDIA_IMAGES_DECLARATION = 1024; // 0x400
     field public static final int DFLAG_HAS_READ_MEDIA_VIDEO_DECLARATION = 2048; // 0x800
+    field public static final int DFLAG_HAS_WRITE_CONTACTS_DECLARATION = 2097152; // 0x200000
     field public static final int DFLAG_HAS_WRITE_EXTERNAL_STORAGE_DECLARATION = 32; // 0x20
     field public static final int EDITOR_FLAG_KILL_UID_AFTER_APPLY = 1; // 0x1
     field public static final int FLAG_ALLOW_ACCESS_TO_OBB_DIRECTORY = 2; // 0x2
+    field public static final int FLAG_CONTACT_SCOPES_ENABLED = 32; // 0x20
     field public static final int FLAG_DISABLE_HARDENED_MALLOC = 4; // 0x4
     field public static final int FLAG_ENABLE_COMPAT_VA_39_BIT = 8; // 0x8
     field public static final int FLAG_STORAGE_SCOPES_ENABLED = 1; // 0x1
@@ -3269,6 +3273,7 @@ package android.content.pm {
     method public boolean apply();
     method @NonNull public android.content.pm.GosPackageState.Editor clearFlags(int);
     method @NonNull public android.content.pm.GosPackageState.Editor killUidAfterApply();
+    method @NonNull public android.content.pm.GosPackageState.Editor setContactScopes(@Nullable byte[]);
     method @NonNull public android.content.pm.GosPackageState.Editor setFlagsState(int, boolean);
     method @NonNull public android.content.pm.GosPackageState.Editor setKillUidAfterApply(boolean);
     method @NonNull public android.content.pm.GosPackageState.Editor setStorageScopes(@Nullable byte[]);
