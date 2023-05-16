@@ -120,6 +120,14 @@ public class LongArray implements Cloneable {
         mValues[index] = value;
     }
 
+    public void addAll(long[] arr) {
+        final int len = arr.length;
+        ensureCapacity(len);
+
+        System.arraycopy(arr, 0, mValues, mSize, len);
+        mSize += len;
+    }
+
     /**
      * Adds the values in the specified array to this array.
      */
@@ -134,7 +142,7 @@ public class LongArray implements Cloneable {
     /**
      * Ensures capacity to append at least <code>count</code> values.
      */
-    private void ensureCapacity(int count) {
+    public void ensureCapacity(int count) {
         final int currentSize = mSize;
         final int minCapacity = currentSize + count;
         if (minCapacity >= mValues.length) {
