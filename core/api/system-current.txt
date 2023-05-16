@@ -3807,6 +3807,60 @@ package android.debug {
 
 }
 
+package android.ext.cscopes {
+
+  public final class ContactScope implements android.os.Parcelable {
+    ctor public ContactScope(int, long, @Nullable String, @Nullable String, @Nullable android.net.Uri);
+    method public int describeContents();
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.ext.cscopes.ContactScope> CREATOR;
+    field public static final int TYPE_CONTACT = 1; // 0x1
+    field public static final int TYPE_COUNT = 4; // 0x4
+    field public static final int TYPE_EMAIL = 3; // 0x3
+    field public static final int TYPE_GROUP = 0; // 0x0
+    field public static final int TYPE_NUMBER = 2; // 0x2
+    field @Nullable public final android.net.Uri detailsUri;
+    field public final long id;
+    field @Nullable public final String summary;
+    field @Nullable public final String title;
+    field public final int type;
+  }
+
+  public class ContactScopesApi {
+    method @NonNull public static android.content.Intent createConfigActivityIntent(@NonNull String);
+    field public static final String ACTION_NOTIFY_CONTENT_OBSERVERS = "android.ext.cscopes.action.NOTIFY_CONTENT_OBSERVERS";
+    field public static final String KEY_ID = "id";
+    field public static final String KEY_RESULT = "result";
+    field public static final String KEY_URI = "uri";
+    field public static final String METHOD_GET_GROUPS = "get_groups";
+    field public static final String METHOD_GET_ID_FROM_URI = "get_id_from_uri";
+    field public static final String METHOD_GET_VIEW_MODEL = "get_view_model";
+    field public static final String SCOPED_CONTACTS_PROVIDER_AUTHORITY = "com.android.contacts.scoped";
+  }
+
+  public final class ContactScopesStorage {
+    method public boolean add(int, long);
+    method @NonNull public static android.ext.cscopes.ContactScopesStorage deserialize(@NonNull android.content.pm.GosPackageState);
+    method public int getCount();
+    method @NonNull public long[] getIds(int);
+    method public static boolean isEmpty(@NonNull android.content.pm.GosPackageState);
+    method public boolean remove(int, long);
+    method @Nullable public byte[] serialize();
+    field public static final int MAX_COUNT_PER_PACKAGE = 100; // 0x64
+  }
+
+  public final class ContactsGroup implements android.os.Parcelable {
+    ctor public ContactsGroup(long, @Nullable String, @Nullable String);
+    method public int describeContents();
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.ext.cscopes.ContactsGroup> CREATOR;
+    field public final long id;
+    field @Nullable public final String summary;
+    field @Nullable public final String title;
+  }
+
+}
+
 package android.graphics.fonts {
 
   public final class FontFamilyUpdateRequest {
