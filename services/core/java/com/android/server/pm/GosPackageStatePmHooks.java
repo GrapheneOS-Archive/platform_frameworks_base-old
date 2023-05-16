@@ -19,6 +19,7 @@ package com.android.server.pm;
 import android.Manifest;
 import android.annotation.Nullable;
 import android.app.ActivityManager;
+import android.app.ActivityManagerInternal;
 import android.app.PropertyInvalidatedCache;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -52,7 +53,7 @@ import java.util.Objects;
 
 import static android.content.pm.GosPackageState.*;
 
-class GosPackageStatePmHooks {
+public class GosPackageStatePmHooks {
     private static final String TAG = "GosPackageStatePmHooks";
 
     private static final String ATTR_GOS_FLAGS = "GrapheneOS-flags";
@@ -112,7 +113,11 @@ class GosPackageStatePmHooks {
     @Nullable
     static GosPackageState get(PackageManagerService pm, String packageName, int userId) {
         final int callingUid = Binder.getCallingUid();
+        return get(pm, callingUid, packageName, userId);
+    }
 
+    @Nullable
+    public static GosPackageState get(PackageManagerService pm, int callingUid, String packageName, int userId) {
         Computer snapshot = pm.snapshotComputer();
         PackageStateInternal packageState = snapshot.getPackageStates().get(packageName);
         if (packageState == null) {
@@ -198,6 +203,22 @@ class GosPackageStatePmHooks {
                 ActivityManager.getService().killUid(appId, userId, "GosPackageState");
             } catch (RemoteException e) {
                 e.rethrowAsRuntimeException();
+            } finally {
+                Binder.restoreCallingIdentity(token);
+            }
+        }
+
+        if ((editorFlags & EDITOR_FLAG_NOTIFY_UID_AFTER_APPLY) != 0) {
+            int uid = UserHandle.getUid(userId, appId);
+
+            // get GosPackageState as the target app
+            GosPackageState ps = get(pm, uid, packageName, userId);
+
+            final long token = Binder.clearCallingIdentity();
+
+            try {
+                var am = LocalServices.getService(ActivityManagerInternal.class);
+                am.onGosPackageStateChanged(uid, ps);
             } finally {
                 Binder.restoreCallingIdentity(token);
             }
