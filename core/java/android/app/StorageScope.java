@@ -116,13 +116,13 @@ public final class StorageScope {
 
         DataInputStream s = new DataInputStream(new ByteArrayInputStream(ser));
         try {
-            final int version = s.read();
+            final int version = s.readByte();
             if (version != StorageScope.VERSION) {
                 Log.e(TAG, "unexpected version " + version);
                 return new StorageScope[0];
             }
 
-            int cnt = s.read();
+            int cnt = s.readByte();
             StorageScope[] arr = new StorageScope[cnt];
             for (int i = 0; i < cnt; ++i) {
                 String path = s.readUTF();
