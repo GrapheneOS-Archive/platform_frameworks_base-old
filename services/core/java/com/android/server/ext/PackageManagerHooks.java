@@ -6,6 +6,7 @@ import android.annotation.UserIdInt;
 import android.app.AppBindArgs;
 import android.content.pm.GosPackageState;
 import android.content.pm.PackageManager;
+import android.content.pm.PackageManagerInternal;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.UserHandle;
@@ -65,6 +66,12 @@ public class PackageManagerHooks {
         var set = new ArraySet<>(perms);
         pkg.getRequestedPermissions().removeAll(set);
         pkg.getUsesPermissions().removeIf(p -> set.contains(p.getName()));
+    }
+
+    public static boolean shouldBlockGrantRuntimePermission(
+            PackageManagerInternal pm, String permName, String packageName, int userId)
+    {
+        return false;
     }
 
     @Nullable
