@@ -16,13 +16,13 @@ public class ContactScopesApi {
     public static final String SCOPED_CONTACTS_PROVIDER_AUTHORITY = ContactsContract.AUTHORITY + ".scoped";
 
     // ScopedContactsProvider method IDs
-    public static final String METHOD_GET_ID_FROM_URI = "get_id_from_uri";
+    public static final String METHOD_GET_IDS_FROM_URIS = "get_ids_from_uris";
     public static final String METHOD_GET_VIEW_MODEL = "get_view_model";
     public static final String METHOD_GET_GROUPS = "get_groups";
 
     // keys for Bundles passed from/to ScopedContactsProvider methods
-    public static final String KEY_URI = "uri";
-    public static final String KEY_ID = "id";
+    public static final String KEY_URIS = "uris";
+    public static final String KEY_IDS = "ids";
     public static final String KEY_RESULT = "result";
 
     @NonNull
