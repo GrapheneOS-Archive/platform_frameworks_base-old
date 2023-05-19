@@ -93,7 +93,13 @@ public class PackageManagerHooks {
         final int appId = UserHandle.getAppId(callingUid);
         final int userId = UserHandle.getUserId(callingUid);
 
-        AndroidPackage pkg = pm.snapshotComputer().getPackage(packageName);
+        PackageStateInternal pkgState = pm.snapshotComputer().getPackageStateInternal(packageName);
+        if (pkgState == null) {
+            return null;
+        }
+
+        AndroidPackage pkg = pkgState.getPkg();
+
         if (pkg == null) {
             return null;
         }
