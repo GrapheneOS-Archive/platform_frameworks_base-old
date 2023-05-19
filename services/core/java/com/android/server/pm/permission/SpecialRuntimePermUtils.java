@@ -19,24 +19,24 @@ package com.android.server.pm.permission;
 import android.Manifest;
 import android.app.ActivityManager;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.content.pm.PackageManagerInternal;
+import android.content.pm.SrtPermissions;
 import android.ext.settings.ExtSettings;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.UserHandle;
 import android.util.LruCache;
 import android.util.Slog;
 import android.util.SparseArray;
 
 import com.android.server.LocalServices;
+import com.android.server.pm.PackageManagerService;
 import com.android.server.pm.UserManagerInternal;
 import com.android.server.pm.parsing.pkg.AndroidPackage;
+import com.android.server.pm.pkg.PackageState;
 import com.android.server.pm.pkg.component.ParsedUsesPermission;
 
 import java.util.List;
-
-import static android.content.pm.SpecialRuntimePermAppUtils.FLAG_AWARE_OF_RUNTIME_INTERNET_PERMISSION;
-import static android.content.pm.SpecialRuntimePermAppUtils.FLAG_REQUESTS_INTERNET_PERMISSION;
 
 public class SpecialRuntimePermUtils {
     private static final String TAG = "SpecialRuntimePermUtils";
@@ -75,35 +75,46 @@ public class SpecialRuntimePermUtils {
         return !isAutoGrantSkipped(packageName, userId, perm);
     }
 
-    public static int getFlags(AndroidPackage pkg) {
+    public static int getFlags(PackageManagerService pm, AndroidPackage pkg, PackageState pkgState, int userId) {
         int flags = 0;
 
         for (ParsedUsesPermission perm : pkg.getUsesPermissions()) {
             String name = perm.getName();
             switch (name) {
                 case Manifest.permission.INTERNET:
-                    flags |= FLAG_REQUESTS_INTERNET_PERMISSION;
+                    if (shouldEnableInternetCompat(pkg, pkgState, userId)) {
+                        flags |= SrtPermissions.FLAG_INTERNET_COMPAT_ENABLED;
+                    }
                     continue;
                 default:
                     continue;
             }
         }
 
-        if ((flags & FLAG_REQUESTS_INTERNET_PERMISSION) != 0) {
-            if (pkg.isSystem()) {
-                flags |= FLAG_AWARE_OF_RUNTIME_INTERNET_PERMISSION;
-            } else {
-                Bundle metadata = pkg.getMetaData();
-                if (metadata != null) {
-                    String key = Manifest.permission.INTERNET + ".mode";
-                    if ("runtime".equals(metadata.getString(key))) {
-                        flags |= FLAG_AWARE_OF_RUNTIME_INTERNET_PERMISSION;
-                    }
-                }
+        return flags;
+    }
+
+    private static boolean shouldEnableInternetCompat(AndroidPackage pkg, PackageState pkgState, int userId) {
+        if (pkgState.isSystem() || pkgState.isUpdatedSystemApp()) {
+            // system packages should be aware of runtime INTERNET permission
+            return false;
+        }
+
+        Bundle metadata = pkg.getMetaData();
+        if (metadata != null) {
+            String key = Manifest.permission.INTERNET + ".mode";
+            if ("runtime".equals(metadata.getString(key))) {
+                // AndroidManifest has
+                // <meta-data android:name="android.permission.INTERNET.mode" android:value="runtime" />
+                // declaration inside the <application> element
+                return false;
             }
         }
 
-        return flags;
+        var permManager = LocalServices.getService(PermissionManagerServiceInternal.class);
+        // enable InternetCompat if package doesn't have the INTERNET permission
+        return permManager.checkPermission(pkg.getPackageName(),
+                Manifest.permission.INTERNET, userId) != PackageManager.PERMISSION_GRANTED;
     }
 
     // Maps userIds to map of package names to permissions that should not be auto granted

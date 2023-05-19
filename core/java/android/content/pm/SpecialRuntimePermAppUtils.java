@@ -16,64 +16,21 @@
 
 package android.content.pm;
 
-import android.Manifest;
 import android.annotation.SystemApi;
-import android.app.ActivityThread;
-import android.app.AppGlobals;
-import android.content.Context;
-import android.os.Binder;
-import android.os.RemoteException;
 
 /** @hide */
 @SystemApi
 public class SpecialRuntimePermAppUtils {
-    private static final int FLAG_INITED = 1;
-    public static final int FLAG_REQUESTS_INTERNET_PERMISSION = 1 << 1;
-    public static final int FLAG_AWARE_OF_RUNTIME_INTERNET_PERMISSION = 1 << 2;
 
-    private static volatile int cachedFlags;
+    private static boolean isInternetCompatEnabled;
 
     /** @hide */
-    public static boolean isInternetPermissionCheckSpoofed;
-
-    private static boolean hasInternetPermission() {
-        Context ctx = ActivityThread.currentApplication();
-        boolean res = ctx.checkSelfPermission(Manifest.permission.INTERNET) == PackageManager.PERMISSION_GRANTED;
-        if (res && isInternetPermissionCheckSpoofed) {
-            res = false;
-        }
-        return res;
-    }
-
-    public static boolean requestsInternetPermission() {
-        return (getFlags() & FLAG_REQUESTS_INTERNET_PERMISSION) != 0;
-    }
-
-    public static boolean awareOfRuntimeInternetPermission() {
-        return (getFlags() & FLAG_AWARE_OF_RUNTIME_INTERNET_PERMISSION) != 0;
+    public static void enableInternetCompat() {
+        isInternetCompatEnabled = true;
     }
 
     public static boolean isInternetCompatEnabled() {
-        return !hasInternetPermission() && requestsInternetPermission() && !awareOfRuntimeInternetPermission();
-    }
-
-    private static int getFlags() {
-        int cache = cachedFlags;
-        if (cache != 0) {
-            return cache;
-        }
-
-        IPackageManager pm = AppGlobals.getPackageManager();
-        String pkgName = AppGlobals.getInitialPackage();
-
-        final long token = Binder.clearCallingIdentity(); // in case this method is called in the system_server
-        try {
-            return (cachedFlags = pm.getSpecialRuntimePermissionFlags(pkgName) | FLAG_INITED);
-        } catch (RemoteException e) {
-            throw e.rethrowFromSystemServer();
-        } finally {
-            Binder.restoreCallingIdentity(token);
-        }
+        return isInternetCompatEnabled;
     }
 
     private SpecialRuntimePermAppUtils() {}
