@@ -16,7 +16,6 @@
 
 package android.content.pm;
 
-import android.Manifest;
 import android.annotation.NonNull;
 import android.annotation.SystemApi;
 import android.app.compat.gms.GmsCompat;
@@ -42,11 +41,7 @@ public class AppPermissionUtils {
             return true;
         }
 
-        if (Manifest.permission.INTERNET.equals(permName)
-                && SpecialRuntimePermAppUtils.requestsInternetPermission()
-                && !SpecialRuntimePermAppUtils.awareOfRuntimeInternetPermission())
-        {
-            SpecialRuntimePermAppUtils.isInternetPermissionCheckSpoofed = true;
+        if (SrtPermissions.shouldSpoofSelfCheck(permName)) {
             return true;
         }
 

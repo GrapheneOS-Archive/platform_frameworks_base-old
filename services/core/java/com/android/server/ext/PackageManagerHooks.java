@@ -18,6 +18,7 @@ import com.android.internal.util.GoogleEuicc;
 import com.android.server.pm.GosPackageStatePmHooks;
 import com.android.server.pm.PackageManagerService;
 import com.android.server.pm.parsing.pkg.AndroidPackage;
+import com.android.server.pm.permission.SpecialRuntimePermUtils;
 import com.android.server.pm.pkg.GosPackageStatePm;
 import com.android.server.pm.pkg.PackageStateInternal;
 import com.android.server.pm.pkg.parsing.ParsingPackage;
@@ -111,6 +112,8 @@ public class PackageManagerHooks {
         GosPackageState gosPs = GosPackageStatePmHooks.get(pm, callingUid, packageName, userId);
 
         int[] flagsArr = new int[AppBindArgs.FLAGS_ARRAY_LEN];
+        flagsArr[AppBindArgs.FLAGS_IDX_SPECIAL_RUNTIME_PERMISSIONS] =
+                SpecialRuntimePermUtils.getFlags(pm, pkg, pkgState, userId);
 
         var b = new Bundle();
         b.putParcelable(AppBindArgs.KEY_GOS_PACKAGE_STATE, gosPs);
