@@ -35,6 +35,7 @@ import android.app.job.JobWorkItem;
 import android.app.job.UserVisibleJobSummary;
 import android.content.ClipData;
 import android.content.ComponentName;
+import android.content.Context;
 import android.net.Network;
 import android.net.NetworkRequest;
 import android.net.Uri;
@@ -2382,6 +2383,23 @@ public final class JobStatus {
         if (overrideState == OVERRIDE_FULL) {
             // force override: the job is always runnable
             return true;
+        }
+
+        if ((mRequiredConstraintsOfInterest & CONSTRAINT_CONNECTIVITY) != 0) {
+            if ((satisfiedConstraints & CONSTRAINT_CONNECTIVITY) != 0) {
+                var pmi = LocalServices.getService(
+                        com.android.server.pm.permission.PermissionManagerServiceInternal.class);
+
+                if (pmi.checkUidPermission(getSourceUid(), android.Manifest.permission.INTERNET, Context.DEVICE_ID_DEFAULT) !=
+                        android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                    if (DEBUG) {
+                        Slog.d(TAG, "skipping job " + getJobId() + " for " + getSourcePackageName()
+                                + " in user " + getSourceUserId() + ": it has CONSTRAINT_CONNECTIVITY, "
+                                + "but its UID doesn't have the INTERNET permission");
+                    }
+                    return false;
+                }
+            }
         }
 
         int sat = satisfiedConstraints;
