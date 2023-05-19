@@ -1677,6 +1677,23 @@ public final class JobStatus {
             return true;
         }
 
+        if ((mRequiredConstraintsOfInterest & CONSTRAINT_CONNECTIVITY) != 0) {
+            if ((satisfiedConstraints & CONSTRAINT_CONNECTIVITY) != 0) {
+                var pmi = LocalServices.getService(
+                        com.android.server.pm.permission.PermissionManagerServiceInternal.class);
+
+                if (pmi.checkUidPermission(getSourceUid(), android.Manifest.permission.INTERNET) !=
+                        android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                    if (DEBUG) {
+                        Slog.d(TAG, "skipping job " + getJobId() + " for " + getSourcePackageName()
+                                + " in user " + getSourceUserId() + ": it has CONSTRAINT_CONNECTIVITY, "
+                                + "but its UID doesn't have the INTERNET permission");
+                    }
+                    return false;
+                }
+            }
+        }
+
         int sat = satisfiedConstraints;
         if (overrideState == OVERRIDE_SOFT) {
             // override: pretend all 'soft' requirements are satisfied
