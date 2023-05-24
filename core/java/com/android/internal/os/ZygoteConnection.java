@@ -25,6 +25,7 @@ import static com.android.internal.os.ZygoteConnectionConstants.WRAPPED_PID_TIME
 
 import android.compat.annotation.UnsupportedAppUsage;
 import android.content.pm.ApplicationInfo;
+import android.ext.settings.ExtSettings;
 import android.net.Credentials;
 import android.net.LocalSocket;
 import android.os.Parcel;
@@ -248,7 +249,7 @@ class ZygoteConnection {
                     fdsToClose[1] = zygoteFd.getInt$();
                 }
 
-                if (parsedArgs.mInvokeWith != null || SystemProperties.getBoolean("persist.security.exec_spawn", true) || parsedArgs.mStartChildZygote
+                if (parsedArgs.mInvokeWith != null || ExtSettings.EXEC_SPAWNING.get() || parsedArgs.mStartChildZygote
                         || !multipleOK || peer.getUid() != Process.SYSTEM_UID
                         || (parsedArgs.mRuntimeFlags & Zygote.RUNTIME_FLAGS_DEPENDENT_ON_EXEC_SPAWNING) != 0) {
                     // Continue using old code for now. TODO: Handle these cases in the other path.
@@ -540,7 +541,7 @@ class ZygoteConnection {
                 final int runtimeFlags = parsedArgs.mRuntimeFlags;
                 boolean useExecInit =
                         ((runtimeFlags & Zygote.RUNTIME_FLAGS_DEPENDENT_ON_EXEC_SPAWNING) != 0
-                            || SystemProperties.getBoolean("persist.security.exec_spawn", true))
+                            || ExtSettings.EXEC_SPAWNING.get())
                         &&
                         (runtimeFlags & ApplicationInfo.FLAG_DEBUGGABLE) == 0;
 
