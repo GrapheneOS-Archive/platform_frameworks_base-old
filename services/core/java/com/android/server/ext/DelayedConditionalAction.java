@@ -16,16 +16,14 @@
 
 package com.android.server.ext;
 
+import android.annotation.IntRange;
 import android.app.AlarmManager;
-import android.content.ContentResolver;
 import android.content.Context;
-import android.database.ContentObserver;
-import android.net.Uri;
+import android.ext.settings.IntSetting;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
-import android.provider.Settings;
 import android.util.Slog;
 
 /**
@@ -41,11 +39,12 @@ public abstract class DelayedConditionalAction {
     protected final Thread thread;
     protected final Handler handler;
 
-    protected final ContentResolver contentResolver;
+    protected final IntSetting setting;
+
     protected final AlarmManager alarmManager;
     private final AlarmManager.OnAlarmListener alarmListener;
 
-    protected DelayedConditionalAction(SystemServerExt sse, Handler handler) {
+    protected DelayedConditionalAction(SystemServerExt sse, IntSetting setting, Handler handler) {
         this.sse = sse;
 
         Looper looper = handler.getLooper();
@@ -59,11 +58,10 @@ public abstract class DelayedConditionalAction {
         }
 
         Context ctx = sse.context;
-        contentResolver = ctx.getContentResolver();
         alarmManager = ctx.getSystemService(AlarmManager.class);
 
         alarmListener = () -> {
-            if (delayDurationMillis() == 0) {
+            if (getDelayDurationMillis() == 0) {
                 return;
             }
 
@@ -72,16 +70,11 @@ public abstract class DelayedConditionalAction {
 
         registerStateListener();
 
-        Uri delaySettingUri = Settings.Global.getUriFor(getDelayGlobalSettingsKey());
+        this.setting = setting;
 
-        ContentObserver delayChangeListener = new ContentObserver(handler) {
-            @Override
-            public void onChange(boolean selfChange) {
-                update();
-            }
-        };
-
-        contentResolver.registerContentObserver(delaySettingUri, false, delayChangeListener);
+        if (setting.canObserveState()) {
+            setting.registerObserver(ctx, s -> update(), handler);
+        }
     }
 
     private boolean alarmScheduled;
@@ -107,20 +100,28 @@ public abstract class DelayedConditionalAction {
             return;
         }
 
-        long delayMillis = delayDurationMillis();
+        long delayMillis = getDelayDurationMillis();
 
         if (delayMillis == 0) {
             return;
         }
 
-        final long triggerAt = SystemClock.elapsedRealtime() + delayMillis;
+        long current = SystemClock.elapsedRealtime();
+
+        if (Long.MAX_VALUE - delayMillis < current) {
+            return;
+        }
+
+        final long triggerAt = current + delayMillis;
+
         alarmManager.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP, triggerAt,
                     getClass().getName(), alarmListener, handler);
         alarmScheduled = true;
     }
 
-    private long delayDurationMillis() {
-        return Settings.Global.getLong(contentResolver, getDelayGlobalSettingsKey(), 0);
+    @IntRange(from = 0)
+    private long getDelayDurationMillis() {
+        return Math.max(0, setting.get(sse.context));
     }
 
     // Make sure to use the same Handler that is used for all other callbacks;
@@ -129,7 +130,4 @@ public abstract class DelayedConditionalAction {
 
     protected abstract boolean shouldScheduleAlarm();
     protected abstract void alarmTriggered();
-
-    // android.provider.Settings.Global key
-    protected abstract String getDelayGlobalSettingsKey();
 }
