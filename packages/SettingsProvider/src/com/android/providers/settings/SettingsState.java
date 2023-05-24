@@ -1156,6 +1156,8 @@ final class SettingsState {
 
         mVersion = parser.getAttributeInt(null, ATTR_VERSION);
 
+        final SettingsParserState state = new SettingsParserState(getTypeFromKey(mKey));
+
         final int outerDepth = parser.getDepth();
         int type;
         while ((type = parser.next()) != XmlPullParser.END_DOCUMENT
@@ -1169,6 +1171,9 @@ final class SettingsState {
                 String id = parser.getAttributeValue(null, ATTR_ID);
                 String name = parser.getAttributeValue(null, ATTR_NAME);
                 String value = getValueAttribute(parser, ATTR_VALUE, ATTR_VALUE_BASE64);
+                if (!state.onSettingRead(name, value)) {
+                    continue;
+                }
                 String packageName = parser.getAttributeValue(null, ATTR_PACKAGE);
                 String defaultValue = getValueAttribute(parser, ATTR_DEFAULT_VALUE,
                         ATTR_DEFAULT_VALUE_BASE64);
@@ -1188,6 +1193,8 @@ final class SettingsState {
                 }
             }
         }
+
+        state.onFinish();
     }
 
     @GuardedBy("mLock")
