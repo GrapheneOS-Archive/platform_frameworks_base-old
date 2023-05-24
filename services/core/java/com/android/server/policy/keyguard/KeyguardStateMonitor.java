@@ -18,6 +18,7 @@ package com.android.server.policy.keyguard;
 
 import android.app.ActivityManager;
 import android.content.Context;
+import android.ext.settings.ExtSettings;
 import android.os.RemoteException;
 import android.os.SystemProperties;
 import android.util.Slog;
@@ -91,8 +92,10 @@ public class KeyguardStateMonitor extends IKeyguardStateCallback.Stub {
 
         mCallback.onShowingChanged();
 
-        if ("dynamic".equals(SystemProperties.get("persist.security.deny_new_usb"))) {
-            SystemProperties.set("security.deny_new_usb", showing ? "1" : "0");
+        if (ExtSettings.DENY_NEW_USB_DYNAMIC.equals(ExtSettings.DENY_NEW_USB.get())) {
+            SystemProperties.set(ExtSettings.DENY_NEW_USB_TRANSIENT_PROP, showing ?
+                    ExtSettings.DENY_NEW_USB_TRANSIENT_ENABLE :
+                    ExtSettings.DENY_NEW_USB_TRANSIENT_DISABLE);
         }
     }
 
