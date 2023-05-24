@@ -4,17 +4,17 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.ext.settings.ExtSettings;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Build;
-import android.provider.Settings;
 import android.util.Slog;
 
 class WifiAutoOff extends DelayedConditionalAction {
     private final WifiManager wifiManager;
 
     WifiAutoOff(SystemServerExt sse) {
-        super(sse, sse.bgHandler);
+        super(sse, ExtSettings.WIFI_AUTO_OFF, sse.bgHandler);
         wifiManager = sse.context.getSystemService(WifiManager.class);
     }
 
@@ -60,10 +60,5 @@ class WifiAutoOff extends DelayedConditionalAction {
                 update();
             }
         }, f, handler);
-    }
-
-    @Override
-    protected String getDelayGlobalSettingsKey() {
-        return Settings.Global.WIFI_OFF_TIMEOUT;
     }
 }
