@@ -17306,13 +17306,6 @@ public final class Settings {
         public static final String REVIEW_PERMISSIONS_NOTIFICATION_STATE =
                 "review_permissions_notification_state";
 
-
-        /**
-         * The amount of time in milliseconds before a disconnected Bluetooth adapter is turned off
-         * @hide
-         */
-        public static final String BLUETOOTH_OFF_TIMEOUT = "bluetooth_off_timeout";
-
         /**
          * Settings migrated from Wear OS settings provider.
          * @hide
