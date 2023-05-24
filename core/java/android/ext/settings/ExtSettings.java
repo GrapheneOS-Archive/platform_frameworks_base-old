@@ -122,6 +122,9 @@ public class ExtSettings {
     public static final BoolSysProperty EXEC_SPAWNING = new BoolSysProperty(
             "persist.security.exec_spawn", true);
 
+    public static final BoolSysProperty NATIVE_DEBUGGING = new BoolSysProperty(
+            "persist.native_debug", true);
+
     private ExtSettings() {}
 
     // used for making settings defined in this class unreadable by third-party apps
