@@ -6,6 +6,9 @@ import java.util.Set;
 /** @hide */
 public class ExtSettings {
 
+    public static final BoolSysProperty EXEC_SPAWNING = new BoolSysProperty(
+            "persist.security.exec_spawn", true);
+
     private ExtSettings() {}
 
     // used for making settings defined in this class unreadable by third-party apps
