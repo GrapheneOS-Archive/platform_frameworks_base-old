@@ -28,6 +28,6 @@ public class IntSysProperty extends IntSetting {
     }
 
     public boolean put(int val) {
-        return super.put(null, UserHandle.USER_SYSTEM);
+        return super.put(null, val);
     }
 }
