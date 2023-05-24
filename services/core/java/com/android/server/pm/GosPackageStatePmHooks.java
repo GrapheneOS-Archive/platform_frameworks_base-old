@@ -603,16 +603,15 @@ public class GosPackageStatePmHooks {
                         | FLAG_DISABLE_HARDENED_MALLOC
                         | FLAG_ENABLE_COMPAT_VA_39_BIT;
 
+            final int settingsWriteFlags = FLAG_ALLOW_ACCESS_TO_OBB_DIRECTORY
+                        | FLAG_DISABLE_HARDENED_MALLOC
+                        | FLAG_ENABLE_COMPAT_VA_39_BIT;
+
             // note that this applies to all packages that run in the android.uid.system sharedUserId
             // in secondary users, not just the Settings app. Packages that run in this sharedUserId
             // in the primary user get the fullPermission declared above
             grantPermission(pm, "com.android.settings",
-                    Permission.readWrite(
-                        // read flags
-                        settingsReadFlags,
-                        // write flags
-                        settingsReadFlags & ~FLAG_STORAGE_SCOPES_ENABLED
-                    , 0, 0));
+                    Permission.readWrite(settingsReadFlags, settingsWriteFlags, 0, 0));
 
             userManager = Objects.requireNonNull(LocalServices.getService(UserManagerInternal.class));
 
