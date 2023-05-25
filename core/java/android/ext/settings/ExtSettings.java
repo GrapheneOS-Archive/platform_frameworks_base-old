@@ -81,6 +81,13 @@ public class ExtSettings {
             // also accessed in native code, in frameworks/native/cmds/servicemanager/Access.cpp
             "persist.sys.allow_google_apps_special_access_to_accelerators", true);
 
+    // also read in packages/modules/DnsResolver (DnsTlsTransport.cpp and doh/network/driver.rs)
+    public static final IntSysProperty CONNECTIVITY_CHECKS = new IntSysProperty(
+            "persist.sys.connectivity_checks",
+            ConnChecksSetting.VAL_DEFAULT,
+            ConnChecksSetting.VAL_GRAPHENEOS, ConnChecksSetting.VAL_STANDARD, ConnChecksSetting.VAL_DISABLED
+    );
+
     private ExtSettings() {}
 
     // used for making settings defined in this class unreadable by third-party apps
