@@ -166,6 +166,19 @@ package android.content.pm {
 
 }
 
+package android.ext.settings {
+
+  public class ConnChecksSetting {
+    method public static int get();
+    method public static boolean put(int);
+    field public static final int VAL_DEFAULT = 0; // 0x0
+    field public static final int VAL_DISABLED = 2; // 0x2
+    field public static final int VAL_GRAPHENEOS = 0; // 0x0
+    field public static final int VAL_STANDARD = 1; // 0x1
+  }
+
+}
+
 package android.hardware.usb {
 
   public class UsbManager {
