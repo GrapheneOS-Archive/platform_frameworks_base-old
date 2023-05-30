@@ -53,6 +53,8 @@ public final class SystemServerExt {
         SystemServerExt sse = new SystemServerExt(systemContext, pm);
         sse.bgHandler.post(sse::initBgThread);
         instance = sse;
+
+        new GoogleEuiccLpaDisabler(sse);
     }
 
     void initBgThread() {
