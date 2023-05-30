@@ -35,6 +35,9 @@ public class PackageManagerHooks {
                     // one of the previous OS versions enabled EuiccSupportPixel in all users
                     return PackageManager.COMPONENT_ENABLED_STATE_DISABLED;
                 }
+            case GoogleEuicc.LPA_PKG_NAME:
+                // Google's LPA should be always disabled after reboot
+                return PackageManager.COMPONENT_ENABLED_STATE_DISABLED;
             default:
                 return null;
         }
@@ -48,6 +51,12 @@ public class PackageManagerHooks {
             case GoogleEuicc.EUICC_SUPPORT_PIXEL_PKG_NAME:
                 // EuiccSupportPixel uses INTERNET perm only as part of its dev mode
                 removeUsesPermissions(pkg, Manifest.permission.INTERNET);
+                return;
+            case GoogleEuicc.LPA_PKG_NAME:
+                // this is the same as android:enabled="false" in <application> AndroidManifest tag,
+                // it makes the package disabled by default on first boot, when there's no
+                // serialized package state
+                pkg.setEnabled(false);
                 return;
             default:
                 return;
