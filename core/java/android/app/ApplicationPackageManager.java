@@ -85,6 +85,7 @@ import android.content.res.ApkAssets;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
+import com.android.internal.ext.EuiccGoogleHooks;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Rect;
@@ -2378,7 +2379,13 @@ public class ApplicationPackageManager extends PackageManager {
         }
         try {
             Resources r = getResourcesForApplication(appInfo);
-            text = r.getText(resid);
+            if (AppGlobals.getInitialPackageId() == android.ext.PackageId.G_EUICC_LPA) {
+                try (var s = new EuiccGoogleHooks.SuppressResourceFiltering()) {
+                    text = r.getText(resid);
+                }
+            } else {
+                text = r.getText(resid);
+            }
             putCachedString(name, text);
             return text;
         } catch (NameNotFoundException e) {
