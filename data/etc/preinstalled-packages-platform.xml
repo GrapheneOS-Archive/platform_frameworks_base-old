@@ -110,4 +110,10 @@ to pre-existing users, but cannot uninstall pre-existing system packages from pr
     <install-in-user-type package="com.android.wallpaperbackup">
         <install-in user-type="FULL" />
     </install-in-user-type>
+    <install-in-user-type package="com.google.euiccpixel">
+        <install-in user-type="SYSTEM" />
+    </install-in-user-type>
+    <install-in-user-type package="com.google.android.euicc">
+        <install-in user-type="SYSTEM" />
+    </install-in-user-type>
 </config>
