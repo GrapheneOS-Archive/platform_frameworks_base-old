@@ -455,6 +455,11 @@ public class Resources {
     @NonNull public CharSequence getText(@StringRes int id) throws NotFoundException {
         CharSequence res = mResourcesImpl.getAssets().getResourceText(id);
         if (res != null) {
+            if (android.app.AppGlobals.getInitialPackageId() == android.ext.PackageId.G_EUICC_LPA) {
+                if (res.toString().contains("Google")) {
+                    return "";
+                }
+            }
             return res;
         }
         throw new NotFoundException("String resource ID #0x"
