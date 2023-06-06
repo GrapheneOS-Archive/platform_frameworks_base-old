@@ -23,6 +23,7 @@ import android.annotation.RequiresFeature;
 import android.annotation.RequiresPermission;
 import android.annotation.SystemApi;
 import android.annotation.SystemService;
+import android.app.compat.gms.GmsCompat;
 import android.compat.Compatibility;
 import android.compat.annotation.ChangeId;
 import android.compat.annotation.EnabledAfter;
@@ -51,6 +52,7 @@ import android.util.ArraySet;
 import android.util.Log;
 
 import com.android.internal.annotations.GuardedBy;
+import com.android.internal.gmscompat.sysservice.GmcTelephonyManager;
 import com.android.internal.listeners.ListenerExecutor;
 import com.android.internal.telephony.ICarrierConfigChangeListener;
 import com.android.internal.telephony.ICarrierPrivilegesCallback;
@@ -294,6 +296,13 @@ public class TelephonyRegistryManager {
             } else if (listener.mSubId != null) {
                 subId = listener.mSubId;
             }
+
+            if (GmsCompat.isEnabled()) {
+                eventsList = GmcTelephonyManager.filterTelephonyCallbackEvents(eventsList);
+                // empty eventsList means "unregister the listener". It's fine if eventsList becomes
+                // empty after filtering, unregistration of a never-registered listener is allowed.
+            }
+
             sRegistry.listenWithEventList(renounceFineLocationAccess, renounceCoarseLocationAccess,
                     subId, pkg, featureId, listener.callback, eventsList, notifyNow);
         } catch (RemoteException e) {
@@ -315,6 +324,13 @@ public class TelephonyRegistryManager {
             @NonNull String pkg, @NonNull String featureId,
             @NonNull TelephonyCallback telephonyCallback, @NonNull int[] events,
             boolean notifyNow) {
+
+        if (GmsCompat.isEnabled()) {
+            events = GmcTelephonyManager.filterTelephonyCallbackEvents(events);
+            // empty events array means "unregister the listener". It's fine if events array becomes
+            // empty after filtering, unregistration of a never-registered listener is allowed.
+        }
+
         try {
             sRegistry.listenWithEventList(renounceFineLocationAccess, renounceCoarseLocationAccess,
                     subId, pkg, featureId, telephonyCallback.callback, events, notifyNow);

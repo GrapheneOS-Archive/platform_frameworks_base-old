@@ -20,11 +20,13 @@ import static android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MANIFEST;
 import static android.os.Trace.TRACE_TAG_ACTIVITY_MANAGER;
 import static android.text.TextUtils.formatSimple;
 
+import android.Manifest;
 import android.annotation.FlaggedApi;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.RequiresPermission;
+import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.content.ComponentCallbacks2;
 import android.content.ComponentName;
@@ -858,6 +860,20 @@ public abstract class Service extends ContextWrapper implements ComponentCallbac
      */
     public final void startForeground(int id, @NonNull Notification notification,
             @RequiresPermission @ForegroundServiceType int foregroundServiceType) {
+        if (GmsCompat.isEnabled()) {
+            if ((foregroundServiceType & ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE) != 0) {
+                if (!GmsCompat.hasPermission(Manifest.permission.RECORD_AUDIO)) {
+                    foregroundServiceType &= ~ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE;
+                }
+            }
+
+            if ((foregroundServiceType & ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION) != 0) {
+                if (!GmsCompat.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION)) {
+                    foregroundServiceType &= ~ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION;
+                }
+            }
+        }
+
         try {
             final ComponentName comp = new ComponentName(this, mClassName);
             mActivityManager.setServiceForeground(
@@ -866,6 +882,12 @@ public abstract class Service extends ContextWrapper implements ComponentCallbac
             clearStartForegroundServiceStackTrace();
             logForegroundServiceStart(comp, foregroundServiceType);
         } catch (RemoteException ex) {
+        } catch (SecurityException e) {
+            if (GmsCompat.isEnabled()) {
+                Log.e(TAG, "fgsType: " + Integer.toHexString(foregroundServiceType), e);
+                return;
+            }
+            throw e;
         }
     }
 
