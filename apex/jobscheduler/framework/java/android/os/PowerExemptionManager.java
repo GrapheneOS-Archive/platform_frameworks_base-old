@@ -30,7 +30,10 @@ import android.annotation.RequiresPermission;
 import android.annotation.SystemApi;
 import android.annotation.SystemService;
 import android.annotation.UserHandleAware;
+import android.app.compat.gms.GmsCompat;
 import android.content.Context;
+
+import com.android.internal.gmscompat.client.ClientPriorityManager;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -579,6 +582,11 @@ public class PowerExemptionManager {
     @RequiresPermission(android.Manifest.permission.CHANGE_DEVICE_IDLE_TEMP_WHITELIST)
     public void addToTemporaryAllowList(@NonNull String packageName, @ReasonCode int reasonCode,
             @Nullable String reason, long durationMs) {
+        if (GmsCompat.isEnabled()) {
+            ClientPriorityManager.raiseToForeground(packageName, durationMs, reason, reasonCode);
+            return;
+        }
+
         try {
             mService.addPowerSaveTempWhitelistApp(packageName, durationMs, mContext.getUserId(),
                     reasonCode, reason);
