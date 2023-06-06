@@ -86,6 +86,20 @@ package android.app.admin {
 
 }
 
+package android.app.compat.gms {
+
+  public class GmsModuleHooks {
+    method @Nullable public static String deviceConfigGetProperty(@NonNull String, @NonNull String);
+    method public static boolean deviceConfigSetProperties(@NonNull android.provider.DeviceConfig.Properties);
+    method public static boolean deviceConfigSetProperty(@NonNull String, @NonNull String, @Nullable String);
+    method @Nullable public static Boolean enableBluetoothAdapter();
+    method public static void enableNfc();
+    method public static boolean interceptSynchronousResultReceiverException(@NonNull RuntimeException);
+    method public static void makeBluetoothAdapterDiscoverable();
+  }
+
+}
+
 package android.content {
 
   public abstract class ContentProvider implements android.content.ComponentCallbacks2 {

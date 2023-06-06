@@ -57,6 +57,9 @@ public class PackageExtInit implements ParsingPackageUtils.PackageExtInitIface {
 
         Bundle metadata = pkg.getMetaData();
         if (metadata != null) {
+            if (metadata.containsKey("com.google.android.gms.version")) {
+                flags |= (1 << AppInfoExt.FLAG_HAS_GMSCORE_CLIENT_LIBRARY);
+            }
         }
 
         return flags;

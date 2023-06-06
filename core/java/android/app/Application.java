@@ -19,6 +19,7 @@ package android.app;
 import android.annotation.CallSuper;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.content.ComponentCallbacks;
 import android.content.ComponentCallbacks2;
@@ -232,6 +233,11 @@ public class Application extends ContextWrapper implements ComponentCallbacks2 {
 
     public Application() {
         super(null);
+
+        if (GmsCompat.isEnabled()) {
+            registerActivityLifecycleCallbacks(com.android.internal.gmscompat.util
+                    .GmcActivityUtils.INSTANCE);
+        }
     }
 
     private String getLoadedApkInfo() {

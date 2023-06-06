@@ -32,6 +32,8 @@ import android.annotation.TestApi;
 import android.annotation.UserIdInt;
 import android.app.Activity;
 import android.app.PendingIntent;
+import android.app.compat.gms.GmsCompat;
+import android.app.compat.gms.GmsModuleHooks;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.content.Context;
 import android.content.IntentFilter;
@@ -1116,6 +1118,13 @@ public final class NfcAdapter {
     @SystemApi
     @RequiresPermission(android.Manifest.permission.WRITE_SECURE_SETTINGS)
     public boolean enable() {
+        if (GmsCompat.isEnabled()) {
+            if (!GmsCompat.hasPermission(android.Manifest.permission.WRITE_SECURE_SETTINGS)) {
+                GmsModuleHooks.enableNfc();
+                return false;
+            }
+        }
+
         try {
             return sService.enable();
         } catch (RemoteException e) {
