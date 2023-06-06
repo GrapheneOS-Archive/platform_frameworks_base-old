@@ -534,4 +534,6 @@ public interface ParsingPackage {
     boolean isNormalScreensSupported();
 
     boolean isSmallScreensSupported();
+
+    boolean isPartiallyDirectBootAware();
 }
