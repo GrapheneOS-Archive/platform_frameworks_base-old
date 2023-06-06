@@ -3179,8 +3179,8 @@ public class UserManager {
         return getProfileType(mUserId);
     }
 
-    /** @see #getProfileType() */
-    private @Nullable String getProfileType(@UserIdInt int userId) {
+    /** @hide */
+    protected @Nullable String getProfileType(@UserIdInt int userId) {
         // First, the typical case (i.e. the *process* user, not necessarily the context user).
         // This cache cannot be become invalidated since it's about the calling process itself.
         if (userId == UserHandle.myUserId()) {

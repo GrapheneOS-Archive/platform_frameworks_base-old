@@ -38,6 +38,7 @@ import android.app.Activity;
 import android.app.ActivityThread;
 import android.app.AppGlobals;
 import android.app.StatusBarManager;
+import android.app.compat.gms.GmsCompat;
 import android.bluetooth.BluetoothDevice;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.content.pm.ActivityInfo;
@@ -72,6 +73,7 @@ import android.provider.DocumentsContract;
 import android.provider.DocumentsProvider;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
+import android.provider.Settings;
 import android.service.chooser.ChooserAction;
 import android.telecom.PhoneAccount;
 import android.telecom.TelecomManager;
@@ -9795,6 +9797,14 @@ public class Intent implements Parcelable, Cloneable {
      * @see #resolveActivityInfo
      */
     public ComponentName resolveActivity(@NonNull PackageManager pm) {
+        if (GmsCompat.isEnabled()) {
+            if (Settings.ACTION_SETTINGS_EMBED_DEEP_LINK_ACTIVITY.equals(getAction())) {
+                if (!GmsCompat.hasPermission(Manifest.permission.LAUNCH_MULTI_PANE_SETTINGS_DEEP_LINK)) {
+                    return null;
+                }
+            }
+        }
+
         if (mComponent != null) {
             return mComponent;
         }

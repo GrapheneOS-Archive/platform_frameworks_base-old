@@ -31,6 +31,7 @@ import android.annotation.RequiresPermission;
 import android.annotation.SystemApi;
 import android.annotation.TestApi;
 import android.app.ActivityThread;
+import android.app.compat.gms.GmsCompat;
 import android.companion.virtual.VirtualDeviceManager;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.content.AttributionSource;
@@ -53,6 +54,7 @@ import android.os.Parcel;
 import android.os.PersistableBundle;
 import android.os.RemoteException;
 import android.os.ServiceManager;
+import android.os.SystemClock;
 import android.util.ArrayMap;
 import android.util.Log;
 import android.util.Pair;
@@ -66,6 +68,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.ref.WeakReference;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -471,6 +474,20 @@ public class AudioRecord implements AudioRouting, MicrophoneDirection,
         int[] session = new int[1];
         session[0] = resolveSessionId(context, sessionId);
 
+        if (GmsCompat.isEnabled()) {
+            mIsPseudoTrack = !GmsCompat.hasPermission(android.Manifest.permission.RECORD_AUDIO);
+
+            if (GmsCompat.isAndroidAuto() && attributes.getCapturePreset() == MediaRecorder.AudioSource.REMOTE_SUBMIX) {
+                mIsPseudoTrack = !GmsCompat.hasPermission(android.Manifest.permission.MODIFY_AUDIO_ROUTING);
+            }
+        }
+
+        if (mIsPseudoTrack) {
+            Log.d(TAG_PSEUDO_TRACK, "constructor");
+            int bytesPerSecond = format.getFrameSizeInBytes() * format.getSampleRate();
+            mMillisecondInBytes = 1000d / (double) bytesPerSecond;
+        } else {
+
         //TODO: update native initialization when information about hardware init failure
         //      due to capture device already open is available.
         try (ScopedParcelState attributionSourceState = attributionSource.asScopedParcelState()) {
@@ -482,6 +499,7 @@ public class AudioRecord implements AudioRouting, MicrophoneDirection,
                 loge("Error code " + initResult + " when initializing native AudioRecord object.");
                 return; // with mState == STATE_UNINITIALIZED
             }
+        }
         }
 
         mSampleRate = sampleRate[0];
@@ -1488,6 +1506,11 @@ public class AudioRecord implements AudioRouting, MicrophoneDirection,
      */
     public void startRecording()
     throws IllegalStateException {
+        if (mIsPseudoTrack) {
+            Log.d(TAG_PSEUDO_TRACK, "startRecording");
+            return;
+        }
+
         if (mState != STATE_INITIALIZED) {
             throw new IllegalStateException("startRecording() called on an "
                     + "uninitialized AudioRecord.");
@@ -1531,6 +1554,11 @@ public class AudioRecord implements AudioRouting, MicrophoneDirection,
      */
     public void stop()
     throws IllegalStateException {
+        if (mIsPseudoTrack) {
+            Log.d(TAG_PSEUDO_TRACK, "stop");
+            return;
+        }
+
         if (mState != STATE_INITIALIZED) {
             throw new IllegalStateException("stop() called on an uninitialized AudioRecord.");
         }
@@ -1579,6 +1607,12 @@ public class AudioRecord implements AudioRouting, MicrophoneDirection,
      * </ul>
      */
     public int read(@NonNull byte[] audioData, int offsetInBytes, int sizeInBytes) {
+        if (mIsPseudoTrack) {
+            Arrays.fill(audioData, offsetInBytes, offsetInBytes + sizeInBytes, (byte) 0);
+            SystemClock.sleep((int) ((double) sizeInBytes * mMillisecondInBytes));
+            return sizeInBytes;
+        }
+
         return read(audioData, offsetInBytes, sizeInBytes, READ_BLOCKING);
     }
 
@@ -2628,4 +2662,8 @@ public class AudioRecord implements AudioRouting, MicrophoneDirection,
         @TestApi
         public static final String START_COUNT = MM_PREFIX + "startCount";
     }
+
+    private static final String TAG_PSEUDO_TRACK = "PseudoAudioTrack";
+    private boolean mIsPseudoTrack;
+    private double mMillisecondInBytes;
 }

@@ -26,6 +26,7 @@ import android.annotation.SystemApi;
 import android.annotation.TestApi;
 import android.app.ActivityThread;
 import android.app.Application;
+import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.content.Context;
 import android.sysprop.DeviceProperties;
@@ -35,6 +36,8 @@ import android.text.TextUtils;
 import android.util.ArraySet;
 import android.util.Slog;
 import android.view.View;
+
+import com.android.internal.gmscompat.GmsHooks;
 
 import dalvik.system.VMRuntime;
 
@@ -256,6 +259,16 @@ public class Build {
     @SuppressAutoDoc // No support for device / profile owner.
     @RequiresPermission(Manifest.permission.READ_PRIVILEGED_PHONE_STATE)
     public static String getSerial() {
+        if (GmsCompat.isEnabled()) {
+            boolean shouldHook =
+                    !GmsCompat.hasPermission(Manifest.permission.READ_PRIVILEGED_PHONE_STATE)
+                    && !GmsCompat.hasPermission(Manifest.permission.READ_DEVICE_SERIAL_NUMBER);
+
+            if (shouldHook) {
+                return GmsHooks.getSerial();
+            }
+        }
+
         IDeviceIdentifiersPolicyService service = IDeviceIdentifiersPolicyService.Stub
                 .asInterface(ServiceManager.getService(Context.DEVICE_IDENTIFIERS_SERVICE));
         try {
