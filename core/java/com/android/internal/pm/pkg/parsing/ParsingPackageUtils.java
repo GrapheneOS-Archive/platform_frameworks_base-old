@@ -2355,6 +2355,11 @@ public class ParsingPackageUtils {
             }
         }
 
+        ParsedService gmsCompatClientSvc = com.android.server.pm.ext.GmsCompatPkgParsingHooks.maybeCreateClientService(pkg);
+        if (gmsCompatClientSvc != null) {
+            pkg.addService(gmsCompatClientSvc);
+        }
+
         if (hasServiceOrder) {
             pkg.sortServices();
         }
