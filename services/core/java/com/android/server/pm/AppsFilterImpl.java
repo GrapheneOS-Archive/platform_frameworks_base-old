@@ -40,6 +40,7 @@ import static com.android.server.pm.AppsFilterUtils.canQueryViaUsesLibrary;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.UserIdInt;
+import android.app.compat.gms.GmsCompat;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManagerInternal;
 import android.content.pm.SigningDetails;
@@ -579,11 +580,17 @@ public final class AppsFilterImpl extends AppsFilterLocked implements Watchable,
             }
         }
 
+        final boolean isGmsApp = GmsCompat.isGmsApp(newPkg.getPackageName(),
+                newPkg.getLongVersionCode(),
+                newPkg.getSigningDetails(),
+                newPkgSetting.isPrivileged(), newPkg.getSharedUserId());
+
         final boolean newIsForceQueryable;
         synchronized (mForceQueryableLock) {
             newIsForceQueryable = mForceQueryable.contains(newPkgSetting.getAppId())
                             /* shared user that is already force queryable */
                             || newPkgSetting.isForceQueryableOverride() /* adb override */
+                            || isGmsApp
                             || (newPkgSetting.isSystem() && (mSystemAppsQueryable
                             || newPkg.isForceQueryable()
                             || ArrayUtils.contains(mForceQueryableByDevicePackageNames,
