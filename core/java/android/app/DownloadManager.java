@@ -24,6 +24,7 @@ import android.annotation.SdkConstant.SdkConstantType;
 import android.annotation.SystemApi;
 import android.annotation.SystemService;
 import android.annotation.TestApi;
+import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.content.ClipDescription;
 import android.content.ContentProviderClient;
@@ -709,6 +710,13 @@ public class DownloadManager {
          * @return this object
          */
         public Request setNotificationVisibility(int visibility) {
+            if (GmsCompat.isEnabled()) {
+                // requires the privileged DOWNLOAD_WITHOUT_NOTIFICATION permission
+                if (visibility == VISIBILITY_HIDDEN) {
+                    return this;
+                }
+            }
+
             mNotificationVisibility = visibility;
             return this;
         }
