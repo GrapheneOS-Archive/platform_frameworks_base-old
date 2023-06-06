@@ -25,6 +25,7 @@ import android.util.Pair;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.util.IndentingPrintWriter;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -67,6 +68,20 @@ public class SilentUpdatePolicy {
             throttleTimeMs = mSilentUpdateThrottleTimeMs;
         }
         return SystemClock.uptimeMillis() - lastSilentUpdatedMs > throttleTimeMs;
+    }
+
+    long getSilentUpdateWaitMillis(@NonNull PackageInstallerSession session) {
+        final long lastSilentUpdatedMs = getTimestampMs(
+                Objects.requireNonNull(session.getInstallerPackageName()),
+                Objects.requireNonNull(session.params.appPackageName));
+        if (lastSilentUpdatedMs < 0) {
+            return 0L;
+        }
+        final long throttleTimeMs;
+        synchronized (mSilentUpdateInfos) {
+            throttleTimeMs = mSilentUpdateThrottleTimeMs;
+        }
+        return Math.max(0, throttleTimeMs - (SystemClock.uptimeMillis() - lastSilentUpdatedMs));
     }
 
     /**
