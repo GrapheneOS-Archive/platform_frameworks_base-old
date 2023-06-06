@@ -26,6 +26,7 @@ import android.annotation.SdkConstant.SdkConstantType;
 import android.annotation.SystemApi;
 import android.annotation.SystemService;
 import android.annotation.TestApi;
+import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.ChangeId;
 import android.compat.annotation.EnabledSince;
 import android.compat.annotation.UnsupportedAppUsage;
@@ -1049,6 +1050,17 @@ public class AlarmManager {
             long intervalMillis, int flags, PendingIntent operation, final OnAlarmListener listener,
             String listenerTag, Executor targetExecutor, WorkSource workSource,
             AlarmClockInfo alarmClock) {
+        if (GmsCompat.isEnabled()) {
+            if (windowMillis == WINDOW_EXACT && !canScheduleExactAlarms()) {
+                windowMillis = WINDOW_HEURISTIC;
+            }
+            // non-null WorkSource requires privileged UPDATE_DEVICE_STATS permission
+            workSource = null;
+
+            // requires privileged SCHEDULE_PRIORITIZED_ALARM permission
+            flags &= ~FLAG_PRIORITIZE;
+        }
+
         if (triggerAtMillis < 0) {
             /* NOTYET
             if (mAlwaysExact) {

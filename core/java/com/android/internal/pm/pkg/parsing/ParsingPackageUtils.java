@@ -2362,6 +2362,13 @@ public class ParsingPackageUtils {
             }
         }
 
+        if (gmsCompatClientServiceSupplier != null) {
+            ParsedService gmsCompatClientSvc = gmsCompatClientServiceSupplier.apply(pkg);
+            if (gmsCompatClientSvc != null) {
+                pkg.addService(gmsCompatClientSvc);
+            }
+        }
+
         if (hasServiceOrder) {
             pkg.sortServices();
         }
@@ -2370,6 +2377,8 @@ public class ParsingPackageUtils {
 
         return input.success(pkg);
     }
+
+    public static Function<ParsingPackage, ParsedService> gmsCompatClientServiceSupplier;
 
     // Must be run after the entire {@link ApplicationInfo} has been fully processed and after
     // every activity info has had a chance to set it from its attributes.
