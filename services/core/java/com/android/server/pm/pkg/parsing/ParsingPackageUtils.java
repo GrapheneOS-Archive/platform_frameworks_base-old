@@ -90,6 +90,7 @@ import com.android.internal.R;
 import com.android.internal.os.ClassLoaderFactory;
 import com.android.internal.util.ArrayUtils;
 import com.android.internal.util.XmlUtils;
+import com.android.server.ext.GmsSysServerHooks;
 import com.android.server.ext.PackageManagerHooks;
 import com.android.server.pm.SharedUidMigration;
 import com.android.server.pm.parsing.pkg.PackageImpl;
@@ -2191,6 +2192,7 @@ public class ParsingPackageUtils {
         }
 
         PackageManagerHooks.amendParsedPackage(pkg);
+        GmsSysServerHooks.amendParsedPackage(pkg);
 
         if (hasActivityOrder) {
             pkg.sortActivities();
