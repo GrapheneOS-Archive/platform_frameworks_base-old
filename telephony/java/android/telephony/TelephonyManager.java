@@ -42,6 +42,7 @@ import android.annotation.TestApi;
 import android.annotation.WorkerThread;
 import android.app.PendingIntent;
 import android.app.PropertyInvalidatedCache;
+import android.app.compat.gms.GmsCompat;
 import android.app.role.RoleManager;
 import android.compat.Compatibility;
 import android.compat.annotation.ChangeId;
@@ -109,6 +110,7 @@ import android.util.Pair;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.internal.gmscompat.gcarriersettings.GCarrierSettingsApp;
 import com.android.internal.os.BackgroundThread;
 import com.android.internal.telephony.CellNetworkScanResult;
 import com.android.internal.telephony.IBooleanConsumer;
@@ -722,6 +724,13 @@ public class TelephonyManager {
      * @return a TelephonyManager that uses the given subId for all calls.
      */
     public TelephonyManager createForSubscriptionId(int subId) {
+        if (GmsCompat.isGCarrierSettings()) {
+            var override = GCarrierSettingsApp.maybeOverrideCreateTelephonyManager(mContext, subId);
+
+            if (override != null) {
+                return override;
+            }
+        }
       // Don't reuse any TelephonyManager objects.
       return new TelephonyManager(mContext, subId);
     }
@@ -6685,6 +6694,12 @@ public class TelephonyManager {
     @RequiresPermission(android.Manifest.permission.ACCESS_FINE_LOCATION)
     @RequiresFeature(PackageManager.FEATURE_TELEPHONY_RADIO_ACCESS)
     public List<CellInfo> getAllCellInfo() {
+        if (GmsCompat.isEnabled()) {
+            if (!GmsCompat.hasPermission(android.Manifest.permission.ACCESS_FINE_LOCATION)) {
+                return null;
+            }
+        }
+
         try {
             ITelephony telephony = getITelephony();
             if (telephony == null)
@@ -6819,6 +6834,12 @@ public class TelephonyManager {
         } catch (RemoteException ex) {
             runOnBackgroundThread(() -> executor.execute(
                     () -> callback.onError(CellInfoCallback.ERROR_MODEM_ERROR, ex)));
+        } catch (SecurityException e) {
+            if (GmsCompat.isEnabled()) {
+                Log.d("GmsCompat", "requestCellInfoUpdate", e);
+                return;
+            }
+            throw e;
         }
     }
 
@@ -6845,6 +6866,12 @@ public class TelephonyManager {
     @RequiresFeature(PackageManager.FEATURE_TELEPHONY_RADIO_ACCESS)
     public void requestCellInfoUpdate(@NonNull WorkSource workSource,
             @NonNull @CallbackExecutor Executor executor, @NonNull CellInfoCallback callback) {
+        if (GmsCompat.isEnabled()) {
+            // passing WorkSource requires the privileged MODIFY_PHONE_STATE permission
+            requestCellInfoUpdate(executor, callback);
+            return;
+        }
+
         try {
             ITelephony telephony = getITelephony();
             if (telephony == null) {
