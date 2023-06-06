@@ -22,6 +22,7 @@ import android.annotation.Nullable;
 import android.annotation.SystemApi;
 import android.annotation.TestApi;
 import android.annotation.UserIdInt;
+import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.util.SparseArray;
 
@@ -565,6 +566,10 @@ public final class UserHandle implements Parcelable {
     @Deprecated
     @SystemApi
     public boolean isOwner() {
+        if (GmsCompat.isEnabled()) {
+            return isSystem();
+        }
+
         return this.equals(OWNER);
     }
 
@@ -574,6 +579,11 @@ public final class UserHandle implements Parcelable {
      */
     @SystemApi
     public boolean isSystem() {
+        if (GmsCompat.isEnabled()) {
+            // "system" user means "primary" ("Owner") user
+            return true;
+        }
+
         return this.equals(SYSTEM);
     }
 
