@@ -1,0 +1,190 @@
+/*
+ * Copyright (C) 2022 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.internal.gmscompat.sysservice;
+
+import android.annotation.Nullable;
+import android.annotation.UserIdInt;
+import android.content.Context;
+import android.content.pm.UserInfo;
+import android.os.IUserManager;
+import android.os.Process;
+import android.os.UserHandle;
+import android.os.UserManager;
+
+import java.util.Collections;
+import java.util.List;
+
+/**
+ * GMS tries to interact across user profiles, which requires privileged permissions.
+ * As a workaround, a pseudo-single-user environment is constructed by hiding non-current users
+ * and marking the current user as the primary ("Owner") user.
+ */
+public class GmcUserManager extends UserManager {
+    public GmcUserManager(Context context, IUserManager service) {
+        super(context, service);
+    }
+
+    private static int getUserId() {
+        return UserHandle.myUserId();
+    }
+
+    private static void checkUserId(int userId) {
+        if (userId != getUserId() && userId != UserHandle.USER_CURRENT) {
+            throw new IllegalStateException("unexpected userId " + userId);
+        }
+    }
+
+    public static UserHandle translateUserHandle(UserHandle h) {
+        if (UserHandle.ALL.equals(h)) {
+            return UserHandle.of(getUserId());
+        }
+
+        checkUserId(h.getIdentifier());
+        return h;
+    }
+
+    private static int getUserSerialNumber() {
+        // GMS has several hardcoded (userSerialNumber == 0) checks
+        return 0;
+    }
+
+    private static String getUserType_() {
+        // "system" means "primary" ("Owner") user
+        return UserManager.USER_TYPE_FULL_SYSTEM;
+    }
+
+    private static UserInfo getUserInfo() {
+        // obtaining UserInfo is a privileged operation (even for the current user)
+        UserInfo ui = new UserInfo();
+        ui.id = getUserId();
+        ui.serialNumber = getUserSerialNumber();
+        ui.userType = getUserType_();
+        ui.flags = UserInfo.FLAG_SYSTEM | UserInfo.FLAG_FULL | UserInfo.FLAG_MAIN;
+        return ui;
+    }
+
+    @Override
+    public boolean isSystemUser() {
+        return true;
+    }
+
+    @Override
+    public boolean isUserOfType(String userType) {
+        return getUserType_().equals(userType);
+    }
+
+    @Override
+    public UserInfo getUserInfo(int userId) {
+        checkUserId(userId);
+        return getUserInfo();
+    }
+
+    @Override
+    public boolean hasBaseUserRestriction(String restrictionKey, UserHandle userHandle) {
+        // Can't ignore device policy restrictions without permission
+        return hasUserRestriction(restrictionKey, userHandle);
+    }
+
+    @Override
+    public List<UserInfo> getUsers(boolean excludePartial, boolean excludeDying, boolean excludePreCreated) {
+        return Collections.singletonList(getUserInfo());
+    }
+
+    @Override
+    public int getUserSerialNumber(@UserIdInt int userId) {
+        checkUserId(userId);
+        return getUserSerialNumber();
+    }
+
+    @Override
+    public @UserIdInt int getUserHandle(int userSerialNumber) {
+        if (userSerialNumber != getUserSerialNumber()) {
+            throw new IllegalStateException("unexpected userSerialNumber " + userSerialNumber);
+        }
+        return getUserId();
+    }
+
+    // ActivityManager#getCurrentUser()
+    public static int amGetCurrentUser() {
+        return getUserId();
+    }
+
+    // ActivityManager#isUserRunning(int)
+    public static boolean amIsUserRunning(int userId) {
+        checkUserId(userId);
+        return true;
+    }
+
+    // support for managed ("work") profiles
+
+    @Override
+    public List<UserInfo> getProfiles(@UserIdInt int userId) {
+        checkUserId(userId);
+        return getUsers();
+    }
+
+    @Override
+    public int[] getProfileIds(@UserIdInt int userId, boolean enabledOnly) {
+        checkUserId(userId);
+        return new int[] { userId };
+    }
+
+    @Override
+    public UserInfo getProfileParent(int userId) {
+        checkUserId(userId);
+        return null;
+    }
+
+    @Override
+    public boolean isRestrictedProfile() {
+        return false;
+    }
+
+    @Override
+    public boolean isDemoUser() {
+        return false;
+    }
+
+    @Nullable
+    @Override
+    protected String getProfileType(int userId) {
+        checkUserId(userId);
+        return "";
+    }
+
+    @Nullable
+    @Override
+    public UserHandle getPreviousForegroundUser() {
+        return null;
+    }
+
+    @Nullable
+    @Override
+    public UserHandle getMainUser() {
+        return Process.myUserHandle();
+    }
+
+    @Override
+    public UserHandle getBootUser() {
+        return Process.myUserHandle();
+    }
+
+    @Override
+    public boolean isAdminUser() {
+        return true;
+    }
+}

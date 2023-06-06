@@ -3578,6 +3578,10 @@ public final class ActivityThread extends ClientTransactionHandler
         }
     }
 
+    public int getProcessState() {
+        return mLastProcessState;
+    }
+
     @Override
     public void updateProcessState(int processState, boolean fromIpc) {
         synchronized (mAppThread) {
