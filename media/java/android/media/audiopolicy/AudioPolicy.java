@@ -16,6 +16,7 @@
 
 package android.media.audiopolicy;
 
+import android.Manifest;
 import android.annotation.FlaggedApi;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
@@ -25,6 +26,7 @@ import android.annotation.SystemApi;
 import android.annotation.TestApi;
 import android.annotation.UserIdInt;
 import android.app.ActivityManager;
+import android.app.compat.gms.GmsCompat;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.media.AudioAttributes;
@@ -339,6 +341,12 @@ public class AudioPolicy {
      *    otherwise.
      */
     public int attachMixes(@NonNull List<AudioMix> mixes) {
+        if (GmsCompat.isAndroidAuto()) {
+            if (!GmsCompat.hasPermission(Manifest.permission.MODIFY_AUDIO_ROUTING)) {
+                return AudioManager.ERROR;
+            }
+        }
+
         if (mixes == null) {
             throw new IllegalArgumentException("Illegal null list of AudioMix");
         }
@@ -813,6 +821,12 @@ public class AudioPolicy {
      * @throws IllegalArgumentException
      */
     public AudioRecord createAudioRecordSink(AudioMix mix) throws IllegalArgumentException {
+        if (GmsCompat.isAndroidAuto()) {
+            if (!GmsCompat.hasPermission(Manifest.permission.MODIFY_AUDIO_ROUTING)) {
+                return null;
+            }
+        }
+
         if (!policyReadyToUse()) {
             Log.e(TAG, "Cannot create AudioRecord sink for AudioMix");
             return null;

@@ -29,6 +29,7 @@ import android.app.ambientcontext.AmbientContextManager;
 import android.app.ambientcontext.IAmbientContextManager;
 import android.app.appsearch.AppSearchManagerFrameworkInitializer;
 import android.app.blob.BlobStoreManagerFrameworkInitializer;
+import android.app.compat.gms.GmsCompat;
 import android.app.contentsuggestions.ContentSuggestionsManager;
 import android.app.contentsuggestions.IContentSuggestionsManager;
 import android.app.job.JobSchedulerFrameworkInitializer;
@@ -253,6 +254,7 @@ import com.android.internal.app.IAppOpsService;
 import com.android.internal.app.IBatteryStats;
 import com.android.internal.app.ISoundTriggerService;
 import com.android.internal.appwidget.IAppWidgetService;
+import com.android.internal.gmscompat.sysservice.GmcUserManager;
 import com.android.internal.graphics.fonts.IFontManager;
 import com.android.internal.net.INetworkWatchlistManager;
 import com.android.internal.os.IBinaryTransparencyService;
@@ -814,6 +816,11 @@ public final class SystemServiceRegistry {
             public UserManager createService(ContextImpl ctx) throws ServiceNotFoundException {
                 IBinder b = ServiceManager.getServiceOrThrow(Context.USER_SERVICE);
                 IUserManager service = IUserManager.Stub.asInterface(b);
+
+                if (GmsCompat.isEnabled()) {
+                    return new GmcUserManager(ctx, service);
+                }
+
                 return new UserManager(ctx, service);
             }});
 

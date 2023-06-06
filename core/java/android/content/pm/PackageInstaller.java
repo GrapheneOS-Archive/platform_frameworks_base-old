@@ -48,6 +48,7 @@ import android.app.ActivityManager;
 import android.app.ActivityThread;
 import android.app.AppGlobals;
 import android.app.PendingIntent;
+import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -75,6 +76,7 @@ import android.os.ParcelableException;
 import android.os.PersistableBundle;
 import android.os.RemoteCallback;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.system.ErrnoException;
@@ -83,8 +85,10 @@ import android.text.TextUtils;
 import android.util.ArrayMap;
 import android.util.ArraySet;
 import android.util.ExceptionUtils;
+import android.util.Log;
 
 import com.android.internal.content.InstallLocationUtils;
+import com.android.internal.gmscompat.PlayStoreHooks;
 import com.android.internal.util.ArrayUtils;
 import com.android.internal.util.DataClass;
 import com.android.internal.util.IndentingPrintWriter;
@@ -791,6 +795,10 @@ public class PackageInstaller {
      *         session is finalized. IDs are not reused during a given boot.
      */
     public int createSession(@NonNull SessionParams params) throws IOException {
+        if (GmsCompat.isPlayStore()) {
+            PlayStoreHooks.adjustSessionParams(params);
+        }
+
         try {
             return mInstaller.createSession(params, mInstallerPackageName, mAttributionTag,
                     mUserId);
@@ -1960,6 +1968,26 @@ public class PackageInstaller {
          * @see #requestUserPreapproval
          */
         public void commit(@NonNull IntentSender statusReceiver) {
+            if (GmsCompat.isPlayStore()) {
+                long waitMs = 0;
+                try {
+                    waitMs = mSession.getSilentUpdateWaitMillis();
+                } catch (Exception e) {
+                    // getSilentUpdateWaitMillis() will fail if Play Store didn't set packageName
+                    // of this session. It always does currently AFAIK (September 2022)
+                    Log.e("GmsCompat", "", e);
+                }
+
+                if (waitMs > 0) {
+                    // Should happen only if the same package is updated twice within 30 seconds
+                    // (likely a Play Store bug, possibly related to APK splits)
+                    Log.d("GmsCompat", "PackageInstaller.Session.getSilentUpdateWaitMillis returned " + waitMs + ", sleeping...");
+                    SystemClock.sleep(waitMs + 100);
+                }
+
+                statusReceiver = PlayStoreHooks.wrapCommitStatusReceiver(this, statusReceiver);
+            }
+
             try {
                 mSession.commit(statusReceiver, false);
             } catch (RemoteException e) {
@@ -2700,6 +2728,12 @@ public class PackageInstaller {
         public IntentSender unarchiveIntentSender;
 
         private final ArrayMap<String, Integer> mPermissionStates;
+        /**
+         * {@hide}
+         *
+         *  Used only by gmscompat, to disallow updates to unknown versions of GmsCore and Play Store.
+         */
+        public long maxAllowedVersion = Long.MAX_VALUE;
 
         /**
          * Construct parameters for a new package install session.
@@ -2711,6 +2745,10 @@ public class PackageInstaller {
         public SessionParams(int mode) {
             this.mode = mode;
             mPermissionStates = new ArrayMap<>();
+            if (GmsCompat.isPlayStore()) {
+                // called here instead of in createSession() to give Play Store a chance to override
+                setRequireUserAction(USER_ACTION_NOT_REQUIRED);
+            }
         }
 
         /** {@hide} */
@@ -2751,6 +2789,7 @@ public class PackageInstaller {
             developmentInstallFlags = source.readInt();
             unarchiveId = source.readInt();
             unarchiveIntentSender = source.readParcelable(null, IntentSender.class);
+            maxAllowedVersion = source.readLong();
         }
 
         /** {@hide} */
@@ -2786,6 +2825,7 @@ public class PackageInstaller {
             ret.developmentInstallFlags = developmentInstallFlags;
             ret.unarchiveId = unarchiveId;
             ret.unarchiveIntentSender = unarchiveIntentSender;
+            ret.maxAllowedVersion = maxAllowedVersion;
             return ret;
         }
 
@@ -3541,6 +3581,7 @@ public class PackageInstaller {
             dest.writeInt(developmentInstallFlags);
             dest.writeInt(unarchiveId);
             dest.writeParcelable(unarchiveIntentSender, flags);
+            dest.writeLong(maxAllowedVersion);
         }
 
         public static final Parcelable.Creator<SessionParams>
