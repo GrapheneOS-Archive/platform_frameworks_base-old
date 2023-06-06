@@ -41,6 +41,7 @@ import android.annotation.TestApi;
 import android.app.AppOpsManager;
 import android.app.PendingIntent;
 import android.app.PropertyInvalidatedCache;
+import android.app.compat.gms.GmsCompat;
 import android.compat.Compatibility;
 import android.compat.annotation.ChangeId;
 import android.compat.annotation.EnabledAfter;
@@ -64,6 +65,8 @@ import android.os.Process;
 import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.UserHandle;
+import android.provider.Settings;
+import android.util.Log;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.listeners.ListenerExecutor;
@@ -1546,6 +1549,28 @@ public class LocationManager {
             @NonNull LocationRequest locationRequest,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull LocationListener listener) {
+        if (GmsCompat.isEnabled()) {
+            if (!GmsCompat.hasPermission(ACCESS_COARSE_LOCATION)) {
+                return;
+            }
+
+            // requires privileged UPDATE_APP_OPS_STATS permission
+            locationRequest.setHideFromAppOps(false);
+            // requires privileged WRITE_SECURE_SETTINGS permission
+            locationRequest.setLocationSettingsIgnored(false);
+            // requires privileged UPDATE_DEVICE_STATS permission
+            locationRequest.setWorkSource(null);
+
+            if (Build.IS_DEBUGGABLE) {
+                var cr = mContext.getContentResolver();
+                String key = "gmscompat_skip_gnss_location_updates";
+                if (Settings.Global.getInt(cr, key, 0) == 1) {
+                    Log.d("GmsCompat", "requestLocationUpdates is skipped because "
+                            + key + " global setting is enabled");
+                    return;
+                }
+            }
+        }
         Preconditions.checkArgument(provider != null, "invalid null provider");
         Preconditions.checkArgument(locationRequest != null, "invalid null location request");
 
