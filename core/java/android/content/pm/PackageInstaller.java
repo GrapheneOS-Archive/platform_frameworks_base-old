@@ -48,6 +48,7 @@ import android.app.ActivityManager;
 import android.app.ActivityThread;
 import android.app.AppGlobals;
 import android.app.PendingIntent;
+import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.UnsupportedAppUsage;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -76,6 +77,7 @@ import android.os.ParcelableException;
 import android.os.PersistableBundle;
 import android.os.RemoteCallback;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.system.ErrnoException;
@@ -84,8 +86,10 @@ import android.text.TextUtils;
 import android.util.ArrayMap;
 import android.util.ArraySet;
 import android.util.ExceptionUtils;
+import android.util.Log;
 
 import com.android.internal.content.InstallLocationUtils;
+import com.android.internal.gmscompat.PlayStoreHooks;
 import com.android.internal.util.ArrayUtils;
 import com.android.internal.util.DataClass;
 import com.android.internal.util.IndentingPrintWriter;
@@ -800,6 +804,10 @@ public class PackageInstaller {
      *         session is finalized. IDs are not reused during a given boot.
      */
     public int createSession(@NonNull SessionParams params) throws IOException {
+        if (GmsCompat.isPlayStore()) {
+            PlayStoreHooks.adjustSessionParams(params);
+        }
+
         try {
             return mInstaller.createSession(params, mInstallerPackageName, mAttributionTag,
                     mUserId);
@@ -875,6 +883,16 @@ public class PackageInstaller {
      *             the session is invalid.
      */
     public void abandonSession(int sessionId) {
+        if (GmsCompat.isPlayStore()) {
+            SessionInfo si = getSessionInfo(sessionId);
+            if (si != null && si.isCommitted()) {
+                // Play Store doesn't expect committed sessions to be waiting for confirmation from
+                // the user and tries to destroy them after ~10 minutes
+                Log.d("GmsCompat", "skipped PackageInstaller.abandonSession(), sessionId " + sessionId);
+                return;
+            }
+        }
+
         try {
             mInstaller.abandonSession(sessionId);
         } catch (RemoteException e) {
@@ -1969,6 +1987,10 @@ public class PackageInstaller {
          * @see #requestUserPreapproval
          */
         public void commit(@NonNull IntentSender statusReceiver) {
+            if (GmsCompat.isPlayStore()) {
+                statusReceiver = PlayStoreHooks.wrapCommitStatusReceiver(this, statusReceiver);
+            }
+
             try {
                 mSession.commit(statusReceiver, false);
             } catch (RemoteException e) {
@@ -2064,6 +2086,20 @@ public class PackageInstaller {
          * would be destroyed and the created {@link Session} information will be discarded.</p>
          */
         public void abandon() {
+            if (GmsCompat.isPlayStore()) {
+                final int id;
+                try {
+                    id = mSession.getId();
+                } catch (RemoteException e) {
+                    throw e.rethrowFromSystemServer();
+                }
+                PackageInstaller packageInstaller = GmsCompat.appContext().getPackageManager()
+                        .getPackageInstaller();
+                // see comment in abandonSession()
+                packageInstaller.abandonSession(id);
+                return;
+            }
+
             try {
                 mSession.abandon();
             } catch (RemoteException e) {
@@ -2792,6 +2828,12 @@ public class PackageInstaller {
         public int unarchiveId = -1;
 
         private final ArrayMap<String, Integer> mPermissionStates;
+        /**
+         * {@hide}
+         *
+         *  Used only by gmscompat, to disallow updates to unknown versions of GmsCore and Play Store.
+         */
+        public long maxAllowedVersion = Long.MAX_VALUE;
 
         /**
          * Construct parameters for a new package install session.
@@ -2803,6 +2845,10 @@ public class PackageInstaller {
         public SessionParams(int mode) {
             this.mode = mode;
             mPermissionStates = new ArrayMap<>();
+            if (GmsCompat.isPlayStore()) {
+                // called here instead of in createSession() to give Play Store a chance to override
+                setRequireUserAction(USER_ACTION_NOT_REQUIRED);
+            }
         }
 
         /** {@hide} */
@@ -2843,6 +2889,7 @@ public class PackageInstaller {
             applicationEnabledSettingPersistent = source.readBoolean();
             developmentInstallFlags = source.readInt();
             unarchiveId = source.readInt();
+            maxAllowedVersion = source.readLong();
         }
 
         /** {@hide} */
@@ -2878,6 +2925,7 @@ public class PackageInstaller {
             ret.applicationEnabledSettingPersistent = applicationEnabledSettingPersistent;
             ret.developmentInstallFlags = developmentInstallFlags;
             ret.unarchiveId = unarchiveId;
+            ret.maxAllowedVersion = maxAllowedVersion;
             return ret;
         }
 
@@ -3656,6 +3704,7 @@ public class PackageInstaller {
             dest.writeBoolean(applicationEnabledSettingPersistent);
             dest.writeInt(developmentInstallFlags);
             dest.writeInt(unarchiveId);
+            dest.writeLong(maxAllowedVersion);
         }
 
         public static final Parcelable.Creator<SessionParams>
@@ -5406,4 +5455,8 @@ public class PackageInstaller {
         }
     }
 
+    /** @hide **/
+    public IPackageInstaller getIPackageInstaller() {
+        return mInstaller;
+    }
 }
