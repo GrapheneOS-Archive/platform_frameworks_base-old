@@ -44,6 +44,7 @@ import com.android.internal.util.ArrayUtils;
 import com.android.server.SystemConfig;
 import com.android.server.pm.PackageManagerException;
 import com.android.server.pm.PackageManagerService;
+import com.android.server.pm.ext.GmsCompatPkgParsingHooks;
 import com.android.server.pm.ext.PackageExtInit;
 import com.android.server.pm.ext.PackageHooksRegistry;
 
@@ -64,6 +65,7 @@ public class PackageParser2 implements AutoCloseable {
     static {
         PackageImpl.packageParsingHooksSupplier = PackageHooksRegistry::getParsingHooks;
         ParsingPackageUtils.packageExtInitSupplier = PackageExtInit::new;
+        ParsingPackageUtils.gmsCompatClientServiceSupplier = GmsCompatPkgParsingHooks::maybeCreateClientService;
     }
 
     /**

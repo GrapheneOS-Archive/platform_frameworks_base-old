@@ -255,6 +255,7 @@ import android.app.assist.ActivityId;
 import android.app.backup.BackupAnnotations.BackupDestination;
 import android.app.backup.IBackupManager;
 import android.app.compat.CompatChanges;
+import android.app.compat.gms.GmsCompat;
 import android.app.job.JobParameters;
 import android.app.usage.UsageEvents;
 import android.app.usage.UsageEvents.Event;
@@ -13791,6 +13792,10 @@ public class ActivityManagerService extends IActivityManager.Stub
                 if (ActivityManager.checkUidPermission(
                         INTERACT_ACROSS_USERS,
                         aInfo.uid) != PackageManager.PERMISSION_GRANTED) {
+                    if (GmsCompat.isEnabledFor(aInfo)) {
+                        return false;
+                    }
+
                     ComponentName comp = new ComponentName(aInfo.packageName, className);
                     String msg = "Permission Denial: Component " + comp.flattenToShortString()
                             + " requests FLAG_SINGLE_USER, but app does not hold "

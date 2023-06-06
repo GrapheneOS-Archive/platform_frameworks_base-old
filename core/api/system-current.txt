@@ -2070,6 +2070,22 @@ package android.app.compat {
 
 }
 
+package android.app.compat.gms {
+
+  public final class GmsCompat {
+    method public static boolean hasPermission(@NonNull String);
+    method public static boolean isEnabled();
+    method public static boolean isEnabledFor(@NonNull android.content.pm.ApplicationInfo);
+    method public static boolean isEnabledFor(int, boolean);
+    method public static boolean isEnabledFor(@NonNull String, int);
+  }
+
+  public class GmsUtils {
+    method @NonNull public static android.content.Intent createAppPlayStoreIntent(@NonNull String);
+  }
+
+}
+
 package android.app.contentsuggestions {
 
   public final class ClassificationsRequest implements android.os.Parcelable {
