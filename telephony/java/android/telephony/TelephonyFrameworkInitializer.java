@@ -18,6 +18,7 @@ package android.telephony;
 
 import android.annotation.NonNull;
 import android.app.SystemServiceRegistry;
+import android.app.compat.gms.GmsCompat;
 import android.content.Context;
 import android.os.TelephonyServiceManager;
 import android.telephony.euicc.EuiccCardManager;
@@ -25,6 +26,7 @@ import android.telephony.euicc.EuiccManager;
 import android.telephony.ims.ImsManager;
 import android.telephony.satellite.SatelliteManager;
 
+import com.android.internal.gmscompat.sysservice.GmcTelephonyManager;
 import com.android.internal.util.Preconditions;
 
 
@@ -66,7 +68,7 @@ public class TelephonyFrameworkInitializer {
         SystemServiceRegistry.registerContextAwareService(
                 Context.TELEPHONY_SERVICE,
                 TelephonyManager.class,
-                context -> new TelephonyManager(context)
+                context -> GmsCompat.isEnabled() ? new GmcTelephonyManager(context) : new TelephonyManager(context)
         );
         SystemServiceRegistry.registerContextAwareService(
                 Context.TELEPHONY_SUBSCRIPTION_SERVICE,
