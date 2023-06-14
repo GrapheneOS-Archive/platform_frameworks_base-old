@@ -1004,7 +1004,7 @@ public class LockPatternUtils {
      * @return Whether enhanced pin privacy is enabled.
      */
     public boolean isPinEnhancedPrivacyEnabled(int userId) {
-        return getBoolean(LOCK_PIN_ENHANCED_PRIVACY, false, userId);
+        return getBoolean(LOCK_PIN_ENHANCED_PRIVACY, true, userId);
     }
 
     /**
