@@ -109,6 +109,9 @@ public class PackageManagerHooks {
             return null;
         }
 
+        // isSystem() remains true even if isUpdatedSystemApp() is true
+        final boolean isUserApp = !pkgState.isSystem();
+
         GosPackageState gosPs = GosPackageStatePmHooks.get(pm, callingUid, packageName, userId);
 
         int[] flagsArr = new int[AppBindArgs.FLAGS_ARRAY_LEN];
