@@ -122,6 +122,7 @@ import android.location.CountryDetector;
 import android.location.ICountryDetector;
 import android.location.ILocationManager;
 import android.location.LocationManager;
+import android.location.HookedLocationManager;
 import android.media.AudioDeviceVolumeManager;
 import android.media.AudioManager;
 import android.media.MediaFrameworkInitializer;
@@ -567,7 +568,11 @@ public final class SystemServiceRegistry {
             @Override
             public LocationManager createService(ContextImpl ctx) throws ServiceNotFoundException {
                 IBinder b = ServiceManager.getServiceOrThrow(Context.LOCATION_SERVICE);
-                return new LocationManager(ctx, ILocationManager.Stub.asInterface(b));
+                if (HookedLocationManager.isEnabled()) {
+                    return new HookedLocationManager(ctx, ILocationManager.Stub.asInterface(b));
+                } else {
+                    return new LocationManager(ctx, ILocationManager.Stub.asInterface(b));
+                }
             }});
 
         registerService(Context.NETWORK_POLICY_SERVICE, NetworkPolicyManager.class,
