@@ -4,6 +4,7 @@ import android.annotation.Nullable;
 import android.content.Context;
 import android.content.pm.GosPackageState;
 import android.content.pm.SrtPermissions;
+import android.location.HookedLocationManager;
 import android.os.Bundle;
 import android.os.Process;
 import android.os.RemoteException;
@@ -51,6 +52,8 @@ class ActivityThreadHooks {
         int[] flags = Objects.requireNonNull(args.getIntArray(AppBindArgs.KEY_FLAGS_ARRAY));
 
         SrtPermissions.setFlags(flags[AppBindArgs.FLAGS_IDX_SPECIAL_RUNTIME_PERMISSIONS]);
+
+        HookedLocationManager.setFlags(flags[AppBindArgs.FLAGS_IDX_HOOKED_LOCATION_MANAGER]);
 
         return args;
     }
