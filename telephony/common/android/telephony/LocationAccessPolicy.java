@@ -30,6 +30,7 @@ import android.os.Build;
 import android.os.Process;
 import android.os.UserHandle;
 import android.util.Log;
+import android.util.PackageUtils;
 import android.widget.Toast;
 
 import com.android.internal.telephony.util.TelephonyUtils;
@@ -390,8 +391,9 @@ public final class LocationAccessPolicy {
      * @return An array of packages that are always allowed to access location.
      */
     public static @NonNull String[] getLocationBypassPackages(@NonNull Context context) {
-        return context.getResources().getStringArray(
+        String[] arr = context.getResources().getStringArray(
                 com.android.internal.R.array.config_serviceStateLocationAllowedPackages);
+        return PackageUtils.filterNonSystemPackages(context, arr);
     }
 
     private static boolean checkInteractAcrossUsersFull(
