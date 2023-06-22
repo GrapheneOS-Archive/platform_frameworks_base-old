@@ -51,13 +51,17 @@ public class GmcUserManager extends UserManager {
         return 0;
     }
 
+    private static String getUserType_() {
+        // "system" means "primary" ("Owner") user
+        return UserManager.USER_TYPE_FULL_SYSTEM;
+    }
+
     private static UserInfo getUserInfo() {
         // obtaining UserInfo is a privileged operation (even for the current user)
         UserInfo ui = new UserInfo();
         ui.id = getUserId();
         ui.serialNumber = getUserSerialNumber();
-        // "system" means "primary" ("Owner") user
-        ui.userType = UserManager.USER_TYPE_FULL_SYSTEM;
+        ui.userType = getUserType_();
         ui.flags = UserInfo.FLAG_SYSTEM | UserInfo.FLAG_FULL;
         return ui;
     }
@@ -65,6 +69,11 @@ public class GmcUserManager extends UserManager {
     @Override
     public boolean isSystemUser() {
         return true;
+    }
+
+    @Override
+    public boolean isUserOfType(String userType) {
+        return getUserType_().equals(userType);
     }
 
     @Override
