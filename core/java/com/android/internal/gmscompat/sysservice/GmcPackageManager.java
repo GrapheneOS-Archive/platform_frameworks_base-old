@@ -19,8 +19,10 @@ package com.android.internal.gmscompat.sysservice;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.SuppressLint;
+import android.app.ActivityThread;
 import android.app.ApplicationPackageManager;
 import android.app.compat.gms.GmsCompat;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
@@ -36,19 +38,25 @@ import android.os.UserHandle;
 import android.util.ArraySet;
 import android.util.Log;
 
+import com.android.internal.gmscompat.GmsHooks;
 import com.android.internal.gmscompat.GmsInfo;
 import com.android.internal.gmscompat.PlayStoreHooks;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @SuppressLint("WrongConstant") // lint doesn't like "flags & ~" expressions
 public class GmcPackageManager extends ApplicationPackageManager {
+    private static final String TAG = GmcPackageManager.class.getSimpleName();
 
     public GmcPackageManager(Context context, IPackageManager pm) {
         super(context, pm);
+    }
 
-        maybeInitPseudoDisabledPackages();
+    public static void init(Context ctx) {
+        initPseudoDisabledPackages();
+        initForceDisabledComponents(ctx);
     }
 
     public static void maybeAdjustPackageInfo(PackageInfo pi) {
@@ -408,17 +416,11 @@ public class GmcPackageManager extends ApplicationPackageManager {
 
     // important to have it static: there are multiple instances of enclosing class in the same process
     private static final ArraySet<String> pseudoDisabledPackages = new ArraySet<>();
-    private static boolean pseudoDisabledPackagesInited;
 
-    private static void maybeInitPseudoDisabledPackages() {
+    private static void initPseudoDisabledPackages() {
         if (GmsCompat.isPlayStore()) {
-            synchronized (pseudoDisabledPackages) {
-                if (!pseudoDisabledPackagesInited) {
-                    // "Play Services for AR"
-                    pseudoDisabledPackages.add("com.google.ar.core");
-                    pseudoDisabledPackagesInited = true;
-                }
-            }
+            // "Play Services for AR"
+            pseudoDisabledPackages.add("com.google.ar.core");
         }
     }
 
@@ -453,4 +455,67 @@ public class GmcPackageManager extends ApplicationPackageManager {
                 return true;
         }
     }
+
+    private static ArrayList<ComponentName> forceDisabledComponents;
+
+    private static void initForceDisabledComponents(Context ctx) {
+        if (GmsCompat.isGmsCore()) {
+            String[] names = {
+                    "com.google.android.gms.homegraph.PersistentListenerService",
+            };
+            var components = new ArrayList<ComponentName>(names.length);
+            var settings = new ArrayList<ComponentEnabledSetting>(names.length);
+            for (int i = 0; i < names.length; ++i) {
+                var cn = new ComponentName(GmsInfo.PACKAGE_GMS_CORE, names[i]);
+                components.add(cn);
+                var ces = new ComponentEnabledSetting(
+                        cn, COMPONENT_ENABLED_STATE_DISABLED, DONT_KILL_APP | SKIP_IF_MISSING);
+                settings.add(ces);
+            }
+
+            forceDisabledComponents = components;
+
+            if (GmsHooks.inPersistentGmsCoreProcess) {
+                try {
+                    ActivityThread.getPackageManager().setComponentEnabledSettings(settings, ctx.getUserId());
+                } catch (Exception e) {
+                    Log.d(TAG, "", e);
+                }
+            }
+        }
+    }
+
+    private static boolean isSetComponentEnabledSettingAllowed(ComponentName cn, int newState, int flags) {
+        ArrayList<ComponentName> list = forceDisabledComponents;
+        if (list != null && list.contains(cn)) {
+            Log.d(TAG, "skipped setComponentEnabledSetting for " + cn + ", newState " + newState
+                    + ", flags " + flags);
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public void setComponentEnabledSetting(ComponentName componentName,
+                                           int newState, int flags) {
+        if (!isSetComponentEnabledSettingAllowed(componentName, newState, flags)) {
+            return;
+        }
+
+        super.setComponentEnabledSetting(componentName, newState, flags);
+    }
+
+    @Override
+    public void setComponentEnabledSettings(List<ComponentEnabledSetting> settings) {
+        settings = settings.stream()
+                .filter(s -> isSetComponentEnabledSettingAllowed(s.getComponentName(),
+                        s.getEnabledState(), s.getEnabledFlags()))
+                .collect(Collectors.toUnmodifiableList());
+        if (settings.isEmpty()) {
+            return;
+        }
+        super.setComponentEnabledSettings(settings);
+    }
+
 }
