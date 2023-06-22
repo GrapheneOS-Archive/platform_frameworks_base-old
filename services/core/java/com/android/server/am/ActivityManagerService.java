@@ -5222,24 +5222,31 @@ public class ActivityManagerService extends IActivityManager.Stub
         return isEnabled;
     }
 
-    private static boolean isPixelDevice() {
-        String[] pixelDevices = {"tangorpro", "lynx", "cheetah", "panther", "bluejay", "raven", "oriole", "barbet", "redfin", "bramble", "sunfish", "coral", "flame"};
-        for (String x : pixelDevices) {
-            if (x.equals(Build.DEVICE)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     private static boolean isPrototypeDevice() {
-        // Check if device is a Pixel phone, since other OEMs may deal with hardware revisions differently
-        //
-        // MP1.0 is what all 3rd generation and newer Pixel devices have as their mass production revision.
-        // Account for future mass production device revisions by only checking for "MP".
-        // All devices with a blown secure boot fuse will have the bootloader report ro.boot.secure_boot as being in PRODUCTION mode.
-        // Engineering devices typically don't have a blown secure boot fuse as they are used for firmware development.
-        return isPixelDevice() && (!SystemProperties.get("ro.revision").contains("MP") || !SystemProperties.get("ro.boot.secure_boot").equals("PRODUCTION"));
+        switch (Build.BRAND) {
+            case "google":
+                break;
+            default:
+                // Other OEMs may deal with hardware revisions differently
+                return false;
+        }
+
+        if (!SystemProperties.get("ro.revision").contains("MP")) {
+            // MP1.0 is what all 3rd generation and newer Pixel devices have as their mass
+            // production revision.
+            // Account for future mass production device revisions by only checking for "MP".
+            return true;
+        }
+
+        if (!SystemProperties.get("ro.boot.secure_boot").equals("PRODUCTION")) {
+            // All devices with a blown secure boot fuse will have the bootloader report
+            // ro.boot.secure_boot as being in PRODUCTION mode.
+            // Engineering devices typically don't have a blown secure boot fuse as they are used
+            // for firmware development.
+            return true;
+        }
+
+        return false;
     }
 
     private void showPrototypeNotificationIfPrototype() {
