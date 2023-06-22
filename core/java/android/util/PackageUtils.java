@@ -19,9 +19,12 @@ package android.util;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.app.ActivityManager;
+import android.content.Context;
+import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.text.TextUtils;
 
+import libcore.util.EmptyArray;
 import libcore.util.HexEncoding;
 
 import java.io.ByteArrayOutputStream;
@@ -31,7 +34,9 @@ import java.io.IOException;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Helper functions applicable to packages.
@@ -233,5 +238,31 @@ public final class PackageUtils {
             pieces[index] = HexEncoding.encodeToString(resultBytes[index], true);
         }
         return TextUtils.join(separator, pieces);
+    }
+
+    public static boolean isSystemPackage(Context ctx, @Nullable String pkg) {
+        if (TextUtils.isEmpty(pkg)) {
+            return false;
+        }
+        PackageManager pm = ctx.getPackageManager();
+        try {
+            return pm.getApplicationInfo(pkg, 0).isSystemApp();
+        } catch (PackageManager.NameNotFoundException e) {
+            return false;
+        }
+    }
+
+    public static String[] filterNonSystemPackages(Context ctx, String[] pkgs) {
+        return filterNonSystemPackagesL(ctx, pkgs).toArray(EmptyArray.STRING);
+    }
+
+    public static List<String> filterNonSystemPackagesL(Context ctx, String[] pkgs) {
+        var list = new ArrayList<String>(pkgs.length);
+        for (String pkg : pkgs) {
+            if (isSystemPackage(ctx, pkg)) {
+                list.add(pkg);
+            }
+        }
+        return list;
     }
 }
