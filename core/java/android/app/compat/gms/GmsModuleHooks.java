@@ -27,7 +27,6 @@ import android.os.RemoteException;
 import android.util.Log;
 
 import com.android.internal.gmscompat.GmsCompatApp;
-import com.android.internal.gmscompat.util.GmsCoreActivityLauncher;
 import com.android.internal.gmscompat.GmsHooks;
 import com.android.internal.gmscompat.StubDef;
 import com.android.internal.gmscompat.util.GmcActivityUtils;
@@ -44,15 +43,19 @@ public class GmsModuleHooks {
     // BluetoothAdapter#enable()
     // BluetoothAdapter#enableBLE()
     public static void enableBluetoothAdapter() {
+        if (!GmsCompat.isGmsCore()) {
+            // others handle this themselves
+            return;
+        }
+
         Activity activity = GmcActivityUtils.getMostRecentVisibleActivity();
 
         if (activity != null) {
             if (GmsCompat.hasPermission(Manifest.permission.BLUETOOTH_CONNECT)) {
                 activity.startActivity(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE));
             } else {
-                String pkgName = GmsCompat.appContext().getPackageName();
                 try {
-                    GmsCompatApp.iGms2Gca().showGmsMissingNearbyDevicesPermissionGeneric(pkgName);
+                    GmsCompatApp.iGms2Gca().showGmsCoreMissingNearbyDevicesPermissionGeneric();
                 } catch (RemoteException e) {
                     GmsCompatApp.callFailed(e);
                 }
@@ -62,10 +65,9 @@ public class GmsModuleHooks {
 
     // BluetoothAdapter#setScanMode()
     public static void makeBluetoothAdapterDiscoverable() {
-        Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-        // Currently used only by Nearby Share.
-        // Ignore other requests, if there are any, to prevent spamming the user with these requests.
-        GmsCoreActivityLauncher.maybeLaunch(intent, ".+nearby\\.sharing.+");
+        // don't use BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE intent here, this method is often
+        // called at a time when the user wouldn't expect to see it
+        Log.d(TAG, "makeBluetoothAdapterDiscoverable", new Throwable());
     }
 
     // com.android.modules.utils.SynchronousResultReceiver.Result#getValue()
