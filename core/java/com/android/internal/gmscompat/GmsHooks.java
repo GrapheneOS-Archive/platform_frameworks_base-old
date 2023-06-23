@@ -61,7 +61,6 @@ import com.android.internal.gmscompat.client.GmsCompatClientService;
 import com.android.internal.gmscompat.flags.GmsFlag;
 import com.android.internal.gmscompat.sysservice.GmcPackageManager;
 import com.android.internal.gmscompat.util.GmcActivityUtils;
-import com.android.internal.gmscompat.util.GmsCoreActivityLauncher;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -98,7 +97,6 @@ public final class GmsHooks {
 
         if (GmsCompat.isGmsCore()) {
             inPersistentGmsCoreProcess = processName.equals(PERSISTENT_GmsCore_PROCESS);
-            GmsCoreActivityLauncher.maybeRegister(processName, ctx);
         }
 
         if (GmsCompat.isPlayStore()) {
@@ -500,18 +498,7 @@ public final class GmsHooks {
 
     // Activity#onCreate(Bundle)
     public static void activityOnCreate(Activity activity) {
-        if (GmsCompat.isGmsCore()) {
-            String className = activity.getClass().getName();
-            if ("com.google.android.gms.nearby.sharing.ShareSheetActivity".equals(className)) {
-                if (!hasNearbyDevicesPermission()) {
-                    try {
-                        GmsCompatApp.iGms2Gca().showGmsCoreMissingPermissionForNearbyShareNotification();
-                    } catch (RemoteException e) {
-                        GmsCompatApp.callFailed(e);
-                    }
-                }
-            }
-        }
+
     }
 
     // ContentResolver#insert(Uri, ContentValues, Bundle)
