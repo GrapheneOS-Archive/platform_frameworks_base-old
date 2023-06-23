@@ -38,6 +38,8 @@ import static com.android.internal.gmscompat.GmsHooks.inPersistentGmsCoreProcess
 public final class GmsCompatApp {
     private static final String TAG = "GmsCompat/GCA";
     public static final String PKG_NAME = "app.grapheneos.gmscompat";
+    // permission that is held only by GmsCompatApp
+    public static final String SIGNATURE_PROTECTED_PERMISSION = PKG_NAME + ".SIGNATURE_PROTECTED_PERMISSION";
 
     @SuppressWarnings("FieldCanBeLocal")
     // written to fields to prevent GC from collecting them
