@@ -20,9 +20,9 @@ import android.Manifest;
 import android.content.pm.ServiceInfo;
 import android.os.Bundle;
 
+import com.android.internal.gmscompat.GmcMediaProjectionService;
 import com.android.internal.gmscompat.GmsHooks;
 import com.android.internal.gmscompat.GmsInfo;
-import com.android.internal.gmscompat.GmcMediaProjectionService;
 import com.android.internal.gmscompat.client.GmsCompatClientService;
 import com.android.server.pm.pkg.component.ParsedPermission;
 import com.android.server.pm.pkg.component.ParsedServiceImpl;
@@ -34,7 +34,12 @@ import java.util.List;
 public class GmsSysServerHooks {
 
     // ParsingPackageUtils#parseBaseApplication
-    public static void fixupPermissions(ParsingPackage pkg) {
+    public static void amendParsedPackage(ParsingPackage pkg) {
+        fixupPermissions(pkg);
+        maybeAddServiceToPackage(pkg);
+    }
+
+    private static void fixupPermissions(ParsingPackage pkg) {
         String pkgName = pkg.getPackageName();
 
         if (GmsInfo.PACKAGE_PLAY_STORE.equals(pkgName)) {
@@ -83,7 +88,7 @@ public class GmsSysServerHooks {
     }
 
     // ParsingPackageUtils#parseBaseApplication
-    public static void maybeAddServiceDuringParsing(ParsingPackage pkg) {
+    private static void maybeAddServiceToPackage(ParsingPackage pkg) {
         Bundle metadata = pkg.getMetaData();
         boolean isGmsClient = metadata != null && metadata.containsKey("com.google.android.gms.version");
 
