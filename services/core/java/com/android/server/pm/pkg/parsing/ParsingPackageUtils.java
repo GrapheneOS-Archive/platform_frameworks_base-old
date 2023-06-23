@@ -2205,9 +2205,8 @@ public class ParsingPackageUtils {
             pkg.addActivity(a.getResult());
         }
 
-        GmsSysServerHooks.maybeAddServiceDuringParsing(pkg);
-        GmsSysServerHooks.fixupPermissions(pkg);
         PackageManagerHooks.amendParsedPackage(pkg);
+        GmsSysServerHooks.amendParsedPackage(pkg);
 
         if (hasActivityOrder) {
             pkg.sortActivities();
