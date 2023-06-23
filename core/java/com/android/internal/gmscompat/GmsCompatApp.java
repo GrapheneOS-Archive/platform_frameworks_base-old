@@ -49,8 +49,6 @@ public final class GmsCompatApp {
 
     private static IGms2Gca binderGms2Gca;
 
-    public static final String KEY_BINDER = "binder";
-
     static GmsCompatConfig connect(Context ctx, String processName) {
         registeredContentObservers = new ArraySet<>();
 
@@ -58,7 +56,7 @@ public final class GmsCompatApp {
         binderGca2Gms = gca2Gms;
 
         try {
-            IGms2Gca iGms2Gca = IGms2Gca.Stub.asInterface(getBinder(BINDER_IGms2Gca));
+            IGms2Gca iGms2Gca = IGms2Gca.Stub.asInterface(getBinder(RPC_GET_BINDER_IGms2Gca));
             binderGms2Gca = iGms2Gca;
 
             if (GmsCompat.isGmsCore()) {
@@ -97,29 +95,41 @@ public final class GmsCompatApp {
             throw new IllegalStateException();
         }
 
-        IBinder binder = getBinder(BINDER_IClientOfGmsCore2Gca);
+        IBinder binder = getBinder(RPC_GET_BINDER_IClientOfGmsCore2Gca);
         IClientOfGmsCore2Gca iface = IClientOfGmsCore2Gca.Stub.asInterface(binder);
         // benign race, it's fine to obtain this interface more than once
         binderClientOfGmsCore2Gca = iface;
         return iface;
     }
 
-    public static final int BINDER_IGms2Gca = 0;
-    public static final int BINDER_IClientOfGmsCore2Gca = 1;
+    private static final String RPC_PROVIDER_AUTHORITY = PKG_NAME + ".RpcProvider";
+    public static final String KEY_BINDER = "binder";
+    public static final String KEY_PKG_NAME = "pkg";
 
-    private static IBinder getBinder(int which) {
-        String authority = PKG_NAME + ".BinderProvider";
+    public static final int RPC_GET_BINDER_IGms2Gca = 0;
+    public static final int RPC_GET_BINDER_IClientOfGmsCore2Gca = 1;
+
+    public static Bundle callRpcProvider(Context ctx, int method, String arg, Bundle extras) {
+        String authority = RPC_PROVIDER_AUTHORITY;
+        var cr = ctx.getContentResolver();
         try {
-            Bundle bundle = GmsCompat.appContext().getContentResolver().call(authority, Integer.toString(which), null, null);
-            IBinder binder = bundle.getBinder(KEY_BINDER);
-            DeathRecipient.register(binder);
-            return binder;
+            return cr.call(authority, Integer.toString(method), arg, extras);
         } catch (Throwable t) {
-            // content provider calls are infallible unless something goes very wrong, better fail fast in that case
             Log.e(TAG, "call to " + authority + " failed", t);
-            System.exit(1);
+            if (GmsCompat.isEnabled()) {
+                // content provider calls are infallible unless something goes very wrong, better fail fast in that case
+                System.exit(1);
+            }
+            // don't crash processes that call GmsCompatApp, but don't use GmsCompat layer
             return null;
         }
+    }
+
+    private static IBinder getBinder(int which) {
+        Bundle bundle = callRpcProvider(GmsCompat.appContext(), which, null, null);
+        IBinder binder = bundle.getBinder(KEY_BINDER);
+        DeathRecipient.register(binder);
+        return binder;
     }
 
     static class DeathRecipient implements IBinder.DeathRecipient {
