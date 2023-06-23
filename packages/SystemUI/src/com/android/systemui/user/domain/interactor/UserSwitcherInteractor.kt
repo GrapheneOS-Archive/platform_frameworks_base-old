@@ -821,6 +821,10 @@ constructor(
     }
 
     private fun canCreateGuestUser(settings: UserSwitcherSettingsModel): Boolean {
+        if (!settings.isAddUsersFromLockscreen) {
+            return false
+        }
+
         return guestUserInteractor.isGuestUserAutoCreated ||
             UserActionsUtil.canCreateGuest(
                 manager,
