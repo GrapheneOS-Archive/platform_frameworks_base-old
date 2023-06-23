@@ -23,7 +23,7 @@ interface IGms2Gca {
 
     oneway void showGmsCoreMissingPermissionForNearbyShareNotification();
 
-    oneway void showGmsMissingNearbyDevicesPermissionGeneric(String callerPkg);
+    oneway void showGmsCoreMissingNearbyDevicesPermissionGeneric();
 
     oneway void showMissingPostNotifsPermissionNotification(String callerPkg);
 
