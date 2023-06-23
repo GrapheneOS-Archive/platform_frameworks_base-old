@@ -130,14 +130,14 @@ public final class BinderRedirector implements Parcelable {
 
     public static class RedirectionStateListener extends BroadcastReceiver {
         public static final String INTENT_ACTION = GmsCompatApp.PKG_NAME + ".ACTION_REDIRECTION_STATE_CHANGED";
-        public static final String PERMISSION = GmsCompatApp.PKG_NAME + ".permission.REDIRECTION_STATE_CHANGED_BROADCAST";
         public static final String KEY_REDIRECTION_ID = "id";
 
         volatile long usedRedirections;
 
         static RedirectionStateListener register() {
             RedirectionStateListener l = new RedirectionStateListener();
-            GmsCompat.appContext().registerReceiver(l, new IntentFilter(INTENT_ACTION), PERMISSION, null);
+            GmsCompat.appContext().registerReceiver(l, new IntentFilter(INTENT_ACTION),
+                    GmsCompatApp.SIGNATURE_PROTECTED_PERMISSION, null, Context.RECEIVER_EXPORTED);
             return l;
         }
 
