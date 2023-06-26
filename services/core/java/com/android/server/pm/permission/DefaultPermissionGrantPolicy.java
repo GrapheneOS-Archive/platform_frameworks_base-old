@@ -817,8 +817,7 @@ final class DefaultPermissionGrantPolicy {
                         ACTIVITY_RECOGNITION_PERMISSIONS);
             }
         }
-        grantPermissionsToSystemPackage(pm, GmsCompatApp.PKG_NAME, userId,
-                ALWAYS_LOCATION_PERMISSIONS, NOTIFICATION_PERMISSIONS);
+        grantPermissionsToSystemPackage(pm, GmsCompatApp.PKG_NAME, userId, NOTIFICATION_PERMISSIONS);
 
         // Music
         Intent musicIntent = new Intent(Intent.ACTION_VIEW)
