@@ -3106,6 +3106,7 @@ public class SettingsProvider extends ContentProvider {
             // Upgrade the settings to the latest version.
             UpgradeController upgrader = new UpgradeController(userId);
             upgrader.upgradeIfNeededLocked();
+            SettingsProviderHooks.onSettingsStateInit(SettingsRegistry.this, userId);
             return true;
         }
 
