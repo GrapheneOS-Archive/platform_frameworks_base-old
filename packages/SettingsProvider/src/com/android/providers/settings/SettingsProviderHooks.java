@@ -9,6 +9,7 @@ class SettingsProviderHooks {
         if (userId == UserHandle.USER_SYSTEM) {
             SettingsState globalSettings = registry.getSettingsLocked(SettingsProvider.SETTINGS_TYPE_GLOBAL, userId);
             insertSetting(globalSettings, Settings.Global.ADD_USERS_WHEN_LOCKED, "0" /* disabled value */);
+            insertSetting(globalSettings, Settings.Global.ENABLE_EPHEMERAL_FEATURE, "0" /* disabled value */);
         }
         SettingsState secureSettings = registry.getSettingsLocked(SettingsProvider.SETTINGS_TYPE_SECURE, userId);
     }
