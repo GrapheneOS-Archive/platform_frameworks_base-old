@@ -519,8 +519,7 @@ public class SntpClient {
                     throw new GeneralSecurityException("https method received timestamp before BUILD unix time, rejecting");
                 }
                 EventLogTags.writeNtpSuccess(url.toString(), roundTripTime, clockOffset);
-                // save our results - use the times on this side of the network latency
-                // (response rather than request time)
+
                 mClockOffset = clockOffset;
                 mNtpTime = responseTime + clockOffset;
                 mNtpTimeReference = responseTicks;
