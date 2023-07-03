@@ -74,9 +74,7 @@ public class HookedLocationManager extends LocationManager {
 
     @Override
     public boolean isProviderEnabled(@NonNull String provider) {
-        if (isMissingProvider(provider)) {
-            return false;
-        }
+        provider = translateProvider(provider);
 
         return super.isProviderEnabled(provider);
     }
