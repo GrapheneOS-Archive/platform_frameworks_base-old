@@ -43,7 +43,6 @@ import android.util.SparseIntArray;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.gmscompat.GmsHooks;
-import com.android.internal.gmscompat.HybridBinder;
 import com.android.internal.util.ArrayUtils;
 
 import dalvik.annotation.optimization.CriticalNative;
@@ -3125,7 +3124,7 @@ public final class Parcel {
     }
 
     /** {@hide} */
-    public boolean mPerformBinderRedirectionCheck;
+    public boolean mCallMaybeOverrideBinder;
 
     /**
      * Read an object from the parcel at the current dataPosition().
@@ -3140,10 +3139,10 @@ public final class Parcel {
             Binder.allowBlocking(result);
         }
 
-        if (mPerformBinderRedirectionCheck && result != null) {
-            HybridBinder hb = HybridBinder.maybeCreate(result);
-            if (hb != null) {
-                return hb;
+        if (mCallMaybeOverrideBinder && result != null) {
+            IBinder override = GmsHooks.maybeOverrideBinder(result);
+            if (override != null) {
+                return override;
             }
         }
 
