@@ -97,7 +97,6 @@ import android.window.WindowContext;
 import android.window.WindowTokenClient;
 
 import com.android.internal.annotations.GuardedBy;
-import com.android.internal.gmscompat.BinderRedirector;
 import com.android.internal.gmscompat.sysservice.GmcPackageManager;
 import com.android.internal.gmscompat.GmsHooks;
 import com.android.internal.util.Preconditions;
@@ -2046,7 +2045,6 @@ class ContextImpl extends Context {
         }
         validateServiceIntent(service);
 
-        BinderRedirector.maybeInit(service);
         if (GmsCompat.isEnabled()) {
             // requires privileged START_ACTIVITIES_FROM_BACKGROUND permission
             flags &= ~BIND_ALLOW_BACKGROUND_ACTIVITY_STARTS;
