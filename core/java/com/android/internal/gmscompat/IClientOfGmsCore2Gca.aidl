@@ -1,17 +1,14 @@
 package com.android.internal.gmscompat;
 
-import com.android.internal.gmscompat.dynamite.server.IFileProxyService;
+import android.os.BinderDef;
 
-parcelable BinderRedirector;
+import com.android.internal.gmscompat.dynamite.server.IFileProxyService;
 
 // calls from clients of GMS Core to GmsCompatApp
 interface IClientOfGmsCore2Gca {
-    String[] getRedirectableInterfaces(out List<String> notableInterfaces);
-    BinderRedirector getBinderRedirector(int id);
+    @nullable BinderDef maybeGetBinderDef(String callerPkg, int processState, String ifaceName);
 
     IFileProxyService getDynamiteFileProxyService();
-
-    oneway void onNotableInterfaceAcquired(String interfaceDescriptor);
 
     oneway void showMissingAppNotification(String pkgName);
 }
