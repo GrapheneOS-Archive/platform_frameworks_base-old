@@ -194,6 +194,8 @@ public class NavBarHelperTest extends SysuiTestCase {
         verify(mNavbarTaskbarStateUpdater, times(1))
                 .updateRotationWatcherState(anyInt());
         verify(mNavbarTaskbarStateUpdater, times(1))
+                .updateNavInversion(anyBoolean());
+        verify(mNavbarTaskbarStateUpdater, times(1))
                 .updateWallpaperVisibility(anyBoolean(), anyInt());
     }
 

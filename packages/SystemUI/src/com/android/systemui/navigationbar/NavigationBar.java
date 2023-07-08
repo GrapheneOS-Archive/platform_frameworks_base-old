@@ -364,6 +364,11 @@ public class NavigationBar extends ViewController<NavigationBarView> implements 
                         }
                     }
                 }
+
+                @Override
+                public void updateNavInversion(boolean invert) {
+                    mView.setLayoutDirection(invert ? View.LAYOUT_DIRECTION_RTL : View.LAYOUT_DIRECTION_LTR);
+                }
             };
 
     private final OverviewProxyListener mOverviewProxyListener = new OverviewProxyListener() {

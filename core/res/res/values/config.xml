@@ -5763,6 +5763,8 @@
 
     <!-- Default value for Settings.ASSIST_LONG_PRESS_HOME_ENABLED -->
     <bool name="config_assistLongPressHomeEnabledDefault">true</bool>
+    <!-- Default value for Settings.NAV_INVERT_ENABLED -->
+    <bool name="config_navInvertEnabledDefault">false</bool>
     <!-- Default value for Settings.ASSIST_TOUCH_GESTURE_ENABLED -->
     <bool name="config_assistTouchGestureEnabledDefault">true</bool>
 

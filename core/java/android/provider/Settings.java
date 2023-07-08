@@ -10089,6 +10089,14 @@ public final class Settings {
          */
         public static final String ASSIST_LONG_PRESS_HOME_ENABLED =
                 "assist_long_press_home_enabled";
+        
+        /**
+         * Whether the navigation bar should be inverted
+         *
+         * @hide
+         */
+        public static final String NAV_INVERT_ENABLED =
+                "nav_invert_enabled";
 
         /**
          * Control whether Trust Agents are in active unlock or extend unlock mode.

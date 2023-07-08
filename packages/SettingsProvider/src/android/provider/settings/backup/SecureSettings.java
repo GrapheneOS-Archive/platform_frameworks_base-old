@@ -219,6 +219,7 @@ public class SecureSettings {
         Settings.Secure.STATUS_BAR_SHOW_VIBRATE_ICON,
         Settings.Secure.ASSIST_TOUCH_GESTURE_ENABLED,
         Settings.Secure.ASSIST_LONG_PRESS_HOME_ENABLED,
+        Settings.Secure.NAV_INVERT_ENABLED,
         Settings.Secure.BLUETOOTH_LE_BROADCAST_PROGRAM_INFO,
         Settings.Secure.BLUETOOTH_LE_BROADCAST_CODE,
         Settings.Secure.BLUETOOTH_LE_BROADCAST_APP_SOURCE_NAME,

@@ -118,6 +118,7 @@ public final class NavBarHelper implements
     private final int mDefaultDisplayId;
     private boolean mAssistantAvailable;
     private boolean mLongPressHomeEnabled;
+    private boolean mNavInvertEnabled;
     private boolean mAssistantTouchGestureEnabled;
     private int mNavBarMode;
     private int mA11yButtonState;
@@ -134,6 +135,14 @@ public final class NavBarHelper implements
         @Override
         public void onChange(boolean selfChange, Uri uri) {
             updateAssistantAvailability();
+        }
+    };
+
+    // Listens for changes to the navigation inversion setting
+    private final ContentObserver mNavInvertContentObserver = new ContentObserver(mHandler) {
+        @Override
+        public void onChange(boolean selfChange, Uri uri) {
+            updateNavInversion();
         }
     };
 
@@ -233,6 +242,10 @@ public final class NavBarHelper implements
                 Settings.Secure.getUriFor(Settings.Secure.ASSIST_TOUCH_GESTURE_ENABLED),
                 false, mAssistContentObserver, UserHandle.USER_ALL);
 
+        mContentResolver.registerContentObserver(
+                Settings.Secure.getUriFor(Settings.Secure.NAV_INVERT_ENABLED),
+                false, mNavInvertContentObserver, UserHandle.USER_ALL);
+
         // Setup display rotation watcher
         try {
             mWm.watchRotation(mRotationWatcher, mDefaultDisplayId);
@@ -294,6 +307,7 @@ public final class NavBarHelper implements
 
             // Update the state once the first bar is registered
             updateAssistantAvailability();
+            updateNavInversion();
             updateA11yState();
             mCommandQueue.recomputeDisableFlags(mContext.getDisplayId(), false /* animate */);
         } else {
@@ -436,6 +450,17 @@ public final class NavBarHelper implements
         dispatchAssistantEventUpdate(mAssistantAvailable, mLongPressHomeEnabled);
     }
 
+    private void updateNavInversion() {
+        boolean navInvertDefault = mContext.getResources().getBoolean(
+                com.android.internal.R.bool.config_navInvertEnabledDefault); 
+        mNavInvertEnabled = Settings.Secure.getIntForUser(mContentResolver,
+            Settings.Secure.NAV_INVERT_ENABLED, navInvertDefault ? 1 : 0, mUserTracker.getUserId()) != 0;
+        
+        for (NavbarTaskbarStateUpdater listener : mStateListeners) {
+            listener.updateNavInversion(mNavInvertEnabled);
+        }
+    }
+
     public boolean getLongPressHomeEnabled() {
         return mLongPressHomeEnabled;
     }
@@ -507,6 +532,7 @@ public final class NavBarHelper implements
         void updateAssistantAvailable(boolean available, boolean longPressHomeEnabled);
         default void updateWallpaperVisibility(boolean visible, int displayId) {}
         default void updateRotationWatcherState(int rotation) {}
+        default void updateNavInversion(boolean invert) {}
     }
 
     /** Data class to help Taskbar/Navbar initiate state correctly when switching between the two.*/
