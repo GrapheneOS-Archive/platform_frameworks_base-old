@@ -20,6 +20,7 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.SuppressLint;
 import android.app.ActivityThread;
+import android.app.Application;
 import android.app.ApplicationPackageManager;
 import android.app.compat.gms.GmsCompat;
 import android.content.ComponentName;
@@ -35,6 +36,7 @@ import android.content.pm.SharedLibraryInfo;
 import android.content.pm.VersionedPackage;
 import android.os.Process;
 import android.os.UserHandle;
+import android.util.ArrayMap;
 import android.util.ArraySet;
 import android.util.Log;
 
@@ -456,38 +458,56 @@ public class GmcPackageManager extends ApplicationPackageManager {
         }
     }
 
-    private static ArrayList<ComponentName> forceDisabledComponents;
+    private static ArraySet<ComponentName> componentsWithForcedEnabledSetting;
 
     private static void initForceDisabledComponents(Context ctx) {
+        final String pkgName = ctx.getPackageName();
+        ArrayMap<String, Integer> forcedCes = GmsHooks.config().forceComponentEnabledSettingsMap.get(pkgName);
+
+        if (forcedCes == null) {
+            return;
+        }
+
+        final int cnt = forcedCes.size();
+
+        var components = new ArraySet<ComponentName>(cnt);
+        var settings = new ArrayList<ComponentEnabledSetting>(cnt);
+        for (int i = 0; i < cnt; ++i) {
+            var name = new ComponentName(ctx, forcedCes.keyAt(i));
+            components.add(name);
+            int state = forcedCes.valueAt(i).intValue();
+            var ces = new ComponentEnabledSetting(name, state, DONT_KILL_APP | SKIP_IF_MISSING);
+            settings.add(ces);
+        }
+
+        componentsWithForcedEnabledSetting = components;
+
+        // Don't repeat setComponentEnabledSettings() in all processes
+        boolean shouldUpdate;
         if (GmsCompat.isGmsCore()) {
-            String[] names = {
-                    "com.google.android.gms.homegraph.PersistentListenerService",
-            };
-            var components = new ArrayList<ComponentName>(names.length);
-            var settings = new ArrayList<ComponentEnabledSetting>(names.length);
-            for (int i = 0; i < names.length; ++i) {
-                var cn = new ComponentName(GmsInfo.PACKAGE_GMS_CORE, names[i]);
-                components.add(cn);
-                var ces = new ComponentEnabledSetting(
-                        cn, COMPONENT_ENABLED_STATE_DISABLED, DONT_KILL_APP | SKIP_IF_MISSING);
-                settings.add(ces);
-            }
+            shouldUpdate = GmsHooks.inPersistentGmsCoreProcess;
+        } else if (GmsCompat.isPlayStore()) {
+            shouldUpdate = GmsInfo.PACKAGE_PLAY_STORE.equals(Application.getProcessName());
+        } else {
+            shouldUpdate = true;
+        }
 
-            forceDisabledComponents = components;
-
-            if (GmsHooks.inPersistentGmsCoreProcess) {
-                try {
-                    ActivityThread.getPackageManager().setComponentEnabledSettings(settings, ctx.getUserId());
-                } catch (Exception e) {
-                    Log.d(TAG, "", e);
-                }
+        if (shouldUpdate) {
+            try {
+                ActivityThread.getPackageManager().setComponentEnabledSettings(settings, ctx.getUserId());
+            } catch (Exception e) {
+                Log.d(TAG, "", e);
             }
         }
     }
 
-    private static boolean isSetComponentEnabledSettingAllowed(ComponentName cn, int newState, int flags) {
-        ArrayList<ComponentName> list = forceDisabledComponents;
-        if (list != null && list.contains(cn)) {
+    private static boolean isSetComponentEnabledSettingAllowed(@Nullable ComponentName cn, int newState, int flags) {
+        if (cn == null) {
+            return true;
+        }
+
+        ArraySet<ComponentName> set = componentsWithForcedEnabledSetting;
+        if (set != null && set.contains(cn)) {
             Log.d(TAG, "skipped setComponentEnabledSetting for " + cn + ", newState " + newState
                     + ", flags " + flags);
             return false;
