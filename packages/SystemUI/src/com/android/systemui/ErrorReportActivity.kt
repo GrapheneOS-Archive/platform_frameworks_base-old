@@ -122,9 +122,10 @@ class ErrorReportActivity : Activity() {
     fun px(dp: Int) = TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_PX, dp.toFloat(), resources.displayMetrics).toInt()
 
-    fun errorReportToText(r: ApplicationErrorReport, headerExt: String?) =
+    fun errorReportToText(r: ApplicationErrorReport, headerExt: String?): String {
+        fun line(s: String?) = if (s != null) "\n$s" else ""
 
-"""type: ${reportTypeToString(r.type)}
+        return """type: ${reportTypeToString(r.type)}
 osVersion: ${Build.FINGERPRINT}
 package: ${r.packageName}:${r.packageVersion}
 process: ${r.processName}${
@@ -132,9 +133,25 @@ process: ${r.processName}${
         "\nprocessUptime: ${r.crashInfo.processUptimeMs} + ${r.crashInfo.processStartupLatencyMs} ms"
     else
         ""
-}${if (headerExt != null) "\n$headerExt" else ""}
+}${
+    line(installerInfo(r.packageName))}${
+    line(headerExt)
+}
 
 ${reportInfoToString(r)}"""
+    }
+
+    fun installerInfo(pkgName: String): String? {
+        try {
+            val isi = packageManager.getInstallSourceInfo(pkgName)
+            isi.installingPackageName?.let {
+                return "installer: $it"
+            }
+        } catch (e: PackageManager.NameNotFoundException) {
+            e.printStackTrace()
+        }
+        return null
+    }
 
     fun reportInfoToString(r: ApplicationErrorReport): String {
         if (r.type == ApplicationErrorReport.TYPE_CRASH) {
