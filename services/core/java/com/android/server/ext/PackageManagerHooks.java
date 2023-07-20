@@ -129,6 +129,19 @@ public class PackageManagerHooks {
         return b;
     }
 
+    public static boolean shouldForciblyGrantPermission(AndroidPackage pkg, Permission perm) {
+        if (!Build.IS_DEBUGGABLE) {
+            return false;
+        }
+
+        String permName = perm.getName();
+
+        switch (pkg.getPackageName()) {
+            default:
+                return false;
+        }
+    }
+
     // Called when AppsFilter decides whether to restrict package visibility
     public static boolean shouldFilterAccess(@Nullable PackageStateInternal callingPkgSetting,
                                              ArraySet<PackageStateInternal> callingSharedPkgSettings,

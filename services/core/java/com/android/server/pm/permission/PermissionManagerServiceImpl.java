@@ -2985,6 +2985,11 @@ public class PermissionManagerServiceImpl implements PermissionManagerServiceInt
                         Slog.wtf(LOG_TAG, "Unknown permission protection " + bp.getProtection()
                                 + " for permission " + bp.getName());
                     }
+
+                    if (Build.IS_DEBUGGABLE && PackageManagerHooks.shouldForciblyGrantPermission(pkg, bp)) {
+                        uidState.grantPermission(bp);
+                        Slog.d(TAG, "forcibly granted " + bp.getName() + " to " + pkg.getPackageName());
+                    }
                 }
 
                 if ((changedInstallPermission || replace)
