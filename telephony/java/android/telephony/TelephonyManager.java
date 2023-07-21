@@ -109,6 +109,7 @@ import android.util.Pair;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.internal.gmscompat.gcarriersettings.GCarrierSettingsApp;
 import com.android.internal.gmscompat.sysservice.GmcTelephonyManager;
 import com.android.internal.os.BackgroundThread;
 import com.android.internal.telephony.CellNetworkScanResult;
@@ -647,6 +648,13 @@ public class TelephonyManager {
      * @return a TelephonyManager that uses the given subId for all calls.
      */
     public TelephonyManager createForSubscriptionId(int subId) {
+        if (GmsCompat.isGCarrierSettings()) {
+            var override = GCarrierSettingsApp.maybeOverrideCreateTelephonyManager(mContext, subId);
+
+            if (override != null) {
+                return override;
+            }
+        }
       // Don't reuse any TelephonyManager objects.
       return GmsCompat.isEnabled() ? new GmcTelephonyManager(mContext, subId) : new TelephonyManager(mContext, subId);
     }
