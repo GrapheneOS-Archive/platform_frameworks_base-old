@@ -60,6 +60,8 @@ import android.webkit.WebView;
 import com.android.internal.gmscompat.client.ClientPriorityManager;
 import com.android.internal.gmscompat.client.GmsCompatClientService;
 import com.android.internal.gmscompat.flags.GmsFlag;
+import com.android.internal.gmscompat.gcarriersettings.GCarrierSettingsApp;
+import com.android.internal.gmscompat.gcarriersettings.TestCarrierConfigService;
 import com.android.internal.gmscompat.sysservice.GmcPackageManager;
 import com.android.internal.gmscompat.util.GmcActivityUtils;
 
@@ -102,6 +104,10 @@ public final class GmsHooks {
 
         if (GmsCompat.isPlayStore()) {
             PlayStoreHooks.init();
+        }
+
+        if (GmsCompat.isGCarrierSettings()) {
+            GCarrierSettingsApp.init();
         }
 
         configUpdateLock = new Object();
@@ -632,8 +638,17 @@ public final class GmsHooks {
             return new GmsCompatClientService();
         }
 
-        if (GmcMediaProjectionService.class.getName().equals(className)) {
-            return new GmcMediaProjectionService();
+        if (GmsCompat.isEnabled()) {
+            if (GmsCompat.isGmsCore()) {
+                if (GmcMediaProjectionService.class.getName().equals(className)) {
+                    return new GmcMediaProjectionService();
+                }
+            }
+            if (GmsCompat.isGCarrierSettings()) {
+                if (TestCarrierConfigService.class.getName().equals(className)) {
+                    return new TestCarrierConfigService();
+                }
+            }
         }
 
         return null;
