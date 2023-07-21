@@ -25,6 +25,7 @@ import android.content.pm.IPackageManager;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
+import android.content.pm.SigningDetails;
 import android.content.pm.SigningInfo;
 import android.os.Binder;
 import android.os.Build;
@@ -33,6 +34,7 @@ import android.os.RemoteException;
 import android.os.SystemProperties;
 import android.os.UserHandle;
 
+import com.android.internal.gmscompat.gcarriersettings.GCarrierSettingsApp;
 import com.android.internal.gmscompat.GmsHooks;
 import com.android.internal.gmscompat.GmsInfo;
 import com.android.internal.util.ArrayUtils;
@@ -59,6 +61,7 @@ public final class GmsCompat {
     private static boolean isGmsCompatEnabled;
     private static boolean isGmsCore;
     private static boolean isPlayStore;
+    private static boolean isGCarrierSettings;
 
     private static boolean eligibleForClientCompat;
 
@@ -77,6 +80,11 @@ public final class GmsCompat {
     /** @hide */
     public static boolean isPlayStore() {
         return isPlayStore;
+    }
+
+    /** @hide */
+    public static boolean isGCarrierSettings() {
+        return isGCarrierSettings;
     }
 
     private static Context appContext;
@@ -106,8 +114,17 @@ public final class GmsCompat {
         if (isGmsApp(appInfo)) {
             isGmsCompatEnabled = true;
             String pkg = appInfo.packageName;
-            isGmsCore = GmsInfo.PACKAGE_GMS_CORE.equals(pkg);
-            isPlayStore = GmsInfo.PACKAGE_PLAY_STORE.equals(pkg);
+            switch (pkg) {
+                case GmsInfo.PACKAGE_GMS_CORE:
+                    isGmsCore = true;
+                    break;
+                case GmsInfo.PACKAGE_PLAY_STORE:
+                    isPlayStore = true;
+                    break;
+                case GCarrierSettingsApp.PKG_NAME:
+                    isGCarrierSettings = true;
+                    break;
+            }
             GmsHooks.init(appCtx, pkg);
         }
         eligibleForClientCompat = !isGmsCore;
@@ -130,8 +147,8 @@ public final class GmsCompat {
      * Check whether the given app is unprivileged and part of the Google Play Services family.
      * @hide
      */
-    public static boolean isGmsApp(String packageName, Signature[] signatures,
-                                   Signature[] pastSignatures, boolean isPrivileged, String sharedUserId) {
+    public static boolean isGmsApp(String packageName, long versionCode, SigningDetails signingDetails,
+                                   boolean isPrivileged, String sharedUserId) {
         // Privileged GMS doesn't need any compatibility changes
         if (isPrivileged) {
             return false;
@@ -149,17 +166,27 @@ public final class GmsCompat {
             case GmsInfo.PACKAGE_PLAY_STORE:
             case GmsInfo.PACKAGE_GSA:
                 break;
+            case GCarrierSettingsApp.PKG_NAME:
+                return GCarrierSettingsApp.getPackageSpec().validate(packageName, versionCode, signingDetails);
             default:
                 return false;
+        }
+
+        var certs = signingDetails.getSignatures();
+
+        if (certs == null) {
+            return false;
         }
 
         // Validate signature to avoid affecting apps like microG and Gcam Services Provider.
         // This isn't actually necessary from a security perspective because GMS doesn't get any
         // special privileges, but it's a failsafe to avoid unintentional compatibility issues.
-        boolean validCert = validateCerts(signatures);
+        boolean validCert = validateCerts(certs);
 
-        if (!validCert && pastSignatures != null) {
-            validCert = validateCerts(pastSignatures);
+        Signature[] pastCerts = signingDetails.getPastSigningCertificates();
+
+        if (!validCert && pastCerts != null) {
+            validCert = validateCerts(pastCerts);
         }
         return validCert;
     }
@@ -176,10 +203,16 @@ public final class GmsCompat {
             }
         }
 
-        return GmsInfo.PACKAGE_GMS_CORE.equals(pkg)
-            || GmsInfo.PACKAGE_PLAY_STORE.equals(pkg)
-            || GmsInfo.PACKAGE_GSF.equals(pkg)
-            || GmsInfo.PACKAGE_GSA.equals(pkg);
+        switch (pkg) {
+            case GmsInfo.PACKAGE_GMS_CORE:
+            case GmsInfo.PACKAGE_PLAY_STORE:
+            case GmsInfo.PACKAGE_GSF:
+            case GmsInfo.PACKAGE_GSA:
+            case GCarrierSettingsApp.PKG_NAME:
+                return true;
+        }
+
+        return false;
     }
 
     public static boolean isGmsApp(@NonNull String packageName, int userId) {
@@ -225,8 +258,7 @@ public final class GmsCompat {
             return false;
         }
         SigningInfo si = pkg.signingInfo;
-        return isGmsApp(app.packageName,
-            si.getApkContentsSigners(), si.getSigningCertificateHistory(),
+        return isGmsApp(app.packageName, app.longVersionCode, si.getSigningDetails(),
             app.isPrivilegedApp(), pkg.sharedUserId);
     }
 
@@ -265,6 +297,10 @@ public final class GmsCompat {
     }
 
     private static boolean isTestPackage(String packageName) {
+        if (GCarrierSettingsApp.PKG_NAME.equals(packageName)) {
+            return true;
+        }
+
         String testPkgs = SystemProperties.get("persist.gmscompat_test_pkgs");
         return ArrayUtils.contains(testPkgs.split(","), packageName);
     }

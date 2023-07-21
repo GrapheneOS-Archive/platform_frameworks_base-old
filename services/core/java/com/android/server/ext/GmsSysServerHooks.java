@@ -24,6 +24,8 @@ import com.android.internal.gmscompat.GmcMediaProjectionService;
 import com.android.internal.gmscompat.GmsHooks;
 import com.android.internal.gmscompat.GmsInfo;
 import com.android.internal.gmscompat.client.GmsCompatClientService;
+import com.android.internal.gmscompat.gcarriersettings.GCarrierSettingsApp;
+import com.android.internal.gmscompat.gcarriersettings.TestCarrierConfigService;
 import com.android.server.pm.pkg.component.ParsedPermission;
 import com.android.server.pm.pkg.component.ParsedServiceImpl;
 import com.android.server.pm.pkg.component.ParsedUsesPermissionImpl;
@@ -31,12 +33,20 @@ import com.android.server.pm.pkg.parsing.ParsingPackage;
 
 import java.util.List;
 
+import static com.android.server.ext.PackageManagerHooks.removeUsesPermissions;
+
 public class GmsSysServerHooks {
 
     // ParsingPackageUtils#parseBaseApplication
     public static void amendParsedPackage(ParsingPackage pkg) {
         fixupPermissions(pkg);
         maybeAddServiceToPackage(pkg);
+
+        switch (pkg.getPackageName()) {
+            case GCarrierSettingsApp.PKG_NAME:
+                amendGCarrierSettingsPackage(pkg);
+                break;
+        }
     }
 
     private static void fixupPermissions(ParsingPackage pkg) {
@@ -120,6 +130,20 @@ public class GmsSysServerHooks {
         s.setForegroundServiceType(ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION);
         s.setExported(false);
 
+        pkg.addService(s);
+    }
+
+    private static void amendGCarrierSettingsPackage(ParsingPackage pkg) {
+        // make sure it doesn't download carrier config overrides (see CarrierConfig2 README),
+        // access to GmsCore is blocked too
+        removeUsesPermissions(pkg, Manifest.permission.INTERNET);
+
+        var s = new ParsedServiceImpl();
+        s.setPackageName(pkg.getPackageName());
+        s.setName(TestCarrierConfigService.class.getName());
+        s.setProcessName(pkg.getProcessName());
+        s.setDirectBootAware(true);
+        s.setExported(true);
         pkg.addService(s);
     }
 }
