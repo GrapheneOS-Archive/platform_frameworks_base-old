@@ -9,19 +9,23 @@ import android.content.pm.PackageManager;
 import android.content.pm.PackageManagerInternal;
 import android.location.HookedLocationManager;
 import android.os.Binder;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.UserHandle;
 import android.util.ArraySet;
 import android.util.Slog;
 
 import com.android.internal.app.ContactScopes;
+import com.android.internal.gmscompat.gcarriersettings.GCarrierSettingsApp;
 import com.android.internal.util.GoogleEuicc;
 import com.android.server.pm.GosPackageStatePmHooks;
 import com.android.server.pm.PackageManagerService;
 import com.android.server.pm.parsing.pkg.AndroidPackage;
+import com.android.server.pm.permission.Permission;
 import com.android.server.pm.permission.SpecialRuntimePermUtils;
 import com.android.server.pm.pkg.GosPackageStatePm;
 import com.android.server.pm.pkg.PackageStateInternal;
+import com.android.server.pm.pkg.component.ParsedServiceImpl;
 import com.android.server.pm.pkg.parsing.ParsingPackage;
 
 public class PackageManagerHooks {
@@ -169,5 +173,7 @@ public class PackageManagerHooks {
     // Packages in this array are restricted from interacting with and being interacted by non-system apps
     private static final ArraySet<String> restrictedVisibilityPackages = new ArraySet<>(new String[] {
         GoogleEuicc.EUICC_SUPPORT_PIXEL_PKG_NAME,
+        // prevent it from obtaining carrier config overrides from GmsCore (see CarrierConfig2 README)
+        GCarrierSettingsApp.PKG_NAME,
     });
 }
