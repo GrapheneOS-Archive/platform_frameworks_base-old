@@ -22,7 +22,6 @@ import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import com.android.systemui.dagger.qualifiers.Main
 import com.android.systemui.shade.ShadeExpansionStateManager
-import com.android.systemui.statusbar.phone.CentralSurfaces
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -34,7 +33,6 @@ import javax.inject.Inject
  */
 internal class ScreenshotProxyService @Inject constructor(
     private val mExpansionMgr: ShadeExpansionStateManager,
-    private val mCentralSurfacesOptional: Optional<CentralSurfaces>,
     @Main private val mMainDispatcher: CoroutineDispatcher,
 ) : LifecycleService() {
 
@@ -57,18 +55,7 @@ internal class ScreenshotProxyService @Inject constructor(
 
     private suspend fun executeAfterDismissing(callback: IOnDoneCallback) =
         withContext(mMainDispatcher) {
-            mCentralSurfacesOptional.ifPresentOrElse(
-                    {
-                        it.executeRunnableDismissingKeyguard(
-                                Runnable {
-                                    callback.onDone(true)
-                                }, null,
-                                true /* dismissShade */, true /* afterKeyguardGone */,
-                                true /* deferred */
-                        )
-                    },
-                    { callback.onDone(false) }
-            )
+            callback.onDone(false)
         }
 
     override fun onBind(intent: Intent): IBinder? {
