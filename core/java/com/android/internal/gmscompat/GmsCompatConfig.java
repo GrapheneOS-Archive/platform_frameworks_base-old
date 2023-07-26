@@ -77,9 +77,8 @@ public class GmsCompatConfig implements Parcelable {
     public void writeToParcel(Parcel p, int wtpFlags) {
         p.writeLong(version);
 
-        writeStringArrayMapMap(flags, p);
-
-        p.writeTypedArrayMap(gservicesFlags, 0);
+        writeStringArrayMapMap(flags, GmsFlag::writeMapEntry, p);
+        writeArrayMap(gservicesFlags, GmsFlag::writeMapEntry, p);
 
         writeStringArrayMapMap(stubs, p);
 
@@ -106,9 +105,8 @@ public class GmsCompatConfig implements Parcelable {
             GmsCompatConfig r = new GmsCompatConfig();
             r.version = p.readLong();
 
-            readStringArrayMapMap(p, r.flags, GmsFlag.CREATOR);
-
-            r.gservicesFlags = readFlagsMap(p);
+            readStringArrayMapMap(p, r.flags, GmsFlag::readMapEntry);
+            r.gservicesFlags = readArrayMap(p, GmsFlag::readMapEntry);
 
             readStringArrayMapMap(p, r.stubs, StubDef.CREATOR);
 
@@ -139,14 +137,6 @@ public class GmsCompatConfig implements Parcelable {
             return r;
         }
 
-        private ArrayMap<String, GmsFlag> readFlagsMap(Parcel p) {
-            ArrayMap<String, GmsFlag> map = p.createTypedArrayMap(GmsFlag.CREATOR);
-            for (int i = 0; i < map.size(); ++i) {
-                map.valueAt(i).name = map.keyAt(i);
-            }
-            return map;
-        }
-
         @Override
         public GmsCompatConfig[] newArray(int size) {
             return new GmsCompatConfig[size];
@@ -167,36 +157,66 @@ public class GmsCompatConfig implements Parcelable {
 
     static <K, V> void writeStringArrayMapMap(ArrayMap<String, ArrayMap<K, V>> outerMap,
               BiConsumer<Parcel, K> writeK, BiConsumer<Parcel, V> writeV, Parcel p) {
+        ArrayMapEntryWriter<K, V> entryWriter = (map, i, parcel) -> {
+            writeK.accept(p, map.keyAt(i));
+            writeV.accept(p, map.valueAt(i));
+        };
+        writeStringArrayMapMap(outerMap, entryWriter, p);
+    }
+
+    static <K, V> void readStringArrayMapMap(Parcel p, ArrayMap<String, ArrayMap<K, V>> outerMap,
+             Function<Parcel, K> readK, Function<Parcel, V> readV) {
+        ArrayMapEntryReader<K, V> entryReader = (parcel, map) -> {
+            map.append(readK.apply(p), readV.apply(p));
+        };
+        readStringArrayMapMap(p, outerMap, entryReader);
+    }
+
+    interface ArrayMapEntryWriter<K, V> {
+        void write(ArrayMap<K, V> map, int idx, Parcel dst);
+    }
+
+    interface ArrayMapEntryReader<K, V> {
+        void read(Parcel p, ArrayMap<K, V> dst);
+    }
+
+    static <K, V> void writeStringArrayMapMap(ArrayMap<String, ArrayMap<K, V>> outerMap,
+                                              ArrayMapEntryWriter<K, V> entryWriter, Parcel p) {
         int outerCnt = outerMap.size();
         p.writeInt(outerCnt);
         for (int outerIdx = 0; outerIdx < outerCnt; ++outerIdx) {
             String outerK = outerMap.keyAt(outerIdx);
             p.writeString(outerK);
-
-            ArrayMap<K, V> map = outerMap.valueAt(outerIdx);
-            int cnt = map.size();
-            p.writeInt(cnt);
-
-            for (int i = 0; i < cnt; ++i) {
-                writeK.accept(p, map.keyAt(i));
-                writeV.accept(p, map.valueAt(i));
-            }
+            writeArrayMap(outerMap.valueAt(outerIdx), entryWriter, p);
         }
     }
 
     static <K, V> void readStringArrayMapMap(Parcel p, ArrayMap<String, ArrayMap<K, V>> outerMap,
-             Function<Parcel, K> readK, Function<Parcel, V> readV) {
+             ArrayMapEntryReader<K, V> entryReader) {
         int outerCnt = p.readInt();
         outerMap.ensureCapacity(outerCnt);
         for (int outerIdx = 0; outerIdx < outerCnt; ++outerIdx) {
             String outerK = p.readString();
-            int cnt = p.readInt();
-            ArrayMap<K, V> map = new ArrayMap<>(cnt);
-            for (int i = 0; i < cnt; ++i) {
-                map.append(readK.apply(p), readV.apply(p));
-            }
-            outerMap.put(outerK, map);
+            outerMap.put(outerK, readArrayMap(p, entryReader));
         }
+    }
+
+    static <K, V> void writeArrayMap(ArrayMap<K, V> map, ArrayMapEntryWriter<K, V> entryWriter,
+                                     Parcel p) {
+        int cnt = map.size();
+        p.writeInt(cnt);
+        for (int i = 0; i < cnt; ++i) {
+            entryWriter.write(map, i, p);
+        }
+    }
+
+    static <K, V> ArrayMap<K, V> readArrayMap(Parcel p, ArrayMapEntryReader<K, V> entryReader) {
+        int cnt = p.readInt();
+        var map = new ArrayMap<K, V>(cnt);
+        for (int i = 0; i < cnt; ++i) {
+            entryReader.read(p, map);
+        }
+        return map;
     }
 
     static void writeArrayMapStringStringList(ArrayMap<String, ArrayList<String>> map, Parcel p) {
