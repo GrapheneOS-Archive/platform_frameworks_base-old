@@ -253,6 +253,7 @@ public class GmsFlag implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel p, int flags) {
+        p.writeString(name);
         p.writeByte(type);
         p.writeByte(permissionCheckMode);
         p.writeStringArray(permissions);
@@ -268,6 +269,7 @@ public class GmsFlag implements Parcelable {
         @Override
         public GmsFlag createFromParcel(Parcel p) {
             GmsFlag f = new GmsFlag();
+            f.name = p.readString();
             f.type = p.readByte();
             f.permissionCheckMode = p.readByte();
             f.permissions = p.readStringArray();
@@ -285,4 +287,14 @@ public class GmsFlag implements Parcelable {
             return new GmsFlag[size];
         }
     };
+
+    public static void writeMapEntry(ArrayMap<String, GmsFlag> map, int idx, Parcel dst) {
+        // map key is GmsFlag.name, do not write it twice
+        map.valueAt(idx).writeToParcel(dst, 0);
+    }
+
+    public static void readMapEntry(Parcel p, ArrayMap<String, GmsFlag> dst) {
+        GmsFlag f = GmsFlag.CREATOR.createFromParcel(p);
+        dst.append(f.name, f);
+    }
 }
