@@ -34,6 +34,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ValueAnimator;
 import android.app.ActivityManager;
+import android.app.KeyguardManager;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -170,6 +171,7 @@ public class ScreenshotView extends FrameLayout implements
     private long mDefaultTimeoutOfTimeoutHandler;
     private ActionIntentExecutor mActionExecutor;
     private FeatureFlags mFlags;
+    private KeyguardManager mKeyguardManager;
 
     private enum PendingInteraction {
         PREVIEW,
@@ -737,8 +739,10 @@ public class ScreenshotView extends FrameLayout implements
                 / SCREENSHOT_ACTIONS_EXPANSION_DURATION_MS;
         mActionsContainer.setAlpha(0f);
         mActionsContainerBackground.setAlpha(0f);
-        mActionsContainer.setVisibility(View.VISIBLE);
-        mActionsContainerBackground.setVisibility(View.VISIBLE);
+        if (!isKeyguardLocked()) {
+            mActionsContainer.setVisibility(View.VISIBLE);
+            mActionsContainerBackground.setVisibility(View.VISIBLE);
+        }
 
         animator.addListener(new AnimatorListenerAdapter() {
             @Override
@@ -824,6 +828,9 @@ public class ScreenshotView extends FrameLayout implements
         });
         mScreenshotPreview.setOnClickListener(v -> {
             mUiEventLogger.log(ScreenshotEvent.SCREENSHOT_PREVIEW_TAPPED, 0, mPackageName);
+            if (isKeyguardLocked()) {
+                return;
+            }
             if (mFlags.isEnabled(Flags.SCREENSHOT_WORK_PROFILE_POLICY)) {
                 prepareSharedTransition();
                 mActionExecutor.launchIntentAsync(
@@ -1044,8 +1051,10 @@ public class ScreenshotView extends FrameLayout implements
         if (mAccessibilityManager.isEnabled()) {
             mDismissButton.setVisibility(View.VISIBLE);
         }
-        mActionsContainer.setVisibility(View.VISIBLE);
-        mActionsContainerBackground.setVisibility(View.VISIBLE);
+        if (!isKeyguardLocked()) {
+            mActionsContainer.setVisibility(View.VISIBLE);
+            mActionsContainerBackground.setVisibility(View.VISIBLE);
+        }
         mScreenshotPreviewBorder.setVisibility(View.VISIBLE);
         mScreenshotPreview.setVisibility(View.VISIBLE);
         // reset the timeout
@@ -1128,6 +1137,13 @@ public class ScreenshotView extends FrameLayout implements
         mPendingSharedTransition = true;
         // fade out non-preview UI
         createScreenshotFadeDismissAnimation().start();
+    }
+
+    private boolean isKeyguardLocked() {
+        if (mKeyguardManager == null) {
+            mKeyguardManager = requireNonNull(mContext.getSystemService(KeyguardManager.class));
+        }
+        return mKeyguardManager.isKeyguardLocked();
     }
 
     ValueAnimator createScreenshotFadeDismissAnimation() {
