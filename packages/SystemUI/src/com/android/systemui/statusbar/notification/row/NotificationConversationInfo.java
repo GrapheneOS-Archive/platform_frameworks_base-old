@@ -48,6 +48,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.RemoteException;
 import android.os.UserHandle;
+import android.os.UserManager;
 import android.service.notification.StatusBarNotification;
 import android.text.TextUtils;
 import android.transition.ChangeBounds;
@@ -155,7 +156,10 @@ public class NotificationConversationInfo extends LinearLayout implements
         // People Tile add request.
         if (mSelectedAction == ACTION_FAVORITE && getPriority() != mSelectedAction) {
             mShadeController.animateCollapseShade();
-            mPeopleSpaceWidgetManager.requestPinAppWidget(mShortcutInfo, new Bundle());
+            var um = getContext().getSystemService(UserManager.class);
+            if (um.isSameProfileGroup(UserHandle.USER_SYSTEM, mSbn.getNormalizedUserId())) {
+                mPeopleSpaceWidgetManager.requestPinAppWidget(mShortcutInfo, new Bundle());
+            }
         }
         mGutsContainer.closeControls(v, /* save= */ true);
     };
