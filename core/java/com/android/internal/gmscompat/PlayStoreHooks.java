@@ -50,13 +50,9 @@ import java.util.function.BiConsumer;
 public final class PlayStoreHooks {
     private static final String TAG = "GmsCompat/PlayStore";
 
-    // accessed only from the main thread, no need for synchronization
-    static ArrayDeque<Intent> pendingConfirmationIntents;
     static PackageManager packageManager;
 
     public static void init() {
-        pendingConfirmationIntents = new ArrayDeque<>();
-
         obbDir = Environment.getExternalStorageDirectory().getPath() + "/Android/obb";
         playStoreObbDir = obbDir + '/' + GmsInfo.PACKAGE_PLAY_STORE;
         File.mkdirsFailedHook = PlayStoreHooks::mkdirsFailed;
@@ -100,15 +96,14 @@ public final class PlayStoreHooks {
     }
 
     public static void onActivityResumed(Activity activity) {
-        if (pendingConfirmationIntents.size() != 0) {
-            Intent i = pendingConfirmationIntents.removeLast();
-            activity.startActivity(i);
-
-            try {
-                GmsCompatApp.iGms2Gca().dismissPlayStorePendingUserActionNotification();
-            } catch (RemoteException e) {
-                GmsCompatApp.callFailed(e);
-            }
+        Intent pendingActionIntent;
+        try {
+            pendingActionIntent = GmsCompatApp.iGms2Gca().maybeGetPlayStorePendingUserActionIntent();
+        } catch (RemoteException e) {
+            throw GmsCompatApp.callFailed(e);
+        }
+        if (pendingActionIntent != null) {
+            activity.startActivity(pendingActionIntent);
         }
     }
 
@@ -155,17 +150,12 @@ public final class PlayStoreHooks {
                     }
                 }
 
-                Activity activity = GmcActivityUtils.getMostRecentVisibleActivity();
-                if (activity != null) {
-                    activity.startActivity(confirmationIntent);
-                } else {
-                    pendingConfirmationIntents.addLast(confirmationIntent);
-                    try {
-                        GmsCompatApp.iGms2Gca().showPlayStorePendingUserActionNotification(packageName);
-                    } catch (RemoteException e) {
-                        GmsCompatApp.callFailed(e);
-                    }
+                try {
+                    GmsCompatApp.iGms2Gca().onPlayStorePendingUserAction(confirmationIntent, packageName);
+                } catch (RemoteException e) {
+                    GmsCompatApp.callFailed(e);
                 }
+
                 // confirmationIntent has a PendingIntent to this instance, don't unregister yet
                 return;
             }
