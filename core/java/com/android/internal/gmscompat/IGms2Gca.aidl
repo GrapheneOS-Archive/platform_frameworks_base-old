@@ -3,6 +3,7 @@ package com.android.internal.gmscompat;
 import android.app.ApplicationErrorReport;
 import android.app.Notification;
 import android.app.PendingIntent;
+import android.content.Intent;
 import android.database.IContentObserver;
 import android.os.BinderDef;
 
@@ -17,8 +18,8 @@ interface IGms2Gca {
 
     @nullable BinderDef maybeGetBinderDef(String callerPkg, int processState, String ifaceName);
 
-    oneway void showPlayStorePendingUserActionNotification(@nullable String pkgName);
-    oneway void dismissPlayStorePendingUserActionNotification();
+    oneway void onPlayStorePendingUserAction(in Intent actionIntent, @nullable String pkgName);
+    @nullable Intent maybeGetPlayStorePendingUserActionIntent();
 
     oneway void showPlayStoreMissingObbPermissionNotification();
 
