@@ -1,5 +1,6 @@
 package com.android.internal.gmscompat;
 
+import android.app.Activity;
 import android.app.compat.gms.GmsCompat;
 import android.content.ContentResolver;
 import android.content.ContentValues;
@@ -10,6 +11,12 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
 import android.util.ArraySet;
 import android.util.Log;
+
+import com.android.internal.gmscompat.util.GmcActivityUtils;
+
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
 
 import static com.android.internal.gmscompat.GmsHooks.inPersistentGmsCoreProcess;
 import static com.android.internal.gmscompat.GmsInfo.PACKAGE_GMS_CORE;
@@ -85,6 +92,27 @@ class BinderGca2Gms extends IGca2Gms.Stub {
             i.putExtra(PACKAGE_GMS_CORE + ".phenotype.PACKAGE_NAME", configPackageName);
             i.setPackage(packageName);
             GmsCompat.appContext().sendBroadcast(i);
+        }
+    }
+
+    @Override
+    public boolean startActivityIfVisible(Intent intent) {
+        Callable<Boolean> callable = () -> {
+            Activity activity = GmcActivityUtils.getMostRecentVisibleActivity();
+            if (activity == null) {
+                return false;
+            }
+            activity.startActivity(intent);
+            return true;
+        };
+        var task = new FutureTask<>(callable);
+        // getMostRecentVisibleActivity() needs to be called from main thread to avoid races
+        GmsCompat.appContext().getMainThreadHandler().post(task);
+        try {
+            return task.get().booleanValue();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+            return false;
         }
     }
 }
