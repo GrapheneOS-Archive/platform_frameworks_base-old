@@ -165,6 +165,12 @@ package android.ext.settings {
     field public static final int VAL_STANDARD = 1; // 0x1
   }
 
+  public class RemoteKeyProvisioningSettings {
+    method @Nullable public static String getServerUrlOverride(@NonNull android.content.Context);
+    field public static final int GRAPHENEOS_PROXY = 0; // 0x0
+    field public static final int STANDARD_SERVER = 1; // 0x1
+  }
+
 }
 
 package android.hardware.usb {
