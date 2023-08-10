@@ -12,6 +12,8 @@ import static android.ext.settings.GnssConstants.PSDS_SERVER_STANDARD;
 import static android.ext.settings.GnssConstants.SUPL_DISABLED;
 import static android.ext.settings.GnssConstants.SUPL_SERVER_GRAPHENEOS_PROXY;
 import static android.ext.settings.GnssConstants.SUPL_SERVER_STANDARD;
+import static android.ext.settings.RemoteKeyProvisioningSettings.GRAPHENEOS_PROXY;
+import static android.ext.settings.RemoteKeyProvisioningSettings.STANDARD_SERVER;
 
 /** @hide */
 public class ExtSettings {
@@ -68,6 +70,12 @@ public class ExtSettings {
 
     public static final BoolSetting SCRAMBLE_PIN_LAYOUT = new BoolSetting(
             Setting.Scope.PER_USER, "lockscreen_scramble_pin_layout", false);
+
+    public static final IntSetting REMOTE_KEY_PROVISIONING_SERVER = new IntSetting(
+            Setting.Scope.GLOBAL, "attest_remote_provisioner_server",
+            GRAPHENEOS_PROXY, // default
+            STANDARD_SERVER, GRAPHENEOS_PROXY // valid values
+    );
 
     public static final BoolSysProperty ALLOW_GOOGLE_APPS_SPECIAL_ACCESS_TO_ACCELERATORS = new BoolSysProperty(
             // also accessed in native code, in frameworks/native/cmds/servicemanager/Access.cpp
