@@ -12640,6 +12640,9 @@ public final class Settings {
         /** @hide */
         public static final String BLUETOOTH_AUTO_OFF = "bluetooth_off_timeout";
 
+        /** @hide */
+        public static final String REMOTE_KEY_PROVISIONING_SERVER = "attest_remote_provisioner_server";
+
         // ExtSettings END
 
         // NOTE: If you add new settings here, be sure to add them to
