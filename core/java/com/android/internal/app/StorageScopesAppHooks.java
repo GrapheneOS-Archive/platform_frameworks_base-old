@@ -47,9 +47,26 @@ public class StorageScopesAppHooks {
         }
     }
 
+    public static boolean shouldSkipPermissionCheckSpoof(int gosPsDflags, int permDerivedFlag) {
+        if ((gosPsDflags & DFLAG_HAS_READ_MEDIA_VISUAL_USER_SELECTED_DECLARATION) != 0) {
+            switch (permDerivedFlag) {
+                case DFLAG_HAS_READ_MEDIA_AUDIO_DECLARATION:
+                case DFLAG_HAS_READ_MEDIA_VIDEO_DECLARATION:
+                    // see https://developer.android.com/about/versions/14/changes/partial-photo-video-access
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
     // call only if isEnabled == true
     private static boolean shouldSpoofSelfPermissionCheckInner(int permDerivedFlag) {
         if (permDerivedFlag == 0) {
+            return false;
+        }
+
+        if (shouldSkipPermissionCheckSpoof(gosPsDerivedFlags, permDerivedFlag)) {
             return false;
         }
 
@@ -144,6 +161,9 @@ public class StorageScopesAppHooks {
             case Manifest.permission.READ_MEDIA_VIDEO:
                 return DFLAG_HAS_READ_MEDIA_VIDEO_DECLARATION;
 
+            case Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED:
+                return DFLAG_HAS_READ_MEDIA_VISUAL_USER_SELECTED_DECLARATION;
+
             default:
                 return 0;
         }
@@ -174,6 +194,9 @@ public class StorageScopesAppHooks {
 
             case AppOpsManager.OP_ACCESS_MEDIA_LOCATION:
                 return DFLAG_HAS_ACCESS_MEDIA_LOCATION_DECLARATION;
+
+            case AppOpsManager.OP_READ_MEDIA_VISUAL_USER_SELECTED:
+                return DFLAG_HAS_READ_MEDIA_VISUAL_USER_SELECTED_DECLARATION;
 
             default:
                 return 0;
