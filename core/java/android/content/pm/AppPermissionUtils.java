@@ -79,19 +79,24 @@ public class AppPermissionUtils {
         // permission is split into multiple permissions (based on app's targetSdk), and at least
         // one of of those split permissions is present in manifest, then permission prompt would be
         // shown anyway.
-        return getSpoofablePermissionDflag(ps, perm) != 0;
+        return getSpoofablePermissionDflag(ps, perm, true) != 0;
     }
 
     // Controls spoofing of Activity#onRequestPermissionsResult() callback
     public static boolean shouldSpoofPermissionRequestResult(@NonNull GosPackageState ps, @NonNull String perm) {
-        int dflag = getSpoofablePermissionDflag(ps, perm);
+        int dflag = getSpoofablePermissionDflag(ps, perm, false);
         return dflag != 0 && ps.hasDerivedFlag(dflag);
     }
 
-    private static int getSpoofablePermissionDflag(GosPackageState ps, String perm) {
+    private static int getSpoofablePermissionDflag(GosPackageState ps, String perm, boolean forRequestDialog) {
         if (ps.hasFlag(GosPackageState.FLAG_STORAGE_SCOPES_ENABLED)) {
             int permDflag = StorageScopesAppHooks.getSpoofablePermissionDflag(perm);
             if (permDflag != 0) {
+                if (!forRequestDialog) {
+                    if (StorageScopesAppHooks.shouldSkipPermissionCheckSpoof(ps.derivedFlags, permDflag)) {
+                        return 0;
+                    }
+                }
                 return permDflag;
             }
         }
