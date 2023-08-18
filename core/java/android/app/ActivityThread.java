@@ -4622,8 +4622,14 @@ public final class ActivityThread extends ClientTransactionHandler
             } else {
                 cl = packageInfo.getClassLoader();
             }
-            service = packageInfo.getAppFactory()
-                    .instantiateService(cl, data.info.name, data.intent);
+            {
+                String className = data.info.name;
+                service = ActivityThreadHooks.instantiateService(className);
+                if (service == null) {
+                    service = packageInfo.getAppFactory()
+                            .instantiateService(cl, className, data.intent);
+                }
+            }
             ContextImpl context = ContextImpl.getImpl(service
                     .createServiceBaseContext(this, packageInfo));
             if (data.info.splitName != null) {
