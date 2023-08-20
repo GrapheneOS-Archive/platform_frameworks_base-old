@@ -16,10 +16,12 @@
 
 package com.android.internal.gmscompat.sysservice;
 
+import android.annotation.Nullable;
 import android.annotation.UserIdInt;
 import android.content.Context;
 import android.content.pm.UserInfo;
 import android.os.IUserManager;
+import android.os.Process;
 import android.os.UserHandle;
 import android.os.UserManager;
 
@@ -62,7 +64,7 @@ public class GmcUserManager extends UserManager {
         ui.id = getUserId();
         ui.serialNumber = getUserSerialNumber();
         ui.userType = getUserType_();
-        ui.flags = UserInfo.FLAG_SYSTEM | UserInfo.FLAG_FULL;
+        ui.flags = UserInfo.FLAG_SYSTEM | UserInfo.FLAG_FULL | UserInfo.FLAG_MAIN;
         return ui;
     }
 
@@ -139,7 +141,31 @@ public class GmcUserManager extends UserManager {
     }
 
     @Override
-    public boolean isManagedProfile() {
+    public boolean isRestrictedProfile() {
         return false;
+    }
+
+    @Override
+    public boolean isDemoUser() {
+        return false;
+    }
+
+    @Nullable
+    @Override
+    protected String getProfileType(int userId) {
+        checkUserId(userId);
+        return "";
+    }
+
+    @Nullable
+    @Override
+    public UserHandle getPreviousForegroundUser() {
+        return null;
+    }
+
+    @Nullable
+    @Override
+    public UserHandle getMainUser() {
+        return Process.myUserHandle();
     }
 }

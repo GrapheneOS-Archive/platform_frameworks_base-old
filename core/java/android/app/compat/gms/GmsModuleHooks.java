@@ -18,6 +18,7 @@ package android.app.compat.gms;
 
 import android.Manifest;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.annotation.SystemApi;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
@@ -94,6 +95,19 @@ public class GmsModuleHooks {
         }
 
         return true;
+    }
+
+    @Nullable
+    public static String deviceConfigGetProperty(@NonNull String namespace, @NonNull String name) {
+        return GmsCompatApp.getString(GmsCompatApp.deviceConfigNamespace(namespace), name);
+    }
+
+    public static boolean deviceConfigSetProperty(@NonNull String namespace, @NonNull String name, @Nullable String value) {
+        return GmsCompatApp.putString(GmsCompatApp.deviceConfigNamespace(namespace), name, value);
+    }
+
+    public static boolean deviceConfigSetProperties(@NonNull android.provider.DeviceConfig.Properties properties) {
+        return GmsCompatApp.setProperties(properties);
     }
 
     private GmsModuleHooks() {}

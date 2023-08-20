@@ -124,7 +124,10 @@ public final class PlayStoreHooks {
                 + "." + PackageInstallerStatusForwarder.class.getName() + "."
                 + lastId.getAndIncrement();
 
-            sf.pendingIntent = PendingIntent.getBroadcast(context, 0, new Intent(intentAction),
+            var intent = new Intent(intentAction);
+            intent.setPackage(context.getPackageName());
+
+            sf.pendingIntent = PendingIntent.getBroadcast(context, 0, intent,
                     PendingIntent.FLAG_CANCEL_CURRENT |
                         PendingIntent.FLAG_MUTABLE);
 
