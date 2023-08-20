@@ -83,6 +83,9 @@ package android.app.admin {
 package android.app.compat.gms {
 
   public class GmsModuleHooks {
+    method @Nullable public static String deviceConfigGetProperty(@NonNull String, @NonNull String);
+    method public static boolean deviceConfigSetProperties(@NonNull android.provider.DeviceConfig.Properties);
+    method public static boolean deviceConfigSetProperty(@NonNull String, @NonNull String, @Nullable String);
     method public static void enableBluetoothAdapter();
     method public static boolean interceptSynchronousResultReceiverException(@NonNull RuntimeException);
     method public static void makeBluetoothAdapterDiscoverable();

@@ -27,6 +27,7 @@ import com.android.internal.gmscompat.client.GmsCompatClientService;
 import com.android.internal.gmscompat.gcarriersettings.GCarrierSettingsApp;
 import com.android.internal.gmscompat.gcarriersettings.TestCarrierConfigService;
 import com.android.server.pm.pkg.component.ParsedPermission;
+import com.android.server.pm.pkg.component.ParsedService;
 import com.android.server.pm.pkg.component.ParsedServiceImpl;
 import com.android.server.pm.pkg.component.ParsedUsesPermissionImpl;
 import com.android.server.pm.pkg.parsing.ParsingPackage;
@@ -94,6 +95,19 @@ public class GmsSysServerHooks {
         } else if (GmsInfo.PACKAGE_GMS_CORE.equals(pkgName)) {
             String perm = Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS;
             pkg.addUsesPermission(new ParsedUsesPermissionImpl(perm, 0));
+        }
+
+        final String fgServicePerm = Manifest.permission.FOREGROUND_SERVICE_SPECIAL_USE;
+        if (!pkg.getUsesPermissions().stream().anyMatch(p -> fgServicePerm.equals(p.getName()))) {
+            pkg.addUsesPermission(new ParsedUsesPermissionImpl(fgServicePerm, 0));
+        }
+
+        for (ParsedService svc : pkg.getServices()) {
+            var i = (ParsedServiceImpl) svc;
+            if (i.getForegroundServiceType() == android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SYSTEM_EXEMPTED) {
+                // FOREGROUND_SERVICE_TYPE_SYSTEM_EXEMPTED requires special privileges
+                i.setForegroundServiceType(android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
+            }
         }
     }
 
