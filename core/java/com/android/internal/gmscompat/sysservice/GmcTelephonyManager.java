@@ -147,6 +147,7 @@ public class GmcTelephonyManager extends TelephonyManager {
             TelephonyCallback.EVENT_VOICE_ACTIVATION_STATE_CHANGED,
             TelephonyCallback.EVENT_RADIO_POWER_STATE_CHANGED,
             TelephonyCallback.EVENT_ALLOWED_NETWORK_TYPE_LIST_CHANGED,
+            TelephonyCallback.EVENT_EMERGENCY_CALLBACK_MODE_CHANGED,
     };
 
     private static final int[] EVENTS_PROT_READ_PRECISE_PHONE_STATE = {
@@ -161,5 +162,6 @@ public class GmcTelephonyManager extends TelephonyManager {
             TelephonyCallback.EVENT_PHYSICAL_CHANNEL_CONFIG_CHANGED,
             TelephonyCallback.EVENT_DATA_ENABLED_CHANGED,
             TelephonyCallback.EVENT_LINK_CAPACITY_ESTIMATE_CHANGED,
+            TelephonyCallback.EVENT_MEDIA_QUALITY_STATUS_CHANGED,
     };
 }
