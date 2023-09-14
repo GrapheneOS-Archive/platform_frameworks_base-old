@@ -19,6 +19,7 @@ package com.android.server.pm.pkg;
 import android.annotation.Nullable;
 import android.content.pm.GosPackageState;
 import android.content.pm.GosPackageStateBase;
+import android.content.pm.PackageManagerInternal;
 
 import com.android.server.pm.Computer;
 import com.android.server.pm.PackageManagerService;
@@ -107,8 +108,8 @@ public final class GosPackageStatePm extends GosPackageStateBase {
         return null;
     }
 
-    public static GosPackageState.Editor getEditor(PackageManagerService pm, String packageName, int userId) {
-        var ps = get(pm, packageName, userId);
+    public static GosPackageState.Editor getEditor(PackageManagerInternal pmi, String packageName, int userId) {
+        GosPackageStatePm ps = pmi.getGosPackageState(packageName, userId);
 
         if (ps != null) {
             return ps.edit(packageName, userId);
