@@ -1,0 +1,21 @@
+cc_library_shared {
+    name: "libhardening_test",
+
+    cflags: [
+        "-Wall",
+        "-Wextra",
+        "-Wno-unused-parameter",
+        "-Werror",
+    ],
+
+    srcs: ["**/*.cpp"],
+
+    shared_libs: [
+        "libandroid",
+        "libbase",
+        "libcutils",
+        "liblog",
+        "libnativehelper",
+        "libutils",
+    ],
+}
