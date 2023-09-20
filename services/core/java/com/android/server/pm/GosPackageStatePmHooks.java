@@ -598,6 +598,11 @@ public class GosPackageStatePmHooks {
             );
 
             grantedPermissions = new SparseArray<>();
+            if (Build.isDebuggable()) {
+                grantedPermissions.put(Process.SHELL_UID, fullPermission);
+                // for root adb
+                grantedPermissions.put(Process.ROOT_UID, fullPermission);
+            }
 
             Computer computer = pm.snapshotComputer();
 
