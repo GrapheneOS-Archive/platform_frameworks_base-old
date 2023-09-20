@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="app.grapheneos.hardeningtest">
+
+    <application
+        android:zygotePreloadName="app.grapheneos.hardeningtest.ZygotePreloadImpl" >
+
+        <uses-library android:name="android.test.runner" />
+
+        <service
+            android:name=".TestService"
+            android:process=":test"
+            android:exported="false" />
+
+        <service
+            android:name=".IsolatedTestService"
+            android:isolatedProcess="true"
+            android:useAppZygote="true"
+            android:exported="false" />
+
+<!--   Since there are multiple versions of HardeningTest, authority value of androidx InitializationProvider -->
+<!--   conflicts between them.-->
+<!--   Remove this provider, it doesn't affect app's functionality.-->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            tools:node="remove" />
+
+    </application>
+
+    <instrumentation
+        android:name="androidx.test.runner.AndroidJUnitRunner"
+        android:targetPackage="${applicationId}" />
+
+</manifest>
