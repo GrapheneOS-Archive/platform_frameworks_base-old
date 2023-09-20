@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<configuration description="Test of some of per-app GrapheneOS hardening">
+
+    <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
+        <option name="cleanup-apks" value="true" />
+        <option name="test-file-name" value="HardeningTestAppSdk27.apk" />
+        <option name="test-file-name" value="HardeningTestAppSdkLatest.apk" />
+    </target_preparer>
+
+    <test class="com.android.compatibility.common.tradefed.testtype.JarHostTest" >
+        <option name="jar" value="HardeningTest.jar" />
+    </test>
+
+</configuration>
