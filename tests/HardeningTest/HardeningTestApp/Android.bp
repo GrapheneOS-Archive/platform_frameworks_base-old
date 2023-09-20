@@ -1,0 +1,93 @@
+android_app {
+    name: "HardeningTestApp",
+
+    srcs: [
+        "src/**/*.java",
+        "src/**/*.kt",
+        "src/**/*.aidl",
+    ],
+
+    jni_libs: ["libhardening_test"],
+
+    use_embedded_native_libs: true,
+
+    platform_apis: true,
+
+    optimize: { enabled: false },
+
+    libs: [
+        "android.test.runner",
+    ],
+
+    static_libs: [
+        "androidx.appcompat_appcompat",
+        "androidx.test.core",
+        "androidx.test.rules",
+    ],
+
+    aaptflags: [
+        "--rename-manifest-package app.grapheneos.hardeningtest.preinstalled",
+        "--rename-instrumentation-target-package app.grapheneos.hardeningtest.preinstalled",
+    ],
+}
+
+android_test_helper_app {
+    name: "HardeningTestAppSdk27",
+
+    target_sdk_version: "27",
+
+    srcs: [
+        "src/**/*.java",
+        "src/**/*.kt",
+        "src/**/*.aidl",
+    ],
+
+    jni_libs: ["libhardening_test"],
+
+    use_embedded_native_libs: true,
+
+    platform_apis: true,
+
+    optimize: { enabled: false },
+
+    static_libs: [
+        "androidx.appcompat_appcompat",
+        "androidx.test.core",
+        "androidx.test.rules",
+    ],
+
+    aaptflags: [
+        "--rename-manifest-package app.grapheneos.hardeningtest.sdk_27",
+        "--rename-instrumentation-target-package app.grapheneos.hardeningtest.sdk_27",
+    ],
+}
+
+android_test_helper_app {
+    name: "HardeningTestAppSdkLatest",
+
+    srcs: [
+        "src/**/*.java",
+        "src/**/*.kt",
+        "src/**/*.aidl",
+    ],
+
+    jni_libs: ["libhardening_test"],
+
+    use_embedded_native_libs: true,
+
+    platform_apis: true,
+
+    optimize: { enabled: false },
+
+    static_libs: [
+        "androidx.appcompat_appcompat",
+        "androidx.test.core",
+        "androidx.test.rules",
+    ],
+
+    aaptflags: [
+        "--rename-manifest-package app.grapheneos.hardeningtest.sdk_latest",
+        "--rename-instrumentation-target-package app.grapheneos.hardeningtest.sdk_latest",
+    ],
+}
+
