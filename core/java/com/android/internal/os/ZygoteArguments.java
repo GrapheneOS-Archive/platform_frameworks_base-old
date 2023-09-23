@@ -72,6 +72,11 @@ class ZygoteArguments {
     int mRuntimeFlags;
 
     /**
+     * From --flat-extra-args
+     */
+    ZygoteExtraArgs mExtraArgs = ZygoteExtraArgs.DEFAULT;
+
+    /**
      * From --mount-external
      */
     int mMountExternal = Zygote.MOUNT_EXTERNAL_NONE;
@@ -324,6 +329,8 @@ class ZygoteArguments {
                 seenRuntimeArgs = true;
             } else if (arg.startsWith("--runtime-flags=")) {
                 mRuntimeFlags = Integer.parseInt(getAssignmentValue(arg));
+            } else if (arg.startsWith(ZygoteExtraArgs.PREFIX)) {
+                mExtraArgs = ZygoteExtraArgs.parse(getAssignmentValue(arg));
             } else if (arg.startsWith("--seinfo=")) {
                 if (mSeInfoSpecified) {
                     throw new IllegalArgumentException(
