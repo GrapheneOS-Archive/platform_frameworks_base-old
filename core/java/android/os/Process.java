@@ -734,13 +734,14 @@ public class Process {
                                            boolean bindMountAppsData,
                                            boolean bindMountAppStorageDirs,
                                            boolean bindMountSystemOverrides,
-                                           @Nullable String[] zygoteArgs) {
+                                           @Nullable String[] zygoteArgs,
+                                           @Nullable String flatExtraArgs) {
         return ZYGOTE_PROCESS.start(processClass, niceName, uid, gid, gids,
                     runtimeFlags, mountExternal, targetSdkVersion, seInfo,
                     abi, instructionSet, appDataDir, invokeWith, packageName,
                     zygotePolicyFlags, isTopApp, disabledCompatChanges,
                     pkgDataInfoMap, whitelistedDataInfoMap, bindMountAppsData,
-                    bindMountAppStorageDirs, bindMountSystemOverrides, zygoteArgs);
+                    bindMountAppStorageDirs, bindMountSystemOverrides, zygoteArgs, flatExtraArgs);
     }
 
     /** @hide */
@@ -758,7 +759,8 @@ public class Process {
                                                   @Nullable String packageName,
                                                   @Nullable long[] disabledCompatChanges,
                                                   boolean bindMountSyspropOverrides,
-                                                  @Nullable String[] zygoteArgs) {
+                                                  @Nullable String[] zygoteArgs,
+                                                  @Nullable String flatExtraArgs) {
         // Webview zygote can't access app private data files, so doesn't need to know its data
         // info.
         return WebViewZygote.getProcess().start(processClass, niceName, uid, gid, gids,
@@ -767,7 +769,8 @@ public class Process {
                     /*zygotePolicyFlags=*/ ZYGOTE_POLICY_FLAG_EMPTY, /*isTopApp=*/ false,
                 disabledCompatChanges, /* pkgDataInfoMap */ null,
                 /* whitelistedDataInfoMap */ null, /* bindMountAppsData */ false,
-                /* bindMountAppStorageDirs */ false, bindMountSyspropOverrides, zygoteArgs);
+                /* bindMountAppStorageDirs */ false, bindMountSyspropOverrides, zygoteArgs,
+                flatExtraArgs);
     }
 
     /**
