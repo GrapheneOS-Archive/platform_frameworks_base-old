@@ -363,14 +363,14 @@ public final class Zygote {
             int[][] rlimits, int mountExternal, String seInfo, String niceName, int[] fdsToClose,
             int[] fdsToIgnore, boolean startChildZygote, String instructionSet, String appDataDir,
             boolean isTopApp, String[] pkgDataInfoList, String[] allowlistedDataInfoList,
-            boolean bindMountAppDataDirs, boolean bindMountAppStorageDirs) {
+            boolean bindMountAppDataDirs, boolean bindMountAppStorageDirs, ZygoteExtraArgs extraArgs) {
         ZygoteHooks.preFork();
 
         int pid = nativeForkAndSpecialize(
                 uid, gid, gids, runtimeFlags, rlimits, mountExternal, seInfo, niceName, fdsToClose,
                 fdsToIgnore, startChildZygote, instructionSet, appDataDir, isTopApp,
                 pkgDataInfoList, allowlistedDataInfoList, bindMountAppDataDirs,
-                bindMountAppStorageDirs);
+                bindMountAppStorageDirs, extraArgs.makeJniLongArray());
         if (pid == 0) {
             // Note that this event ends at the end of handleChildProc,
             Trace.traceBegin(Trace.TRACE_TAG_ACTIVITY_MANAGER, "PostFork");
@@ -393,7 +393,7 @@ public final class Zygote {
             int[] fdsToClose, int[] fdsToIgnore, boolean startChildZygote, String instructionSet,
             String appDataDir, boolean isTopApp, String[] pkgDataInfoList,
             String[] allowlistedDataInfoList, boolean bindMountAppDataDirs,
-            boolean bindMountAppStorageDirs);
+            boolean bindMountAppStorageDirs, long[] extraLongArgs);
 
     /**
      * Specialize an unspecialized app process.  The current VM must have been started
@@ -428,11 +428,11 @@ public final class Zygote {
             int[][] rlimits, int mountExternal, String seInfo, String niceName,
             boolean startChildZygote, String instructionSet, String appDataDir, boolean isTopApp,
             String[] pkgDataInfoList, String[] allowlistedDataInfoList,
-            boolean bindMountAppDataDirs, boolean bindMountAppStorageDirs) {
+            boolean bindMountAppDataDirs, boolean bindMountAppStorageDirs, ZygoteExtraArgs extraArgs) {
         nativeSpecializeAppProcess(uid, gid, gids, runtimeFlags, rlimits, mountExternal, seInfo,
                 niceName, startChildZygote, instructionSet, appDataDir, isTopApp,
                 pkgDataInfoList, allowlistedDataInfoList,
-                bindMountAppDataDirs, bindMountAppStorageDirs);
+                bindMountAppDataDirs, bindMountAppStorageDirs, extraArgs.makeJniLongArray());
 
         // Note that this event ends at the end of handleChildProc.
         Trace.traceBegin(Trace.TRACE_TAG_ACTIVITY_MANAGER, "PostFork");
@@ -457,7 +457,7 @@ public final class Zygote {
             int runtimeFlags, int[][] rlimits, int mountExternal, String seInfo, String niceName,
             boolean startChildZygote, String instructionSet, String appDataDir, boolean isTopApp,
             String[] pkgDataInfoList, String[] allowlistedDataInfoList,
-            boolean bindMountAppDataDirs, boolean bindMountAppStorageDirs);
+            boolean bindMountAppDataDirs, boolean bindMountAppStorageDirs, long[] extraLongArgs);
 
     /**
      * Called to do any initialization before starting an application.
@@ -868,7 +868,8 @@ public final class Zygote {
                                  args.mSeInfo, args.mNiceName, args.mStartChildZygote,
                                  args.mInstructionSet, args.mAppDataDir, args.mIsTopApp,
                                  args.mPkgDataInfoList, args.mAllowlistedDataInfoList,
-                                 args.mBindMountAppDataDirs, args.mBindMountAppStorageDirs);
+                                 args.mBindMountAppDataDirs, args.mBindMountAppStorageDirs,
+                                 args.mExtraArgs);
 
             Trace.traceEnd(Trace.TRACE_TAG_ACTIVITY_MANAGER);
 
