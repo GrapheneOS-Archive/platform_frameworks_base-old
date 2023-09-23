@@ -133,6 +133,7 @@ import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.app.ProcessMap;
 import com.android.internal.os.Zygote;
+import com.android.internal.os.ZygoteExtraArgs;
 import com.android.internal.util.ArrayUtils;
 import com.android.internal.util.MemInfoReader;
 import com.android.server.AppStateTracker;
@@ -143,6 +144,7 @@ import com.android.server.Watchdog;
 import com.android.server.am.ActivityManagerService.ProcessChangeItem;
 import com.android.server.compat.PlatformCompat;
 import com.android.server.pm.pkg.AndroidPackage;
+import com.android.server.pm.pkg.GosPackageStatePm;
 import com.android.server.pm.pkg.PackageStateInternal;
 import com.android.server.wm.ActivityServiceConnectionsHolder;
 import com.android.server.wm.WindowManagerService;
@@ -2019,6 +2021,36 @@ public final class ProcessList {
             runtimeFlags |= Zygote.getMemorySafetyRuntimeFlags(
                     definingAppInfo, app.processInfo, instructionSet, mPlatformCompat);
 
+            final Context ctx = mService.mContext;
+            final PackageManagerInternal pmi = mService.getPackageManagerInternal();
+            final String flatExtraArgs;
+            if (hostingRecord.usesWebviewZygote()) {
+                // See commits fe85ed2ef53a7b1442a0e87f47e23e407e3e2b8c and b9a8666eb5504f022343fef9087135b7d937ddf8
+                String callerPkgName = app.info.packageName;
+
+                if (!app.isolated) {
+                   throw new IllegalStateException("non-isolated WebView process for callerPkg "
+                                                   + callerPkgName);
+                }
+
+                // app.info is not actually callerAppInfo, it's definingAppInfo with packageName and
+                // uid replaced by values from callerAppInfo
+                ApplicationInfo callerAppInfo =
+                        pmi.getApplicationInfo(callerPkgName, 0, SYSTEM_UID, userId);
+
+                if (callerAppInfo == null) {
+                    throw new IllegalStateException("callerAppInfo is null");
+                }
+
+                GosPackageStatePm callerPs = pmi.getGosPackageState(callerPkgName, userId);
+
+                flatExtraArgs = ZygoteExtraArgs.createFlatForWebviewProcess(ctx, userId, callerAppInfo, callerPs);
+            } else {
+                GosPackageStatePm ps = pmi.getGosPackageState(definingAppInfo.packageName, userId);
+
+                flatExtraArgs = ZygoteExtraArgs.createFlat(ctx, userId, definingAppInfo, ps, app.isolated);
+            }
+
             // the per-user SELinux context must be set
             if (TextUtils.isEmpty(app.info.seInfoUser)) {
                 Slog.wtf(ActivityManagerService.TAG, "SELinux tag not defined",
@@ -2034,7 +2066,7 @@ public final class ProcessList {
 
             return startProcessLocked(hostingRecord, entryPoint, app, uid, gids,
                     runtimeFlags, zygotePolicyFlags, mountExternal, seInfo, requiredAbi,
-                    instructionSet, invokeWith, startUptime, startElapsedTime);
+                    instructionSet, invokeWith, startUptime, startElapsedTime, flatExtraArgs);
         } catch (RuntimeException e) {
             Slog.e(ActivityManagerService.TAG, "Failure starting process " + app.processName, e);
 
@@ -2074,7 +2106,7 @@ public final class ProcessList {
     boolean startProcessLocked(HostingRecord hostingRecord, String entryPoint, ProcessRecord app,
             int uid, int[] gids, int runtimeFlags, int zygotePolicyFlags, int mountExternal,
             String seInfo, String requiredAbi, String instructionSet, String invokeWith,
-            long startUptime, long startElapsedTime) {
+            long startUptime, long startElapsedTime, final String flatExtraArgs) {
         app.setPendingStart(true);
         app.setRemoved(false);
         synchronized (mProcLock) {
@@ -2105,14 +2137,14 @@ public final class ProcessList {
                     "Posting procStart msg for " + app.toShortString());
             mService.mProcStartHandler.post(() -> handleProcessStart(
                     app, entryPoint, gids, runtimeFlags, zygotePolicyFlags, mountExternal,
-                    requiredAbi, instructionSet, invokeWith, startSeq));
+                    requiredAbi, instructionSet, invokeWith, startSeq, flatExtraArgs));
             return true;
         } else {
             try {
                 final Process.ProcessStartResult startResult = startProcess(hostingRecord,
                         entryPoint, app,
                         uid, gids, runtimeFlags, zygotePolicyFlags, mountExternal, seInfo,
-                        requiredAbi, instructionSet, invokeWith, startUptime);
+                        requiredAbi, instructionSet, invokeWith, startUptime, flatExtraArgs);
                 handleProcessStartedLocked(app, startResult.pid, startResult.usingWrapper,
                         startSeq, false);
             } catch (RuntimeException e) {
@@ -2134,13 +2166,13 @@ public final class ProcessList {
     private void handleProcessStart(final ProcessRecord app, final String entryPoint,
             final int[] gids, final int runtimeFlags, int zygotePolicyFlags,
             final int mountExternal, final String requiredAbi, final String instructionSet,
-            final String invokeWith, final long startSeq) {
+            final String invokeWith, final long startSeq, final String flatExtraArgs) {
         final Runnable startRunnable = () -> {
             try {
                 final Process.ProcessStartResult startResult = startProcess(app.getHostingRecord(),
                         entryPoint, app, app.getStartUid(), gids, runtimeFlags, zygotePolicyFlags,
                         mountExternal, app.getSeInfo(), requiredAbi, instructionSet, invokeWith,
-                        app.getStartTime());
+                        app.getStartTime(), flatExtraArgs);
 
                 synchronized (mService) {
                     handleProcessStartedLocked(app, startResult, startSeq);
@@ -2358,7 +2390,7 @@ public final class ProcessList {
     private Process.ProcessStartResult startProcess(HostingRecord hostingRecord, String entryPoint,
             ProcessRecord app, int uid, int[] gids, int runtimeFlags, int zygotePolicyFlags,
             int mountExternal, String seInfo, String requiredAbi, String instructionSet,
-            String invokeWith, long startTime) {
+            String invokeWith, long startTime, final String flatExtraArgs) {
         try {
             Trace.traceBegin(Trace.TRACE_TAG_ACTIVITY_MANAGER, "Start proc: " +
                     app.processName);
@@ -2483,19 +2515,19 @@ public final class ProcessList {
                         app.info.dataDir, null, app.info.packageName,
                         app.getDisabledCompatChanges(),
                         bindOverrideSysprops,
-                        new String[]{PROC_START_SEQ_IDENT + app.getStartSeq()});
+                        new String[]{PROC_START_SEQ_IDENT + app.getStartSeq()}, flatExtraArgs);
             } else if (hostingRecord.usesAppZygote()) {
                 final AppZygote appZygote = createAppZygoteForProcessIfNeeded(app);
 
                 // We can't isolate app data and storage data as parent zygote already did that.
-                startResult = appZygote.getProcess().start(entryPoint,
+                startResult = appZygote.getProcess(flatExtraArgs).start(entryPoint,
                         app.processName, uid, uid, gids, runtimeFlags, mountExternal,
                         app.info.targetSdkVersion, seInfo, requiredAbi, instructionSet,
                         app.info.dataDir, null, app.info.packageName,
                         /*zygotePolicyFlags=*/ ZYGOTE_POLICY_FLAG_EMPTY, isTopApp,
                         app.getDisabledCompatChanges(), pkgDataInfoMap, allowlistedAppDataInfoMap,
                         false, false, bindOverrideSysprops,
-                        new String[]{PROC_START_SEQ_IDENT + app.getStartSeq()});
+                        new String[]{PROC_START_SEQ_IDENT + app.getStartSeq()}, null);
             } else {
                 regularZygote = true;
                 startResult = Process.start(entryPoint,
@@ -2505,7 +2537,7 @@ public final class ProcessList {
                         isTopApp, app.getDisabledCompatChanges(), pkgDataInfoMap,
                         allowlistedAppDataInfoMap, bindMountAppsData, bindMountAppStorageDirs,
                         bindOverrideSysprops,
-                        new String[]{PROC_START_SEQ_IDENT + app.getStartSeq()});
+                        new String[]{PROC_START_SEQ_IDENT + app.getStartSeq()}, flatExtraArgs);
                 // By now the process group should have been created by zygote.
                 app.mProcessGroupCreated = true;
             }
