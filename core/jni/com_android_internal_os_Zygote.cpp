@@ -361,12 +361,15 @@ enum RuntimeFlags : uint32_t {
 };
 
 struct ExtraArgs {
+    uint64_t selinux_flags = 0;
+
     ExtraArgs() {}
 
     ExtraArgs(JNIEnv* env, jlongArray jlongArgs) {
-        const size_t num_jlong_args = 0;
+        const size_t num_jlong_args = 1;
         jlong jlong_arr[num_jlong_args];
         env->GetLongArrayRegion(jlongArgs, 0, num_jlong_args, (jlong *) &jlong_arr);
+        selinux_flags = (uint64_t) jlong_arr[0];
     }
 };
 
@@ -1988,9 +1991,9 @@ static void SpecializeCommon(JNIEnv* env, uid_t uid, gid_t gid, jintArray gids, 
 
     const char* se_info_ptr = se_info.has_value() ? se_info.value().c_str() : nullptr;
 
-    if (selinux_android_setcontext(uid, is_system_server, se_info_ptr, nice_name_ptr) == -1) {
-        fail_fn(CREATE_ERROR("selinux_android_setcontext(%d, %d, \"%s\", \"%s\") failed", uid,
-                             is_system_server, se_info_ptr, nice_name_ptr));
+    if (selinux_android_setcontext2(uid, is_system_server, se_info_ptr, nice_name_ptr, extra_args.selinux_flags) == -1) {
+        fail_fn(CREATE_ERROR("selinux_android_setcontext(%d, %d, \"%s\", \"%s\", selinux_flags: \"%" PRIx64 "\") failed", uid,
+                             is_system_server, se_info_ptr, nice_name_ptr, extra_args.selinux_flags));
     }
 
     // Make it easier to debug audit logs by setting the main thread's name to the
