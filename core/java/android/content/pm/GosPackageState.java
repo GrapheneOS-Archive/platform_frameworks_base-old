@@ -48,10 +48,35 @@ public final class GosPackageState extends GosPackageStateBase implements Parcel
     public static final int FLAG_STORAGE_SCOPES_ENABLED = 1;
     // checked only if REQUEST_INSTALL_PACKAGES permission is granted
     public static final int FLAG_ALLOW_ACCESS_TO_OBB_DIRECTORY = 1 << 1;
-    public static final int FLAG_DISABLE_HARDENED_MALLOC = 1 << 2;
-    public static final int FLAG_ENABLE_COMPAT_VA_39_BIT = 1 << 3;
-    // 1 << 4 was used by a now-removed feature, do not reuse it
+    // 1 << 2, 1 << 3, 1 << 4 were used previously, do not reuse them
     public static final int FLAG_CONTACT_SCOPES_ENABLED = 1 << 5;
+
+    /** @hide */ public static final int FLAG_BLOCK_NATIVE_DEBUGGING_NON_DEFAULT = 1 << 6;
+    /** @hide */ public static final int FLAG_BLOCK_NATIVE_DEBUGGING = 1 << 7;
+    /** @hide */ public static final int FLAG_BLOCK_NATIVE_DEBUGGING_SUPPRESS_NOTIF = 1 << 8;
+
+    /** @hide */ public static final int FLAG_RESTRICT_MEMORY_DYN_CODE_EXEC_NON_DEFAULT = 1 << 9;
+    /** @hide */ public static final int FLAG_RESTRICT_MEMORY_DYN_CODE_EXEC = 1 << 10;
+    /** @hide */ public static final int FLAG_RESTRICT_MEMORY_DYN_CODE_EXEC_SUPPRESS_NOTIF = 1 << 11;
+
+    /** @hide */ public static final int FLAG_RESTRICT_STORAGE_DYN_CODE_EXEC_NON_DEFAULT = 1 << 12;
+    /** @hide */ public static final int FLAG_RESTRICT_STORAGE_DYN_CODE_EXEC = 1 << 13;
+    /** @hide */ public static final int FLAG_RESTRICT_STORAGE_DYN_CODE_EXEC_SUPPRESS_NOTIF = 1 << 14;
+
+    /** @hide */ public static final int FLAG_RESTRICT_WEBVIEW_DYN_CODE_EXEC_NON_DEFAULT = 1 << 15;
+    /** @hide */ public static final int FLAG_RESTRICT_WEBVIEW_DYN_CODE_EXEC = 1 << 16;
+
+    /** @hide */ public static final int FLAG_USE_HARDENED_MALLOC_NON_DEFAULT = 1 << 17;
+    /** @hide */ public static final int FLAG_USE_HARDENED_MALLOC = 1 << 18;
+
+    /** @hide */ public static final int FLAG_USE_EXTENDED_VA_SPACE_NON_DEFAULT = 1 << 19;
+    /** @hide */ public static final int FLAG_USE_EXTENDED_VA_SPACE = 1 << 20;
+
+    /** @hide */ public static final int FLAG_FORCE_MEMTAG_NON_DEFAULT = 1 << 21;
+    /** @hide */ public static final int FLAG_FORCE_MEMTAG = 1 << 22;
+    /** @hide */ public static final int FLAG_FORCE_MEMTAG_SUPPRESS_NOTIF = 1 << 23;
+
+    /** @hide */ public static final int FLAG_ENABLE_EXPLOIT_PROTECTION_COMPAT_MODE = 1 << 24;
 
     // to distinguish between the case when no dflags are set and the case when dflags weren't calculated yet
     public static final int DFLAGS_SET = 1;

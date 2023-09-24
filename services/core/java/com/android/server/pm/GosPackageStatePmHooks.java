@@ -98,6 +98,8 @@ public class GosPackageStatePmHooks {
             return null;
         }
 
+        flags = migrateLegacyFlags(flags);
+
         byte[] storageScopes = null;
         if ((flags & FLAG_STORAGE_SCOPES_ENABLED) != 0) {
             storageScopes = parser.getAttributeBytesHex(null, ATTR_GOS_STORAGE_SCOPES, null);
@@ -109,6 +111,22 @@ public class GosPackageStatePmHooks {
         }
 
         return new GosPackageStatePm(flags, storageScopes, contactScopes);
+    }
+
+    private static int migrateLegacyFlags(int flags) {
+        final int FLAG_DISABLE_HARDENED_MALLOC = 1 << 2;
+        if ((flags & FLAG_DISABLE_HARDENED_MALLOC) != 0) {
+            flags &= ~(FLAG_USE_HARDENED_MALLOC | FLAG_DISABLE_HARDENED_MALLOC);
+            flags |= FLAG_USE_HARDENED_MALLOC_NON_DEFAULT;
+        }
+
+        final int FLAG_ENABLE_COMPAT_VA_39_BIT = 1 << 3;
+        if ((flags & FLAG_ENABLE_COMPAT_VA_39_BIT) != 0) {
+            flags &= ~(FLAG_USE_EXTENDED_VA_SPACE | FLAG_ENABLE_COMPAT_VA_39_BIT);
+            flags |= FLAG_USE_EXTENDED_VA_SPACE_NON_DEFAULT;
+        }
+
+        return flags;
     }
 
     @Nullable
@@ -604,15 +622,31 @@ public class GosPackageStatePmHooks {
                                 | FIELD_CONTACT_SCOPES
                     ));
 
-            final int settingsReadFlags = FLAG_STORAGE_SCOPES_ENABLED
-                        | FLAG_CONTACT_SCOPES_ENABLED
-                        | FLAG_ALLOW_ACCESS_TO_OBB_DIRECTORY
-                        | FLAG_DISABLE_HARDENED_MALLOC
-                        | FLAG_ENABLE_COMPAT_VA_39_BIT;
+            final int settingsReadWriteFlags =
+                    FLAG_ALLOW_ACCESS_TO_OBB_DIRECTORY
+                    | FLAG_BLOCK_NATIVE_DEBUGGING_NON_DEFAULT
+                    | FLAG_BLOCK_NATIVE_DEBUGGING
+                    | FLAG_RESTRICT_MEMORY_DYN_CODE_EXEC_NON_DEFAULT
+                    | FLAG_RESTRICT_MEMORY_DYN_CODE_EXEC
+                    | FLAG_RESTRICT_STORAGE_DYN_CODE_EXEC_NON_DEFAULT
+                    | FLAG_RESTRICT_STORAGE_DYN_CODE_EXEC
+                    | FLAG_RESTRICT_WEBVIEW_DYN_CODE_EXEC_NON_DEFAULT
+                    | FLAG_RESTRICT_WEBVIEW_DYN_CODE_EXEC
+                    | FLAG_USE_HARDENED_MALLOC_NON_DEFAULT
+                    | FLAG_USE_HARDENED_MALLOC
+                    | FLAG_USE_EXTENDED_VA_SPACE_NON_DEFAULT
+                    | FLAG_USE_EXTENDED_VA_SPACE
+                    | FLAG_FORCE_MEMTAG_NON_DEFAULT
+                    | FLAG_FORCE_MEMTAG
+                    | FLAG_ENABLE_EXPLOIT_PROTECTION_COMPAT_MODE
+            ;
 
-            final int settingsWriteFlags = FLAG_ALLOW_ACCESS_TO_OBB_DIRECTORY
-                        | FLAG_DISABLE_HARDENED_MALLOC
-                        | FLAG_ENABLE_COMPAT_VA_39_BIT;
+            final int settingsReadFlags = settingsReadWriteFlags
+                    | FLAG_STORAGE_SCOPES_ENABLED
+                    | FLAG_CONTACT_SCOPES_ENABLED
+            ;
+
+            final int settingsWriteFlags = settingsReadWriteFlags;
 
             // note that this applies to all packages that run in the android.uid.system sharedUserId
             // in secondary users, not just the Settings app. Packages that run in this sharedUserId
