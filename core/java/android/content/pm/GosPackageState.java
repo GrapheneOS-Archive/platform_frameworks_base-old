@@ -32,8 +32,6 @@ import android.permission.PermissionManager;
 
 import java.util.Objects;
 
-import dalvik.system.VMRuntime;
-
 /**
  * @hide
  */
@@ -320,13 +318,6 @@ public final class GosPackageState extends GosPackageStateBase implements Parcel
         }
 
         return new Editor(packageName, userId);
-    }
-
-    /** @hide */
-    public static boolean eligibleForRelaxHardeningFlag(ApplicationInfo ai) {
-        String primaryAbi = ai.primaryCpuAbi;
-        // non-system app that has native 64-bit code
-        return !ai.isSystemApp() && primaryAbi != null && VMRuntime.is64BitAbi(primaryAbi);
     }
 
     public static final int EDITOR_FLAG_KILL_UID_AFTER_APPLY = 1;
