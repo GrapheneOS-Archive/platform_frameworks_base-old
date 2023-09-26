@@ -62,6 +62,9 @@ public class ExtSettings {
     public static final IntSetting BLUETOOTH_AUTO_OFF = new IntSetting(
             Setting.Scope.GLOBAL, Settings.Global.BLUETOOTH_AUTO_OFF, 0 /* off by default */);
 
+    public static final BoolSysProperty ALLOW_NATIVE_DEBUG_BY_DEFAULT = new BoolSysProperty(
+            "persist.native_debug", defaultBool(R.bool.setting_default_allow_native_debugging));
+
     // AppCompatConfig specifies which hardening features are compatible/incompatible with a
     // specific app.
     // This setting controls whether incompatible hardening features would be disabled by default
