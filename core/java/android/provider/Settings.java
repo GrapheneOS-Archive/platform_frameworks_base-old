@@ -12637,6 +12637,15 @@ public final class Settings {
         public static final String REMOTE_KEY_PROVISIONING_SERVER = "attest_remote_provisioner_server";
 
         /** @hide */
+        public static final String RESTRICT_MEMORY_DYN_CODE_LOADING_BY_DEFAULT = "restrict_memory_dyn_code_exec";
+
+        /** @hide */
+        public static final String RESTRICT_STORAGE_DYN_CODE_LOADING_BY_DEFAULT = "restrict_storage_dyn_code_exec";
+
+        /** @hide */
+        public static final String RESTRICT_WEBVIEW_DYN_CODE_LOADING_BY_DEFAULT = "restrict_webview_dyn_code_exec";
+
+        /** @hide */
         public static final String SHOW_SYSTEM_PROCESS_CRASH_NOTIFICATIONS = "show_system_process_crash_notifs";
 
         // ExtSettings END
