@@ -132,8 +132,8 @@ public class ExtSettings {
         }
     };
 
-    public static final BoolSysProperty NATIVE_DEBUGGING = new BoolSysProperty(
-            "persist.native_debug", true);
+    public static final BoolSysProperty ALLOW_NATIVE_DEBUG_BY_DEFAULT = new BoolSysProperty(
+            "persist.native_debug", defaultBool(R.bool.setting_default_allow_native_debugging));
 
     // AppCompatConfig specifies which hardening features are compatible/incompatible with a
     // specific app.

@@ -4,6 +4,7 @@ import android.annotation.Nullable;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.GosPackageStateBase;
+import android.ext.settings.app.AswDenyNativeDebug;
 import android.os.Build;
 import android.os.Process;
 import android.os.SystemProperties;
@@ -70,6 +71,10 @@ public class SELinuxFlags {
         }
 
         long res = ALL_RESTRICTIONS;
+
+        if (!AswDenyNativeDebug.I.get(ctx, userId, appInfo, ps)) {
+            res &= ~DENY_PROCESS_PTRACE;
+        }
 
         return res;
     }
