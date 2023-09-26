@@ -4,12 +4,18 @@ import android.annotation.Nullable;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.GosPackageStateBase;
+import android.ext.BrowserUtils;
 import android.ext.settings.app.AswDenyNativeDebug;
+import android.ext.settings.app.AswRestrictMemoryDynCodeExec;
+import android.ext.settings.app.AswRestrictStorageDynCodeExec;
+import android.ext.settings.app.AswRestrictWebViewDynamicCodeExecution;
 import android.os.Build;
 import android.os.Process;
 import android.os.SystemProperties;
+import android.util.Log;
 
 import java.io.File;
+import java.nio.file.Files;
 
 // Per-app per-user per-process SELinux flags which are passed to the kernel via the selinux_flags
 // process attribute.
@@ -59,6 +65,10 @@ public class SELinuxFlags {
 
         long res = ALL_RESTRICTIONS;
 
+        if (!AswRestrictWebViewDynamicCodeExecution.I.get(ctx, userId, callerAppInfo, callerPs)) {
+            res &= ~MEMORY_DYN_CODE_EXEC_FLAGS_THAT_BREAK_WEB_JIT;
+        }
+
         return res;
     }
 
@@ -76,11 +86,41 @@ public class SELinuxFlags {
             res &= ~DENY_PROCESS_PTRACE;
         }
 
+        if (!AswRestrictMemoryDynCodeExec.I.get(ctx, userId, appInfo, ps)) {
+            if (BrowserUtils.isSystemBrowser(ctx, appInfo.packageName)) {
+                // Chromium-based browsers use JIT only in isolated processes
+                if (isIsolatedProcess) {
+                    res &= ~MEMORY_DYN_CODE_EXEC_FLAGS_THAT_BREAK_WEB_JIT;
+                }
+            } else {
+                res &= ~RESTRICT_MEMORY_DYN_CODE_EXEC_FLAGS;
+            }
+        }
+
+        if (!AswRestrictStorageDynCodeExec.I.get(ctx, userId, appInfo, ps)) {
+            res &= ~RESTRICT_STORAGE_DYN_CODE_EXEC_FLAGS;
+        }
+
         return res;
     }
 
     private static String getSelfProcAttrPath() {
         return "/proc/self/task/" + Process.myPid() + "/attr/selinux_flags";
+    }
+
+    public static boolean isExecmemBlocked() {
+        return (getFlags() & DENY_EXECMEM) != 0;
+    }
+
+    private static long getFlags() {
+        String flagsPath = getSelfProcAttrPath();
+        try {
+            byte[] val = Files.readAllBytes(new File(flagsPath).toPath());
+            return Long.parseLong(new String(val), 16);
+        } catch (Exception e) {
+            Log.d("SELinux", "", e);
+            return 0L;
+        }
     }
 
     public static boolean isSystemAppSepolicyWeakeningAllowed() {
