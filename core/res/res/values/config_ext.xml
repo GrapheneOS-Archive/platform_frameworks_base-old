@@ -5,4 +5,31 @@
 
     <bool name="setting_default_allow_native_debugging">true</bool>
     <java-symbol type="bool" name="setting_default_allow_native_debugging" />
+
+    <bool name="setting_default_restrict_memory_dyn_code_exec">false</bool>
+    <java-symbol type="bool" name="setting_default_restrict_memory_dyn_code_exec" />
+
+    <bool name="setting_default_restrict_storage_dyn_code_exec">false</bool>
+    <java-symbol type="bool" name="setting_default_restrict_storage_dyn_code_exec" />
+
+    <string-array translatable="false" name="system_pkgs_allowed_memory_dyn_code_exec_by_default">
+        <item>app.vanadium.browser</item>
+        <!-- original-package for Vanadium -->
+        <item>org.chromium.chrome</item>
+    </string-array>
+    <java-symbol type="array" name="system_pkgs_allowed_memory_dyn_code_exec_by_default" />
+
+    <string-array translatable="false" name="system_pkgs_allowed_storage_dyn_code_exec_by_default">
+    </string-array>
+    <java-symbol type="array" name="system_pkgs_allowed_storage_dyn_code_exec_by_default" />
+
+    <bool name="setting_default_restrict_webview_dyn_code_exec">false</bool>
+    <java-symbol type="bool" name="setting_default_restrict_webview_dyn_code_exec" />
+
+    <string-array translatable="false" name="system_pkgs_allowed_webview_dyn_code_exec_by_default">
+        <item>app.grapheneos.pdfviewer</item>
+        <!-- original-package -->
+        <item>org.grapheneos.pdfviewer</item>
+    </string-array>
+    <java-symbol type="array" name="system_pkgs_allowed_webview_dyn_code_exec_by_default" />
 </resources>
