@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array translatable="false" name="system_browser_package_names">
+        <item>app.vanadium.browser</item>
+        <!-- original-package for Vanadium -->
+        <item>org.chromium.chrome</item>
+    </string-array>
+    <java-symbol type="array" name="system_browser_package_names" />
+</resources>
