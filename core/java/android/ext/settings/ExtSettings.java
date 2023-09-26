@@ -146,6 +146,18 @@ public class ExtSettings {
             Setting.Scope.GLOBAL, "allow_automatic_pkg_hardening_config", // historical name
             defaultBool(R.bool.setting_default_allow_disabling_hardening_via_app_compat_config));
 
+    public static final BoolSetting RESTRICT_MEMORY_DYN_CODE_EXEC_BY_DEFAULT = new BoolSetting(
+            Setting.Scope.GLOBAL, "restrict_memory_dyn_code_exec",
+            defaultBool(R.bool.setting_default_restrict_memory_dyn_code_exec));
+
+    public static final BoolSetting RESTRICT_STORAGE_DYN_CODE_EXEC_BY_DEFAULT = new BoolSetting(
+            Setting.Scope.GLOBAL, "restrict_storage_dyn_code_exec",
+            defaultBool(R.bool.setting_default_restrict_storage_dyn_code_exec));
+
+    public static final BoolSetting RESTRICT_WEBVIEW_DYN_CODE_EXEC_BY_DEFAULT = new BoolSetting(
+            Setting.Scope.GLOBAL, "restrict_webview_dyn_code_exec",
+            defaultBool(R.bool.setting_default_restrict_webview_dyn_code_exec));
+
     private ExtSettings() {}
 
     // used for making settings defined in this class unreadable by third-party apps
