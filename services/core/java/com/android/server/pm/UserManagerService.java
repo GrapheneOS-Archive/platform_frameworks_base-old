@@ -3065,6 +3065,8 @@ public class UserManagerService extends IUserManager.Stub {
                                     synchronized (mGuestRestrictions) {
                                         UserRestrictionsUtils
                                                 .readRestrictions(parser, mGuestRestrictions);
+                                        UserManagerServiceHooks
+                                                .updateDefaultRestrictionsIfNecessary(parser, mGuestRestrictions);
                                     }
                                 }
                                 break;
@@ -3725,6 +3727,10 @@ public class UserManagerService extends IUserManager.Stub {
                     }
                 } else if (TAG_RESTRICTIONS.equals(tag)) {
                     baseRestrictions = UserRestrictionsUtils.readRestrictions(parser);
+                    if (UserManager.USER_TYPE_FULL_SECONDARY.equals(userType)
+                            || UserManager.USER_TYPE_FULL_GUEST.equals(userType)) {
+                        UserManagerServiceHooks.updateDefaultRestrictionsIfNecessary(parser, baseRestrictions);
+                    }
                 } else if (TAG_DEVICE_POLICY_RESTRICTIONS.equals(tag)) {
                     legacyLocalRestrictions = UserRestrictionsUtils.readRestrictions(parser);
                 } else if (TAG_DEVICE_POLICY_LOCAL_RESTRICTIONS.equals(tag)) {
@@ -3784,6 +3790,13 @@ public class UserManagerService extends IUserManager.Stub {
         synchronized (mRestrictionsLock) {
             if (baseRestrictions != null) {
                 mBaseUserRestrictions.updateRestrictions(id, baseRestrictions);
+            } else if (UserManager.USER_TYPE_FULL_SECONDARY.equals(userType)
+                    || UserManager.USER_TYPE_FULL_GUEST.equals(userType)) {
+                // No baseRestrictions found, default is disallowed configuration of private DNS
+                // for existing secondary or guest users.
+                Bundle b = new Bundle();
+                b.putBoolean(UserManager.DISALLOW_CONFIG_PRIVATE_DNS, true);
+                mBaseUserRestrictions.updateRestrictions(id, b);
             }
             if (localRestrictions != null) {
                 mDevicePolicyLocalUserRestrictions.put(id, localRestrictions);
