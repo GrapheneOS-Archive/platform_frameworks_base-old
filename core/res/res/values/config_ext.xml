@@ -3,6 +3,9 @@
     <bool name="setting_default_allow_disabling_hardening_via_app_compat_config">true</bool>
     <java-symbol type="bool" name="setting_default_allow_disabling_hardening_via_app_compat_config" />
 
+    <bool name="setting_default_allow_native_debugging">true</bool>
+    <java-symbol type="bool" name="setting_default_allow_native_debugging" />
+
     <string name="config_first_party_app_source_package_name">app.grapheneos.apps</string>
     <java-symbol type="string" name="config_first_party_app_source_package_name" />
 </resources>
