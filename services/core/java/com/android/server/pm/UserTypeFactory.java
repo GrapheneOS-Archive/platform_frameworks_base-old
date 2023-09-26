@@ -265,6 +265,7 @@ public final class UserTypeFactory {
         final Bundle restrictions = new Bundle();
         restrictions.putBoolean(UserManager.DISALLOW_OUTGOING_CALLS, true);
         restrictions.putBoolean(UserManager.DISALLOW_SMS, true);
+        restrictions.putBoolean(UserManager.DISALLOW_CONFIG_PRIVATE_DNS, true);
         return restrictions;
     }
 
