@@ -1594,4 +1594,10 @@ public class Environment {
     public static File maybeTranslateEmulatedPathToInternal(File path) {
         return StorageManager.maybeTranslateEmulatedPathToInternal(path);
     }
+
+    /** @hide */
+    @UnsupportedAppUsage
+    public static boolean isExecmemBlocked() {
+        return com.android.internal.os.SELinuxFlags.isExecmemBlocked();
+    }
 }
