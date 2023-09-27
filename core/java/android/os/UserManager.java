@@ -1405,6 +1405,13 @@ public class UserManager {
      *
      * <p>The default value is <code>false</code>.
      *
+     * <p>START GrapheneOS change
+     * <p>This restriction can also bet set on a profile owner for secondary users in GrapheneOS.
+     * This allows configuring whether to show Private DNS and connectivity checks settings in secondary users.
+     * Setting this in system or primary user applies this change globally.
+     * <p>The default value in GrapheneOS is <code>true</code> in unmanaged secondary users and guest users.
+     * <p>END GrapheneOS change
+     *
      * <p>Key for user restrictions.
      * <p>Type: Boolean
      * @see DevicePolicyManager#addUserRestriction(ComponentName, String)
