@@ -12651,6 +12651,9 @@ public final class Settings {
         /** @hide */
         public static final String SHOW_SYSTEM_PROCESS_CRASH_NOTIFICATIONS = "show_system_process_crash_notifs";
 
+        /** @hide */
+        public static final String WIDEVINE_PROVISIONING_SERVER = "widevine_provisioner_server";
+
         // ExtSettings END
 
         // NOTE: If you add new settings here, be sure to add them to

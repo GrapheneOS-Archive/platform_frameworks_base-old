@@ -171,6 +171,10 @@ package android.ext.settings {
     field public static final int STANDARD_SERVER = 1; // 0x1
   }
 
+  public class WidevineProvisioningSettings {
+    method @Nullable public static String getServerHostnameOverride(@NonNull android.content.Context);
+  }
+
 }
 
 package android.hardware.usb {
