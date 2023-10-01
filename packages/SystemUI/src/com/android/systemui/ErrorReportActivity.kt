@@ -155,7 +155,35 @@ ${reportInfoToString(r)}"""
 
     fun reportInfoToString(r: ApplicationErrorReport): String {
         if (r.type == ApplicationErrorReport.TYPE_CRASH) {
-            return r.crashInfo.stackTrace
+            val stackTrace = r.crashInfo.stackTrace
+            val nativeCrashMarkerIdx = stackTrace.indexOf("\nProcess uptime: ")
+            if (nativeCrashMarkerIdx > 0) {
+                // This is a native crash, filter out most of the header lines to make the report easier to read
+                val sb = StringBuilder()
+                val prefixes = arrayOf("signal ", "Abort message: ")
+                var backtraceStarted = false
+                for (line in stackTrace.substring(nativeCrashMarkerIdx).lines()) {
+                    if (backtraceStarted) {
+                        sb.append(line)
+                        sb.append('\n')
+                    }
+                    for (prefix in prefixes) {
+                        if (line.startsWith(prefix)) {
+                            sb.append(line)
+                            sb.append('\n')
+                        }
+                    }
+                    if (line.startsWith("backtrace:")) {
+                        sb.append('\n')
+                        sb.append(line)
+                        sb.append('\n')
+                        backtraceStarted = true
+                    }
+                }
+                return sb.toString()
+            } else {
+                return stackTrace
+            }
         }
 
         val sb = StringBuilder()
