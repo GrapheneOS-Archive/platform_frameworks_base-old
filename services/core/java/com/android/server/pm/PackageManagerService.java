@@ -8290,4 +8290,9 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
         // use the same procedure that is used for SELinux compat changes
         selinuxChangeListener.onCompatChange(packageName);
     }
+
+    @NonNull
+    public Context getContext() {
+        return mContext;
+    }
 }
