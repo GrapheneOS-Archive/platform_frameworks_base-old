@@ -3701,7 +3701,8 @@ public class PermissionManagerServiceImpl implements PermissionManagerServiceInt
 
             Integer permissionState = permissionStates.get(permission);
 
-            if (permissionState == null || permissionState == PERMISSION_STATE_DEFAULT) {
+            if (!isPregrantedSpecialRuntimePermission
+                    && (permissionState == null || permissionState == PERMISSION_STATE_DEFAULT)) {
                 continue;
             }
 
@@ -3715,6 +3716,7 @@ public class PermissionManagerServiceImpl implements PermissionManagerServiceInt
                 shouldGrantRuntimePermission = (bp.isRuntime() || bp.isDevelopment())
                         && (!instantApp || bp.isInstant())
                         && (supportsRuntimePermissions || !bp.isRuntimeOnly())
+                        && permissionState != null
                         && permissionState == PERMISSION_STATE_GRANTED;
                 isAppOpPermission = bp.isAppOp();
             }
