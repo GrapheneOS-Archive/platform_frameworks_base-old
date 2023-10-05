@@ -62,6 +62,8 @@ import android.util.proto.ProtoOutputStream;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.gmscompat.GmsHooks;
+import com.android.internal.gmscompat.GmsInfo;
+import com.android.internal.gmscompat.util.GmcActivityUtils;
 import com.android.internal.os.IResultReceiver;
 
 import java.lang.annotation.Retention;
@@ -1060,6 +1062,12 @@ public final class PendingIntent implements Parcelable {
                 if (targetPkg != null) {
                     options = GmsHooks.filterBroadcastOptions(options, targetPkg);
                 }
+            }
+        }
+
+        if (GmsCompat.isClientOfGmsCore()) {
+            if (isActivity() && GmsInfo.PACKAGE_GMS_CORE.equals(getCreatorPackage())) {
+                options = GmcActivityUtils.allowActivityLaunchFromPendingIntent(options);
             }
         }
 
