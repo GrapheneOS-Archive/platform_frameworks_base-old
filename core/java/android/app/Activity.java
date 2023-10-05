@@ -170,7 +170,9 @@ import com.android.internal.app.ToolbarActionBar;
 import com.android.internal.app.WindowDecorActionBar;
 import com.android.internal.gmscompat.GmsCompatApp;
 import com.android.internal.gmscompat.GmsHooks;
+import com.android.internal.gmscompat.GmsInfo;
 import com.android.internal.gmscompat.PlayStoreHooks;
+import com.android.internal.gmscompat.util.GmcActivityUtils;
 import com.android.internal.policy.PhoneWindow;
 import com.android.internal.util.dump.DumpableContainerImpl;
 
@@ -6006,6 +6008,12 @@ public class Activity extends ContextThemeWrapper
             @Nullable Bundle options)
             throws IntentSender.SendIntentException {
         try {
+            if (intent != null && GmsCompat.isClientOfGmsCore()) {
+                if (GmsInfo.PACKAGE_GMS_CORE.equals(intent.getCreatorPackage())) {
+                    options = GmcActivityUtils.allowActivityLaunchFromPendingIntent(options);
+                }
+            }
+
             options = transferSpringboardActivityOptions(options);
             String resolvedType = null;
             if (fillInIntent != null) {

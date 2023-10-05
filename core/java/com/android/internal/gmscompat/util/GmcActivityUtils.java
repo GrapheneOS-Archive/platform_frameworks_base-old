@@ -3,6 +3,7 @@ package com.android.internal.gmscompat.util;
 import android.Manifest;
 import android.annotation.Nullable;
 import android.app.Activity;
+import android.app.ActivityOptions;
 import android.app.Application;
 import android.app.compat.gms.GmsCompat;
 import android.bluetooth.BluetoothAdapter;
@@ -98,5 +99,13 @@ public class GmcActivityUtils implements Application.ActivityLifecycleCallbacks 
                 GmsCompatApp.callFailed(e);
             }
         }
+    }
+
+    // called in clients of GmsCore to allow launching activity PendingIntent that GmsCore returns
+    // in some cases (e.g. FIDO2 UI)
+    public static Bundle allowActivityLaunchFromPendingIntent(@Nullable Bundle orig) {
+        var ao = orig != null ? ActivityOptions.fromBundle(orig) : ActivityOptions.makeBasic();
+        ao.setPendingIntentBackgroundActivityStartMode(ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED);
+        return ao.toBundle();
     }
 }
