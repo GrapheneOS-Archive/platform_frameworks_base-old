@@ -57,7 +57,7 @@ public class StorageScopesAppHooks {
                 case DFLAG_HAS_READ_MEDIA_AUDIO_DECLARATION:
                 case DFLAG_HAS_READ_MEDIA_VIDEO_DECLARATION:
                     // see https://developer.android.com/about/versions/14/changes/partial-photo-video-access
-                    return true;
+                    return false;
             }
         }
 
