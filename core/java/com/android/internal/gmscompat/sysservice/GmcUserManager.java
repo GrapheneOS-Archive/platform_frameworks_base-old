@@ -168,4 +168,14 @@ public class GmcUserManager extends UserManager {
     public UserHandle getMainUser() {
         return Process.myUserHandle();
     }
+
+    @Override
+    public UserHandle getBootUser() {
+        return Process.myUserHandle();
+    }
+
+    @Override
+    public boolean isAdminUser() {
+        return true;
+    }
 }
