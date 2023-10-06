@@ -147,15 +147,15 @@ public abstract class NtpTrustedTime implements TrustedTime {
         private final long mUnixEpochTimeMillis;
         private final long mElapsedRealtimeMillis;
         private final int mUncertaintyMillis;
-        @NonNull private final InetSocketAddress mNtpServerSocketAddress;
+        @Nullable private final InetSocketAddress mNtpServerSocketAddress;
 
         public TimeResult(
                 long unixEpochTimeMillis, long elapsedRealtimeMillis, int uncertaintyMillis,
-                @NonNull InetSocketAddress ntpServerSocketAddress) {
+                @Nullable InetSocketAddress ntpServerSocketAddress) {
             mUnixEpochTimeMillis = unixEpochTimeMillis;
             mElapsedRealtimeMillis = elapsedRealtimeMillis;
             mUncertaintyMillis = uncertaintyMillis;
-            mNtpServerSocketAddress = Objects.requireNonNull(ntpServerSocketAddress);
+            mNtpServerSocketAddress = ntpServerSocketAddress;
         }
 
         public long getTimeMillis() {
@@ -203,14 +203,13 @@ public abstract class NtpTrustedTime implements TrustedTime {
             return mUnixEpochTimeMillis == that.mUnixEpochTimeMillis
                     && mElapsedRealtimeMillis == that.mElapsedRealtimeMillis
                     && mUncertaintyMillis == that.mUncertaintyMillis
-                    && mNtpServerSocketAddress.equals(
-                    that.mNtpServerSocketAddress);
+                    && Objects.equals(mNtpServerSocketAddress, that.mNtpServerSocketAddress);
         }
 
         @Override
         public int hashCode() {
             return Objects.hash(mUnixEpochTimeMillis, mElapsedRealtimeMillis, mUncertaintyMillis,
-                    mNtpServerSocketAddress);
+                    Objects.hashCode(mNtpServerSocketAddress));
         }
 
         @Override

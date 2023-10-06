@@ -158,7 +158,7 @@ public class SntpClient {
         try {
             switch (mNtpMode) {
                 case NtpTrustedTime.NtpConfig.MODE_HTTPS:
-                    URL url = new URL(host);
+                    URL url = new URL("https://" + host);
                     return requestHttpTime(url, timeout, network);
                 case NtpTrustedTime.NtpConfig.MODE_NTP:
                     final InetAddress[] addresses = networkForResolv.getAllByName(host);
@@ -172,12 +172,6 @@ public class SntpClient {
                     EventLogTags.writeNtpFailure(host, "unknown protocol " + mNtpMode + " provided");
                     if (DBG) Log.d(TAG, "request time failed, wrong protocol");
                     return false;
-            }
-            final InetAddress[] addresses = networkForResolv.getAllByName(host);
-            for (int i = 0; i < addresses.length; i++) {
-                if (requestTime(addresses[i], port, timeout, networkForResolv)) {
-                    return true;
-                }
             }
         } catch (UnknownHostException | MalformedURLException e) {
             Log.w(TAG, "Unknown host: " + host);
