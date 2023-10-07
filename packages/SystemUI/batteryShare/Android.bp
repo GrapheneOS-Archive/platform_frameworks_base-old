@@ -1,0 +1,9 @@
+java_library {
+    name: "ReverseWirelessCharging",
+    platform_apis: true,
+    srcs: [
+        "src/**/I*.aidl",
+        "src/**/*.java",
+        "src/**/*.kt",
+    ],
+}
