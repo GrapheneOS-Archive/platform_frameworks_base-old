@@ -32,6 +32,8 @@ import android.os.UserHandle;
 import android.text.TextUtils;
 import android.util.Slog;
 
+import com.android.server.ext.SystemServerExt;
+
 import java.util.Arrays;
 
 final class PackageManagerNative extends IPackageManagerNative.Stub {
@@ -193,6 +195,10 @@ final class PackageManagerNative extends IPackageManagerNative.Stub {
     public void onDeniedSpecialRuntimePermissionOp(String permissionName, int uid, String packageName) {
         if (Binder.getCallingUid() != android.os.Process.SYSTEM_UID) {
             throw new SecurityException();
+        }
+
+        if (SystemServerExt.get() == null) {
+            return;
         }
 
         com.android.server.ext.MissingSpecialRuntimePermissionNotification
