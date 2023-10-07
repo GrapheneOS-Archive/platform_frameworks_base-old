@@ -13,7 +13,6 @@ import android.widget.Switch;
 
 import androidx.annotation.Nullable;
 
-import com.android.internal.batteryShare.ReverseWirelessCharger;
 import com.android.internal.logging.MetricsLogger;
 import com.android.internal.logging.nano.MetricsProto.MetricsEvent;
 import com.android.systemui.R;
@@ -29,6 +28,7 @@ import com.android.systemui.qs.logging.QSLogger;
 import com.android.systemui.statusbar.policy.KeyguardStateController;
 
 import javax.inject.Inject;
+import vendor.google.wireless_charger.ReverseWirelessCharger;
 
 public class BatteryShareTile extends SecureQSTile<BooleanState> {
 
