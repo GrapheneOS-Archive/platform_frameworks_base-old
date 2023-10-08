@@ -1435,7 +1435,7 @@ public class UserManagerService extends IUserManager.Stub {
         synchronized (mPackagesLock) {
             writeUserLP(profileUserData);
         }
-        if (getDevicePolicyManagerInternal().isKeepProfilesRunningEnabled()) {
+        if (false) {
             // New behavior: when quiet mode is enabled, profile user is running, but apps are
             // suspended.
             getPackageManagerInternal().setPackagesSuspendedForQuietMode(userId, enableQuietMode);
