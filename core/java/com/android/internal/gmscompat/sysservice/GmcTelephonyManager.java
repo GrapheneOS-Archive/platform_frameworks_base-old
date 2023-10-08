@@ -37,32 +37,9 @@ import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("AutoBoxing")
-public class GmcTelephonyManager extends TelephonyManager {
+public class GmcTelephonyManager {
 
     private static final String TAG = "GmcTelephonyManager";
-
-    public GmcTelephonyManager(Context ctx) {
-        super(ctx);
-    }
-
-    public GmcTelephonyManager(Context context, int subId) {
-        super(context, subId);
-    }
-
-    @Override
-    public void requestCellInfoUpdate(WorkSource workSource, @CallbackExecutor Executor executor, CellInfoCallback callback) {
-        // Attribute the work to GMS instead of the client
-        requestCellInfoUpdate(executor, callback);
-    }
-
-    @Override
-    public void requestCellInfoUpdate(Executor executor, CellInfoCallback callback) {
-        if (!GmsCompat.hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)) {
-            return;
-        }
-
-        super.requestCellInfoUpdate(executor, callback);
-    }
 
     public static int[] filterTelephonyCallbackEvents(int[] eventsArray) {
         Set<Integer> events = Arrays.stream(eventsArray).boxed().collect(Collectors.toSet());
