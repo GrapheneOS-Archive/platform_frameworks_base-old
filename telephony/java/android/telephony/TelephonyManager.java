@@ -111,7 +111,6 @@ import android.util.Pair;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.gmscompat.gcarriersettings.GCarrierSettingsApp;
-import com.android.internal.gmscompat.sysservice.GmcTelephonyManager;
 import com.android.internal.os.BackgroundThread;
 import com.android.internal.telephony.CellNetworkScanResult;
 import com.android.internal.telephony.IBooleanConsumer;
@@ -733,7 +732,7 @@ public class TelephonyManager {
             }
         }
       // Don't reuse any TelephonyManager objects.
-      return GmsCompat.isEnabled() ? new GmcTelephonyManager(mContext, subId) : new TelephonyManager(mContext, subId);
+      return new TelephonyManager(mContext, subId);
     }
 
     /**
@@ -749,7 +748,7 @@ public class TelephonyManager {
         if (!SubscriptionManager.isValidSubscriptionId(subId)) {
             return null;
         }
-        return GmsCompat.isEnabled() ? new GmcTelephonyManager(mContext, subId) : new TelephonyManager(mContext, subId);
+        return new TelephonyManager(mContext, subId);
     }
 
     /** {@hide} */
@@ -6829,6 +6828,12 @@ public class TelephonyManager {
         } catch (RemoteException ex) {
             runOnBackgroundThread(() -> executor.execute(
                     () -> callback.onError(CellInfoCallback.ERROR_MODEM_ERROR, ex)));
+        } catch (SecurityException e) {
+            if (GmsCompat.isEnabled()) {
+                Log.d("GmsCompat", "requestCellInfoUpdate", e);
+                return;
+            }
+            throw e;
         }
     }
 
@@ -6855,6 +6860,12 @@ public class TelephonyManager {
     @RequiresFeature(PackageManager.FEATURE_TELEPHONY_RADIO_ACCESS)
     public void requestCellInfoUpdate(@NonNull WorkSource workSource,
             @NonNull @CallbackExecutor Executor executor, @NonNull CellInfoCallback callback) {
+        if (GmsCompat.isEnabled()) {
+            // passing WorkSource requires the privileged MODIFY_PHONE_STATE permission
+            requestCellInfoUpdate(executor, callback);
+            return;
+        }
+
         try {
             ITelephony telephony = getITelephony();
             if (telephony == null) {
