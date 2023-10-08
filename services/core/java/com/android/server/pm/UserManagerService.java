@@ -1438,7 +1438,7 @@ public class UserManagerService extends IUserManager.Stub {
         synchronized (mPackagesLock) {
             writeUserLP(profileUserData);
         }
-        if (getDevicePolicyManagerInternal().isKeepProfilesRunningEnabled()) {
+        if (false) {
             // New behavior: when quiet mode is enabled, profile user is running, but apps are
             // suspended.
             getPackageManagerInternal().setPackagesSuspendedForQuietMode(userId, enableQuietMode);
@@ -1457,6 +1457,15 @@ public class UserManagerService extends IUserManager.Stub {
                 }
             }
         } else {
+            if (!enableQuietMode) {
+                try {
+                    getPackageManagerInternal().setPackagesSuspendedForQuietMode(userId, false);
+                    setAppOpsRestrictedForQuietMode(userId, false);
+                } catch (Exception e) {
+                    Slog.d("UserManager", "", e);
+                }
+            }
+
             // Old behavior: when quiet is enabled, profile user is stopped.
             // Old quiet mode behavior: profile user is stopped.
             // TODO(b/265683382) Remove once rollout complete.
