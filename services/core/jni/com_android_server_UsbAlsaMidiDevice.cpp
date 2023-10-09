@@ -138,7 +138,7 @@ static void android_server_UsbAlsaMidiDevice_close(JNIEnv *env, jobject thiz, jo
     }
 }
 
-static JNINativeMethod method_table[] = {
+static const JNINativeMethod method_table[] = {
         {"nativeOpen", "(IIII)[Ljava/io/FileDescriptor;",
          (void *)android_server_UsbAlsaMidiDevice_open},
         {"nativeClose", "([Ljava/io/FileDescriptor;)V",
