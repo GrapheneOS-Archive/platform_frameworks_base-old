@@ -69,7 +69,7 @@ static void NativeAllocationRegistry_Delegate_nativeApplyFreeFunction(JNIEnv*, j
     nativeFreeFunction(nativePtr);
 }
 
-static JNINativeMethod gMethods[] = {
+static const JNINativeMethod gMethods[] = {
         NATIVE_METHOD(NativeAllocationRegistry_Delegate, nativeApplyFreeFunction, "(JJ)V"),
 };
 
