@@ -381,7 +381,7 @@ static bool nativeWriteStylusButtonEvent(JNIEnv* env, jobject thiz, jlong ptr, j
                                            std::chrono::nanoseconds(eventTimeNanos));
 }
 
-static JNINativeMethod methods[] = {
+static const JNINativeMethod methods[] = {
         {"nativeOpenUinputDpad", "(Ljava/lang/String;IILjava/lang/String;)J",
          (void*)nativeOpenUinputDpad},
         {"nativeOpenUinputKeyboard", "(Ljava/lang/String;IILjava/lang/String;)J",
