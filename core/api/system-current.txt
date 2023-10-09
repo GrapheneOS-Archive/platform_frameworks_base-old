@@ -2062,6 +2062,7 @@ package android.app.compat.gms {
   public final class GmsCompat {
     method public static boolean hasPermission(@NonNull String);
     method public static boolean isEnabled();
+    method public static boolean isGmsApp(@NonNull android.content.pm.ApplicationInfo);
     method public static boolean isGmsApp(@NonNull String, int);
   }
 

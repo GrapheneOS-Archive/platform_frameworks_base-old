@@ -191,8 +191,7 @@ public final class GmsCompat {
         return validCert;
     }
 
-    /** @hide */
-    public static boolean isGmsApp(ApplicationInfo app) {
+    public static boolean isGmsApp(@NonNull ApplicationInfo app) {
         return isGmsApp(app.packageName, UserHandle.getUserId(app.uid));
     }
 
