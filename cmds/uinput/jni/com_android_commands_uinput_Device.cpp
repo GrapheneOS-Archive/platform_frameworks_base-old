@@ -325,7 +325,7 @@ static jint getEvdevInputPropByLabel(JNIEnv* env, jclass /* clazz */, jstring ra
     return InputEventLookup::getLinuxEvdevInputPropByLabel(label.c_str()).value_or(-1);
 }
 
-static JNINativeMethod sMethods[] = {
+static const JNINativeMethod sMethods[] = {
         {"nativeOpenUinputDevice",
          "(Ljava/lang/String;IIIIIILjava/lang/String;"
          "Lcom/android/commands/uinput/Device$DeviceCallback;)J",
