@@ -1,5 +1,6 @@
 package com.android.server.ext;
 
+import android.Manifest;
 import android.annotation.Nullable;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
@@ -41,7 +42,7 @@ class BluetoothAutoOff extends DelayedConditionalAction {
         f.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
         f.addAction(BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED);
 
-        sse.registerReceiver(new BroadcastReceiver() {
+        sse.context.registerReceiverForAllUsers(new BroadcastReceiver() {
             @Override
             public void onReceive(Context broadcastContext, Intent intent) {
                 if (Build.isDebuggable()) {
@@ -49,7 +50,7 @@ class BluetoothAutoOff extends DelayedConditionalAction {
                 }
                 update();
             }
-        }, f, handler);
+        }, f, null, handler, Context.RECEIVER_NOT_EXPORTED);
     }
 
     private boolean isAdapterOnAndDisconnected() {
