@@ -1114,7 +1114,7 @@ static jobjectArray Image_createSurfacePlanes(JNIEnv* env, jobject thiz,
 
 // ----------------------------------------------------------------------------
 
-static JNINativeMethod gImageWriterMethods[] = {
+static const JNINativeMethod gImageWriterMethods[] = {
     {"nativeClassInit",         "()V",                        (void*)ImageWriter_classInit },
     {"nativeInit",              "(Ljava/lang/Object;Landroid/view/Surface;IIIZIIJ)J",
                                                               (void*)ImageWriter_init },
@@ -1131,7 +1131,7 @@ static JNINativeMethod gImageWriterMethods[] = {
     {"cancelImage",             "(JLandroid/media/Image;)V",   (void*)ImageWriter_cancelImage },
 };
 
-static JNINativeMethod gImageMethods[] = {
+static const JNINativeMethod gImageMethods[] = {
     {"nativeCreatePlanes",      "(II)[Landroid/media/ImageWriter$WriterSurfaceImage$SurfacePlane;",
                                                                (void*)Image_createSurfacePlanes },
     {"nativeGetWidth",          "()I",                         (void*)Image_getWidth },
