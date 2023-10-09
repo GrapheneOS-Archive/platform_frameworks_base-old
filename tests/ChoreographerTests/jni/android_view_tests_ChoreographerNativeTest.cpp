@@ -151,7 +151,7 @@ static void android_view_ChoreographerNativeTest_testPostVsyncCallbackAtFrameRat
     endTest(env, clazz);
 }
 
-static JNINativeMethod gMethods[] = {
+static const JNINativeMethod gMethods[] = {
         {"nativeSurfaceControl_getChoreographer", "(Landroid/view/SurfaceControl;)J",
          (void*)SurfaceControl_getChoreographer},
         {"nativeTestPostVsyncCallbackAtFrameRate", "(JF)V",
