@@ -2660,12 +2660,13 @@ public class UserManagerService extends IUserManager.Stub {
     public void setDefaultGuestRestrictions(Bundle restrictions) {
         checkManageUsersPermission("setDefaultGuestRestrictions");
         synchronized (mGuestRestrictions) {
+            final Bundle newRestrictions = BundleUtils.clone(restrictions);
             mGuestRestrictions.clear();
-            mGuestRestrictions.putAll(restrictions);
+            mGuestRestrictions.putAll(newRestrictions);
             final List<UserInfo> guests = getGuestUsers();
             for (int i = 0; i < guests.size(); i++) {
                 synchronized (mRestrictionsLock) {
-                    updateUserRestrictionsInternalLR(mGuestRestrictions, guests.get(i).id);
+                    updateUserRestrictionsInternalLR(newRestrictions, guests.get(i).id);
                 }
             }
         }
