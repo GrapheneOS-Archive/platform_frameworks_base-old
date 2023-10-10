@@ -2665,7 +2665,7 @@ public class UserManagerService extends IUserManager.Stub {
             final List<UserInfo> guests = getGuestUsers();
             for (int i = 0; i < guests.size(); i++) {
                 synchronized (mRestrictionsLock) {
-                    updateUserRestrictionsInternalLR(mGuestRestrictions, guests.get(i).id);
+                    updateUserRestrictionsInternalLR(restrictions, guests.get(i).id);
                 }
             }
         }
