@@ -33,7 +33,7 @@ public class PendingActionReceiver extends BroadcastReceiver {
             if (intentAction == null) {
                 intentAction = PendingActionReceiver.class.getName() + '.' + idSrc.getAndIncrement();
                 var filter = new IntentFilter(intentAction);
-                sse.registerReceiver(this, filter, handler);
+                sse.context.registerReceiver(this, filter, null, handler, Context.RECEIVER_NOT_EXPORTED);
             }
         }
 
