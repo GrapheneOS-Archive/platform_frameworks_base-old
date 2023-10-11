@@ -51,7 +51,7 @@ class WifiAutoOff extends DelayedConditionalAction {
         // to be higher level than that, eg VPN over Wi-Fi isn't considered to be a Wi-Fi connection
         // by ConnectivityManager
 
-        sse.registerReceiver(new BroadcastReceiver() {
+        sse.context.registerReceiver(new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
                 if (Build.isDebuggable()) {
@@ -59,6 +59,6 @@ class WifiAutoOff extends DelayedConditionalAction {
                 }
                 update();
             }
-        }, f, handler);
+        }, f, null, handler);
     }
 }
