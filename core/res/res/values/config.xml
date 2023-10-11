@@ -5958,7 +5958,7 @@
     <bool name="config_earcFeatureDisabled_default">false</bool>
 
     <!-- Whether app hibernation deletes OAT artifact files as part of global hibernation. -->
-    <bool name="config_hibernationDeletesOatArtifactsEnabled">true</bool>
+    <bool name="config_hibernationDeletesOatArtifactsEnabled">false</bool>
 
     <!-- Package name of the on-device intelligent processor for system UI
          features. Examples include the search functionality or the app
