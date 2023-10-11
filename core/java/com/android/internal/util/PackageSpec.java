@@ -23,6 +23,22 @@ public class PackageSpec {
         this(packageName, minVersionCode, decodeHexStrings(validCertificatesSha256, 64));
     }
 
+    public interface Validator {
+        boolean validatePackageSpec(PackageSpec s);
+    }
+
+    public static PackageSpec.Validator getValidator(PackageManager pm) {
+        return (PackageSpec spec) -> spec.validate(pm, 0L);
+    }
+
+    public boolean validate(String packageName, Validator validator) {
+        if (!this.packageName.equals(packageName)) {
+            return false;
+        }
+
+        return validator.validatePackageSpec(this);
+    }
+
     public boolean validate(PackageManager pm, String packageName, long flags) {
         if (!this.packageName.equals(packageName)) {
             return false;
