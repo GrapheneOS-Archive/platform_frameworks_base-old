@@ -28,7 +28,7 @@ public class GoogleEuiccLpaDisabler extends BroadcastReceiver {
             f.addDataSchemeSpecificPart(pkg, PatternMatcher.PATTERN_LITERAL);
         }
 
-        sse.registerReceiver(this, f, sse.bgHandler);
+        sse.context.registerReceiver(this, f, null, sse.bgHandler);
     }
 
     @Override
