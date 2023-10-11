@@ -67,8 +67,4 @@ public final class SystemServerExt {
             new BluetoothAutoOff(this);
         }
     }
-
-    public void registerReceiver(BroadcastReceiver receiver, IntentFilter filter, Handler handler) {
-        context.registerReceiver(receiver, filter, null, handler, Context.RECEIVER_NOT_EXPORTED);
-    }
 }
