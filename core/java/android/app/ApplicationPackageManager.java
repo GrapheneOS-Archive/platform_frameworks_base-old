@@ -1685,12 +1685,17 @@ public class ApplicationPackageManager extends PackageManager {
     @Override
     public ProviderInfo resolveContentProviderAsUser(String name, ComponentInfoFlags flags,
             int userId) {
+        ProviderInfo res;
         try {
-            return mPM.resolveContentProvider(name,
+            res = mPM.resolveContentProvider(name,
                     updateFlagsForComponent(flags.getValue(), userId, null), userId);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
+        if (res != null && res.applicationInfo != null && "com.google.android.gms.chimera".equals(name)) {
+            GmcPackageManager.maybeAdjustApplicationInfo(res.applicationInfo);
+        }
+        return res;
     }
 
     @Override
