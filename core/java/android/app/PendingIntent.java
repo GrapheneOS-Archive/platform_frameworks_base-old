@@ -1065,8 +1065,9 @@ public final class PendingIntent implements Parcelable {
             }
         }
 
-        if (GmsCompat.isClientOfGmsCore()) {
-            if (isActivity() && GmsInfo.PACKAGE_GMS_CORE.equals(getCreatorPackage())) {
+        if (isActivity()) {
+            String pkg = getCreatorPackage();
+            if (pkg != null && GmsCompat.isGmsAppAndUnprivilegedProcess(pkg)) {
                 options = GmcActivityUtils.allowActivityLaunchFromPendingIntent(options);
             }
         }
