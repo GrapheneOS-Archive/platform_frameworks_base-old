@@ -6008,8 +6008,9 @@ public class Activity extends ContextThemeWrapper
             @Nullable Bundle options)
             throws IntentSender.SendIntentException {
         try {
-            if (intent != null && GmsCompat.isClientOfGmsCore()) {
-                if (GmsInfo.PACKAGE_GMS_CORE.equals(intent.getCreatorPackage())) {
+            if (intent != null) {
+                String pkg = intent.getCreatorPackage();
+                if (pkg != null && GmsCompat.isGmsAppAndUnprivilegedProcess(pkg)) {
                     options = GmcActivityUtils.allowActivityLaunchFromPendingIntent(options);
                 }
             }

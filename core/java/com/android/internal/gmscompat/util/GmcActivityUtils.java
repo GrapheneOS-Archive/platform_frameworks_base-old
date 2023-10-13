@@ -101,8 +101,7 @@ public class GmcActivityUtils implements Application.ActivityLifecycleCallbacks 
         }
     }
 
-    // called in clients of GmsCore to allow launching activity PendingIntent that GmsCore returns
-    // in some cases (e.g. FIDO2 UI)
+    // See https://developer.android.com/about/versions/14/behavior-changes-14#background-activity-restrictions
     public static Bundle allowActivityLaunchFromPendingIntent(@Nullable Bundle orig) {
         var ao = orig != null ? ActivityOptions.fromBundle(orig) : ActivityOptions.makeBasic();
         ao.setPendingIntentBackgroundActivityStartMode(ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED);
