@@ -562,11 +562,7 @@ public class TelephonyManager {
         // getting the op package name. As a workaround we do a best
         // effort and get the context from the current activity thread.
         if (mContext != null) {
-            String res = mContext.getOpPackageName();
-            if (res == null && GmsCompat.isEnabled()) {
-                res = mContext.getPackageName();
-            }
-            return res;
+            return mContext.getOpPackageName();
         } else {
             ITelephony telephony = getITelephony();
             if (telephony == null) return null;
