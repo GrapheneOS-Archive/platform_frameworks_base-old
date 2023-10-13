@@ -2143,10 +2143,15 @@ class ContextImpl extends Context {
             flags &= ~BIND_ALLOW_BACKGROUND_ACTIVITY_STARTS;
         }
 
-        ComponentName cn = service.getComponent();
-        boolean isGmsCoreIntent = GmsInfo.PACKAGE_GMS_CORE.equals(service.getPackage())
-            || (cn != null && GmsInfo.PACKAGE_GMS_CORE.equals(cn.getPackageName()));
-        if (isGmsCoreIntent && GmsCompat.isClientOfGmsCore()) {
+        String pkg = service.getPackage();
+        if (pkg == null) {
+            ComponentName cn = service.getComponent();
+            if (cn != null) {
+                pkg = cn.getPackageName();
+            }
+        }
+
+        if (pkg != null && GmsCompat.isGmsAppAndUnprivilegedProcess(pkg)) {
             flags |= BIND_ALLOW_ACTIVITY_STARTS;
         }
 

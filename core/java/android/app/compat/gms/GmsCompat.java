@@ -19,6 +19,8 @@ package android.app.compat.gms;
 import android.annotation.NonNull;
 import android.annotation.SystemApi;
 import android.app.ActivityThread;
+import android.app.AppGlobals;
+import android.app.Application;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.IPackageManager;
@@ -214,6 +216,22 @@ public final class GmsCompat {
         return false;
     }
 
+    /** @hide */
+    public static boolean isGmsAppAndUnprivilegedProcess(@NonNull String packageName) {
+        if (!isGmsApp(packageName, UserHandle.USER_CURRENT)) {
+            return false;
+        }
+        Application a = AppGlobals.getInitialApplication();
+        if (a == null) {
+            return false;
+        }
+        ApplicationInfo ai = a.getApplicationInfo();
+        if (ai == null) {
+            return false;
+        }
+        return !ai.isPrivilegedApp();
+    }
+
     public static boolean isGmsApp(@NonNull String packageName, int userId) {
         return isGmsApp(packageName, userId, false);
     }
@@ -228,6 +246,10 @@ public final class GmsCompat {
 
         if (!isGmsPackageName(packageName)) {
             return false;
+        }
+
+        if (userId == UserHandle.USER_CURRENT) {
+            userId = UserHandle.myUserId();
         }
 
         IPackageManager pm = ActivityThread.getPackageManager();
