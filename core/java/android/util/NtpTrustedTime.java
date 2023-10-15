@@ -288,6 +288,13 @@ public abstract class NtpTrustedTime implements TrustedTime {
     public boolean forceRefresh(@NonNull Network network) {
         Objects.requireNonNull(network);
 
+        final ContentResolver resolver = getContext().getContentResolver();
+
+        if (Settings.Global.getInt(resolver, Settings.Global.AUTO_TIME, 1) == 0) {
+            Log.d(TAG, "forceRefresh: nitzTimeUpdate disabled bailing early");
+            return false;
+        }
+
         synchronized (this) {
             return forceRefreshLocked(network);
         }
