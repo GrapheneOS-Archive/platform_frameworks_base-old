@@ -130,7 +130,10 @@ public class InstallStart extends Activity {
             mAbortInstall = true;
         }
 
-        checkDevicePolicyRestriction();
+        checkIfAllowedToInstall();
+        if (!isTrustedSource) {
+            checkIfAllowedToInstallUnknownSources();
+        }
 
         final String installerPackageNameFromIntent = getIntent().getStringExtra(
                 Intent.EXTRA_INSTALLER_PACKAGE_NAME);
@@ -284,7 +287,7 @@ public class InstallStart extends Activity {
         return (originatingUid == Process.ROOT_UID) || (originatingUid == installerUid);
     }
 
-    private void checkDevicePolicyRestriction() {
+    private void checkIfAllowedToInstall() {
         // Check for install apps user restriction first.
         final int installAppsRestrictionSource = mUserManager.getUserRestrictionSource(
                 UserManager.DISALLOW_INSTALL_APPS, Process.myUserHandle());
@@ -302,7 +305,9 @@ public class InstallStart extends Activity {
             startActivity(new Intent(Settings.ACTION_SHOW_ADMIN_SUPPORT_DETAILS));
             return;
         }
+    }
 
+    private void checkIfAllowedToInstallUnknownSources() {
         final int unknownSourcesRestrictionSource = mUserManager.getUserRestrictionSource(
                 UserManager.DISALLOW_INSTALL_UNKNOWN_SOURCES, Process.myUserHandle());
         final int unknownSourcesGlobalRestrictionSource = mUserManager.getUserRestrictionSource(
