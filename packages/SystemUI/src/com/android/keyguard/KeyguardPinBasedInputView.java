@@ -183,6 +183,8 @@ public abstract class KeyguardPinBasedInputView extends KeyguardAbsKeyInputView 
         mPasswordEntry.requestFocus();
         super.onFinishInflate();
         reloadColors();
+
+        updateScrambling();
     }
 
     NumPadKey[] getButtons() {

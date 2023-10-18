@@ -153,10 +153,4 @@ public abstract class KeyguardPinBasedInputViewController<T extends KeyguardPinB
     protected int getInitialMessageResId() {
         return R.string.keyguard_enter_your_pin;
     }
-
-    @Override
-    public void startAppearAnimation() {
-        super.startAppearAnimation();
-        mView.updateScrambling();
-    }
 }
