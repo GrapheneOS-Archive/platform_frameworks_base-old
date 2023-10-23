@@ -7,12 +7,11 @@ import android.content.Intent;
 
 public class SseUtils {
 
-    public static Notification.Action notifAction(Intent broadcastIntent, int textRes) {
-        return notifActionBuilder(broadcastIntent, textRes).build();
+    public static Notification.Action notifAction(Context ctx, Intent broadcastIntent, int textRes) {
+        return notifActionBuilder(ctx, broadcastIntent, textRes).build();
     }
 
-    public static Notification.Action.Builder notifActionBuilder(Intent broadcastIntent, int textRes) {
-        var ctx = SystemServerExt.get().context;
+    public static Notification.Action.Builder notifActionBuilder(Context ctx, Intent broadcastIntent, int textRes) {
         var pi = PendingIntent.getBroadcast(ctx, 0, broadcastIntent, PendingIntent.FLAG_IMMUTABLE);
         return new Notification.Action.Builder(null, ctx.getText(textRes), pi);
     }
