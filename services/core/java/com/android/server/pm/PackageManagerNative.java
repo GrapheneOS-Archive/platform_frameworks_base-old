@@ -202,6 +202,6 @@ final class PackageManagerNative extends IPackageManagerNative.Stub {
         }
 
         com.android.server.ext.MissingSpecialRuntimePermissionNotification
-                .maybeShow(permissionName, uid, packageName);
+                .maybeShow(mPm.getContext(), permissionName, uid, packageName);
     }
 }
