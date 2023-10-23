@@ -9,15 +9,18 @@ import android.Manifest;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManagerInternal;
+import android.os.Bundle;
 import android.os.Process;
 import android.os.SystemClock;
 import android.os.UserHandle;
 import android.permission.PermissionManager;
 import android.util.ArrayMap;
+import android.util.Slog;
 import android.util.SparseLongArray;
 
 import com.android.internal.R;
@@ -27,14 +30,14 @@ import com.android.server.LocalServices;
 
 import java.util.UUID;
 
-import static com.android.server.ext.SseUtils.notifAction;
+import static com.android.server.ext.SseUtils.addNotifAction;
 
 public class MissingSpecialRuntimePermissionNotification {
     private static final String TAG = "SrPermissionNotif";
 
     private static final ArrayMap<String, SparseLongArray> lastShownTracker = new ArrayMap<>();
 
-    public static void maybeShow(String permissionName, int uid, String packageName) {
+    public static void maybeShow(Context ctx, String permissionName, int uid, String packageName) {
         final long timestamp = SystemClock.uptimeMillis();
 
         synchronized (lastShownTracker) {
@@ -54,11 +57,16 @@ public class MissingSpecialRuntimePermissionNotification {
             }
         }
 
-        var ctx = SystemServerExt.get().context;
-
         final UserHandle user = UserHandle.of(UserHandle.getUserId(uid));
 
         var permManager = ctx.getSystemService(PermissionManager.class);
+
+        if (permManager == null) {
+            // might happen during bootup
+            Slog.e(TAG, "PermissionManager is null");
+            return;
+        }
+
         final int permFlags = permManager.getPermissionFlags(packageName, permissionName, user);
 
         if ((permFlags & PackageManager.FLAG_PERMISSION_USER_SET) != 0) {
@@ -66,7 +74,7 @@ public class MissingSpecialRuntimePermissionNotification {
         }
 
         var nb = new Notification.Builder(ctx, SystemNotificationChannels.MISSING_PERMISSION);
-        nb.setSmallIcon(com.android.internal.R.drawable.stat_sys_warning);
+        nb.setSmallIcon(R.drawable.stat_sys_warning);
 
         CharSequence appLabel;
         {
@@ -78,7 +86,7 @@ public class MissingSpecialRuntimePermissionNotification {
 
         nb.setContentText(ctx.getString(notifTextForPermission(permissionName)));
         {
-            var intent = ctx.getPackageManager().buildRequestPermissionsIntent(new String[] { permissionName });
+            Intent intent = ctx.getPackageManager().buildRequestPermissionsIntent(new String[] { permissionName });
             intent.setAction(PackageManager.ACTION_REQUEST_PERMISSIONS_FOR_OTHER);
             intent.putExtra(Intent.EXTRA_PACKAGE_NAME, packageName);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -89,32 +97,42 @@ public class MissingSpecialRuntimePermissionNotification {
             nb.setContentIntent(pi);
         }
         nb.setAutoCancel(true);
-        {
-            var i = doNotShowAgainReceiver.getIntentTemplate();
-            i.putExtra(Intent.EXTRA_PACKAGE_NAME, packageName);
-            i.putExtra(Intent.EXTRA_PERMISSION_NAME, permissionName);
-            i.putExtra(Intent.EXTRA_USER, user);
-            nb.addAction(notifAction(i, R.string.notification_action_dont_show_again));
+
+        var args = new Bundle();
+        args.putString(Intent.EXTRA_PACKAGE_NAME, packageName);
+        args.putString(Intent.EXTRA_PERMISSION_NAME, permissionName);
+        args.putParcelable(Intent.EXTRA_USER, user);
+
+        PendingIntent dontShowAgainPi = IntentReceiver.getPendingIntent(NotifActionReceiver.class, ctx, args);
+
+        addNotifAction(ctx, dontShowAgainPi, R.string.notification_action_dont_show_again, nb);
+
+        var notifManager = ctx.getSystemService(NotificationManager.class);
+        if (notifManager == null) {
+            // might happen during bootup
+            Slog.e(TAG, "NotificationManager is null");
+            return;
         }
-        ctx.getSystemService(NotificationManager.class)
-            .notifyAsUser(null, notifIdForPermission(permissionName), nb.build(), user);
+
+        notifManager.notifyAsUser(null, notifIdForPermission(permissionName), nb.build(), user);
     }
 
-    private static final PendingActionReceiver doNotShowAgainReceiver = new PendingActionReceiver(intent -> {
-        var packageName = intent.getStringExtra(Intent.EXTRA_PACKAGE_NAME);
-        var permissionName = intent.getStringExtra(Intent.EXTRA_PERMISSION_NAME);
-        var user = intent.getParcelableExtra(Intent.EXTRA_USER, UserHandle.class);
+    static class NotifActionReceiver extends IntentReceiver {
+        @Override
+        public void onReceive(Context ctx, Bundle args) {
+            String packageName = args.getString(Intent.EXTRA_PACKAGE_NAME);
+            String permissionName = args.getString(Intent.EXTRA_PERMISSION_NAME);
+            var user = args.getParcelable(Intent.EXTRA_USER, UserHandle.class);
 
-        var ctx = SystemServerExt.get().context;
+            final int flag = PackageManager.FLAG_PERMISSION_USER_SET;
 
-        final int flag = PackageManager.FLAG_PERMISSION_USER_SET;
+            ctx.getSystemService(PermissionManager.class)
+                    .updatePermissionFlags(packageName, permissionName, flag, flag, user);
 
-        ctx.getSystemService(PermissionManager.class)
-                .updatePermissionFlags(packageName, permissionName, flag, flag, user);
-
-        ctx.getSystemService(NotificationManager.class)
-                .cancelAsUser(null, notifIdForPermission(permissionName), user);
-    });
+            ctx.getSystemService(NotificationManager.class)
+                    .cancelAsUser(null, notifIdForPermission(permissionName), user);
+        }
+    }
 
     private static int notifTextForPermission(String perm) {
         switch (perm) {
