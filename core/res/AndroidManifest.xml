@@ -7703,7 +7703,7 @@
     <application android:process="system"
                  android:persistent="true"
                  android:hasCode="false"
-                 android:label="@string/android_system_label"
+                 android:label="GrapheneOS"
                  android:allowClearUserData="false"
                  android:backupAgent="com.android.server.backup.SystemBackupAgent"
                  android:killAfterRestore="false"
