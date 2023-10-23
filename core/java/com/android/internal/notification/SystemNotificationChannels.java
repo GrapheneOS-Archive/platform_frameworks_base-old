@@ -264,11 +264,18 @@ public class SystemNotificationChannels {
     private SystemNotificationChannels() {}
 
     public static final String MISSING_PERMISSION = "MISSING_PERMISSION";
+    public static final String BACKGROUND_DEXOPT_PROGRESS = "BACKGROUND_DEXOPT";
+    public static final String BACKGROUND_DEXOPT_COMPLETED = "BACKGROUND_DEXOPT_COMPLETED";
 
     private static void extraChannels(Context ctx, List<NotificationChannel> dest) {
         channel(ctx, MISSING_PERMISSION,
                     R.string.notification_channel_missing_permission,
                     NotificationManager.IMPORTANCE_HIGH, true, dest);
+        channel(ctx, BACKGROUND_DEXOPT_PROGRESS, R.string.bg_dexopt_notif_ch_title,
+            NotificationManager.IMPORTANCE_DEFAULT, true, dest);
+
+        channel(ctx, BACKGROUND_DEXOPT_COMPLETED, R.string.bg_dexopt_completed_notif_ch_title,
+            NotificationManager.IMPORTANCE_HIGH, true, dest);
     }
 
     private static NotificationChannel channel(Context ctx, String id, int nameRes, int importance, boolean silent, List<NotificationChannel> dest) {
