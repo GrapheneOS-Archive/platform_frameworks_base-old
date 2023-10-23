@@ -191,4 +191,8 @@ public interface PackageManagerLocal {
     }
 
     void showDexoptProgressBootMessage(int percentage, int current, int total);
+
+    void onBgDexoptProgressUpdate(int percentage, int current, int total);
+
+    void onBgDexoptCompleted(@Nullable Object dexOptResult, long durationMs);
 }
