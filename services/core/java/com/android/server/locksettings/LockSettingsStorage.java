@@ -83,12 +83,16 @@ class LockSettingsStorage {
             COLUMN_KEY, COLUMN_VALUE
     };
 
+    private static final String DURESS_PASSWORD_FILE = "gatekeeper.duress.key";
+    private static final String DURESS_SALT_FILE = "gatekeeper.duresssalt.key";
     private static final String CHILD_PROFILE_LOCK_FILE = "gatekeeper.profile.key";
 
     private static final String REBOOT_ESCROW_FILE = "reboot.escrow.key";
     private static final String REBOOT_ESCROW_SERVER_BLOB_FILE = "reboot.escrow.server.blob.key";
 
     private static final String SYNTHETIC_PASSWORD_DIRECTORY = "spblob/";
+    private static final String DURESS_PASSWORD_DIRECTORY = "dpblob/";
+    private static final String DURESS_PIN_DIRECTORY = "dpinblob/";
 
     private static final String REPAIR_MODE_DIRECTORY = "repair-mode/";
     private static final String REPAIR_MODE_PERSISTENT_FILE = "pst";
@@ -391,6 +395,81 @@ class LockSettingsStorage {
         } else {
             return new File(Environment.getUserSystemDirectory(userId), fileName);
         }
+    }
+
+    @Nullable
+    public byte[] readDuressPinToken() {
+        return readFile(getDuressPinHashFile());
+    }
+
+    @Nullable
+    public byte[] readDuressPasswordToken() {
+        return readFile(getDuressPasswordHashFile());
+    }
+
+    @Nullable
+    public byte[] getDuressPinSalt() {
+        return readFile(getDuressPinSaltFile());
+    }
+
+    @Nullable
+    public byte[] getDuressPasswordSalt() {
+        return readFile(getDuressPasswordSaltFile());
+    }
+
+    public void writeDuressPasswordHash(byte[] data) {
+        writeFile(getDuressPasswordHashFile(), data);
+    }
+
+    public void writeDuressPasswordSalt(byte[] salt) {
+        writeFile(getDuressPasswordSaltFile(), salt);
+    }
+
+    public void writeDuressPinHash(byte[] data) {
+        writeFile(getDuressPinHashFile(), data);
+    }
+
+    public void writeDuressPinSalt(byte[] salt) {
+        writeFile(getDuressPinSaltFile(), salt);
+    }
+
+    public void deleteDuressConfig() {
+        deleteFile(getDuressPinSaltFile());
+        deleteFile(getDuressPinHashFile());
+        deleteFile(getDuressPasswordSaltFile());
+        deleteFile(getDuressPasswordHashFile());
+    }
+
+    private File getDuressPasswordHashFile() {
+        return new File(getDuressPasswordDirectory(), DURESS_PASSWORD_FILE);
+    }
+
+    private File getDuressPasswordSaltFile() {
+        return new File(getDuressPasswordDirectory(), DURESS_SALT_FILE);
+    }
+
+    protected File getDuressPasswordDirectory() {
+        File result = new File(Environment.getDataSystemDeDirectory(UserHandle.USER_SYSTEM), DURESS_PASSWORD_DIRECTORY);
+        if (!result.exists()) {
+            result.mkdirs();
+        }
+        return result;
+    }
+
+    private File getDuressPinHashFile() {
+        return new File(getDuressPinDirectory(), DURESS_PASSWORD_FILE);
+    }
+
+    private File getDuressPinSaltFile() {
+        return new File(getDuressPinDirectory(), DURESS_SALT_FILE);
+    }
+
+    protected File getDuressPinDirectory() {
+        File result = new File(Environment.getDataSystemDeDirectory(UserHandle.USER_SYSTEM), DURESS_PIN_DIRECTORY);
+        if (!result.exists()) {
+            result.mkdirs();
+        }
+        return result;
     }
 
     @VisibleForTesting
