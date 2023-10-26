@@ -94,8 +94,6 @@ public class InstallStart extends Activity {
         if (callingUid == Process.INVALID_UID) {
             Log.e(TAG, "Could not determine the launching uid.");
         }
-        // Uid of the source package, with a preference to uid from ApplicationInfo
-        final int originatingUid = sourceInfo != null ? sourceInfo.uid : callingUid;
 
         if (callingUid == Process.INVALID_UID && sourceInfo == null) {
             mAbortInstall = true;
@@ -103,6 +101,31 @@ public class InstallStart extends Activity {
 
         boolean isDocumentsManager = checkPermission(Manifest.permission.MANAGE_DOCUMENTS,
                 -1, callingUid) == PackageManager.PERMISSION_GRANTED;
+
+        // Uid of the source package, with a preference to uid from ApplicationInfo
+        final int originatingUid;
+        {
+            final int uidFromIntent = intent.getIntExtra(Intent.EXTRA_ORIGINATING_UID, Process.INVALID_UID);
+            if (sourceInfo != null) {
+                originatingUid = sourceInfo.uid;
+            } else if (isSystemDownloadsProvider(callingUid) || isDocumentsManager) {
+                 if (uidFromIntent == Process.INVALID_UID) {
+                     // Set this such that it is always the calling package from Documents Manager app
+                     // or Download Provider app that will be requested with permission to install from unknown sources.
+                     callingPackage = getLaunchedFromPackage();
+                     originatingUid = callingUid;
+                 } else {
+                     originatingUid = intent.getIntExtra(Intent.EXTRA_ORIGINATING_UID, callingUid);
+                 }
+            } else {
+                // Set this such that it is always the calling package explicitly requested for
+                // install permissions, whenever it has sharedUid
+                callingPackage = getLaunchedFromPackage();
+                originatingUid = callingUid;
+            }
+
+        }
+
         boolean isTrustedSource = false;
         if (sourceInfo != null && sourceInfo.isPrivilegedApp()) {
             isTrustedSource = intent.getBooleanExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, false) || (
