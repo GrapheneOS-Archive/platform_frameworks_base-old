@@ -4,9 +4,11 @@ import android.Manifest;
 import android.annotation.Nullable;
 import android.annotation.UserIdInt;
 import android.app.AppBindArgs;
+import android.content.Intent;
 import android.content.pm.GosPackageState;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManagerInternal;
+import android.health.connect.HealthConnectManager;
 import android.location.HookedLocationManager;
 import android.os.Binder;
 import android.os.Build;
@@ -25,8 +27,13 @@ import com.android.server.pm.permission.SpecialRuntimePermUtils;
 import com.android.server.pm.pkg.AndroidPackage;
 import com.android.server.pm.pkg.GosPackageStatePm;
 import com.android.server.pm.pkg.PackageStateInternal;
+import com.android.server.pm.pkg.component.ParsedActivity;
+import com.android.server.pm.pkg.component.ParsedMainComponent;
+import com.android.server.pm.pkg.component.ParsedUsesPermission;
 import com.android.server.pm.pkg.parsing.ParsingPackage;
 import com.android.server.pm.pkg.parsing.ParsingPackageUtils;
+
+import java.util.List;
 
 public class PackageManagerHooks {
 
@@ -67,6 +74,53 @@ public class PackageManagerHooks {
                 pkg.setEnabled(false);
                 return;
             default:
+                if ((flags & ParsingPackageUtils.PARSE_IS_SYSTEM_DIR) != 0) {
+                    return;
+                }
+
+                List<ParsedUsesPermission> usesPermissions = pkg.getUsesPermissions();
+                if (usesPermissions.isEmpty()) {
+                    return;
+                }
+
+                // HealthConnectManager#HEALTH_PERMISSION_PREFIX
+                String healthPermPrefix = "android.permission.health.";
+                String[] healthPermissions = usesPermissions.stream()
+                        .map(ParsedUsesPermission::getName)
+                        .filter(name -> name.startsWith(healthPermPrefix))
+                        .toArray(String[]::new);
+                if (healthPermissions.length == 0) {
+                    return;
+                }
+
+                final List<ParsedActivity> activities = pkg.getActivities();
+                if (activities.isEmpty()) {
+                    return;
+                }
+
+                final boolean shouldRemoveHealthPermission = activities.stream()
+                        .filter(ParsedMainComponent::isExported).noneMatch(
+                        a -> a.getIntents().stream().anyMatch(i -> {
+                            var filter = i.getIntentFilter();
+                            return filter.hasCategory(HealthConnectManager.CATEGORY_HEALTH_PERMISSIONS)
+                                    && filter.matchAction(Intent.ACTION_VIEW_PERMISSION_USAGE);
+                        })
+                );
+
+                if (!shouldRemoveHealthPermission) {
+                    return;
+                }
+
+                Slog.e("PackageManager", "Removing health connect permissions for " + pkgName + "."
+                        + " Apps requesting these permissions in Android 14 are required to declare an activity alias"
+                        + " with intent filters of action \"android.intent.action.VIEW_PERMISSION_USAGE\""
+                        + " and category \"android.intent.category.HEALTH_PERMISSIONS\","
+                        + " linking its rationale and privacy policy for requesting health connect permissions."
+                        + " Refer to the following documentations for details: \n"
+                        + "https://developer.android.com/health-and-fitness/guides/health-connect/develop/get-started#show-privacy-policy" + "\n"
+                        + "https://developer.android.com/reference/android/health/connect/HealthPermissions");
+
+                removeUsesPermissions(pkg, healthPermissions);
                 return;
         }
     }
