@@ -26,6 +26,7 @@ import com.android.server.pm.pkg.AndroidPackage;
 import com.android.server.pm.pkg.GosPackageStatePm;
 import com.android.server.pm.pkg.PackageStateInternal;
 import com.android.server.pm.pkg.parsing.ParsingPackage;
+import com.android.server.pm.pkg.parsing.ParsingPackageUtils;
 
 public class PackageManagerHooks {
 
@@ -51,7 +52,7 @@ public class PackageManagerHooks {
     }
 
     // Called when package parsing is completed
-    public static void amendParsedPackage(ParsingPackage pkg) {
+    public static void amendParsedPackage(ParsingPackage pkg, @ParsingPackageUtils.ParseFlags int flags) {
         String pkgName = pkg.getPackageName();
 
         switch (pkgName) {

@@ -2191,7 +2191,7 @@ public class ParsingPackageUtils {
             pkg.addActivity(a.getResult());
         }
 
-        PackageManagerHooks.amendParsedPackage(pkg);
+        PackageManagerHooks.amendParsedPackage(pkg, flags);
         GmsSysServerHooks.amendParsedPackage(pkg);
 
         if (hasActivityOrder) {
