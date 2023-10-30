@@ -116,7 +116,13 @@ public class BgDexoptUi {
             if (psi == null || psi.isSystem()) {
                 continue;
             }
-            set.add(r.getPackageName());
+            for (DexoptResult.DexContainerFileDexoptResult cr : r.getDexContainerFileDexoptResults()) {
+                Slog.d(TAG, cr.toString());
+                if (cr.getDexContainerFile().endsWith("base.apk") && cr.getStatus() == DexoptResult.DEXOPT_PERFORMED) {
+                    set.add(r.getPackageName());
+                    break;
+                }
+            }
         }
 
         return set;
