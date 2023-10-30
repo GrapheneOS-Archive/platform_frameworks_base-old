@@ -17,6 +17,7 @@
 package com.android.server.pm.local;
 
 import android.annotation.CallSuper;
+import android.annotation.ElapsedRealtimeLong;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.UserIdInt;
@@ -237,8 +238,8 @@ public class PackageManagerLocalImpl implements PackageManagerLocal {
     }
 
     @Override
-    public void onBgDexoptProgressUpdate(int percentage, int current, int total) {
-        BgDexoptUi.onBgDexoptProgressUpdate(mService, percentage, current, total);
+    public void onBgDexoptProgressUpdate(@ElapsedRealtimeLong long start, int percentage, int current, int total) {
+        BgDexoptUi.onBgDexoptProgressUpdate(mService, start, percentage, current, total);
     }
 
     @Override

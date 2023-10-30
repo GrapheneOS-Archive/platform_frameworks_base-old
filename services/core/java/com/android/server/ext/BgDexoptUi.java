@@ -1,5 +1,6 @@
 package com.android.server.ext;
 
+import android.annotation.ElapsedRealtimeLong;
 import android.annotation.Nullable;
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningAppProcessInfo;
@@ -9,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManagerInternal;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.text.format.DateUtils;
 import android.util.Slog;
 
@@ -31,7 +33,14 @@ public class BgDexoptUi {
 
     private static final int NOTIF_ID = SystemMessageProto.SystemMessage.NOTE_BACKGROUND_DEXOPT;
 
-    public static void onBgDexoptProgressUpdate(PackageManagerService pm, int percentage, int current, int total) {
+    public static void onBgDexoptProgressUpdate(PackageManagerService pm, @ElapsedRealtimeLong long start,
+                                                int percentage, int current, int total) {
+        long elapsedMs = SystemClock.elapsedRealtime() - start;
+        if (elapsedMs < 15_000) {
+            Slog.d(TAG, "skipping progress update, elapsed time since start: " + elapsedMs + " ms");
+            return;
+        }
+
         Context ctx = pm.getContext();
 
         var b = new Notification.Builder(ctx, SystemNotificationChannels.BACKGROUND_DEXOPT_PROGRESS);
