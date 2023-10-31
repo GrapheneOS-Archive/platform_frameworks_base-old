@@ -24,6 +24,7 @@ import android.annotation.SystemApi;
 import android.os.Binder;
 import android.os.UserHandle;
 
+import com.android.server.pm.pkg.AndroidPackage;
 import com.android.server.pm.pkg.PackageState;
 
 import java.io.IOException;
@@ -199,4 +200,9 @@ public interface PackageManagerLocal {
             // com.android.server.art.model.DexoptResult
             @Nullable Object dexOptResult,
             long durationMs);
+
+    @Nullable
+    String maybeOverrideCompilerFilter(@NonNull String origFilter, @NonNull AndroidPackage pkg,
+                                       // com.android.server.art.model.DexoptParams
+                                       @NonNull Object dexoptParams);
 }
