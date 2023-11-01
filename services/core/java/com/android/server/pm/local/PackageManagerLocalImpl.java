@@ -16,6 +16,7 @@
 
 package com.android.server.pm.local;
 
+import android.Manifest;
 import android.annotation.CallSuper;
 import android.annotation.ElapsedRealtimeLong;
 import android.annotation.NonNull;
@@ -28,13 +29,17 @@ import android.os.UserHandle;
 import android.util.ArrayMap;
 import android.util.Slog;
 
+import com.android.internal.net.VpnConfig;
 import com.android.server.art.model.DexoptParams;
 import com.android.server.art.model.DexoptResult;
 import com.android.server.ext.BgDexoptUi;
 import com.android.server.pm.Computer;
 import com.android.server.pm.PackageManagerLocal;
 import com.android.server.pm.PackageManagerService;
+import com.android.server.pm.pkg.AndroidPackage;
 import com.android.server.pm.pkg.PackageState;
+import com.android.server.pm.pkg.component.ParsedIntentInfo;
+import com.android.server.pm.pkg.component.ParsedService;
 import com.android.server.pm.snapshot.PackageDataSnapshot;
 
 import java.io.IOException;
@@ -263,6 +268,26 @@ public class PackageManagerLocalImpl implements PackageManagerLocal {
 
         var dexoptParams = (DexoptParams) dexoptParamsR;
 
+        if (isVpnServiceHost(pkg)) {
+            Slog.d(TAG, pkg.getPackageName() + " is a VPN service host, using " + speedFilter +
+                ", reason: " + dexoptParams.getReason());
+            return speedFilter;
+        }
+
         return null;
+    }
+
+    private static boolean isVpnServiceHost(AndroidPackage pkg) {
+        for (ParsedService s : pkg.getServices()) {
+            if (!Manifest.permission.BIND_VPN_SERVICE.equals(s.getPermission())) {
+                continue;
+            }
+            for (ParsedIntentInfo i : s.getIntents()) {
+                if (i.getIntentFilter().hasAction(VpnConfig.SERVICE_INTERFACE)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
