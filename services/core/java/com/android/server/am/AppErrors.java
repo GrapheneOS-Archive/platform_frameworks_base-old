@@ -1041,7 +1041,9 @@ class AppErrors {
                     crashShowErrorTime = mProcessCrashShowDialogTimes.get(proc.processName,
                             proc.uid);
                 }
-                final boolean showFirstCrash = true;
+                final boolean showFirstCrash = Settings.Global.getInt(
+                        mContext.getContentResolver(),
+                        Settings.Global.SHOW_FIRST_CRASH_DIALOG, 0) != 0;
                 final boolean showFirstCrashDevOption = Settings.Secure.getIntForUser(
                         mContext.getContentResolver(),
                         Settings.Secure.SHOW_FIRST_CRASH_DIALOG_DEV_OPTION,
