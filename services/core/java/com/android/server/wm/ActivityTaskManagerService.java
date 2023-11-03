@@ -1682,7 +1682,6 @@ public class ActivityTaskManagerService extends IActivityTaskManager.Stub {
                     .setActivityOptions(createSafeActivityOptionsWithBalAllowed(bOptions))
                     .setUserId(userId)
                     .setIgnoreTargetSecurity(ignoreTargetSecurity)
-                    .setFilterCallingUid(isResolver ? 0 /* system */ : targetUid)
                     // The target may well be in the background, which would normally prevent it
                     // from starting an activity. Here we definitely want the start to succeed.
                     .setBackgroundStartPrivileges(BackgroundStartPrivileges.ALLOW_BAL)
