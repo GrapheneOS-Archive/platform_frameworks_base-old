@@ -1337,10 +1337,6 @@ public final class Zygote {
 
         // Take into account the hardware capabilities.
         if (nativeSupportsMemoryTagging()) {
-            if (info.isSystemApp()) {
-                level = MEMORY_TAG_LEVEL_ASYNC;
-            }
-
             // MTE devices can not do TBI, because the Zygote process already has live MTE
             // allocations. Downgrade TBI to NONE.
             if (level == MEMORY_TAG_LEVEL_TBI) {
