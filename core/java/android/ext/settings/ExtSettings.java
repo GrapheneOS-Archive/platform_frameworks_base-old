@@ -158,6 +158,10 @@ public class ExtSettings {
             Setting.Scope.GLOBAL, "restrict_webview_dyn_code_exec",
             defaultBool(R.bool.setting_default_restrict_webview_dyn_code_exec));
 
+    public static final BoolSetting FORCE_APP_MEMTAG_BY_DEFAULT = new BoolSetting(
+            Setting.Scope.GLOBAL, "force_app_memtag",
+            defaultBool(R.bool.setting_default_force_app_memtag));
+
     private ExtSettings() {}
 
     // used for making settings defined in this class unreadable by third-party apps
