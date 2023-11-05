@@ -1337,7 +1337,7 @@ public final class Zygote {
 
         // Take into account the hardware capabilities.
         if (nativeSupportsMemoryTagging()) {
-            if (info.primaryCpuAbi == null || info.isSystemApp()) {
+            if (info.isSystemApp()) {
                 level = MEMORY_TAG_LEVEL_ASYNC;
             }
 
