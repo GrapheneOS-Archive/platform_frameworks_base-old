@@ -1783,6 +1783,17 @@ static void HandleRuntimeFlags(JNIEnv* env, jint& runtime_flags, const char* pro
     }
     mallopt(M_BIONIC_SET_HEAP_TAGGING_LEVEL, heap_tagging_level);
 
+    const int FORCIBLY_ENABLE_MEMORY_TAGGING = 1 << 28;
+    if (runtime_flags & FORCIBLY_ENABLE_MEMORY_TAGGING) {
+        if (mallopt(M_BIONIC_BLOCK_HEAP_TAGGING_LEVEL_DOWNGRADE, 0) != (int) true) {
+            RuntimeAbort(env, __LINE__, "mallopt(M_BIONIC_BLOCK_HEAP_TAGGING_LEVEL_DOWNGRADE) failed");
+        }
+        if (mallopt(M_BIONIC_SET_IGNORE_NEW_SIGSEGV_HANDLERS, 0) != (int) true) {
+            RuntimeAbort(env, __LINE__, "mallopt(M_BIONIC_SET_IGNORE_NEW_SIGSEGV_HANDLERS) failed");
+        }
+        runtime_flags &= ~FORCIBLY_ENABLE_MEMORY_TAGGING;
+    }
+
     // Now that we've used the flag, clear it so that we don't pass unknown flags to the ART
     // runtime.
     runtime_flags &= ~RuntimeFlags::MEMORY_TAG_LEVEL_MASK;
