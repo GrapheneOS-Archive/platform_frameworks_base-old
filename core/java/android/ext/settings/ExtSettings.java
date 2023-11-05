@@ -84,6 +84,10 @@ public class ExtSettings {
             Setting.Scope.GLOBAL, Settings.Global.RESTRICT_WEBVIEW_DYN_CODE_LOADING_BY_DEFAULT,
             defaultBool(R.bool.setting_default_restrict_webview_dyn_code_loading));
 
+    public static final BoolSetting FORCE_APP_MEMTAG_BY_DEFAULT = new BoolSetting(
+            Setting.Scope.GLOBAL, Settings.Global.FORCE_APP_MEMTAG_BY_DEFAULT,
+            defaultBool(R.bool.setting_default_force_app_memtag));
+
     public static final BoolSetting SHOW_SYSTEM_PROCESS_CRASH_NOTIFICATIONS = new BoolSetting(
             Setting.Scope.GLOBAL, Settings.Global.SHOW_SYSTEM_PROCESS_CRASH_NOTIFICATIONS, false);
 

@@ -12646,6 +12646,9 @@ public final class Settings {
         public static final String RESTRICT_WEBVIEW_DYN_CODE_LOADING_BY_DEFAULT = "restrict_webview_dyn_code_exec";
 
         /** @hide */
+        public static final String FORCE_APP_MEMTAG_BY_DEFAULT = "force_app_memtag";
+
+        /** @hide */
         public static final String SHOW_SYSTEM_PROCESS_CRASH_NOTIFICATIONS = "show_system_process_crash_notifs";
 
         // ExtSettings END
