@@ -88,6 +88,10 @@ public class ExtSettings {
             Setting.Scope.GLOBAL, Settings.Global.RESTRICT_WEBVIEW_DYN_CODE_EXEC_BY_DEFAULT,
             defaultBool(R.bool.setting_default_restrict_webview_dyn_code_exec));
 
+    public static final BoolSetting FORCE_APP_MEMTAG_BY_DEFAULT = new BoolSetting(
+            Setting.Scope.GLOBAL, Settings.Global.FORCE_APP_MEMTAG_BY_DEFAULT,
+            defaultBool(R.bool.setting_default_force_app_memtag));
+
     private ExtSettings() {}
 
     public static Function<Context, Boolean> defaultBool(@BoolRes int res) {
