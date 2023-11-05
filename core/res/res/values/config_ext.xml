@@ -32,4 +32,7 @@
         <item>org.grapheneos.pdfviewer</item>
     </string-array>
     <java-symbol type="array" name="system_pkgs_allowed_webview_dyn_code_exec_by_default" />
+
+    <bool name="setting_default_force_app_memtag">false</bool>
+    <java-symbol type="bool" name="setting_default_force_app_memtag" />
 </resources>
