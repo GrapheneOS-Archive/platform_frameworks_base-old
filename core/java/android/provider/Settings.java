@@ -12652,6 +12652,9 @@ public final class Settings {
         /** @hide */
         public static final String RESTRICT_WEBVIEW_DYN_CODE_EXEC_BY_DEFAULT = "restrict_webview_dyn_code_exec";
 
+        /** @hide */
+        public static final String FORCE_APP_MEMTAG_BY_DEFAULT = "force_app_memtag";
+
         // ExtSettings END
 
         // NOTE: If you add new settings here, be sure to add them to
