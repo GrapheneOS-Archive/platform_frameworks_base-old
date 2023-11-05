@@ -20,12 +20,16 @@ import static android.system.OsConstants.O_CLOEXEC;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.app.AppGlobals;
 import android.compat.annotation.ChangeId;
 import android.compat.annotation.Disabled;
 import android.compat.annotation.EnabledAfter;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.GosPackageState;
 import android.content.pm.ProcessInfo;
+import android.ext.settings.app.AppSwitch;
+import android.ext.settings.app.AswUseMemoryTagging;
 import android.net.Credentials;
 import android.net.LocalServerSocket;
 import android.net.LocalSocket;
@@ -37,6 +41,7 @@ import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.SystemProperties;
 import android.os.Trace;
+import android.os.UserHandle;
 import android.provider.DeviceConfig;
 import android.system.ErrnoException;
 import android.system.Os;
@@ -201,13 +206,14 @@ public final class Zygote {
      */
     public static final int DEBUG_ENABLE_PTRACE = 1 << 25;
 
+    public static final int FORCIBLY_ENABLE_MEMORY_TAGGING = 1 << 28;
     public static final int DISABLE_HARDENED_MALLOC = 1 << 29;
     public static final int ENABLE_COMPAT_VA_39_BIT = 1 << 30;
 
     // make sure to update isSimpleForkCommand() in core/jni/com_android_internal_os_ZygoteCommandBuffer.cpp
     // when adding new flags that depend on exec spawning
     public static final int RUNTIME_FLAGS_DEPENDENT_ON_EXEC_SPAWNING = DISABLE_HARDENED_MALLOC | ENABLE_COMPAT_VA_39_BIT;
-    public static final int CUSTOM_RUNTIME_FLAGS = DISABLE_HARDENED_MALLOC | ENABLE_COMPAT_VA_39_BIT;
+    public static final int CUSTOM_RUNTIME_FLAGS = DISABLE_HARDENED_MALLOC | ENABLE_COMPAT_VA_39_BIT | FORCIBLY_ENABLE_MEMORY_TAGGING;
 
     /** No external storage should be mounted. */
     public static final int MOUNT_EXTERNAL_NONE = IVold.REMOUNT_MODE_NONE;
@@ -1362,6 +1368,36 @@ public final class Zygote {
 
         // Take into account the hardware capabilities.
         if (nativeSupportsMemoryTagging()) {
+            Context ctx = AppGlobals.getInitialApplication();
+            int userId = UserHandle.getUserId(info.uid);
+            GosPackageState ps = GosPackageState.get(info.packageName, userId);
+
+            var si = new AppSwitch.StateInfo();
+            if (AswUseMemoryTagging.I.get(ctx, userId, info, ps, si)) {
+                level = MEMORY_TAG_LEVEL_ASYNC;
+
+                if (!si.isImmutable()) {
+                    level |= FORCIBLY_ENABLE_MEMORY_TAGGING;
+                    // This flag prevents the app from downgrading the heap memory tagging level and
+                    // from intercepting MTE SIGSEGV signal (it's used for crashing the process
+                    // after tag check failure).
+                    //
+                    // It's intended for apps that are not aware of memory tagging and do not attempt
+                    // to actively disable or circumvent it.
+                    //
+                    // Apps might be incompatible with this approach for several reasons (the list
+                    // is not complete):
+                    // - app stores custom data in top pointer byte (it's used for pointer tagging)
+                    // - app relies on a MTE SIGSEGV handler in its bundled runtime
+                    // - app uses a custom memory allocator that ignores current memory tagging level
+                    // - app manually disables tag mismatch checks
+                    //
+                    // '!si.isImmutable()' check ensures that this flag gets enabled only for those
+                    // apps for which memory tagging can be manually disabled, i.e. third-party
+                    // apps with custom native code that haven't opted-in to memory tagging
+                }
+            }
+
             // MTE devices can not do TBI, because the Zygote process already has live MTE
             // allocations. Downgrade TBI to NONE.
             if (level == MEMORY_TAG_LEVEL_TBI) {
@@ -1477,6 +1513,10 @@ public final class Zygote {
         int runtimeFlags =
                 getMemorySafetyRuntimeFlags(
                         info, processInfo, null /*instructionSet*/, platformCompat);
+
+        // Memory tagging can be forcibly enabled only in immediate children of the primary zygote
+        // (which includes secondary zygotes)
+        runtimeFlags &= ~FORCIBLY_ENABLE_MEMORY_TAGGING;
 
         // TBI ("fake" pointer tagging) in AppZygote is controlled by a separate compat feature.
         if ((runtimeFlags & MEMORY_TAG_LEVEL_MASK) == MEMORY_TAG_LEVEL_TBI
