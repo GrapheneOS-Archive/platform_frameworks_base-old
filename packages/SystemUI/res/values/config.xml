@@ -832,8 +832,8 @@
     be unique across all slots specified. The second part is the capacity and must be a positive
     integer; this is how many quick affordance actions that user is allowed to add to the slot. -->
     <string-array name="config_keyguardQuickAffordanceSlots" translatable="false">
-        <item>bottom_start:1</item>
-        <item>bottom_end:1</item>
+        <item>bottom_start:2</item>
+        <item>bottom_end:2</item>
     </string-array>
 
     <!-- A collection of defaults for the quick affordances on the lock screen. Each item must be a
