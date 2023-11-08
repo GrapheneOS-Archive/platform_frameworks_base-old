@@ -261,6 +261,8 @@ public class BootReceiver extends BroadcastReceiver {
         return "isPrevious: true\n" + oldHeaders;
     }
 
+    public static final String KMSG_BOOT_REASON_PREFIX = "Last boot reason: ";
+
     private void logBootEvents(Context ctx) throws IOException {
         final DropBoxManager db = (DropBoxManager) ctx.getSystemService(Context.DROPBOX_SERVICE);
         final String headers = getBootHeadersToLogAndUpdate();
@@ -276,7 +278,7 @@ public class BootReceiver extends BroadcastReceiver {
             lastKmsgFooter = new StringBuilder(512)
                 .append("\n")
                 .append("Boot info:\n")
-                .append("Last boot reason: ").append(bootReason).append("\n")
+                .append(KMSG_BOOT_REASON_PREFIX).append(bootReason).append("\n")
                 .toString();
         }
 

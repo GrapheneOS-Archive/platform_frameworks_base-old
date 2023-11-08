@@ -267,6 +267,7 @@ public class SystemNotificationChannels {
     public static final String BACKGROUND_DEXOPT_PROGRESS = "BACKGROUND_DEXOPT";
     public static final String BACKGROUND_DEXOPT_COMPLETED = "BACKGROUND_DEXOPT_COMPLETED";
     public static final String EXPLOIT_PROTECTION = "EXPLOIT_PROTECTION";
+    public static final String SYSTEM_JOURNAL = "SYSTEM_JOURNAL";
 
     private static void extraChannels(Context ctx, List<NotificationChannel> dest) {
         channel(ctx, MISSING_PERMISSION,
@@ -279,6 +280,9 @@ public class SystemNotificationChannels {
             NotificationManager.IMPORTANCE_HIGH, true, dest);
 
         channel(ctx, EXPLOIT_PROTECTION, R.string.notif_channel_exploit_protection,
+            NotificationManager.IMPORTANCE_HIGH, true, dest);
+
+        channel(ctx, SYSTEM_JOURNAL, R.string.notif_ch_system_journal,
             NotificationManager.IMPORTANCE_HIGH, true, dest);
     }
 
