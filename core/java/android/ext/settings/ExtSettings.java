@@ -92,6 +92,9 @@ public class ExtSettings {
             Setting.Scope.GLOBAL, Settings.Global.FORCE_APP_MEMTAG_BY_DEFAULT,
             defaultBool(R.bool.setting_default_force_app_memtag));
 
+    public static final BoolSetting SHOW_SYSTEM_PROCESS_CRASH_NOTIFICATIONS = new BoolSetting(
+            Setting.Scope.GLOBAL, Settings.Global.SHOW_SYSTEM_PROCESS_CRASH_NOTIFICATIONS, false);
+
     private ExtSettings() {}
 
     public static Function<Context, Boolean> defaultBool(@BoolRes int res) {

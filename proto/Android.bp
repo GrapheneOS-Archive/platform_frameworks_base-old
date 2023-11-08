@@ -15,6 +15,7 @@ java_library_static {
     },
     srcs: [
         "src/**/*.proto",
+        ":libtombstone_proto-src",
         ":app_compat_config_proto-src",
     ],
     sdk_version: "9",
