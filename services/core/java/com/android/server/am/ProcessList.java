@@ -3034,7 +3034,7 @@ public final class ProcessList {
             removeProcessLocked(proc.first, callerWillRestart, allowRestart || proc.second,
                     reasonCode, subReason, reason, !doFreeze /* async */);
         }
-        killAppZygotesLocked(packageName, appId, userId, false /* force */);
+        killAppZygotesLocked(packageName, appId, userId, true /* force */);
         mService.updateOomAdjLocked(OOM_ADJ_REASON_PROCESS_END);
         if (doFreeze) {
             freezePackageCgroup(packageUID, false);
