@@ -31,4 +31,13 @@
     <string name="notif_native_debug_title">%1$s tried to use native code debugging</string>
     <java-symbol type="string" name="notif_native_debug_title" />
 
+    <string name="notif_ch_system_journal">System journal</string>
+    <java-symbol type="string" name="notif_ch_system_journal" />
+
+    <string name="process_crash_notif_title">%1$s has crashed</string>
+    <java-symbol type="string" name="process_crash_notif_title" />
+
+    <string name="fsck_error_notif_title">File system error was detected</string>
+    <java-symbol type="string" name="fsck_error_notif_title" />
+
 </resources>
