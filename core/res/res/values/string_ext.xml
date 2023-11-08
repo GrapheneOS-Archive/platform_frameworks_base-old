@@ -19,4 +19,13 @@
     <string name="bg_dexopt_completed_notif_text">App optimization has completed. Tap to restart apps that were optimized.</string>
     <java-symbol type="string" name="bg_dexopt_completed_notif_text" />
 
+    <string name="notif_channel_exploit_protection">Exploit protection</string>
+    <java-symbol type="string" name="notif_channel_exploit_protection" />
+    <string name="notif_text_tap_to_open_settings">Tap to open settings</string>
+    <java-symbol type="string" name="notif_text_tap_to_open_settings" />
+    <string name="notif_text_tap_to_see_details">Tap to see the details</string>
+    <java-symbol type="string" name="notif_text_tap_to_see_details" />
+    <string name="notif_action_more_info">More info</string>
+    <java-symbol type="string" name="notif_action_more_info" />
+
 </resources>
