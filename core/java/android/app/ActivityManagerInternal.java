@@ -1237,4 +1237,24 @@ public abstract class ActivityManagerInternal {
             boolean isRestore, IPackageDataObserver observer, int userId);
 
     public abstract void onGosPackageStateChanged(int uid, @Nullable GosPackageState state);
+
+    public static class ProcessRecordSnapshot {
+        public final int pid;
+        public final int uid; // process UID, might differ from app UID in appInfo.uid
+        public final int userId;
+        public final String name;
+        public final ApplicationInfo appInfo; // first loaded app in the process
+        public final String[] pkgList;
+
+        public ProcessRecordSnapshot(int pid, int uid, int userId, String name, ApplicationInfo appInfo, String[] pkgList) {
+            this.pid = pid;
+            this.uid = uid;
+            this.userId = userId;
+            this.name = name;
+            this.appInfo = appInfo;
+            this.pkgList = pkgList;
+        }
+    }
+
+    public abstract ProcessRecordSnapshot getProcessRecordByPid(int pid);
 }
