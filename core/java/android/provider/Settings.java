@@ -12648,6 +12648,9 @@ public final class Settings {
         /** @hide */
         public static final String FORCE_APP_MEMTAG_BY_DEFAULT = "force_app_memtag";
 
+        /** @hide */
+        public static final String SHOW_SYSTEM_PROCESS_CRASH_NOTIFICATIONS = "show_system_process_crash_notifs";
+
         // ExtSettings END
 
         // NOTE: If you add new settings here, be sure to add them to
