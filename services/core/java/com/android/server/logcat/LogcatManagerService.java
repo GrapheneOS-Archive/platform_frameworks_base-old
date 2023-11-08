@@ -27,6 +27,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Binder;
 import android.os.Build;
 import android.os.DeadObjectException;
 import android.os.Handler;
@@ -210,6 +211,18 @@ public final class LogcatManagerService extends SystemService {
             }
             final Message msg = mHandler.obtainMessage(MSG_LOG_ACCESS_FINISHED, logAccessRequest);
             mHandler.sendMessageAtTime(msg, mClock.get());
+        }
+
+        @Override
+        public void onNotableMessage(int type, int uid, int pid, byte[] msg) {
+            final long token = Binder.clearCallingIdentity();
+            try {
+                LogdNotableMessage.onNotableMessage(mContext, type, uid, pid, msg);
+            } catch (Throwable t) {
+                Slog.e(TAG, "", t);
+            } finally {
+                Binder.restoreCallingIdentity(token);
+            }
         }
     }
 
