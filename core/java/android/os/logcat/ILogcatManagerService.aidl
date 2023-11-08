@@ -42,4 +42,6 @@ oneway interface ILogcatManagerService {
      * @param fd  The FD (Socket) of client who makes the request.
      */
     void finishThread(in int uid, in int gid, in int pid, in int fd);
+
+    void onNotableMessage(int type, int uid, int pid, in byte[] msg);
 }
