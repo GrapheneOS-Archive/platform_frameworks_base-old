@@ -99,6 +99,7 @@ import android.window.WindowTokenClient;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.gmscompat.sysservice.GmcPackageManager;
 import com.android.internal.gmscompat.GmsHooks;
+import com.android.internal.gmscompat.sysservice.GmcUserManager;
 import com.android.internal.util.Preconditions;
 
 import dalvik.system.BlockGuard;
@@ -1422,6 +1423,10 @@ class ContextImpl extends Context {
 
     @Override
     public void sendBroadcastAsUser(Intent intent, UserHandle user) {
+        if (GmsCompat.isEnabled()) {
+            user = GmcUserManager.translateUserHandle(user);
+        }
+
         String resolvedType = intent.resolveTypeIfNeeded(getContentResolver());
         try {
             intent.prepareToLeaveProcess(this);
@@ -1445,6 +1450,7 @@ class ContextImpl extends Context {
             Bundle options) {
         if (GmsCompat.isEnabled()) {
             options = GmsHooks.filterBroadcastOptions(intent, options);
+            user = GmcUserManager.translateUserHandle(user);
         }
 
         String resolvedType = intent.resolveTypeIfNeeded(getContentResolver());
@@ -1465,6 +1471,10 @@ class ContextImpl extends Context {
     @Override
     public void sendBroadcastAsUser(Intent intent, UserHandle user,
             String receiverPermission, int appOp) {
+        if (GmsCompat.isEnabled()) {
+            user = GmcUserManager.translateUserHandle(user);
+        }
+
         String resolvedType = intent.resolveTypeIfNeeded(getContentResolver());
         String[] receiverPermissions = receiverPermission == null ? null
                 : new String[] {receiverPermission};
@@ -1502,6 +1512,7 @@ class ContextImpl extends Context {
             Handler scheduler, int initialCode, String initialData, Bundle initialExtras) {
         if (GmsCompat.isEnabled()) {
             options = GmsHooks.filterBroadcastOptions(intent, options);
+            user = GmcUserManager.translateUserHandle(user);
         }
 
         IIntentReceiver rd = null;
