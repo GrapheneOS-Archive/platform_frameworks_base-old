@@ -43,9 +43,18 @@ public class GmcUserManager extends UserManager {
     }
 
     private static void checkUserId(int userId) {
-        if (userId != getUserId()) {
+        if (userId != getUserId() && userId != UserHandle.USER_CURRENT) {
             throw new IllegalStateException("unexpected userId " + userId);
         }
+    }
+
+    public static UserHandle translateUserHandle(UserHandle h) {
+        if (UserHandle.ALL.equals(h)) {
+            return UserHandle.of(getUserId());
+        }
+
+        checkUserId(h.getIdentifier());
+        return h;
     }
 
     private static int getUserSerialNumber() {
