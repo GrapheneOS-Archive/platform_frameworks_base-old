@@ -408,6 +408,8 @@ message SystemMessage {
 
     NOTE_APP_EXPLOIT_PROTECTION_BASE = 0xf000000;
     NOTE_APP_EXPLOIT_PROTECTION_MAX =  0xf00ffff;
+    NOTE_SYSTEM_JOURNAL_BASE = 0xf010000;
+    NOTE_SYSTEM_JOURNAL_MAX =  0xf01ffff;
 
     // Notify the user that dialer and sms functionality are unavailable whilst the apps are
     // paused in the work profile.
