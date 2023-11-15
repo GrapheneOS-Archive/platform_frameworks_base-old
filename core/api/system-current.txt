@@ -4732,6 +4732,20 @@ package android.debug {
 
 }
 
+package android.ext {
+
+  public final class KnownSystemPackages {
+    method @NonNull public static android.ext.KnownSystemPackages get(@NonNull android.content.Context);
+    field @NonNull public final String contactsProvider;
+    field @NonNull public final String launcher;
+    field @NonNull public final String mediaProvider;
+    field @NonNull public final String permissionController;
+    field @NonNull public final String settings;
+    field @NonNull public final String systemUi;
+  }
+
+}
+
 package android.graphics.fonts {
 
   public final class FontFamilyUpdateRequest {
