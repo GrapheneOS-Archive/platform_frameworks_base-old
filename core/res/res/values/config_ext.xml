@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <bool name="setting_default_allow_disabling_hardening_via_app_compat_config">true</bool>
+    <java-symbol type="bool" name="setting_default_allow_disabling_hardening_via_app_compat_config" />
+
     <string name="config_first_party_app_source_package_name">app.grapheneos.apps</string>
     <java-symbol type="string" name="config_first_party_app_source_package_name" />
 </resources>
