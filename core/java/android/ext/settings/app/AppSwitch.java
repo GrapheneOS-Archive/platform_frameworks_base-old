@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.GosPackageState;
 import android.content.pm.GosPackageStateBase;
+import android.ext.compat.AppCompatConfig;
+import android.ext.compat.ExtAppCompat;
 
 /** @hide */
 public abstract class AppSwitch {
@@ -142,5 +144,10 @@ public abstract class AppSwitch {
 
     public final void addSuppressNotificationFlag(GosPackageState.Editor ed) {
         ed.addFlags(gosPsFlagSuppressNotif);
+    }
+
+    @Nullable
+    protected static AppCompatConfig getAppCompatConfig(ApplicationInfo appInfo, int userId) {
+        return ExtAppCompat.getAppCompatConfig(appInfo, userId);
     }
 }
