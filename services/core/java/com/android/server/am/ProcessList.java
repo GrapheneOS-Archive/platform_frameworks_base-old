@@ -86,9 +86,6 @@ import android.content.pm.IPackageManager;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManagerInternal;
 import android.content.res.Resources;
-import android.ext.compat.ExtAppCompat;
-import android.ext.compat.PkgHardeningConfig;
-import android.ext.settings.ExtSettings;
 import android.graphics.Point;
 import android.net.LocalSocket;
 import android.net.LocalSocketAddress;
@@ -1957,17 +1954,7 @@ public final class ProcessList {
             runtimeFlags |= Zygote.getMemorySafetyRuntimeFlags(
                     definingAppInfo, app.processInfo, instructionSet, mPlatformCompat);
 
-            Context ctx = mService.mContext;
-
-            boolean doHardeningFlagsCheck = true;
-            PkgHardeningConfig phc = ExtAppCompat.getHardeningConfig(app.info.packageName, ctx.getPackageManager());
-
-            if (phc != null && ExtSettings.ALLOW_AUTOMATIC_PKG_HARDENING_CONFIG.get(ctx)) {
-                runtimeFlags |= phc.zygoteFlags;
-                doHardeningFlagsCheck = false;
-            }
-
-            if (doHardeningFlagsCheck && GosPackageState.eligibleForRelaxHardeningFlag(app.info)) {
+            if (GosPackageState.eligibleForRelaxHardeningFlag(app.info)) {
                 PackageManagerInternal pmi = LocalServices.getService(PackageManagerInternal.class);
 
                 GosPackageStatePm ps = pmi.getGosPackageState(app.info.packageName, userId);
