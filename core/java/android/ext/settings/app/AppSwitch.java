@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.GosPackageState;
 import android.content.pm.GosPackageStateBase;
+import android.ext.settings.AppInfoExt;
+import android.ext.settings.ExtSettings;
 
 /** @hide */
 public abstract class AppSwitch {
@@ -19,6 +21,8 @@ public abstract class AppSwitch {
     // "Don't show again" notification action)
     int gosPsFlagSuppressNotif;
 
+    int compatChangeToDisableHardening = -1;
+
     // immutability reasons
     public static final int IR_UNKNOWN = 0;
     public static final int IR_IS_SYSTEM_APP = 1;
@@ -32,8 +36,8 @@ public abstract class AppSwitch {
     // default value reasons
     public static final int DVR_UNKNOWN = 0;
     public static final int DVR_DEFAULT_SETTING = 1;
-    public static final int DVR_PACKAGE_COMPAT_CONFIG_OPT_IN = 2;
-    public static final int DVR_PACKAGE_COMPAT_CONFIG_OPT_OUT = 3;
+    public static final int DVR_APP_COMPAT_CONFIG_HARDENING_OPT_IN = 2;
+    public static final int DVR_APP_COMPAT_CONFIG_HARDENING_OPT_OUT = 3;
 
     public static class StateInfo {
         // use it only if StateInfo is not needed, it's not thread-safe to read from this variable
@@ -83,8 +87,27 @@ public abstract class AppSwitch {
         return getDefaultValue(ctx, userId, appInfo, ps, StateInfo.PLACEHOLDER);
     }
 
-    public abstract boolean getDefaultValue(Context ctx, int userId, ApplicationInfo appInfo,
-                                            @Nullable GosPackageStateBase ps, StateInfo si);
+    public final boolean getDefaultValue(Context ctx, int userId, ApplicationInfo appInfo,
+                                         @Nullable GosPackageStateBase ps, StateInfo si) {
+        int compatChangeForOff = this.compatChangeToDisableHardening;
+        if (compatChangeForOff >= 0) {
+            AppInfoExt aie = appInfo.ext();
+            if (aie.hasCompatConfig()) {
+                boolean res = !aie.hasCompatChange(compatChangeForOff);
+                if (res || ExtSettings.ALLOW_DISABLING_HARDENING_VIA_APP_COMPAT_CONFIG.get(ctx, userId)) {
+                    si.defaultValueReason = res ?
+                            DVR_APP_COMPAT_CONFIG_HARDENING_OPT_IN : DVR_APP_COMPAT_CONFIG_HARDENING_OPT_OUT;
+                    return res;
+                }
+            }
+        }
+
+        return getDefaultValueInner(ctx, userId, appInfo, ps, si);
+    }
+
+    protected abstract boolean getDefaultValueInner(Context ctx, int userId, ApplicationInfo appInfo,
+                                                    @Nullable GosPackageStateBase ps, StateInfo si);
+
 
     public final boolean get(Context ctx, int userId, ApplicationInfo appInfo,
                              @Nullable GosPackageStateBase ps) {
