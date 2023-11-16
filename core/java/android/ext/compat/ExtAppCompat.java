@@ -14,7 +14,6 @@ public class ExtAppCompat {
     private static final ArrayMap<String, PkgHardeningConfig> PKG_HARDENING_CONFIGS = new ArrayMap<>();
 
     static {
-        addPkgConfig(GoogleCameraUtils.PACKAGE_SPEC, Zygote.DISABLE_HARDENED_MALLOC);
     };
 
     @Nullable
