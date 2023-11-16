@@ -135,6 +135,17 @@ public class ExtSettings {
     public static final BoolSysProperty NATIVE_DEBUGGING = new BoolSysProperty(
             "persist.native_debug", true);
 
+    // AppCompatConfig specifies which hardening features are compatible/incompatible with a
+    // specific app.
+    // This setting controls whether incompatible hardening features would be disabled by default
+    // for that app. In both cases, user will still be able to enable/disable them manually.
+    //
+    // Note that hardening features that are marked as compatible are enabled unconditionally,
+    // regardless of this setting.
+    public static final BoolSetting ALLOW_DISABLING_HARDENING_VIA_APP_COMPAT_CONFIG = new BoolSetting(
+            Setting.Scope.GLOBAL, "allow_automatic_pkg_hardening_config", // historical name
+            defaultBool(R.bool.setting_default_allow_disabling_hardening_via_app_compat_config));
+
     private ExtSettings() {}
 
     // used for making settings defined in this class unreadable by third-party apps
