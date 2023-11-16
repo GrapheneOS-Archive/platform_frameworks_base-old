@@ -1,3 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <bool name="setting_default_allow_disabling_hardening_via_app_compat_config">true</bool>
+    <java-symbol type="bool" name="setting_default_allow_disabling_hardening_via_app_compat_config" />
 </resources>
