@@ -8,8 +8,6 @@ import com.android.internal.os.Zygote;
 import com.android.internal.util.GoogleCameraUtils;
 import com.android.internal.util.PackageSpec;
 
-import java.util.function.Supplier;
-
 /** @hide */
 public class ExtAppCompat {
 
@@ -20,11 +18,10 @@ public class ExtAppCompat {
     };
 
     @Nullable
-    public static PkgHardeningConfig getHardeningConfig(String pkgName,
-                                                        Supplier<PackageSpec.Validator> validator) {
+    public static PkgHardeningConfig getHardeningConfig(String pkgName, PackageManager pm) {
         PkgHardeningConfig c = PKG_HARDENING_CONFIGS.get(pkgName);
 
-        if (c != null && validator.get().validatePackageSpec(c.pkgSpec)) {
+        if (c != null && c.pkgSpec.validate(pm, 0L)) {
             return c;
         }
         return null;
