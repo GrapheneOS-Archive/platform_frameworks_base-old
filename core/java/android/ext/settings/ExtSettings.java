@@ -125,9 +125,6 @@ public class ExtSettings {
     public static final BoolSysProperty NATIVE_DEBUGGING = new BoolSysProperty(
             "persist.native_debug", true);
 
-    public static final BoolSetting ALLOW_AUTOMATIC_PKG_HARDENING_CONFIG = new BoolSetting(
-                Setting.Scope.GLOBAL, "allow_automatic_pkg_hardening_config", true);
-
     private ExtSettings() {}
 
     // used for making settings defined in this class unreadable by third-party apps
