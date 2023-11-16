@@ -143,7 +143,6 @@ import com.android.server.SystemConfig;
 import com.android.server.Watchdog;
 import com.android.server.am.ActivityManagerService.ProcessChangeItem;
 import com.android.server.compat.PlatformCompat;
-import com.android.server.ext.PackageManagerUtils;
 import com.android.server.pm.pkg.AndroidPackage;
 import com.android.server.pm.pkg.GosPackageStatePm;
 import com.android.server.pm.pkg.PackageStateInternal;
@@ -1961,8 +1960,7 @@ public final class ProcessList {
             Context ctx = mService.mContext;
 
             boolean doHardeningFlagsCheck = true;
-            PkgHardeningConfig phc = ExtAppCompat.getHardeningConfig(app.info.packageName,
-                    PackageManagerUtils::getPackageSpecValidator);
+            PkgHardeningConfig phc = ExtAppCompat.getHardeningConfig(app.info.packageName, ctx.getPackageManager());
 
             if (phc != null && ExtSettings.ALLOW_AUTOMATIC_PKG_HARDENING_CONFIG.get(ctx)) {
                 runtimeFlags |= phc.zygoteFlags;
