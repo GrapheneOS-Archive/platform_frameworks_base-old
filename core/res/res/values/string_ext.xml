@@ -28,4 +28,7 @@
     <string name="notif_action_more_info">More info</string>
     <java-symbol type="string" name="notif_action_more_info" />
 
+    <string name="notif_native_debug_title">%1$s tried to use native code debugging</string>
+    <java-symbol type="string" name="notif_native_debug_title" />
+
 </resources>
