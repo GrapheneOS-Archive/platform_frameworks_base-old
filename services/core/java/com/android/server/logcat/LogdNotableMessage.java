@@ -115,6 +115,21 @@ public class LogdNotableMessage {
             return;
         }
 
-        Slog.w(TAG, "unknown flag " + msg);
+        ApplicationInfo appInfo = prs.appInfo;
+
+        if (flagValue == SELinuxFlags.DENY_PROCESS_PTRACE) {
+            if (appInfo.ext().hasCompatChange(AppCompatProtos.SUPPRESS_NATIVE_DEBUGGING_NOTIFICATION)) {
+                Slog.d(TAG, "ptrace notification is disabled by compat change for " + appInfo.packageName);
+                return;
+            }
+
+            var n = AppSwitchNotification.create(ctx, appInfo, SettingsIntents.APP_NATIVE_DEBUGGING);
+            n.titleRes = R.string.notif_native_debug_title;
+            n.gosPsFlagSuppressNotif = GosPackageState.FLAG_BLOCK_NATIVE_DEBUGGING_SUPPRESS_NOTIF;
+            n.maybeShow();
+        }
+        else {
+            Slog.w(TAG, "unknown flag " + msg);
+        }
     }
 }
