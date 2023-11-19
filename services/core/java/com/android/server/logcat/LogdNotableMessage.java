@@ -119,7 +119,11 @@ public class LogdNotableMessage {
         int notifTitleRes;
         int gosPsFlagSuppressNotif;
         String intentAction;
-        if (true) {
+        if (flagValue == SELinuxFlags.DENY_PROCESS_PTRACE) {
+            notifTitleRes = R.string.notif_native_debug_title;
+            gosPsFlagSuppressNotif = GosPackageState.FLAG_BLOCK_NATIVE_DEBUGGING_SUPPRESS_NOTIF;
+            intentAction = SettingsIntents.APP_NATIVE_DEBUGGING;
+        } else {
             Slog.w(TAG, "unknown flag " + msg);
             return;
         }
