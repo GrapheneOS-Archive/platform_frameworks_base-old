@@ -235,6 +235,9 @@ public class TombstoneHandler {
             }
 
             if (!isSystem) {
+                if (!isHistorical) {
+                    maybeShowMemtagNotification(ctx, tombstone, msg, packageUid, firstPackageName);
+                }
                 // rely on the standard crash dialog for non-memtag crashes
                 return;
             }
@@ -251,5 +254,38 @@ public class TombstoneHandler {
         }
 
         SystemJournalNotif.showCrash(ctx, progName, msg, timestamp);
+    }
+
+    private static void maybeShowMemtagNotification(Context ctx, TombstoneProtos.Tombstone tombstone,
+                                                    String errorReport,
+                                                    int packageUid, String firstPackageName) {
+        TombstoneProtos.Signal signal = tombstone.signalInfo;
+        if (signal == null) {
+            return;
+        }
+
+        boolean proceed = isMemoryTaggingSupported && signal.number == SIGSEGV
+                && (signal.code == SEGV_MTEAERR || signal.code == SEGV_MTESERR);
+
+        if (!proceed) {
+            return;
+        }
+
+        Consumer<Notification.Builder> notifCustomizer = nb -> {
+            Intent i = ErrorReportUi.createBaseIntent(ErrorReportUi.ACTION_CUSTOM_REPORT, errorReport);
+            i.putExtra(ErrorReportUi.EXTRA_SOURCE_PACKAGE, firstPackageName);
+
+            UserHandle user = UserHandle.of(UserHandle.getUserId(packageUid));
+            var pi = PendingIntent.getActivityAsUser(ctx, 0, i,
+                    PendingIntent.FLAG_IMMUTABLE, null, user);
+            addNotifAction(ctx, pi, R.string.notif_action_more_info, nb);
+        };
+
+        AppExploitProtectionNotification.maybeShow(ctx, SettingsIntents.APP_MEMTAG,
+                packageUid, firstPackageName,
+                GosPackageState.FLAG_FORCE_MEMTAG_SUPPRESS_NOTIF,
+                R.string.notif_memtag_crash_title,
+                ctx.getText(R.string.notif_text_tap_to_open_settings),
+                notifCustomizer);
     }
 }
