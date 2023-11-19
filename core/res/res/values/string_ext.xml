@@ -40,4 +40,7 @@
     <string name="fsck_error_notif_title">File system error was detected</string>
     <java-symbol type="string" name="fsck_error_notif_title" />
 
+    <string name="notif_memtag_crash_title">Memory tagging detected an error in %1$s</string>
+    <java-symbol type="string" name="notif_memtag_crash_title" />
+
 </resources>
