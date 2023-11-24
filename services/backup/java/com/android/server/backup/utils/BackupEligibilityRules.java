@@ -137,11 +137,6 @@ public class BackupEligibilityRules {
      */
     @VisibleForTesting
     public boolean appIsEligibleForBackup(ApplicationInfo app) {
-        // 1. their manifest states android:allowBackup="false" and this is not a device-to-device
-        // migration
-        if (!isAppBackupAllowed(app)) {
-            return false;
-        }
 
         // 2. they run as a system-level uid
         if (UserHandle.isCore(app.uid)) {

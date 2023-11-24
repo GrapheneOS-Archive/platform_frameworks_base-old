@@ -420,7 +420,6 @@ public class TarBackupReader {
                     info.packageName, PackageManager.GET_SIGNING_CERTIFICATES, userId);
             // Fall through to IGNORE if the app explicitly disallows backup
             final int flags = pkgInfo.applicationInfo.flags;
-            if (eligibilityRules.isAppBackupAllowed(pkgInfo.applicationInfo)) {
                 // Restore system-uid-space packages only if they have
                 // defined a custom backup agent
                 if (!UserHandle.isCore(pkgInfo.applicationInfo.uid)
@@ -501,18 +500,6 @@ public class TarBackupReader {
                             LOG_EVENT_CATEGORY_AGENT,
                             null);
                 }
-            } else {
-                if (DEBUG) {
-                    Slog.i(TAG,
-                            "Restore manifest from " + info.packageName + " but allowBackup=false");
-                }
-                mMonitor = BackupManagerMonitorUtils.monitorEvent(
-                        mMonitor,
-                        LOG_EVENT_ID_FULL_RESTORE_ALLOW_BACKUP_FALSE,
-                        pkgInfo,
-                        LOG_EVENT_CATEGORY_BACKUP_MANAGER_POLICY,
-                        null);
-            }
         } catch (PackageManager.NameNotFoundException e) {
             // Okay, the target app isn't installed.  We can process
             // the restore properly only if the dataset provides the
