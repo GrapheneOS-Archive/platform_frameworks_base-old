@@ -8,6 +8,7 @@ import android.content.pm.GosPackageStateBase;
 import android.ext.settings.ExtSettings;
 
 import com.android.internal.os.SELinuxFlags;
+import com.android.server.os.nano.AppCompatProtos;
 
 /** @hide */
 public class AswDenyNativeDebug extends AppSwitch {
@@ -17,6 +18,7 @@ public class AswDenyNativeDebug extends AppSwitch {
         gosPsFlagNonDefault = GosPackageState.FLAG_BLOCK_NATIVE_DEBUGGING_NON_DEFAULT;
         gosPsFlag = GosPackageState.FLAG_BLOCK_NATIVE_DEBUGGING;
         gosPsFlagSuppressNotif = GosPackageState.FLAG_BLOCK_NATIVE_DEBUGGING_SUPPRESS_NOTIF;
+        compatChangeToDisableHardening = AppCompatProtos.ALLOW_NATIVE_DEBUGGING;
     }
 
     @Override
@@ -36,8 +38,8 @@ public class AswDenyNativeDebug extends AppSwitch {
     }
 
     @Override
-    public boolean getDefaultValue(Context ctx, int userId, ApplicationInfo appInfo,
-                                   @Nullable GosPackageStateBase ps, StateInfo si) {
+    protected boolean getDefaultValueInner(Context ctx, int userId, ApplicationInfo appInfo,
+                                           @Nullable GosPackageStateBase ps, StateInfo si) {
         if (appInfo.isSystemApp()) {
             return true;
         }
