@@ -19,6 +19,7 @@ import android.util.Slog;
 import com.android.internal.app.ContactScopes;
 import com.android.internal.gmscompat.gcarriersettings.GCarrierSettingsApp;
 import com.android.internal.util.GoogleEuicc;
+import com.android.server.os.nano.AppCompatProtos;
 import com.android.server.pm.GosPackageStatePmHooks;
 import com.android.server.pm.PackageManagerService;
 import com.android.server.pm.parsing.pkg.PackageImpl;
@@ -181,6 +182,15 @@ public class PackageManagerHooks {
     @Nullable
     public static AppInfoExt getAppInfoExt(PackageImpl pkg) {
         int flags = 0;
-        return null;
+        long compatChanges = 0L;
+
+        AppCompatProtos.CompatConfig c = AppCompatConf.get(pkg);
+        if (c == null) {
+            return null;
+        }
+
+        compatChanges = c.compatChanges | AppInfoExt.HAS_COMPAT_CHANGES;
+
+        return new AppInfoExt(flags, compatChanges);
     }
 }
