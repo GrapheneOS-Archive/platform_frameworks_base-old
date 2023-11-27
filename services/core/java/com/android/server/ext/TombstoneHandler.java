@@ -11,6 +11,7 @@ import android.content.pm.GosPackageState;
 import android.content.pm.PackageManagerInternal;
 import android.ext.ErrorReportUi;
 import android.ext.SettingsIntents;
+import android.ext.settings.ExtSettings;
 import android.os.DropBoxManager;
 import android.os.Process;
 import android.os.TombstoneWithHeadersProto;
@@ -199,6 +200,8 @@ public class TombstoneHandler {
 
         boolean isAppUid = Process.isApplicationUid(uid);
 
+        boolean shouldSkip = false;
+
         if (isAppUid || Process.isIsolatedUid(uid)) {
             int pid = tombstone.pid;
 
@@ -244,9 +247,15 @@ public class TombstoneHandler {
             switch (progName) {
                 // bootanimation intentionally crashes in some cases
                 case "bootanimation" -> {
-                    Slog.d(TAG, "skipped crash notification for " + progName + "; msg: " + msg);
-                    return;
+                    shouldSkip = true;
                 }
+            }
+        }
+
+        if (!"system_server".equals(progName)) {
+            if (shouldSkip || !ExtSettings.SHOW_SYSTEM_PROCESS_CRASH_NOTIFICATIONS.get(ctx)) {
+                Slog.d(TAG, "skipped crash notification for " + progName + "; msg: " + msg);
+                return;
             }
         }
 
