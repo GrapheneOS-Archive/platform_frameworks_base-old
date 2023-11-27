@@ -162,6 +162,9 @@ public class ExtSettings {
             Setting.Scope.GLOBAL, "force_app_memtag",
             defaultBool(R.bool.setting_default_force_app_memtag));
 
+    public static final BoolSetting SHOW_SYSTEM_PROCESS_CRASH_NOTIFICATIONS = new BoolSetting(
+            Setting.Scope.GLOBAL, "show_system_process_crash_notifs", false);
+
     private ExtSettings() {}
 
     // used for making settings defined in this class unreadable by third-party apps
