@@ -3673,6 +3673,7 @@ package android.content.om {
 package android.content.pm {
 
   public class ApplicationInfo extends android.content.pm.PackageItemInfo implements android.os.Parcelable {
+    method @NonNull public android.ext.AppInfoExt ext();
     method @RequiresPermission(android.Manifest.permission.DELETE_PACKAGES) public boolean hasFragileUserData();
     method public boolean isEncryptionAware();
     method public boolean isInstantApp();
@@ -4263,6 +4264,18 @@ package android.debug {
 }
 
 package android.ext {
+
+  public final class AppInfoExt implements android.os.Parcelable {
+    ctor public AppInfoExt(int, int, long);
+    method public int describeContents();
+    method public int getPackageId();
+    method public boolean hasCompatChange(int);
+    method public boolean hasCompatConfig();
+    method public boolean hasFlag(int);
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.ext.AppInfoExt> CREATOR;
+    field public static final int FLAG_HAS_GMSCORE_CLIENT_LIBRARY = 0; // 0x0
+  }
 
   public interface PackageId {
     field public static final int ANDROID_AUTO = 10; // 0xa
