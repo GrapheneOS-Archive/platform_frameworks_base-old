@@ -6,6 +6,8 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.GosPackageState;
 import android.content.pm.GosPackageStateBase;
 
+import com.android.server.os.nano.AppCompatProtos;
+
 import dalvik.system.VMRuntime;
 
 /** @hide */
@@ -15,6 +17,7 @@ public class AswUseExtendedVaSpace extends AppSwitch {
     private AswUseExtendedVaSpace() {
         gosPsFlag = GosPackageState.FLAG_USE_EXTENDED_VA_SPACE;
         gosPsFlagNonDefault = GosPackageState.FLAG_USE_EXTENDED_VA_SPACE_NON_DEFAULT;
+        compatChangeToDisableHardening = AppCompatProtos.DISABLE_EXTENDED_VA_SPACE;
     }
 
     @Override
@@ -40,8 +43,8 @@ public class AswUseExtendedVaSpace extends AppSwitch {
     }
 
     @Override
-    public boolean getDefaultValue(Context ctx, int userId, ApplicationInfo appInfo,
-                                   @Nullable GosPackageStateBase ps, StateInfo si) {
+    protected boolean getDefaultValueInner(Context ctx, int userId, ApplicationInfo appInfo,
+                                           @Nullable GosPackageStateBase ps, StateInfo si) {
         return true;
     }
 }
