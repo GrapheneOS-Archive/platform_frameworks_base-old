@@ -5,7 +5,8 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.GosPackageState;
 import android.content.pm.GosPackageStateBase;
-import android.ext.settings.ExtSettings;
+
+import com.android.server.os.nano.AppCompatProtos;
 
 import dalvik.system.VMRuntime;
 
@@ -16,6 +17,7 @@ public class AswUseHardenedMalloc extends AppSwitch {
     private AswUseHardenedMalloc() {
         gosPsFlag = GosPackageState.FLAG_USE_HARDENED_MALLOC;
         gosPsFlagNonDefault = GosPackageState.FLAG_USE_HARDENED_MALLOC_NON_DEFAULT;
+        compatChangeToDisableHardening = AppCompatProtos.DISABLE_HARDENED_MALLOC;
     }
 
     @Override
@@ -54,16 +56,8 @@ public class AswUseHardenedMalloc extends AppSwitch {
     }
 
     @Override
-    public boolean getDefaultValue(Context ctx, int userId, ApplicationInfo appInfo,
-                                   @Nullable GosPackageStateBase ps, StateInfo si) {
-        var acc = getAppCompatConfig(appInfo, userId);
-        if (acc != null && acc.isIncompatibleWith(AswUseHardenedMalloc.class)) {
-            if (ExtSettings.ALLOW_DISABLING_HARDENING_VIA_APP_COMPAT_CONFIG.get(ctx, userId)) {
-                si.defaultValueReason = DVR_PACKAGE_COMPAT_CONFIG_OPT_OUT;
-                return false;
-            }
-        }
-
+    protected boolean getDefaultValueInner(Context ctx, int userId, ApplicationInfo appInfo,
+                                           @Nullable GosPackageStateBase ps, StateInfo si) {
         return true;
     }
 }
