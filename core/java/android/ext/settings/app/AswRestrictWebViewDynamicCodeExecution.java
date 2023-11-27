@@ -51,8 +51,8 @@ public class AswRestrictWebViewDynamicCodeExecution extends AppSwitch {
     }
 
     @Override
-    public boolean getDefaultValue(Context ctx, int userId, ApplicationInfo appInfo,
-                                   @Nullable GosPackageStateBase ps, StateInfo si) {
+    protected boolean getDefaultValueInner(Context ctx, int userId, ApplicationInfo appInfo,
+                                           @Nullable GosPackageStateBase ps, StateInfo si) {
         if (appInfo.isSystemApp()) {
             // TODO uncomment after WebView respects Environment.isDynamicCodeExecutionRestricted()
             // return !shouldAllowByDefaultToSystemPackage(ctx, packageName);

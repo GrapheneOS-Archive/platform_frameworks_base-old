@@ -10,6 +10,7 @@ import android.util.ArraySet;
 
 import com.android.internal.R;
 import com.android.internal.os.SELinuxFlags;
+import com.android.server.os.nano.AppCompatProtos;
 
 /** @hide */
 public class AswRestrictMemoryDynCodeExec extends AppSwitch {
@@ -19,6 +20,7 @@ public class AswRestrictMemoryDynCodeExec extends AppSwitch {
         gosPsFlagNonDefault = GosPackageState.FLAG_RESTRICT_MEMORY_DYN_CODE_EXEC_NON_DEFAULT;
         gosPsFlag = GosPackageState.FLAG_RESTRICT_MEMORY_DYN_CODE_EXEC;
         gosPsFlagSuppressNotif = GosPackageState.FLAG_RESTRICT_MEMORY_DYN_CODE_EXEC_SUPPRESS_NOTIF;
+        compatChangeToDisableHardening = AppCompatProtos.ALLOW_MEMORY_DYN_CODE_EXEC;
     }
 
     private static volatile ArraySet<String> allowedSystemPkgs;
@@ -56,8 +58,8 @@ public class AswRestrictMemoryDynCodeExec extends AppSwitch {
     }
 
     @Override
-    public boolean getDefaultValue(Context ctx, int userId, ApplicationInfo appInfo,
-                                   @Nullable GosPackageStateBase ps, StateInfo si) {
+    protected boolean getDefaultValueInner(Context ctx, int userId, ApplicationInfo appInfo,
+                                           @Nullable GosPackageStateBase ps, StateInfo si) {
         if (appInfo.isSystemApp()) {
             return !shouldAllowByDefaultToSystemPkg(ctx, appInfo.packageName);
         } else {
