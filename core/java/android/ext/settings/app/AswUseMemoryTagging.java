@@ -7,6 +7,8 @@ import android.content.pm.GosPackageState;
 import android.content.pm.GosPackageStateBase;
 import android.ext.settings.ExtSettings;
 
+import com.android.server.os.nano.AppCompatProtos;
+
 import dalvik.system.VMRuntime;
 
 /** @hide */
@@ -17,6 +19,7 @@ public class AswUseMemoryTagging extends AppSwitch {
         gosPsFlag = GosPackageState.FLAG_FORCE_MEMTAG;
         gosPsFlagNonDefault = GosPackageState.FLAG_FORCE_MEMTAG_NON_DEFAULT;
         gosPsFlagSuppressNotif = GosPackageState.FLAG_FORCE_MEMTAG_SUPPRESS_NOTIF;
+        compatChangeToDisableHardening = AppCompatProtos.DISABLE_MEMORY_TAGGING;
     }
 
     @Override
@@ -53,8 +56,8 @@ public class AswUseMemoryTagging extends AppSwitch {
     }
 
     @Override
-    public boolean getDefaultValue(Context ctx, int userId, ApplicationInfo appInfo,
-                                   @Nullable GosPackageStateBase ps, StateInfo si) {
+    protected boolean getDefaultValueInner(Context ctx, int userId, ApplicationInfo appInfo,
+                                           @Nullable GosPackageStateBase ps, StateInfo si) {
         si.defaultValueReason = DVR_DEFAULT_SETTING;
         return ExtSettings.FORCE_APP_MEMTAG_BY_DEFAULT.get(ctx, userId);
     }
