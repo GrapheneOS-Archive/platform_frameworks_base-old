@@ -1788,8 +1788,8 @@ static void HandleRuntimeFlags(JNIEnv* env, jint& runtime_flags, const char* pro
         if (mallopt(M_BIONIC_BLOCK_HEAP_TAGGING_LEVEL_DOWNGRADE, 0) != (int) true) {
             RuntimeAbort(env, __LINE__, "mallopt(M_BIONIC_BLOCK_HEAP_TAGGING_LEVEL_DOWNGRADE) failed");
         }
-        if (mallopt(M_BIONIC_SET_IGNORE_NEW_SIGSEGV_HANDLERS, 0) != (int) true) {
-            RuntimeAbort(env, __LINE__, "mallopt(M_BIONIC_SET_IGNORE_NEW_SIGSEGV_HANDLERS) failed");
+        if (mallopt(M_BIONIC_ENABLE_SIGCHAINLIB_MTE_SIGSEGV_INTERCEPTION, 0) != (int) true) {
+            RuntimeAbort(env, __LINE__, "mallopt(M_BIONIC_ENABLE_SIGCHAINLIB_MTE_SIGSEGV_INTERCEPTION) failed");
         }
         runtime_flags &= ~FORCIBLY_ENABLE_MEMORY_TAGGING;
     }
