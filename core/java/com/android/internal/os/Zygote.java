@@ -1354,8 +1354,8 @@ public final class Zygote {
                 if (!si.isImmutable()) {
                     level |= FORCIBLY_ENABLE_MEMORY_TAGGING;
                     // This flag prevents the app from downgrading the heap memory tagging level and
-                    // from intercepting SEGV signal (it's used for crashing the process after tag
-                    // check failure).
+                    // from intercepting MTE SIGSEGV signal (it's used for crashing the process
+                    // after tag check failure).
                     //
                     // It's intended for apps that are not aware of memory tagging and do not attempt
                     // to actively disable or circumvent it.
@@ -1363,10 +1363,9 @@ public final class Zygote {
                     // Apps might be incompatible with this approach for several reasons (the list
                     // is not complete):
                     // - app stores custom data in top pointer byte (it's used for pointer tagging)
-                    // - app relies on a SIGSEGV handler in its bundled runtime, e.g. to deoptimize
-                    // JITed code on null pointer dereference
+                    // - app relies on a MTE SIGSEGV handler in its bundled runtime
                     // - app uses a custom memory allocator that ignores current memory tagging level
-                    // - app manually disables tag mismatch checks with a prctl() call
+                    // - app manually disables tag mismatch checks
                     //
                     // '!si.isImmutable()' check ensures that this flag gets enabled only for those
                     // apps for which memory tagging can be manually disabled, i.e. third-party
