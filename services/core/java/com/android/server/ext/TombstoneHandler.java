@@ -239,7 +239,9 @@ public class TombstoneHandler {
 
             if (!isSystem) {
                 if (!isHistorical) {
-                    maybeShowMemtagNotification(ctx, tombstone, msg, packageUid, firstPackageName);
+                    if (isMemtagError(tombstone)) {
+                        maybeShowMemtagNotification(ctx, tombstone, msg, packageUid, firstPackageName);
+                    }
                 }
                 // rely on the standard crash dialog for non-memtag crashes
                 return;
@@ -256,7 +258,9 @@ public class TombstoneHandler {
         }
 
         if (!"system_server".equals(progName)) {
-            if (shouldSkip || !ExtSettings.SHOW_SYSTEM_PROCESS_CRASH_NOTIFICATIONS.get(ctx)) {
+            boolean ignoreSetting = !isHistorical && isMemtagError(tombstone);
+
+            if (shouldSkip || (!ignoreSetting && !ExtSettings.SHOW_SYSTEM_PROCESS_CRASH_NOTIFICATIONS.get(ctx))) {
                 Slog.d(TAG, "skipped crash notification for " + progName + "; msg: " + msg);
                 return;
             }
@@ -265,21 +269,16 @@ public class TombstoneHandler {
         SystemJournalNotif.showCrash(ctx, progName, msg, timestamp);
     }
 
+    private static boolean isMemtagError(TombstoneProtos.Tombstone t) {
+        TombstoneProtos.Signal s = t.signalInfo;
+
+        return isMemoryTaggingSupported && s != null && s.number == SIGSEGV
+                && (s.code == SEGV_MTEAERR || s.code == SEGV_MTESERR);
+    }
+
     private static void maybeShowMemtagNotification(Context ctx, TombstoneProtos.Tombstone tombstone,
                                                     String errorReport,
                                                     int packageUid, String firstPackageName) {
-        TombstoneProtos.Signal signal = tombstone.signalInfo;
-        if (signal == null) {
-            return;
-        }
-
-        boolean proceed = isMemoryTaggingSupported && signal.number == SIGSEGV
-                && (signal.code == SEGV_MTEAERR || signal.code == SEGV_MTESERR);
-
-        if (!proceed) {
-            return;
-        }
-
         Consumer<Notification.Builder> notifCustomizer = nb -> {
             Intent i = ErrorReportUi.createBaseIntent(ErrorReportUi.ACTION_CUSTOM_REPORT, errorReport);
             i.putExtra(ErrorReportUi.EXTRA_SOURCE_PACKAGE, firstPackageName);
