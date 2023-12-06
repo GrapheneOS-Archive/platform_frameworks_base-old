@@ -1820,7 +1820,6 @@ static void HandleRuntimeFlags(JNIEnv* env, jint& runtime_flags, const char* pro
     // runtime.
     runtime_flags &= ~RuntimeFlags::NATIVE_HEAP_ZERO_INIT_ENABLED;
 
-    const char* nice_name_ptr = nice_name.has_value() ? nice_name.value().c_str() : nullptr;
     android_mallopt_gwp_asan_options_t gwp_asan_options;
     const char* kGwpAsanAppRecoverableSysprop =
             "persist.device_config.memory_safety_native.gwp_asan_recoverable_apps";
