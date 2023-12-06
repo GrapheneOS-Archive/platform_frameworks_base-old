@@ -1859,7 +1859,7 @@ public class KeyguardViewMediator implements CoreStartable, Dumpable,
     }
 
     private void doRebootForOwnerAfterTimeoutIfEnabled(long rebootAfterTimeout) {
-        long when = SystemClock.elapsedRealtime() + rebootAfterTimeout;
+        long when = mSystemClock.elapsedRealtime() + rebootAfterTimeout;
         Intent rebootIntent = new Intent(DELAYED_REBOOT_ACTION);
         rebootIntent.putExtra("seq", mDelayedRebootSequence);
         rebootIntent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND);
