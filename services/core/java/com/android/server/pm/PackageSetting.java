@@ -902,7 +902,7 @@ public class PackageSetting extends SettingBase implements PackageStateInternal 
                 .setHarmfulAppWarning(harmfulAppWarning)
                 .setSplashScreenTheme(splashScreenTheme)
                 .setFirstInstallTimeMillis(firstInstallTime)
-                .setMinAspectRatio(aspectRatio);
+                .setMinAspectRatio(aspectRatio)
                 .setGosPackageState(gosPackageState);
         onChanged();
     }
