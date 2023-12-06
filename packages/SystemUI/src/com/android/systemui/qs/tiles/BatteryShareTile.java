@@ -146,7 +146,6 @@ public class BatteryShareTile extends SecureQSTile<BooleanState> {
         state.label = mContext.getString(R.string.battery_share_switch_title);
         state.contentDescription = state.label;
         state.expandedAccessibilityClassName = Switch.class.getName();
-        state.showRippleEffect = isSupported();
         state.value = isReverseWirelessChargingOn();
         state.secondaryLabel = "";
         state.state = getAvailableStatus();
