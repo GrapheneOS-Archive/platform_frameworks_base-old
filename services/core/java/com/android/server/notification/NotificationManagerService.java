@@ -1909,7 +1909,7 @@ public class NotificationManagerService extends SystemService {
                 if (userId >= 0) {
                     // Clear censored notifications on switch.
                     cancelAllNotificationsInt(MY_UID, MY_PID, getContext().getPackageName(),
-                            SystemNotificationChannels.OTHER_USERS, 0, 0, true, userId,
+                            SystemNotificationChannels.OTHER_USERS, 0, 0, userId,
                             REASON_APP_CANCEL_ALL);
                 }
             }
