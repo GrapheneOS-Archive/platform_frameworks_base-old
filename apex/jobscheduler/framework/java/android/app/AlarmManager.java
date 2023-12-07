@@ -1056,6 +1056,9 @@ public class AlarmManager {
             }
             // non-null WorkSource requires privileged UPDATE_DEVICE_STATS permission
             workSource = null;
+
+            // requires privileged SCHEDULE_PRIORITIZED_ALARM permission
+            flags &= ~FLAG_PRIORITIZE;
         }
 
         if (triggerAtMillis < 0) {
