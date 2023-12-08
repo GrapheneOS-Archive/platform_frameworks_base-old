@@ -186,7 +186,9 @@ public class EventResultPersister {
         int status = intent.getIntExtra(PackageInstaller.EXTRA_STATUS, 0);
 
         if (status == PackageInstaller.STATUS_PENDING_USER_ACTION) {
-            context.startActivity(intent.getParcelableExtra(Intent.EXTRA_INTENT));
+            Intent pendingAction = intent.getParcelableExtra(Intent.EXTRA_INTENT, Intent.class);
+            pendingAction.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(pendingAction);
 
             return;
         }
