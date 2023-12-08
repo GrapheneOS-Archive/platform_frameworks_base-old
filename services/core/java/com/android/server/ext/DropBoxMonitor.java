@@ -236,7 +236,7 @@ public class DropBoxMonitor {
                     String bootReason = line.substring(prefix.length());
 
                     switch (bootReason) {
-                        case "reboot", "PowerKey", "normal", "recovery" -> {
+                        case "reboot", "reboot,shell", "PowerKey", "normal", "recovery" -> {
                             Slog.d(TAG, "skipping last_kmsg, its boot reason is " + bootReason);
                             return;
                         }
