@@ -1913,6 +1913,19 @@ static void SpecializeCommon(JNIEnv* env, uid_t uid, gid_t gid, jintArray gids, 
     auto instruction_set = extract_fn(managed_instruction_set);
     auto app_data_dir = extract_fn(managed_app_data_dir);
 
+    {
+        unsigned max_fds = is_system_server ? 256 * 1024 : 32 * 1024;
+
+        rlimit rl = {};
+        rl.rlim_cur = max_fds;
+        rl.rlim_max = max_fds;
+
+        if (setrlimit(RLIMIT_NOFILE, &rl) == -1) {
+          fail_fn(CREATE_ERROR("setrlimit(RLIMIT_NOFILE, {%ld, %ld}) failed: %s",
+                               rl.rlim_cur, rl.rlim_max, strerror(errno)));
+        }
+    }
+
     // Permit bounding capabilities
     permitted_capabilities |= bounding_capabilities;
 
