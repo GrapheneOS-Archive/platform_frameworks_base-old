@@ -244,7 +244,10 @@ public class DropBoxMonitor {
                     String bootReason = line.substring(bootReasonPrefix.length());
 
                     switch (bootReason) {
-                        case "reboot", "reboot,shell", "PowerKey", "normal", "recovery" -> {
+                        case "reboot", "reboot,shell", "PowerKey", "normal", "recovery",
+                                // device was forcibly rebooted by long-pressing the power key
+                                "reboot,longkey,master_dc"
+                        -> {
                             Slog.d(TAG, "skipping last_kmsg, its boot reason is " + bootReason);
                             return;
                         }
