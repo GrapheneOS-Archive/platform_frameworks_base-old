@@ -28,6 +28,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.function.Consumer;
 
@@ -230,10 +231,17 @@ public class DropBoxMonitor {
     void handleKernelCrash(DropBoxManager.Entry e) {
         String text = readEntryText(e, "kernel_crash");
         if (text != null) {
+            var lines = new ArrayList<String>(text.length() / 40);
+
             for (String line : text.split("\n")) {
-                String prefix = BootReceiver.KMSG_BOOT_REASON_PREFIX;
-                if (line.startsWith(prefix)) {
-                    String bootReason = line.substring(prefix.length());
+                if (line.contains(" Soc ID: 0x")) {
+                    // SoC ID is included in bootloader log
+                    continue;
+                }
+
+                String bootReasonPrefix = BootReceiver.KMSG_BOOT_REASON_PREFIX;
+                if (line.startsWith(bootReasonPrefix)) {
+                    String bootReason = line.substring(bootReasonPrefix.length());
 
                     switch (bootReason) {
                         case "reboot", "reboot,shell", "PowerKey", "normal", "recovery" -> {
@@ -244,9 +252,11 @@ public class DropBoxMonitor {
 
                     break;
                 }
+
+                lines.add(line);
             }
 
-            showCrashNotif(e, "Kernel", text);
+            showCrashNotif(e, "Kernel", String.join("\n", lines));
         }
     }
 
