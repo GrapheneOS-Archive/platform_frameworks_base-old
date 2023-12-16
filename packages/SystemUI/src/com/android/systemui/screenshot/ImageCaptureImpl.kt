@@ -37,10 +37,12 @@ open class ImageCaptureImpl @Inject constructor(
     @Background private val bgContext: CoroutineDispatcher
 ) : ImageCapture {
 
-    override fun captureDisplay(displayId: Int, crop: Rect?): Bitmap? {
-        val captureArgs = CaptureArgs.Builder()
+    override fun captureDisplay(displayId: Int, crop: Rect?, captureSecureLayers: Boolean): Bitmap? {
+        var captureArgs = CaptureArgs.Builder()
             .setSourceCrop(crop)
+            .setCaptureSecureLayers(captureSecureLayers)
             .build()
+
         val syncScreenCapture = ScreenCapture.createSyncCaptureListener()
         windowManager.captureDisplay(displayId, captureArgs, syncScreenCapture)
         val buffer = syncScreenCapture.getBuffer()

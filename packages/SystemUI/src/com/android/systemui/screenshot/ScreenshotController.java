@@ -49,6 +49,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.ext.settings.ExtSettings;
 import android.graphics.Bitmap;
 import android.graphics.Insets;
 import android.graphics.Rect;
@@ -406,7 +407,7 @@ public class ScreenshotController {
         if (screenshot.getType() == WindowManager.TAKE_SCREENSHOT_FULLSCREEN) {
             Rect bounds = getFullScreenRect();
             screenshot.setBitmap(
-                    mImageCapture.captureDisplay(mDisplayTracker.getDefaultDisplayId(), bounds));
+                    mImageCapture.captureDisplay(mDisplayTracker.getDefaultDisplayId(), bounds, ExtSettings.ALLOW_SCREENSHOT_SECURE.get(mContext)));
             screenshot.setScreenBounds(bounds);
         }
 
@@ -761,7 +762,7 @@ public class ScreenshotController {
                 getDefaultDisplay().getRealMetrics(displayMetrics);
                 Bitmap newScreenshot = mImageCapture.captureDisplay(
                         mDisplayTracker.getDefaultDisplayId(),
-                        new Rect(0, 0, displayMetrics.widthPixels, displayMetrics.heightPixels));
+                        new Rect(0, 0, displayMetrics.widthPixels, displayMetrics.heightPixels), ExtSettings.ALLOW_SCREENSHOT_SECURE.get(mContext));
 
                 mScreenshotView.prepareScrollingTransition(response, mScreenBitmap, newScreenshot,
                         mScreenshotTakenInPortrait);
