@@ -3,6 +3,7 @@ package com.android.systemui.screenshot
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
+import android.ext.settings.ExtSettings;
 import android.os.UserHandle
 import android.view.View
 import android.view.ViewGroup
@@ -64,7 +65,7 @@ constructor(
     fun onScreenshotTaken(screenshot: ScreenshotData) {
         val workProfileData = workProfileMessageController.onScreenshotTaken(screenshot.userHandle)
         var notifiedApps: List<CharSequence> = listOf()
-        if (featureFlags.isEnabled(Flags.SCREENSHOT_DETECTION)) {
+        if (featureFlags.isEnabled(Flags.SCREENSHOT_DETECTION) && ExtSettings.ALLOW_SCREENCAPTURE_DETECTION.get(this.container.getContext())) {
             notifiedApps = screenshotDetectionController.maybeNotifyOfScreenshot(screenshot)
         }
 

@@ -295,6 +295,7 @@ import android.content.pm.ConstrainDisplayApisConfig;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.ext.settings.ExtSettings;
 import android.graphics.Bitmap;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
@@ -7197,6 +7198,10 @@ final class ActivityRecord extends WindowToken implements WindowManagerService.A
     }
 
     public void reportScreenCaptured() {
+        if (!ExtSettings.ALLOW_SCREENCAPTURE_DETECTION.get(mWmService.mContext)) {
+            return;
+        }
+
         if (mCaptureCallbacks != null) {
             final int n = mCaptureCallbacks.beginBroadcast();
             for (int i = 0; i < n; i++) {
