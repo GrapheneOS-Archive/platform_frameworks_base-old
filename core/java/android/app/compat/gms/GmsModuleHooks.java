@@ -19,6 +19,7 @@ package android.app.compat.gms;
 import android.Manifest;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.annotation.SuppressLint;
 import android.annotation.SystemApi;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
@@ -43,10 +44,13 @@ public class GmsModuleHooks {
 
     // BluetoothAdapter#enable()
     // BluetoothAdapter#enableBLE()
-    public static void enableBluetoothAdapter() {
+    @SuppressLint("AutoBoxing")
+    @Nullable
+    // returns null if hook wasn't applied, otherwise returns boxed return value for the original method
+    public static Boolean enableBluetoothAdapter() {
         if (!GmsCompat.isGmsCore()) {
             // others handle this themselves
-            return;
+            return null;
         }
 
         Activity activity = GmcActivityUtils.getMostRecentVisibleActivity();
@@ -62,6 +66,8 @@ public class GmsModuleHooks {
                 }
             }
         } // else don't bother the user
+
+        return Boolean.TRUE;
     }
 
     // BluetoothAdapter#setScanMode()

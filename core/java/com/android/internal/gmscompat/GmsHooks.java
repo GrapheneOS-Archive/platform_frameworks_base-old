@@ -198,8 +198,9 @@ public final class GmsHooks {
     public static boolean isHiddenSystemService(String name) {
         // return true only for services that are null-checked
         switch (name) {
-            case Context.CONTEXTHUB_SERVICE:
             case Context.WIFI_SCANNING_SERVICE:
+                return !GmsCompat.isAndroidAuto();
+            case Context.CONTEXTHUB_SERVICE:
             case Context.APP_INTEGRITY_SERVICE:
             // used for factory reset protection
             case Context.PERSISTENT_DATA_BLOCK_SERVICE:
