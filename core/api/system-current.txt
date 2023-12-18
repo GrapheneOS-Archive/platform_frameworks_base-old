@@ -4357,6 +4357,14 @@ package android.debug {
 
 }
 
+package android.ext {
+
+  public interface PackageId {
+    field public static final int UNKNOWN = 0; // 0x0
+  }
+
+}
+
 package android.graphics.fonts {
 
   public final class FontFamilyUpdateRequest {
