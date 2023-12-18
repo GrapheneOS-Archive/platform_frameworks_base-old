@@ -920,8 +920,34 @@ public class CompanionDeviceManagerService extends SystemService {
                 return;
             }
 
-            getContext().enforceCallingOrSelfPermission(
-                    android.Manifest.permission.ASSOCIATE_COMPANION_DEVICES, "createAssociation");
+            try {
+                getContext().enforceCallingOrSelfPermission(
+                        android.Manifest.permission.ASSOCIATE_COMPANION_DEVICES, "createAssociation");
+            } catch (SecurityException se) {
+                String perm = android.Manifest.permission.ASSOCIATE_COMPANION_DEVICES_RESTRICTED;
+                if (getContext().checkCallingPermission(perm) != PERMISSION_GRANTED) {
+                    throw se;
+                }
+
+                int callingUid = Binder.getCallingUid();
+                if (UserHandle.getUserId(callingUid) != userId) {
+                    // don't allow interacting across users, which is allowed by upstream even without
+                    // the INTERACT_ACROSS_USERS permission
+                    throw new SecurityException("userId mismatch");
+                }
+
+                try {
+                    int targetUid = getContext().getPackageManager().getPackageUid(packageName, 0);
+
+                    if (targetUid != callingUid) {
+                        // don't allow creating companion device associations for other packages
+                        throw new SecurityException("targetUid mismatch");
+                    }
+
+                } catch (PackageManager.NameNotFoundException e) {
+                    throw new SecurityException(e);
+                }
+            }
 
             final MacAddress macAddressObj = MacAddress.fromString(macAddress);
             createNewAssociation(userId, packageName, macAddressObj, null, null, false);
