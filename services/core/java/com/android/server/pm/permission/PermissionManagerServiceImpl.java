@@ -3059,10 +3059,6 @@ public class PermissionManagerServiceImpl implements PermissionManagerServiceInt
                         }
                     }
 
-                    if (Build.IS_DEBUGGABLE && PackageManagerHooks.shouldForciblyGrantPermission(pkg, bp)) {
-                        uidState.grantPermission(bp);
-                        Slog.d(TAG, "forcibly granted " + bp.getName() + " to " + pkg.getPackageName());
-                    }
                 }
 
                 if ((installPermissionsChangedForUser || replace)
