@@ -30,6 +30,7 @@ public class GmsCompatPkgParsingHooks extends PackageParsingHooks {
             case PackageId.GMS_CORE_NAME -> new GmsCoreHooks.ParsingHooks();
             case PackageId.PLAY_STORE_NAME -> new PlayStoreHooks.ParsingHooks();
             case PackageId.G_CARRIER_SETTINGS_NAME -> new GCarrierSettingsHooks.ParsingHooks();
+            case PackageId.ANDROID_AUTO_NAME -> new AndroidAutoHooks.ParsingHooks();
             default -> new GmsCompatPkgParsingHooks();
         };
     }
