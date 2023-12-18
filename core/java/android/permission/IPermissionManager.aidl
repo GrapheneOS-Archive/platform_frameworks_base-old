@@ -106,6 +106,8 @@ interface IPermissionManager {
     int checkUidPermission(int uid, String permissionName, int deviceId);
 
     Map<String, PermissionState> getAllPermissionStates(String packageName, String persistentDeviceId, int userId);
+
+    void updatePermissionState(String packageName, int userId);
 }
 
 /**
