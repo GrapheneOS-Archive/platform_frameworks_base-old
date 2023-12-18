@@ -99,4 +99,6 @@ interface IPermissionManager {
     int checkPermission(String packageName, String permissionName, int deviceId, int userId);
 
     int checkUidPermission(int uid, String permissionName, int deviceId);
+
+    void updatePermissionState(String packageName, int userId);
 }
