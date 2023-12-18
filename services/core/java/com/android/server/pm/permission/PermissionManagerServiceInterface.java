@@ -623,4 +623,6 @@ public interface PermissionManagerServiceInterface extends PermissionManagerInte
     void onPackageUninstalled(@NonNull String packageName, int appId,
             @NonNull PackageState packageState, @NonNull AndroidPackage pkg,
             @NonNull List<AndroidPackage> sharedUserPkgs, @UserIdInt int userId);
+
+    void updatePermissions(@NonNull AndroidPackage pkg, int userId);
 }
