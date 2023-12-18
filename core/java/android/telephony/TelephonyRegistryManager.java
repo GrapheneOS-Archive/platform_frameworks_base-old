@@ -278,10 +278,8 @@ public class TelephonyRegistryManager {
 
             if (GmsCompat.isEnabled()) {
                 eventsList = GmcTelephonyManager.filterTelephonyCallbackEvents(eventsList);
-
-                if (eventsList.length == 0) {
-                    return;
-                }
+                // empty eventsList means "unregister the listener". It's fine if eventsList becomes
+                // empty after filtering, unregistration of a never-registered listener is allowed.
             }
 
             sRegistry.listenWithEventList(renounceFineLocationAccess, renounceCoarseLocationAccess,
@@ -308,10 +306,8 @@ public class TelephonyRegistryManager {
 
         if (GmsCompat.isEnabled()) {
             events = GmcTelephonyManager.filterTelephonyCallbackEvents(events);
-
-            if (events.length == 0) {
-                return;
-            }
+            // empty events array means "unregister the listener". It's fine if events array becomes
+            // empty after filtering, unregistration of a never-registered listener is allowed.
         }
 
         try {
