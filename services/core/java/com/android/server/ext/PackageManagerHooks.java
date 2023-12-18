@@ -30,9 +30,9 @@ import com.android.server.pm.pkg.parsing.ParsingPackage;
 
 public class PackageManagerHooks {
 
-    // Called when package enabled setting is deserialized from storage
+    // Called when package enabled setting for a system package is deserialized from storage
     @Nullable
-    public static Integer maybeOverridePackageEnabledSetting(String pkgName, @UserIdInt int userId) {
+    public static Integer maybeOverrideSystemPackageEnabledSetting(String pkgName, @UserIdInt int userId) {
         switch (pkgName) {
             case GoogleEuicc.EUICC_SUPPORT_PIXEL_PKG_NAME:
                 if (userId == UserHandle.USER_SYSTEM) {
