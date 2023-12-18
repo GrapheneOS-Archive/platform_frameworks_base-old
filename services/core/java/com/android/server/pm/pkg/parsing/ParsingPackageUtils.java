@@ -550,9 +550,16 @@ public class ParsingPackageUtils {
 
             pkg.setVolumeUuid(volumeUuid);
 
+            var pkgExtInit = new com.android.server.pm.ext.PackageExtInit(input, pkg,
+                    (flags & PARSE_IS_SYSTEM_DIR) != 0);
+            pkgExtInit.run();
+
             if ((flags & PARSE_COLLECT_CERTIFICATES) != 0) {
-                final ParseResult<SigningDetails> ret =
-                        getSigningDetails(input, pkg, false /*skipVerify*/);
+                // skip reparsing certificates if they were already parsed by PackageExtInit
+                ParseResult<SigningDetails> ret = pkgExtInit.getSigningDetailsParseResult();
+                if (ret == null) {
+                    ret = parseSigningDetails(input, pkg);
+                }
                 if (ret.isError()) {
                     return input.error(ret);
                 }
@@ -566,6 +573,10 @@ public class ParsingPackageUtils {
             return input.error(INSTALL_PARSE_FAILED_UNEXPECTED_EXCEPTION,
                     "Failed to read manifest from " + apkPath, e);
         }
+    }
+
+    public static ParseResult<SigningDetails> parseSigningDetails(ParseInput input, ParsingPackage pkg) {
+        return getSigningDetails(input, pkg, false /*skipVerify*/);
     }
 
     private ParseResult<ParsingPackage> parseSplitApk(ParseInput input,
