@@ -23,6 +23,7 @@ public class PackageHooksRegistry {
             case PackageId.EUICC_SUPPORT_PIXEL -> new EuiccSupportPixelHooks();
             case PackageId.G_CARRIER_SETTINGS -> new GCarrierSettingsHooks();
             case PackageId.G_EUICC_LPA -> new EuiccGoogleHooks();
+            case PackageId.ANDROID_AUTO -> new AndroidAutoHooks();
             default -> PackageHooks.DEFAULT;
         };
     }
