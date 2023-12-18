@@ -527,7 +527,11 @@ public class GmcPackageManager extends ApplicationPackageManager {
             return;
         }
 
-        super.setComponentEnabledSetting(componentName, newState, flags);
+        try {
+            super.setComponentEnabledSetting(componentName, newState, flags);
+        } catch (SecurityException e) {
+            Log.d(TAG, "", e);
+        }
     }
 
     @Override
@@ -539,7 +543,12 @@ public class GmcPackageManager extends ApplicationPackageManager {
         if (settings.isEmpty()) {
             return;
         }
-        super.setComponentEnabledSettings(settings);
+
+        try {
+            super.setComponentEnabledSettings(settings);
+        } catch (SecurityException e) {
+            Log.d(TAG, "", e);
+        }
     }
 
 }

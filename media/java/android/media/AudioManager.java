@@ -36,6 +36,7 @@ import android.annotation.TestApi;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.compat.CompatChanges;
+import android.app.compat.gms.GmsCompat;
 import android.bluetooth.BluetoothCodecConfig;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothLeAudioCodecConfig;
@@ -5273,6 +5274,11 @@ public class AudioManager {
                     policy.isVolumeController(),
                     projection == null ? null : projection.getProjection());
             if (regId == null) {
+                if (GmsCompat.isAndroidAuto()) {
+                    if (!GmsCompat.hasPermission(Manifest.permission.MODIFY_AUDIO_ROUTING)) {
+                        return SUCCESS;
+                    }
+                }
                 return ERROR;
             } else {
                 policy.setRegistration(regId);
@@ -5292,6 +5298,12 @@ public class AudioManager {
     @SystemApi
     @RequiresPermission(Manifest.permission.MODIFY_AUDIO_ROUTING)
     public void unregisterAudioPolicyAsync(@NonNull AudioPolicy policy) {
+        if (GmsCompat.isAndroidAuto()) {
+            if (!GmsCompat.hasPermission(Manifest.permission.MODIFY_AUDIO_ROUTING)) {
+                return;
+            }
+        }
+
         unregisterAudioPolicyAsyncStatic(policy);
     }
 

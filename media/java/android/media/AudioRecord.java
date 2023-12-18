@@ -476,6 +476,10 @@ public class AudioRecord implements AudioRouting, MicrophoneDirection,
 
         if (GmsCompat.isEnabled()) {
             mIsPseudoTrack = !GmsCompat.hasPermission(android.Manifest.permission.RECORD_AUDIO);
+
+            if (GmsCompat.isAndroidAuto() && attributes.getCapturePreset() == MediaRecorder.AudioSource.REMOTE_SUBMIX) {
+                mIsPseudoTrack = !GmsCompat.hasPermission(android.Manifest.permission.MODIFY_AUDIO_ROUTING);
+            }
         }
 
         if (mIsPseudoTrack) {
