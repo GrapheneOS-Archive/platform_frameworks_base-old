@@ -1786,4 +1786,12 @@ public final class PermissionManager {
             }
         }
     }
+
+    public void updatePermissionState(@NonNull String packageName, int userId) {
+        try {
+            mPermissionManager.updatePermissionState(packageName, userId);
+        } catch (RemoteException e) {
+            e.rethrowFromSystemServer();
+        }
+    }
 }
