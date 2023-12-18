@@ -16,6 +16,7 @@
 
 package com.android.server.os;
 
+import android.Manifest;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
@@ -26,6 +27,7 @@ import android.os.IDeviceIdentifiersPolicyService;
 import android.os.RemoteException;
 import android.os.SystemProperties;
 import android.os.UserHandle;
+import android.util.Slog;
 
 import com.android.internal.telephony.TelephonyPermissions;
 import com.android.server.SystemService;
@@ -76,7 +78,13 @@ public final class DeviceIdentifiersPolicyService extends SystemService {
 
             if (!TelephonyPermissions.checkCallingOrSelfReadDeviceIdentifiers(mContext,
                     callingPackage, callingFeatureId, "getSerial")) {
-                return Build.UNKNOWN;
+                String perm = Manifest.permission.READ_DEVICE_SERIAL_NUMBER;
+                if (mContext.checkCallingPermission(perm) != PackageManager.PERMISSION_GRANTED) {
+                    return Build.UNKNOWN;
+                } else {
+                    Slog.d(DeviceIdentifiersPolicyService.class.getSimpleName(),
+                            callingPackage + " has " + perm + ", allowed serial number access");
+                }
             }
             return SystemProperties.get("ro.serialno", Build.UNKNOWN);
         }
