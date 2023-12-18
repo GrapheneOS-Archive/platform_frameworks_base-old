@@ -27,7 +27,21 @@ public class AppCompatConf {
 
     private static final String CONFIG_HOLDER_PKG_NAME = "app.grapheneos.AppCompatConfig";
 
-    private static volatile ArrayMap<String, AppCompatConfig> configs;
+    public static class Configs {
+        public final long versionCode;
+        public final ArrayMap<String, AppCompatConfig> map;
+
+        Configs(long versionCode, ArrayMap<String, AppCompatConfig> map) {
+            this.versionCode = versionCode;
+            this.map = map;
+        }
+    }
+
+    private static volatile Configs configs;
+
+    public static Configs getParsedConfigs() {
+        return configs;
+    }
 
     @Nullable
     private static AndroidPackage getConfigHolderPackage() {
@@ -69,18 +83,14 @@ public class AppCompatConf {
 
     private static void update(AndroidPackage pkg) {
         String apkPath = pkg.getSplits().get(0).getPath();
-        // thread-safe: map field is volatile and map itself is immutable after parsing
-        configs = parseFromApk(apkPath);
+        // thread-safe: "configs" field is volatile and map itself is immutable after parsing
+        configs = parseFromApk(pkg.getLongVersionCode(), apkPath);
         Slog.d(TAG, "updated from " + apkPath);
     }
 
     @Nullable
-    static CompatConfig get(PackageImpl pkg) {
-        ArrayMap<String, AppCompatConfig> map = AppCompatConf.configs;
-
-        if (map == null) {
-            return null;
-        }
+    public static CompatConfig get(Configs configs, PackageImpl pkg) {
+        ArrayMap<String, AppCompatConfig> map = configs.map;
 
         String pkgName = pkg.getPackageName();
 
@@ -132,7 +142,7 @@ public class AppCompatConf {
     }
 
     @Nullable
-    private static ArrayMap<String, AppCompatConfig> parseFromApk(String apkPath) {
+    private static Configs parseFromApk(long versionCode, String apkPath) {
         try {
             byte[] configBytes;
 
@@ -147,11 +157,12 @@ public class AppCompatConf {
 
             AppCompatConfig[] configs = configsWrapper.configs;
 
-            var res = new ArrayMap<String, AppCompatConfig>(configs.length);
+            var map = new ArrayMap<String, AppCompatConfig>(configs.length);
             for (var e : configs) {
-                res.put(e.packageSpec.pkgName, e);
+                map.put(e.packageSpec.pkgName, e);
             }
-            return res;
+
+            return new Configs(versionCode, map);
         } catch (Exception e) {
             Slog.e(TAG, "", e);
             return null;
