@@ -1500,4 +1500,8 @@ public interface AndroidPackage {
      * @hide
      */
     boolean isVisibleToInstantApps();
+
+    /** @hide */
+    @Immutable.Ignore
+    com.android.server.pm.ext.PackageExt ext();
 }

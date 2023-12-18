@@ -3249,6 +3249,7 @@ public class PackageImpl implements ParsedPackage, AndroidPackageInternal,
         dest.writeInt(this.uid);
         dest.writeLong(this.mBooleans);
         dest.writeLong(this.mBooleans2);
+        this.ext.writeToParcel(dest);
     }
 
     public PackageImpl(Parcel in) {
@@ -3412,6 +3413,8 @@ public class PackageImpl implements ParsedPackage, AndroidPackageInternal,
 
         assignDerivedFields();
         assignDerivedFields2();
+
+        this.ext = com.android.server.pm.ext.PackageExt.createFromParcel(this, in);
 
         // Do not call makeImmutable here as cached parsing will need
         // to mutate this instance before it's finalized.
@@ -3796,5 +3799,18 @@ public class PackageImpl implements ParsedPackage, AndroidPackageInternal,
     @Override
     public com.android.server.pm.ext.PackageParsingHooks getPackageParsingHooks() {
         return packageParsingHooks;
+    }
+
+    private com.android.server.pm.ext.PackageExt ext = com.android.server.pm.ext.PackageExt.DEFAULT;
+
+    @Override
+    public void setPackageExt(@Nullable com.android.server.pm.ext.PackageExt ext) {
+        this.ext = ext;
+    }
+
+    @Nullable
+    @Override
+    public com.android.server.pm.ext.PackageExt ext() {
+        return ext;
     }
 }
