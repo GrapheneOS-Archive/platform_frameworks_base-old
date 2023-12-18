@@ -50,22 +50,6 @@ public class PackageManagerHooks {
         }
     }
 
-    // Called when package parsing is completed
-    public static void amendParsedPackage(ParsingPackage pkg) {
-        String pkgName = pkg.getPackageName();
-
-        switch (pkgName) {
-            default:
-                return;
-        }
-    }
-
-    public static void removeUsesPermissions(ParsingPackage pkg, String... perms) {
-        var set = new ArraySet<>(perms);
-        pkg.getRequestedPermissions().removeAll(set);
-        pkg.getUsesPermissions().removeIf(p -> set.contains(p.getName()));
-    }
-
     public static boolean shouldBlockGrantRuntimePermission(
             PackageManagerInternal pm, String permName, String packageName, int userId)
     {
