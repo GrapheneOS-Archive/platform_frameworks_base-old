@@ -142,11 +142,14 @@ import com.android.server.pm.PackageInstallerService;
 import com.android.server.pm.PackageManagerTracedLock;
 import com.android.server.pm.UserManagerInternal;
 import com.android.server.pm.UserManagerService;
+import com.android.server.pm.ext.PackageExt;
+import com.android.server.pm.ext.PackageHooks;
 import com.android.server.pm.parsing.PackageInfoUtils;
 import com.android.server.pm.parsing.pkg.AndroidPackageUtils;
 import com.android.server.pm.pkg.AndroidPackage;
 import com.android.server.pm.pkg.PackageState;
 import com.android.server.pm.pkg.PackageStateInternal;
+import com.android.server.pm.pkg.PackageUserStateInternal;
 import com.android.server.pm.pkg.SharedUserApi;
 import com.android.server.policy.PermissionPolicyInternal;
 import com.android.server.policy.SoftRestrictedPermissionPolicy;
@@ -1614,6 +1617,10 @@ public class PermissionManagerServiceImpl implements PermissionManagerServiceInt
                 return;
             }
 
+            if (PackageExt.get(pkg).hooks().overridePermissionState(permName, userId) == PackageHooks.PERMISSION_OVERRIDE_GRANT) {
+                throw new IllegalArgumentException(permName + " is granted by PackageHooks for " + packageName);
+            }
+
             final int flags = uidState.getPermissionFlags(permName);
             // Only the system may revoke SYSTEM_FIXED permissions.
             if ((flags & PackageManager.FLAG_PERMISSION_SYSTEM_FIXED) != 0
@@ -2608,8 +2615,12 @@ public class PermissionManagerServiceImpl implements PermissionManagerServiceInt
             }
         }
 
+        final PackageHooks pkgHooks = PackageExt.get(pkg).hooks();
+
         synchronized (mLock) {
             for (final int userId : userIds) {
+                PackageUserStateInternal pkgUserState = ps.getUserStateOrDefault(userId);
+
                 final UserPermissionState userState = mState.getOrCreateUserState(userId);
                 final UidPermissionState uidState = userState.getOrCreateUidState(ps.getAppId());
 
@@ -2910,6 +2921,46 @@ public class PermissionManagerServiceImpl implements PermissionManagerServiceInt
                         Slog.wtf(LOG_TAG, "Unknown permission protection " + bp.getProtection()
                                 + " for permission " + bp.getName());
                     }
+
+                    {
+                        final int override = pkgHooks.overridePermissionState(bp.getName(), userId);
+                        boolean uidStateChanged = false;
+                        int flags = -1;
+                        if (override == PackageHooks.PERMISSION_OVERRIDE_GRANT) {
+                            uidStateChanged |= uidState.grantPermission(bp);
+                            flags = FLAG_PERMISSION_SYSTEM_FIXED;
+                        } else if (override == PackageHooks.PERMISSION_OVERRIDE_REVOKE) {
+                            boolean revoke = true;
+                            PermissionState s = uidState.getPermissionState(bp.getName());
+                            if (s != null) {
+                                revoke = (s.getFlags() & FLAG_PERMISSION_USER_SET) == 0;
+                            }
+
+                            if (revoke) {
+                                uidStateChanged |= uidState.revokePermission(bp);
+                                flags = 0;
+                            }
+                        }
+
+                        if (flags != -1) {
+                            int mask = FLAG_PERMISSION_SYSTEM_FIXED
+                                    | FLAG_PERMISSION_USER_SET
+                                    | FLAG_PERMISSION_USER_FIXED
+                                    | FLAG_PERMISSION_POLICY_FIXED
+                                    | FLAG_PERMISSION_GRANTED_BY_DEFAULT
+                                    | FLAG_PERMISSION_GRANTED_BY_ROLE
+                                    | FLAG_PERMISSION_REVOKED_COMPAT
+                                    | FLAG_PERMISSION_ONE_TIME
+                                    | FLAG_PERMISSION_AUTO_REVOKED
+                            ;
+                            uidStateChanged |= uidState.updatePermissionFlags(bp, mask, flags);
+                        }
+
+                        if (uidStateChanged) {
+                            updatedUserIds = ArrayUtils.appendInt(updatedUserIds, userId);
+                        }
+                    }
+
                 }
 
                 if ((installPermissionsChangedForUser || replace)
