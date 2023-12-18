@@ -445,8 +445,9 @@ public abstract class AppsFilterBase implements AppsFilterSnapshot {
                 Trace.traceEnd(TRACE_TAG_PACKAGE_MANAGER);
             }
 
-            if (PackageManagerHooks.shouldFilterAccess(callingPkgSetting, callingSharedPkgSettings,
-                    targetPkgSetting)) {
+            if (PackageManagerHooks.shouldFilterApplication(callingPkgSetting, callingSharedPkgSettings,
+                    UserHandle.getUserId(callingUid),
+                    targetPkgSetting, targetUserId)) {
                 return true;
             }
 
