@@ -2906,4 +2906,9 @@ class PermissionService(private val service: AccessCheckingService) :
                 emptySet<String>()
             }
     }
+
+    override fun updatePermissions(pkg: AndroidPackage, userId: Int) {
+        // this new version of PermissionService is WIP and is not used yet
+        TODO()
+    }
 }

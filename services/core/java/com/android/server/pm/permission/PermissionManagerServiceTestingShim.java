@@ -580,4 +580,10 @@ public class PermissionManagerServiceTestingShim implements PermissionManagerSer
         mNewImplementation.onPackageUninstalled(packageName, appId, packageState, pkg,
                 sharedUserPkgs, userId);
     }
+
+    @Override
+    public void updatePermissions(@NonNull AndroidPackage pkg, int userId) {
+        mOldImplementation.updatePermissions(pkg, userId);
+        mNewImplementation.updatePermissions(pkg, userId);
+    }
 }

@@ -517,6 +517,21 @@ public class PermissionManagerService extends IPermissionManager.Stub {
         return result;
     }
 
+    @Override
+    public void updatePermissionState(String packageName, int userId) {
+        mContext.enforceCallingPermission(
+                android.Manifest.permission.GRANT_RUNTIME_PERMISSIONS,
+                "updatePermissionState");
+
+        AndroidPackage pkg = mPackageManagerInt.getPackage(packageName);
+        if (pkg == null) {
+            Slog.w(LOG_TAG, "updatePermissionState: no AndroidPackage for " + packageName);
+            return;
+        }
+
+        mPermissionManagerServiceImpl.updatePermissions(pkg, userId);
+    }
+
     /* Start of delegate methods to PermissionManagerServiceInterface */
 
     @Override
