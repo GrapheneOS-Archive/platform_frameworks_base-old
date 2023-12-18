@@ -31,6 +31,7 @@ import static com.android.server.companion.RolesUtils.addRoleHolderForAssociatio
 import static com.android.server.companion.RolesUtils.isRoleHolder;
 import static com.android.server.companion.Utils.prepareForIpc;
 
+import static com.android.server.pm.ext.AndroidAutoHooks.isAndroidAutoWithGrantedBasePrivPerms;
 import static java.util.Objects.requireNonNull;
 
 import android.annotation.NonNull;
@@ -168,10 +169,14 @@ class AssociationRequestsProcessor {
         enforcePermissionsForAssociation(mContext, request, packageUid);
         enforceUsesCompanionDeviceFeature(mContext, userId, packageName);
 
+        final boolean shouldSkipAddRoleHolderCheck =
+                AssociationRequest.DEVICE_PROFILE_AUTOMOTIVE_PROJECTION.equals(request.getDeviceProfile())
+                        && isAndroidAutoWithGrantedBasePrivPerms(packageName, userId);
+
         // 2. Check if association can be created without launching UI (i.e. CDM needs NEITHER
         // to perform discovery NOR to collect user consent).
         if (request.isSelfManaged() && !request.isForceConfirmation()
-                && !willAddRoleHolder(request, packageName, userId)) {
+                && (shouldSkipAddRoleHolderCheck || !willAddRoleHolder(request, packageName, userId))) {
             // 2a. Create association right away.
             createAssociationAndNotifyApplication(request, packageName, userId,
                     /* macAddress */ null, callback, /* resultReceiver */ null);
@@ -285,7 +290,11 @@ class AssociationRequestsProcessor {
                 selfManaged, /* notifyOnDeviceNearby */ false, /* revoked */ false,
                 timestamp, Long.MAX_VALUE, /* systemDataSyncFlags */ 0);
 
-        if (deviceProfile != null) {
+        final boolean skipAddRoleHolder =
+                AssociationRequest.DEVICE_PROFILE_AUTOMOTIVE_PROJECTION.equals(deviceProfile)
+                        && isAndroidAutoWithGrantedBasePrivPerms(packageName, userId);
+
+        if (!skipAddRoleHolder && deviceProfile != null) {
             // If the "Device Profile" is specified, make the companion application a holder of the
             // corresponding role.
             addRoleHolderForAssociation(mService.getContext(), association, success -> {
