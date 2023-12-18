@@ -147,9 +147,12 @@ public class PackageManagerHooks {
     }
 
     // Called when AppsFilter decides whether to restrict package visibility
-    public static boolean shouldFilterAccess(@Nullable PackageStateInternal callingPkgSetting,
-                                             ArraySet<PackageStateInternal> callingSharedPkgSettings,
-                                             PackageStateInternal targetPkgSetting) {
+    public static boolean shouldFilterApplication(
+            @Nullable PackageStateInternal callingPkgSetting,
+            ArraySet<PackageStateInternal> callingSharedPkgSettings,
+            int callingUserId,
+            PackageStateInternal targetPkgSetting, int targetUserId
+    ) {
         if (callingPkgSetting != null && restrictedVisibilityPackages.contains(callingPkgSetting.getPackageName())) {
             if (!targetPkgSetting.isSystem()) {
                 return true;
