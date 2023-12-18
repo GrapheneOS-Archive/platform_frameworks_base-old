@@ -1883,8 +1883,8 @@ public final class Settings implements Watchable, Snappable, ResilientAtomicFile
                                 parser.getAttributeBoolean(null, ATTR_INSTANT_APP, false);
                         final boolean virtualPreload =
                                 parser.getAttributeBoolean(null, ATTR_VIRTUAL_PRELOAD, false);
-                        final Integer enabledOverride =
-                            PackageManagerHooks.maybeOverridePackageEnabledSetting(name, userId);
+                        final Integer enabledOverride = ps.isSystem() ?
+                                PackageManagerHooks.maybeOverrideSystemPackageEnabledSetting(name, userId) : null;
                         final int enabled = (enabledOverride != null) ?
                                 enabledOverride.intValue() :
                                 parser.getAttributeInt(null, ATTR_ENABLED, COMPONENT_ENABLED_STATE_DEFAULT);
