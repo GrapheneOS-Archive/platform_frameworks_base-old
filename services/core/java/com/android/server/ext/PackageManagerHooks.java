@@ -56,10 +56,6 @@ public class PackageManagerHooks {
         String pkgName = pkg.getPackageName();
 
         switch (pkgName) {
-            case GoogleEuicc.EUICC_SUPPORT_PIXEL_PKG_NAME:
-                // EuiccSupportPixel uses INTERNET perm only as part of its dev mode
-                removeUsesPermissions(pkg, Manifest.permission.INTERNET);
-                return;
             case GoogleEuicc.LPA_PKG_NAME:
                 // this is the same as android:enabled="false" in <application> AndroidManifest tag,
                 // it makes the package disabled by default on first boot, when there's no
@@ -183,7 +179,6 @@ public class PackageManagerHooks {
 
     // Packages in this array are restricted from interacting with and being interacted by non-system apps
     private static final ArraySet<String> restrictedVisibilityPackages = new ArraySet<>(new String[] {
-        GoogleEuicc.EUICC_SUPPORT_PIXEL_PKG_NAME,
         // prevent it from obtaining carrier config overrides from GmsCore (see CarrierConfig2 README)
         GCarrierSettingsApp.PKG_NAME,
     });
