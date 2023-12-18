@@ -2116,6 +2116,10 @@
                 android:protectionLevel="signature|privileged|knownSigner"
                 android:knownCerts="@array/wifi_known_signers" />
 
+    <!--- @SystemApi @hide -->
+    <permission android:name="android.permission.WIFI_PRIVILEGED_ANDROID_AUTO"
+                android:protectionLevel="internal" />
+
     <!-- @SystemApi @hide Allows apps to create and manage IPsec tunnels.
          <p>Only granted to applications that are currently bound by the
          system for creating and managing IPsec-based interfaces.
