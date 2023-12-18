@@ -83,7 +83,7 @@ public class GmcPackageManager extends ApplicationPackageManager {
             //
             // Also need to be set to allow updates of GmsCore through Play Store without a
             // logged-in Google account
-            if (GmsCompat.isGmsCore() || GmsCompat.isClientOfGmsCore()) {
+            if (GmsCompat.isGmsCore() || GmsCompat.isClientOfGmsCore(ai)) {
                 ai.flags |= ApplicationInfo.FLAG_SYSTEM | ApplicationInfo.FLAG_UPDATED_SYSTEM_APP;
             }
         }
