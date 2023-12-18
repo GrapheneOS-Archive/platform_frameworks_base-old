@@ -2412,6 +2412,10 @@
     <permission android:name="android.permission.BLUETOOTH_PRIVILEGED"
         android:protectionLevel="signature|privileged" />
 
+    <!--- @SystemApi @hide -->
+    <permission android:name="android.permission.BLUETOOTH_PRIVILEGED_ANDROID_AUTO"
+        android:protectionLevel="internal" />
+
     <!-- @SystemApi Control access to email providers exclusively for Bluetooth
          @hide
     -->
