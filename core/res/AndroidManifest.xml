@@ -5759,6 +5759,10 @@
     <permission android:name="android.permission.ASSOCIATE_COMPANION_DEVICES"
         android:protectionLevel="internal|role" />
 
+    <!-- @hide -->
+    <permission android:name="android.permission.ASSOCIATE_COMPANION_DEVICES_RESTRICTED"
+        android:protectionLevel="internal" />
+
     <!-- @SystemApi Allows an application to use SurfaceFlinger's low level features.
          <p>Not for use by third-party applications.
          @hide
