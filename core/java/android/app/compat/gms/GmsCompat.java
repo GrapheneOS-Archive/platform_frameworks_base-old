@@ -1,22 +1,7 @@
-/*
- * Copyright (C) 2021 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package android.app.compat.gms;
 
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.annotation.SystemApi;
 import android.app.ActivityThread;
 import android.app.AppGlobals;
@@ -24,11 +9,9 @@ import android.app.Application;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.IPackageManager;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.Signature;
-import android.content.pm.SigningDetails;
-import android.content.pm.SigningInfo;
+import android.ext.AppInfoExt;
+import android.ext.PackageId;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Process;
@@ -36,23 +19,22 @@ import android.os.RemoteException;
 import android.os.SystemProperties;
 import android.os.UserHandle;
 
-import com.android.internal.gmscompat.gcarriersettings.GCarrierSettingsApp;
 import com.android.internal.gmscompat.GmsHooks;
 import com.android.internal.gmscompat.GmsInfo;
 import com.android.internal.util.ArrayUtils;
 
 /**
  * This class provides helpers for GMS ("Google Mobile Services") compatibility.
+ * <p>
  * It allows the following apps to work as regular, unprivileged user apps:
- *     - GSF ("Google Services Framework")
- *     - GMS Core ("Google Play services")
- *     - Google Play Store
- *     - GSA ("Google Search app", com.google.android.googlequicksearchbox)
- *     - Apps that depend on the above
- *
- * All GMS compatibility hooks should call methods on GmsCompat. Hooks that are more complicated
- * than returning a simple constant value should also be implemented in GmsHooks to reduce
- * maintenance overhead.
+ * <ul>
+ *     <li>GSF ("Google Services Framework")</li>
+ *     <li>GmsCore ("Google Play services")</li>
+ *     <li>Google Play Store</li>
+ *     <li>GSA ("Google Search app", com.google.android.googlequicksearchbox)</li>
+ *     <li>Apps that depend on the above</li>
+ * </ul>
+ * <p>
  *
  * @hide
  */
@@ -61,11 +43,10 @@ public final class GmsCompat {
     private static final String TAG = "GmsCompat/Core";
 
     private static boolean isGmsCompatEnabled;
+    private static int curPackageId;
     private static boolean isGmsCore;
-    private static boolean isPlayStore;
-    private static boolean isGCarrierSettings;
 
-    private static boolean eligibleForClientCompat;
+    private static boolean isEligibleForClientCompat;
 
     // Static only
     private GmsCompat() { }
@@ -76,17 +57,22 @@ public final class GmsCompat {
 
     /** @hide */
     public static boolean isGmsCore() {
-        return isGmsCore;
+        return curPackageId == PackageId.GMS_CORE;
     }
 
     /** @hide */
     public static boolean isPlayStore() {
-        return isPlayStore;
+        return curPackageId == PackageId.PLAY_STORE;
     }
 
     /** @hide */
     public static boolean isGCarrierSettings() {
-        return isGCarrierSettings;
+        return curPackageId == PackageId.G_CARRIER_SETTINGS;
+    }
+
+    /** @hide */
+    public static int getCurrentPackageId() {
+        return curPackageId;
     }
 
     private static Context appContext;
@@ -112,139 +98,102 @@ public final class GmsCompat {
 
         appContext = appCtx;
         ApplicationInfo appInfo = appCtx.getApplicationInfo();
+        AppInfoExt appInfoExt = appInfo.ext();
 
-        if (isGmsApp(appInfo)) {
+        curPackageId = appInfoExt.getPackageId();
+
+        if (isEnabledFor(appInfo)) {
             isGmsCompatEnabled = true;
-            String pkg = appInfo.packageName;
-            switch (pkg) {
-                case GmsInfo.PACKAGE_GMS_CORE:
-                    isGmsCore = true;
-                    break;
-                case GmsInfo.PACKAGE_PLAY_STORE:
-                    isPlayStore = true;
-                    break;
-                case GCarrierSettingsApp.PKG_NAME:
-                    isGCarrierSettings = true;
-                    break;
-            }
-            GmsHooks.init(appCtx, pkg);
+            GmsHooks.init(appCtx, appInfo.packageName);
         }
-        eligibleForClientCompat = !isGmsCore;
+
+        isEligibleForClientCompat = !isGmsCore() &&
+                appInfoExt.hasFlag(AppInfoExt.FLAG_HAS_GMSCORE_CLIENT_LIBRARY);
     }
 
-    private static boolean validateCerts(Signature[] signatures) {
-        for (Signature signature : signatures) {
-            String s = signature.toCharsString();
-
-            for (String validSignature : GmsInfo.VALID_SIGNATURES) {
-                if (s.equals(validSignature)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Check whether the given app is unprivileged and part of the Google Play Services family.
-     * @hide
-     */
-    public static boolean isGmsApp(String packageName, long versionCode, SigningDetails signingDetails,
-                                   boolean isPrivileged, String sharedUserId) {
-        // Privileged GMS doesn't need any compatibility changes
-        if (isPrivileged) {
-            return false;
-        }
-
-        switch (packageName) {
-            case GmsInfo.PACKAGE_GSF:
-            case GmsInfo.PACKAGE_GMS_CORE:
-                // Check the shared user ID to avoid affecting microG with a spoofed signature. This is a
-                // reliable indicator because apps can't change their shared user ID after shipping with it.
-                if (!GmsInfo.SHARED_USER_ID.equals(sharedUserId)) {
-                    return false;
-                }
-                break;
-            case GmsInfo.PACKAGE_PLAY_STORE:
-            case GmsInfo.PACKAGE_GSA:
-                break;
-            case GCarrierSettingsApp.PKG_NAME:
-                return GCarrierSettingsApp.getPackageSpec().validate(packageName, versionCode, signingDetails);
-            default:
-                return false;
-        }
-
-        var certs = signingDetails.getSignatures();
-
-        if (certs == null) {
-            return false;
-        }
-
-        // Validate signature to avoid affecting apps like microG and Gcam Services Provider.
-        // This isn't actually necessary from a security perspective because GMS doesn't get any
-        // special privileges, but it's a failsafe to avoid unintentional compatibility issues.
-        boolean validCert = validateCerts(certs);
-
-        Signature[] pastCerts = signingDetails.getPastSigningCertificates();
-
-        if (!validCert && pastCerts != null) {
-            validCert = validateCerts(pastCerts);
-        }
-        return validCert;
-    }
-
-    public static boolean isGmsApp(@NonNull ApplicationInfo app) {
-        return isGmsApp(app.packageName, UserHandle.getUserId(app.uid));
-    }
-
-    private static boolean isGmsPackageName(String pkg) {
+    public static boolean isEnabledFor(@NonNull ApplicationInfo app) {
         if (Build.IS_DEBUGGABLE) {
-            if (isTestPackage(pkg)) {
+            if (isTestPackage(app.packageName)) {
                 return true;
             }
         }
 
-        switch (pkg) {
-            case GmsInfo.PACKAGE_GMS_CORE:
-            case GmsInfo.PACKAGE_PLAY_STORE:
-            case GmsInfo.PACKAGE_GSF:
-            case GmsInfo.PACKAGE_GSA:
-            case GCarrierSettingsApp.PKG_NAME:
-                return true;
+        return isEnabledFor(app.ext().getPackageId(), app.isPrivilegedApp());
+    }
+
+    public static boolean isEnabledFor(int packageId, boolean isPrivileged) {
+        if (isPrivileged) {
+            // don't enable GmsCompat for privileged GMS
+            return false;
         }
 
-        return false;
+        return switch (packageId) {
+            case
+                PackageId.GSF,
+                PackageId.GMS_CORE,
+                PackageId.PLAY_STORE,
+                PackageId.G_SEARCH_APP,
+                PackageId.G_CARRIER_SETTINGS ->
+                    true;
+            default ->
+                    false;
+        };
+    }
+
+    /** @hide */
+    public static boolean canBeEnabledFor(String pkgName) {
+        if (Build.IS_DEBUGGABLE) {
+            if (isTestPackage(pkgName)) {
+                return true;
+            }
+        }
+
+        return switch (pkgName) {
+            case
+                PackageId.GSF_NAME,
+                PackageId.GMS_CORE_NAME,
+                PackageId.PLAY_STORE_NAME,
+                PackageId.G_SEARCH_APP_NAME,
+                PackageId.G_CARRIER_SETTINGS_NAME ->
+                    true;
+            default ->
+                    false;
+        };
+
     }
 
     /** @hide */
     public static boolean isGmsAppAndUnprivilegedProcess(@NonNull String packageName) {
-        if (!isGmsApp(packageName, UserHandle.USER_CURRENT)) {
+        if (!isEnabledFor(packageName, UserHandle.USER_CURRENT)) {
             return false;
         }
+
         Application a = AppGlobals.getInitialApplication();
         if (a == null) {
             return false;
         }
+
         ApplicationInfo ai = a.getApplicationInfo();
         if (ai == null) {
             return false;
         }
+
         return !ai.isPrivilegedApp();
     }
 
-    public static boolean isGmsApp(@NonNull String packageName, int userId) {
-        return isGmsApp(packageName, userId, false);
+    public static boolean isEnabledFor(@NonNull String packageName, int userId) {
+        return isEnabledFor(packageName, userId, false);
     }
 
     /** @hide */
-    public static boolean isGmsApp(@NonNull String packageName, int userId, boolean matchDisabledApp) {
+    public static boolean isEnabledFor(@NonNull String packageName, int userId, boolean matchDisabledApp) {
         if (Build.isDebuggable()) {
             if (isTestPackage(packageName, userId, matchDisabledApp)) {
                 return true;
             }
         }
 
-        if (!isGmsPackageName(packageName)) {
+        if (!canBeEnabledFor(packageName)) {
             return false;
         }
 
@@ -252,52 +201,60 @@ public final class GmsCompat {
             userId = UserHandle.myUserId();
         }
 
-        IPackageManager pm = ActivityThread.getPackageManager();
+        Context ctx = AppGlobals.getInitialApplication();
+        if (ctx == null) {
+            return false;
+        }
 
-        PackageInfo pkg;
+        PackageManager pm = ctx.getPackageManager();
+
+        ApplicationInfo appInfo;
         long token = Binder.clearCallingIdentity();
         try {
-            pkg = pm.getPackageInfo(packageName, PackageManager.GET_SIGNING_CERTIFICATES, userId);
-            if (pkg == null) {
-                return false;
-            }
-        } catch (RemoteException e) {
-            throw e.rethrowFromSystemServer();
+            appInfo = pm.getApplicationInfoAsUser(packageName, 0, userId);
+        } catch (PackageManager.NameNotFoundException e) {
+            return false;
         } finally {
             Binder.restoreCallingIdentity(token);
         }
-        return isGmsApp(pkg, matchDisabledApp);
+
+        return isEnabledFor(appInfo, matchDisabledApp);
     }
 
     /** @hide */
-    public static boolean isGmsApp(PackageInfo pkg, boolean matchDisabledApp) {
-        ApplicationInfo app = pkg.applicationInfo;
+    public static boolean isEnabledFor(@Nullable ApplicationInfo app, boolean matchDisabledApp) {
         if (app == null) {
             return false;
         }
         if (!app.enabled && !matchDisabledApp) {
             return false;
         }
-        SigningInfo si = pkg.signingInfo;
-        return isGmsApp(app.packageName, app.longVersionCode, si.getSigningDetails(),
-            app.isPrivilegedApp(), pkg.sharedUserId);
+        return isEnabledFor(app);
     }
 
     private static volatile boolean cachedIsClientOfGmsCore;
 
     /** @hide */
     public static boolean isClientOfGmsCore() {
+        return isClientOfGmsCore(null);
+    }
+
+    /** @hide */
+    public static boolean isClientOfGmsCore(@Nullable ApplicationInfo gmsCoreAppInfo) {
         if (cachedIsClientOfGmsCore) {
             return true;
         }
-        if (!eligibleForClientCompat) {
+
+        if (!isEligibleForClientCompat) {
             return false;
         }
-        if (isGmsApp(GmsInfo.PACKAGE_GMS_CORE, appContext().getUserId())) {
-            cachedIsClientOfGmsCore = true;
-            return true;
-        }
-        return false;
+
+        boolean res = (gmsCoreAppInfo != null) ?
+                isEnabledFor(gmsCoreAppInfo) :
+                isEnabledFor(GmsInfo.PACKAGE_GMS_CORE, appContext().getUserId());
+
+        cachedIsClientOfGmsCore = res;
+        return res;
     }
 
     public static boolean hasPermission(@NonNull String perm) {
@@ -318,10 +275,6 @@ public final class GmsCompat {
     }
 
     private static boolean isTestPackage(String packageName) {
-        if (GCarrierSettingsApp.PKG_NAME.equals(packageName)) {
-            return true;
-        }
-
         String testPkgs = SystemProperties.get("persist.gmscompat_test_pkgs");
         return ArrayUtils.contains(testPkgs.split(","), packageName);
     }
@@ -338,6 +291,7 @@ public final class GmsCompat {
 
         IPackageManager pm = ActivityThread.getPackageManager();
         ApplicationInfo ai;
+
         long token = Binder.clearCallingIdentity();
         try {
             ai = pm.getApplicationInfo(packageName, 0, userId);
@@ -346,6 +300,7 @@ public final class GmsCompat {
         } finally {
             Binder.restoreCallingIdentity(token);
         }
+
         if (ai == null) {
             return false;
         }

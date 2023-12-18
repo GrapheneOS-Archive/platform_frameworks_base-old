@@ -13470,7 +13470,7 @@ public class ActivityManagerService extends IActivityManager.Stub
                 if (ActivityManager.checkUidPermission(
                         INTERACT_ACROSS_USERS,
                         aInfo.uid) != PackageManager.PERMISSION_GRANTED) {
-                    if (GmsCompat.isGmsApp(aInfo)) {
+                    if (GmsCompat.isEnabledFor(aInfo)) {
                         return false;
                     }
 
