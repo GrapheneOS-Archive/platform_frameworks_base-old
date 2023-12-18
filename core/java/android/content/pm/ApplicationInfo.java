@@ -29,7 +29,7 @@ import android.compat.annotation.UnsupportedAppUsage;
 import android.content.Context;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Resources;
-import android.ext.settings.AppInfoExt;
+import android.ext.AppInfoExt;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Environment;

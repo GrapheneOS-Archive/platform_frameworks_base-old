@@ -1,4 +1,4 @@
-package android.ext.settings;
+package android.ext;
 
 import android.os.Parcel;
 import android.os.Parcelable;
