@@ -259,7 +259,13 @@ public class Build {
     @RequiresPermission(Manifest.permission.READ_PRIVILEGED_PHONE_STATE)
     public static String getSerial() {
         if (GmsCompat.isEnabled()) {
-            return GmsHooks.getSerial();
+            boolean shouldHook =
+                    !GmsCompat.hasPermission(Manifest.permission.READ_PRIVILEGED_PHONE_STATE)
+                    && !GmsCompat.hasPermission(Manifest.permission.READ_DEVICE_SERIAL_NUMBER);
+
+            if (shouldHook) {
+                return GmsHooks.getSerial();
+            }
         }
 
         IDeviceIdentifiersPolicyService service = IDeviceIdentifiersPolicyService.Stub
