@@ -546,4 +546,6 @@ public interface ParsingPackage {
     void initPackageParsingHooks();
 
     com.android.server.pm.ext.PackageParsingHooks getPackageParsingHooks();
+
+    void setPackageExt(@Nullable com.android.server.pm.ext.PackageExt ext);
 }
