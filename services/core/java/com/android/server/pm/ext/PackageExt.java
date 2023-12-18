@@ -16,6 +16,8 @@ public class PackageExt implements PackageExtIface {
     private final int packageId;
     private final int flags;
 
+    private final PackageHooks hooks;
+
     public static PackageExt get(AndroidPackage pkg) {
         PackageExtIface i = pkg.ext();
         if (i instanceof PackageExt) {
@@ -27,10 +29,15 @@ public class PackageExt implements PackageExtIface {
     public PackageExt(int packageId, int flags) {
         this.packageId = packageId;
         this.flags = flags;
+        this.hooks = PackageHooksRegistry.getHooks(packageId);
     }
 
     public int getPackageId() {
         return packageId;
+    }
+
+    public PackageHooks hooks() {
+        return hooks;
     }
 
     public AppInfoExt toAppInfoExt(PackageImpl pkg) {
