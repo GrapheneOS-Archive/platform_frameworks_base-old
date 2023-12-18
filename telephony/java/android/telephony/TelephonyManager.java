@@ -6694,6 +6694,12 @@ public class TelephonyManager {
     @RequiresPermission(android.Manifest.permission.ACCESS_FINE_LOCATION)
     @RequiresFeature(PackageManager.FEATURE_TELEPHONY_RADIO_ACCESS)
     public List<CellInfo> getAllCellInfo() {
+        if (GmsCompat.isEnabled()) {
+            if (!GmsCompat.hasPermission(android.Manifest.permission.ACCESS_FINE_LOCATION)) {
+                return null;
+            }
+        }
+
         try {
             ITelephony telephony = getITelephony();
             if (telephony == null)

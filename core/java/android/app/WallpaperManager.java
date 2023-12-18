@@ -34,6 +34,7 @@ import android.annotation.SystemService;
 import android.annotation.TestApi;
 import android.annotation.UiContext;
 import android.app.compat.CompatChanges;
+import android.app.compat.gms.GmsCompat;
 import android.compat.annotation.ChangeId;
 import android.compat.annotation.EnabledSince;
 import android.compat.annotation.UnsupportedAppUsage;
@@ -970,6 +971,12 @@ public class WallpaperManager {
     public Drawable getDrawable(@SetWallpaperFlags int which) {
         if (StorageScopesAppHooks.shouldSpoofSelfPermissionCheck(android.Manifest.permission.MANAGE_EXTERNAL_STORAGE)) {
             return null;
+        }
+
+        if (GmsCompat.isEnabled()) {
+            if (!GmsCompat.hasPermission(READ_WALLPAPER_INTERNAL)) {
+                return null;
+            }
         }
 
         final ColorManagementProxy cmProxy = getColorManagementProxy();

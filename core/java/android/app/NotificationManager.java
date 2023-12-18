@@ -1534,6 +1534,10 @@ public class NotificationManager {
      * {@link android.provider.Settings#ACTION_NOTIFICATION_LISTENER_SETTINGS}.
      */
     public boolean isNotificationListenerAccessGranted(ComponentName listener) {
+        if (GmsCompat.isAndroidAuto()) {
+            return true;
+        }
+
         INotificationManager service = getService();
         try {
             return service.isNotificationListenerAccessGranted(listener);
