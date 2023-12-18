@@ -271,6 +271,19 @@ public class UsbService extends IUsbManager.Stub {
         }
     }
 
+    private void enforceCallingOrSelfManageUsborAndroidAuto(String message) {
+        try {
+            mContext.enforceCallingOrSelfPermission(android.Manifest.permission.MANAGE_USB, message);
+        } catch (SecurityException se) {
+            String aautoPerm = android.Manifest.permission.MANAGE_USB_ANDROID_AUTO;
+            if (mContext.checkCallingPermission(aautoPerm) == PackageManager.PERMISSION_GRANTED) {
+                return;
+            }
+
+            throw se;
+        }
+    }
+
     /* Returns a list of all currently attached USB devices (host mdoe) */
     @Override
     public void getDeviceList(Bundle devices) {
@@ -627,7 +640,8 @@ public class UsbService extends IUsbManager.Stub {
 
     @Override
     public void setCurrentFunctions(long functions, int operationId) {
-        mContext.enforceCallingOrSelfPermission(android.Manifest.permission.MANAGE_USB, null);
+        /** @see android.hardware.usb.UsbManager#setCurrentFunctions # */
+        enforceCallingOrSelfManageUsborAndroidAuto(null);
         Preconditions.checkArgument(UsbManager.areSettableFunctions(functions));
         Preconditions.checkState(mDeviceManager != null);
         mDeviceManager.setCurrentFunctions(functions, operationId);
@@ -645,7 +659,8 @@ public class UsbService extends IUsbManager.Stub {
 
     @Override
     public long getCurrentFunctions() {
-        mContext.enforceCallingOrSelfPermission(android.Manifest.permission.MANAGE_USB, null);
+        /** @see android.hardware.usb.UsbManager#getCurrentFunctions */
+        enforceCallingOrSelfManageUsborAndroidAuto(null);
         Preconditions.checkState(mDeviceManager != null);
         return mDeviceManager.getCurrentFunctions();
     }
@@ -694,7 +709,8 @@ public class UsbService extends IUsbManager.Stub {
 
     @Override
     public void resetUsbGadget() {
-        mContext.enforceCallingOrSelfPermission(android.Manifest.permission.MANAGE_USB, null);
+        /** @see android.hardware.usb.UsbManager#resetUsbGadget */
+        enforceCallingOrSelfManageUsborAndroidAuto(null);
         Preconditions.checkNotNull(mDeviceManager, "DeviceManager must not be null");
 
         final long ident = Binder.clearCallingIdentity();
@@ -712,7 +728,8 @@ public class UsbService extends IUsbManager.Stub {
                 + operationId);
         Objects.requireNonNull(callback, "resetUsbPort: callback must not be null. opId:"
                 + operationId);
-        mContext.enforceCallingOrSelfPermission(android.Manifest.permission.MANAGE_USB, null);
+        /** @see android.hardware.usb.UsbManager#resetUsbPort */
+        enforceCallingOrSelfManageUsborAndroidAuto(null);
 
         final long ident = Binder.clearCallingIdentity();
 
@@ -733,7 +750,8 @@ public class UsbService extends IUsbManager.Stub {
 
     @Override
     public List<ParcelableUsbPort> getPorts() {
-        mContext.enforceCallingOrSelfPermission(android.Manifest.permission.MANAGE_USB, null);
+        /** @see android.hardware.usb.UsbManager#getPorts */
+        enforceCallingOrSelfManageUsborAndroidAuto(null);
 
         final long ident = Binder.clearCallingIdentity();
         try {
@@ -759,7 +777,8 @@ public class UsbService extends IUsbManager.Stub {
     @Override
     public UsbPortStatus getPortStatus(String portId) {
         Objects.requireNonNull(portId, "portId must not be null");
-        mContext.enforceCallingOrSelfPermission(android.Manifest.permission.MANAGE_USB, null);
+        /** @see android.hardware.usb.UsbManager#getPortStatus  */
+        enforceCallingOrSelfManageUsborAndroidAuto(null);
 
         final long ident = Binder.clearCallingIdentity();
         try {
@@ -773,7 +792,8 @@ public class UsbService extends IUsbManager.Stub {
     public void setPortRoles(String portId, int powerRole, int dataRole) {
         Objects.requireNonNull(portId, "portId must not be null");
         UsbPort.checkRoles(powerRole, dataRole);
-        mContext.enforceCallingOrSelfPermission(android.Manifest.permission.MANAGE_USB, null);
+        /** @see android.hardware.usb.UsbManager#setPortRoles */
+        enforceCallingOrSelfManageUsborAndroidAuto(null);
 
         final long ident = Binder.clearCallingIdentity();
         try {
