@@ -452,4 +452,10 @@ public class PermissionManagerServiceLoggingDecorator implements PermissionManag
         mService.onPackageUninstalled(packageName, appId, packageState, pkg, sharedUserPkgs,
                 userId);
     }
+
+    @Override
+    public void updatePermissions(@NonNull AndroidPackage pkg, int userId) {
+        Log.i(LOG_TAG, "updatePermissions(pkgName = " + pkg.getPackageName() + ", userId " + userId);
+        mService.updatePermissions(pkg, userId);
+    }
 }
