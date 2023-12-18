@@ -16,6 +16,7 @@ import android.os.DropBoxManager;
 import android.os.Process;
 import android.os.TombstoneWithHeadersProto;
 import android.os.UserHandle;
+import android.text.TextUtils;
 import android.util.Slog;
 import android.util.proto.ProtoInputStream;
 
@@ -95,8 +96,19 @@ public class TombstoneHandler {
         var sb = new StringBuilder();
         sb.append("uid: ");
         sb.append(tombstone.uid);
-        sb.append(" (");
-        sb.append(tombstone.selinuxLabel);
+        {
+            String sl = tombstone.selinuxLabel;
+            if (!TextUtils.isEmpty(sl)) {
+                int len = sl.length();
+                // selinuxLabel usually includes terminating NUL byte. Amending protobuf generation
+                // could break its other users, add a workaround here instead
+                if (sl.charAt(len - 1) == '\u0000') {
+                    sl = sl.substring(0, len - 1);
+                }
+            }
+            sb.append(" (");
+            sb.append(sl);
+        }
         sb.append(")\ncmdline:");
         for (String s : tombstone.commandLine) {
             sb.append(' ');
