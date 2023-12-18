@@ -13,13 +13,20 @@ public class PackageExt {
     private final int packageId;
     private final int flags;
 
+    private final PackageHooks hooks;
+
     public PackageExt(int packageId, int flags) {
         this.packageId = packageId;
         this.flags = flags;
+        this.hooks = PackageHooksRegistry.getHooks(packageId);
     }
 
     public int getPackageId() {
         return packageId;
+    }
+
+    public PackageHooks hooks() {
+        return hooks;
     }
 
     public AppInfoExt toAppInfoExt(PackageImpl pkg) {

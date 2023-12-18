@@ -10,4 +10,10 @@ public class PackageHooksRegistry {
             default -> PackageParsingHooks.DEFAULT;
         };
     }
+
+    public static PackageHooks getHooks(int packageId) {
+        return switch (packageId) {
+            default -> PackageHooks.DEFAULT;
+        };
+    }
 }

@@ -20,7 +20,7 @@ import com.android.internal.gmscompat.gcarriersettings.GCarrierSettingsApp;
 import com.android.internal.util.GoogleEuicc;
 import com.android.server.pm.GosPackageStatePmHooks;
 import com.android.server.pm.PackageManagerService;
-import com.android.server.pm.parsing.pkg.PackageImpl;
+import com.android.server.pm.ext.PackageHooks;
 import com.android.server.pm.permission.Permission;
 import com.android.server.pm.permission.SpecialRuntimePermUtils;
 import com.android.server.pm.pkg.AndroidPackage;
@@ -170,6 +170,14 @@ public class PackageManagerHooks {
                 }
             }
         }
+
+        if (PackageHooks.shouldBlockAppsFilterVisibility(
+                callingPkgSetting, callingSharedPkgSettings, callingUserId,
+                targetPkgSetting, targetUserId)
+        ) {
+            return true;
+        }
+
         return false;
     }
 
