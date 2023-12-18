@@ -2284,4 +2284,9 @@ class PermissionService(
             PackageManager.FLAG_PERMISSION_WHITELIST_SYSTEM or
             PackageManager.FLAG_PERMISSION_WHITELIST_INSTALLER
     }
+
+    override fun updatePermissions(pkg: AndroidPackage, userId: Int) {
+        // this new version of PermissionService is WIP and is not used yet
+        TODO()
+    }
 }
