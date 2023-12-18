@@ -2841,6 +2841,10 @@
     <permission android:name="android.permission.USE_ICC_AUTH_WITH_DEVICE_IDENTIFIER"
         android:protectionLevel="signature|appop" />
 
+    <!--- @hide -->
+    <permission android:name="android.permission.READ_DEVICE_SERIAL_NUMBER"
+        android:protectionLevel="internal" />
+
     <!-- @SystemApi Allows read access to emergency number information for ongoing calls or SMS
          sessions.
          @hide Used internally. -->
