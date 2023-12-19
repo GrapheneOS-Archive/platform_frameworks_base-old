@@ -456,6 +456,18 @@ class LockSettingsStorage {
         return result;
     }
 
+    public boolean validPinExist() {
+        File hashFile = getDuressPinHashFile();
+        File saltFile = getDuressPinSaltFile();
+        return hashFile.isFile() && saltFile.isFile();
+    }
+
+    public boolean validPasswordExist() {
+        File hashFile = getDuressPasswordHashFile();
+        File saltFile = getDuressPasswordSaltFile();
+        return hashFile.isFile() && saltFile.isFile();
+    }
+
     private File getDuressPinHashFile() {
         return new File(getDuressPinDirectory(), DURESS_PASSWORD_FILE);
     }

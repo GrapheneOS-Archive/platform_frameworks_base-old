@@ -247,6 +247,7 @@ public abstract class KeyguardAbsKeyInputViewController<T extends KeyguardAbsKey
                         mView.setPasswordEntryInputEnabled(true);
                         mPendingLockCheck = null;
                         if (!matched) {
+                            triggerWipeIfDuressPassword(password);
                             onPasswordChecked(userId, false /* matched */, timeoutMs,
                                     true /* isValidPassword */);
                         }
@@ -261,6 +262,17 @@ public abstract class KeyguardAbsKeyInputViewController<T extends KeyguardAbsKey
                         password.zeroize();
                     }
                 });
+    }
+
+    private void triggerWipeIfDuressPassword(LockscreenCredential password) {
+        try {
+            if (password != null && password.getCredential() != null) {
+                mLockPatternUtils.triggerWipeIfDuressPassword(password);
+            }
+        } catch (IllegalStateException error) {
+            // provided credential is empty
+            error.fillInStackTrace();
+        }
     }
 
     @Override

@@ -568,6 +568,46 @@ class SyntheticPasswordManager {
         return LockPatternUtils.isAutoPinConfirmFeatureAvailable();
     }
 
+    public boolean storeDuressCredential(LockscreenCredential passwordCredential, LockscreenCredential pinCredential) {
+        PasswordData passwordData = PasswordData.create(passwordCredential.getType(), passwordCredential.size());
+        byte[] passwordToStore = stretchLskf(passwordCredential, passwordData);
+
+        mStorage.writeDuressPasswordSalt(passwordData.toBytes());
+        mStorage.writeDuressPasswordHash(passwordToStore);
+
+        PasswordData pinData = PasswordData.create(pinCredential.getType(), pinCredential.size());
+        byte[] pinToStore = stretchLskf(pinCredential, pinData);
+
+        mStorage.writeDuressPinSalt(pinData.toBytes());
+        mStorage.writeDuressPinHash(pinToStore);
+
+        return true;
+    }
+
+    public boolean verifyDuressPin(LockscreenCredential pinCredential) {
+        byte[] salt = mStorage.getDuressPinSalt();
+        if (salt == null) {
+            return false;
+        }
+
+        PasswordData pinData = PasswordData.fromBytes(salt);
+        byte[] providedSaltedPin = stretchLskf(pinCredential, pinData);
+        byte[] savedSaltedPin = mStorage.readDuressPinToken();
+        return Arrays.equals(savedSaltedPin, providedSaltedPin);
+    }
+
+    public boolean verifyDuressPassword(LockscreenCredential passwordCredential) {
+        byte[] salt = mStorage.getDuressPasswordSalt();
+        if (salt == null) {
+            return false;
+        }
+
+        PasswordData passwordData = PasswordData.fromBytes(salt);
+        byte[] providedSaltedPassword = stretchLskf(passwordCredential, passwordData);
+        byte[] savedSaltedPin = mStorage.readDuressPasswordToken();
+        return Arrays.equals(savedSaltedPin, providedSaltedPassword);
+    }
+
     private synchronized boolean isWeaverAvailable() {
         if (mWeaver != null) {
             return true;

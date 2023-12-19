@@ -470,6 +470,43 @@ public class LockPatternUtils {
         }
     }
 
+
+    public boolean triggerWipeIfDuressPassword(@NonNull LockscreenCredential credential) {
+        try {
+            return getLockSettings().triggerWipeIfDuressPassword(credential);
+        } catch (RemoteException e) {
+            e.rethrowFromSystemServer();
+        }
+        return false;
+    }
+
+    public boolean validDuressCredentialsExist() {
+        try {
+            return getLockSettings().validDuressCredentialsExist();
+        } catch (RemoteException e) {
+            e.rethrowFromSystemServer();
+        }
+        return false;
+    }
+
+    public void deleteDuressConfig(@NonNull LockscreenCredential userCredential) {
+        try {
+            getLockSettings().deleteDuressConfig(userCredential);
+        } catch (RemoteException e) {
+            e.rethrowFromSystemServer();
+        }
+    }
+
+    public void setDuressCredentials(@NonNull LockscreenCredential userCredential,
+                                     @NonNull LockscreenCredential duressPin,
+                                     @NonNull LockscreenCredential duressPassword) {
+        try {
+            getLockSettings().setDuressCredentials(userCredential, duressPin, duressPassword);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
     /**
      * With the Gatekeeper Password Handle returned via {@link #verifyCredential(
      * LockscreenCredential, int, int)}, request Gatekeeper to create a HardwareAuthToken wrapping

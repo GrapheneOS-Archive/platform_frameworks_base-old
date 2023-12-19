@@ -52,6 +52,10 @@ interface ILockSettings {
     VerifyCredentialResponse checkCredential(in LockscreenCredential credential, int userId,
             in ICheckCredentialProgressCallback progressCallback);
     VerifyCredentialResponse verifyCredential(in LockscreenCredential credential, int userId, int flags);
+    boolean validDuressCredentialsExist();
+    void deleteDuressConfig(in LockscreenCredential userCredential);
+    boolean triggerWipeIfDuressPassword(in LockscreenCredential credential);
+    boolean setDuressCredentials(in LockscreenCredential userCredential, in LockscreenCredential duressPin, in LockscreenCredential duressPassword);
     VerifyCredentialResponse verifyTiedProfileChallenge(in LockscreenCredential credential, int userId, int flags);
     VerifyCredentialResponse verifyGatekeeperPasswordHandle(long gatekeeperPasswordHandle, long challenge, int userId);
     void removeGatekeeperPasswordHandle(long gatekeeperPasswordHandle);

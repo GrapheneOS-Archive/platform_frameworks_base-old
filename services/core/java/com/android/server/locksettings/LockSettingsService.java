@@ -31,6 +31,7 @@ import static android.os.UserHandle.USER_ALL;
 import static android.os.UserHandle.USER_SYSTEM;
 
 import static com.android.internal.widget.LockPatternUtils.CREDENTIAL_TYPE_NONE;
+import static com.android.internal.widget.LockPatternUtils.CREDENTIAL_TYPE_PASSWORD;
 import static com.android.internal.widget.LockPatternUtils.CREDENTIAL_TYPE_PASSWORD_OR_PIN;
 import static com.android.internal.widget.LockPatternUtils.CREDENTIAL_TYPE_PIN;
 import static com.android.internal.widget.LockPatternUtils.CURRENT_LSKF_BASED_PROTECTOR_ID_KEY;
@@ -89,6 +90,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.IProgressListener;
+import android.os.Looper;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.ResultReceiver;
@@ -209,6 +211,7 @@ public class LockSettingsService extends ILockSettings.Stub {
     private static final String PREV_LSKF_BASED_PROTECTOR_ID_KEY = "prev-sp-handle";
     private static final String LSKF_LAST_CHANGED_TIME_KEY = "sp-handle-ts";
     private static final String USER_SERIAL_NUMBER_KEY = "serial-number";
+    private static final String DURESS_SERVICE_START_PROPS = "sys.duress.wipe.start";
 
     // Duration that LockSettingsService will store the gatekeeper password for. This allows
     // multiple biometric enrollments without prompting the user to enter their password via
@@ -1676,6 +1679,170 @@ public class LockSettingsService extends ILockSettings.Stub {
         } finally {
             Binder.restoreCallingIdentity(identity);
         }
+    }
+
+    private void enforceCallerPermission(String method) {
+        if (hasPermission(PERMISSION)
+                || hasPermission(SET_AND_VERIFY_LOCKSCREEN_CREDENTIALS)
+                || hasPermission(android.Manifest.permission.CONTROL_KEYGUARD)) {
+            return;
+        }
+        int uid = Binder.getCallingUid();
+        if (uid == Process.SYSTEM_UID) {
+            return;
+        }
+        Log.e(TAG, method + " calls " + " from unexpected UID " + uid);
+        throw new SecurityException(method
+                + "requires " + SET_AND_VERIFY_LOCKSCREEN_CREDENTIALS
+                + " or " + PERMISSION
+                + " or " + android.Manifest.permission.CONTROL_KEYGUARD);
+    }
+
+    @Override
+    public boolean validDuressCredentialsExist() {
+        enforceCallerPermission("validDuressCredentialsExist");
+        return mStorage.validPinExist() && mStorage.validPasswordExist();
+    }
+
+    @Override
+    public void deleteDuressConfig(LockscreenCredential userCredential) {
+        enforceCallerPermission("deleteDuressConfig");
+        Objects.requireNonNull(userCredential);
+        if (!isAdminUserCredential(userCredential)) {
+            throw new IllegalStateException("can't set duress password, user credential is wrong");
+        }
+
+        mStorage.deleteDuressConfig();
+    }
+
+
+    @Override
+    public boolean triggerWipeIfDuressPassword(LockscreenCredential credential) throws RemoteException {
+        enforceCallerPermission("triggerWipeIfDuressPassword");
+        if (!isDuressCredential(credential)) {
+            return false;
+        }
+        if (wipeInProgress()) {
+            return true;
+        }
+
+        //wipe in background thread
+        new Thread(this::processDuressWipe).start();
+        return true;
+    }
+
+    private void processDuressWipe() {
+
+        //wipe keystore and Titan M
+        if (!sendDuressWipeRequest()) {
+            factoryRest();
+        }
+
+        //this code should never run
+        //device should have been rebooted to recovery before 60 sec timeout.
+        //but in case of any failure perform a factory reset after 60 sec
+        Looper.prepare();
+        new Handler(Looper.getMainLooper()).postDelayed(
+                this::factoryRest,
+                TimeUnit.SECONDS.toMillis(60)
+        );
+    }
+
+    private boolean sendDuressWipeRequest() {
+        try {
+            SystemProperties.set(DURESS_SERVICE_START_PROPS, "system");
+            return true;
+        } catch (RuntimeException e) {
+            Log.d(TAG, "setting start duress props failed : " + e.getLocalizedMessage());
+            return false;
+        }
+    }
+
+    private boolean wipeInProgress() {
+        String value = SystemProperties.get(DURESS_SERVICE_START_PROPS, "");
+        return value.equals("system") || value.equals("vendor");
+    }
+
+    private void factoryRest() {
+        Intent intent = new Intent(Intent.ACTION_FACTORY_RESET);
+        intent.setPackage("android");
+        intent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND);
+        intent.putExtra(Intent.EXTRA_REASON, "DuressReset");
+        intent.putExtra(Intent.EXTRA_FORCE_FACTORY_RESET, true);
+        intent.putExtra(Intent.EXTRA_WIPE_EXTERNAL_STORAGE, true);
+        intent.putExtra(Intent.EXTRA_WIPE_ESIMS, true);
+        mContext.sendBroadcast(intent);
+    }
+
+    public boolean isDuressCredential(LockscreenCredential credential) {
+        enforceCallerPermission("isDuressPassword");
+        return isDuressPasswordInternal(credential);
+    }
+
+    private boolean isDuressPasswordInternal(LockscreenCredential credential) {
+        if (credential.getType() == LockPatternUtils.CREDENTIAL_TYPE_PIN) {
+            return mSpManager.verifyDuressPin(credential);
+        } else if (credential.getType() == LockPatternUtils.CREDENTIAL_TYPE_PASSWORD) {
+            return mSpManager.verifyDuressPassword(credential);
+        } else {
+            throw new IllegalArgumentException("please provide a password or pin");
+        }
+    }
+
+    @Override
+    public boolean setDuressCredentials(LockscreenCredential userCredential,
+                                        LockscreenCredential duressPin,
+                                        LockscreenCredential duressPassword) {
+        enforceCallerPermission("setDuressPassword");
+        return setDuressCredentialInternal(userCredential, duressPin, duressPassword);
+    }
+
+    private boolean setDuressCredentialInternal(
+            LockscreenCredential userCredential,
+            LockscreenCredential duressPin,
+            LockscreenCredential duressPassword
+    ) {
+        enforceCallerPermission("setDuressCredentialInternal");
+
+        Objects.requireNonNull(userCredential);
+        Objects.requireNonNull(duressPin);
+        Objects.requireNonNull(duressPassword);
+
+        if (!isAdminUserCredential(userCredential)) {
+            throw new IllegalStateException("can't set duress password, user credential is wrong");
+        }
+
+        if (duressPin.isNone() || duressPassword.isNone()) {
+            throw new IllegalStateException("can't set duress password, expected pin/password type got none");
+        }
+
+        if (duressPin.getType() != LockPatternUtils.CREDENTIAL_TYPE_PIN) {
+            throw new IllegalStateException("expected pin type, got" + duressPin.getType());
+        }
+
+        if (duressPassword.getType() != CREDENTIAL_TYPE_PASSWORD) {
+            throw new IllegalStateException("expected password type, got" + duressPin.getType());
+        }
+
+        return mSpManager.storeDuressCredential(duressPassword, duressPin);
+    }
+
+    private boolean isAdminUserCredential(LockscreenCredential userCredential) {
+        ICheckCredentialProgressCallback callback = new ICheckCredentialProgressCallback.Stub() {
+            @Override
+            public void onCredentialVerified() throws RemoteException {
+
+            }
+        };
+
+        VerifyCredentialResponse response = doVerifyCredential(
+                userCredential,
+                UserHandle.USER_SYSTEM,
+                callback,
+                0 //flags
+        );
+
+        return response != null && response.getResponseCode() == VerifyCredentialResponse.RESPONSE_OK;
     }
 
     /**
