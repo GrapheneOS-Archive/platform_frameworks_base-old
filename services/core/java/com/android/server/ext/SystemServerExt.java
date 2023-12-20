@@ -29,6 +29,8 @@ public final class SystemServerExt {
     public static void init(Context systemContext, PackageManagerService pm) {
         SystemServerExt sse = new SystemServerExt(systemContext, pm);
         sse.bgHandler.post(sse::initBgThread);
+
+        AppCompatConf.init(systemContext);
     }
 
     void initBgThread() {

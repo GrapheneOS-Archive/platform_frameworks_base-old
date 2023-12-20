@@ -44,6 +44,8 @@ import com.android.internal.util.ArrayUtils;
 import com.android.server.SystemConfig;
 import com.android.server.pm.PackageManagerException;
 import com.android.server.pm.PackageManagerService;
+import com.android.server.pm.ext.PackageExtInit;
+import com.android.server.pm.ext.PackageHooksRegistry;
 
 import java.io.File;
 import java.util.List;
@@ -58,6 +60,11 @@ import java.util.Set;
  * collected automatically.
  */
 public class PackageParser2 implements AutoCloseable {
+
+    static {
+        PackageImpl.packageParsingHooksSupplier = PackageHooksRegistry::getParsingHooks;
+        ParsingPackageUtils.packageExtInitSupplier = PackageExtInit::new;
+    }
 
     /**
      * For parsing inside the system server but outside of {@link PackageManagerService}.
@@ -232,8 +239,10 @@ public class PackageParser2 implements AutoCloseable {
         public final ParsingPackage startParsingPackage(@NonNull String packageName,
                 @NonNull String baseCodePath, @NonNull String codePath,
                 @NonNull TypedArray manifestArray, boolean isCoreApp) {
-            return PackageImpl.forParsing(packageName, baseCodePath, codePath, manifestArray,
+            var res = PackageImpl.forParsing(packageName, baseCodePath, codePath, manifestArray,
                     isCoreApp, Callback.this);
+            res.initPackageParsingHooks();
+            return res;
         }
 
         /**
