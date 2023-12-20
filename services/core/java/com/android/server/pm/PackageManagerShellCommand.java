@@ -41,7 +41,6 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.FeatureInfo;
-import android.content.pm.GosPackageState;
 import android.content.pm.IPackageDataObserver;
 import android.content.pm.IPackageInstaller;
 import android.content.pm.IPackageManager;
@@ -120,7 +119,6 @@ import com.android.server.pm.Installer.LegacyDexoptDisabledException;
 import com.android.server.pm.PackageManagerShellCommandDataLoader.Metadata;
 import com.android.server.pm.permission.LegacyPermissionManagerInternal;
 import com.android.server.pm.permission.PermissionAllowlist;
-import com.android.server.pm.pkg.GosPackageStatePm;
 import com.android.server.pm.verify.domain.DomainVerificationShell;
 
 import dalvik.system.DexFile;
@@ -219,7 +217,7 @@ class PackageManagerShellCommand extends ShellCommand {
         try {
             switch (cmd) {
                 case "edit-gos-package-state":
-                    return runEditGosPackageState();
+                    return GosPackageStatePmHooks.runShellCommand(this);
                 case "path":
                     return runPath();
                 case "dump":
@@ -4603,51 +4601,5 @@ class PackageManagerShellCommand extends ShellCommand {
                 throw new RuntimeException(e);
             }
         }
-    }
-
-    private int runEditGosPackageState() {
-        if (!Build.isDebuggable()) {
-            return 1;
-        }
-
-        String packageName = getNextArgRequired();
-        int userId = Integer.parseInt(getNextArgRequired());
-
-        GosPackageState.Editor ed = GosPackageState.edit(packageName, userId);
-
-        for (;;) {
-            String arg = getNextArg();
-            if (arg == null) {
-                return ed.apply() ? 0 : 1;
-            }
-
-            switch (arg) {
-                case "add-flags":
-                case "clear-flags":
-                    ed.setFlagsState(Integer.parseInt(getNextArgRequired(), 16),
-                        "add-flags".equals(arg));
-                    break;
-                case "set-storage-scopes":
-                    ed.setStorageScopes(getByteArrArg());
-                    break;
-                case "set-contact-scopes":
-                    ed.setContactScopes(getByteArrArg());
-                    break;
-                case "set-kill-uid-after-apply":
-                    ed.setKillUidAfterApply(Boolean.parseBoolean(getNextArgRequired()));
-                    break;
-                case "set-notify-uid-after-apply":
-                    ed.setNotifyUidAfterApply(Boolean.parseBoolean(getNextArgRequired()));
-                    break;
-                default:
-                    throw new IllegalArgumentException(arg);
-            }
-        }
-    }
-
-    @android.annotation.Nullable
-    private byte[] getByteArrArg() {
-        String s = getNextArgRequired();
-        return "null".equals(s) ? null : libcore.util.HexEncoding.decode(s);
     }
 }
