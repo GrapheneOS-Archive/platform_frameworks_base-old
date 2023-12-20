@@ -22,6 +22,7 @@ import static android.os.StrictMode.vmIncorrectContextUseEnabled;
 import static android.view.WindowManager.LayoutParams.WindowType;
 import static com.android.internal.app.ContentProviderRedirector.translateContentProviderAuthority;
 
+import android.Manifest;
 import android.annotation.CallbackExecutor;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
@@ -2149,8 +2150,9 @@ class ContextImpl extends Context {
         validateServiceIntent(service);
 
         if (GmsCompat.isEnabled()) {
-            // requires privileged START_ACTIVITIES_FROM_BACKGROUND permission
-            flags &= ~BIND_ALLOW_BACKGROUND_ACTIVITY_STARTS;
+            if (!GmsCompat.hasPermission(Manifest.permission.START_ACTIVITIES_FROM_BACKGROUND)) {
+                flags &= ~BIND_ALLOW_BACKGROUND_ACTIVITY_STARTS;
+            }
         }
 
         String pkg = service.getPackage();

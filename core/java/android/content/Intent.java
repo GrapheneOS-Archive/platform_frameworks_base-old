@@ -9680,8 +9680,9 @@ public class Intent implements Parcelable, Cloneable {
     public ComponentName resolveActivity(@NonNull PackageManager pm) {
         if (GmsCompat.isEnabled()) {
             if (Settings.ACTION_SETTINGS_EMBED_DEEP_LINK_ACTIVITY.equals(getAction())) {
-                // LAUNCH_MULTI_PANE_SETTINGS_DEEP_LINK permission has protectionLevel="signature|preinstalled"
-                return null;
+                if (!GmsCompat.hasPermission(Manifest.permission.LAUNCH_MULTI_PANE_SETTINGS_DEEP_LINK)) {
+                    return null;
+                }
             }
         }
 
