@@ -7,7 +7,6 @@ import android.app.AppBindArgs;
 import android.content.pm.GosPackageState;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManagerInternal;
-import android.ext.AppInfoExt;
 import android.location.HookedLocationManager;
 import android.os.Binder;
 import android.os.Build;
@@ -19,7 +18,6 @@ import android.util.Slog;
 import com.android.internal.app.ContactScopes;
 import com.android.internal.gmscompat.gcarriersettings.GCarrierSettingsApp;
 import com.android.internal.util.GoogleEuicc;
-import com.android.server.os.nano.AppCompatProtos;
 import com.android.server.pm.GosPackageStatePmHooks;
 import com.android.server.pm.PackageManagerService;
 import com.android.server.pm.parsing.pkg.PackageImpl;
@@ -178,19 +176,4 @@ public class PackageManagerHooks {
         // prevent it from obtaining carrier config overrides from GmsCore (see CarrierConfig2 README)
         GCarrierSettingsApp.PKG_NAME,
     });
-
-    @Nullable
-    public static AppInfoExt getAppInfoExt(PackageImpl pkg) {
-        int flags = 0;
-        long compatChanges = 0L;
-
-        AppCompatProtos.CompatConfig c = AppCompatConf.get(pkg);
-        if (c == null) {
-            return null;
-        }
-
-        compatChanges = c.compatChanges | AppInfoExt.HAS_COMPAT_CHANGES;
-
-        return new AppInfoExt(flags, compatChanges);
-    }
 }
