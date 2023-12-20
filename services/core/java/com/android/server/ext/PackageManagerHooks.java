@@ -55,12 +55,6 @@ public class PackageManagerHooks {
         String pkgName = pkg.getPackageName();
 
         switch (pkgName) {
-            case GoogleEuicc.LPA_PKG_NAME:
-                // this is the same as android:enabled="false" in <application> AndroidManifest tag,
-                // it makes the package disabled by default on first boot, when there's no
-                // serialized package state
-                pkg.setEnabled(false);
-                return;
             default:
                 return;
         }
