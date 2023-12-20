@@ -3973,6 +3973,7 @@ package android.content.om {
 package android.content.pm {
 
   public class ApplicationInfo extends android.content.pm.PackageItemInfo implements android.os.Parcelable {
+    method @NonNull public android.ext.AppInfoExt ext();
     method @RequiresPermission(android.Manifest.permission.DELETE_PACKAGES) public boolean hasFragileUserData();
     method public boolean isEncryptionAware();
     method public boolean isInstantApp();
@@ -4728,6 +4729,48 @@ package android.debug {
   public class AdbManager {
     method @RequiresPermission(android.Manifest.permission.MANAGE_DEBUGGING) public boolean isAdbWifiQrSupported();
     method @RequiresPermission(android.Manifest.permission.MANAGE_DEBUGGING) public boolean isAdbWifiSupported();
+  }
+
+}
+
+package android.ext {
+
+  public final class AppInfoExt implements android.os.Parcelable {
+    ctor public AppInfoExt(int, int, long);
+    method public int describeContents();
+    method public int getPackageId();
+    method public boolean hasCompatChange(int);
+    method public boolean hasCompatConfig();
+    method public boolean hasFlag(int);
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.ext.AppInfoExt> CREATOR;
+    field public static final int FLAG_HAS_GMSCORE_CLIENT_LIBRARY = 0; // 0x0
+  }
+
+  public interface PackageId {
+    field public static final int ANDROID_AUTO = 10; // 0xa
+    field public static final String ANDROID_AUTO_NAME = "com.google.android.projection.gearhead";
+    field public static final int EUICC_SUPPORT_PIXEL = 5; // 0x5
+    field public static final String EUICC_SUPPORT_PIXEL_NAME = "com.google.euiccpixel";
+    field public static final int GMS_CORE = 2; // 0x2
+    field public static final String GMS_CORE_NAME = "com.google.android.gms";
+    field public static final int GSF = 1; // 0x1
+    field public static final String GSF_NAME = "com.google.android.gsf";
+    field public static final int G_CAMERA = 8; // 0x8
+    field public static final String G_CAMERA_NAME = "com.google.android.GoogleCamera";
+    field public static final int G_CARRIER_SETTINGS = 7; // 0x7
+    field public static final String G_CARRIER_SETTINGS_NAME = "com.google.android.carrier";
+    field public static final int G_EUICC_LPA = 6; // 0x6
+    field public static final String G_EUICC_LPA_NAME = "com.google.android.euicc";
+    field public static final int G_SEARCH_APP = 4; // 0x4
+    field public static final String G_SEARCH_APP_NAME = "com.google.android.googlequicksearchbox";
+    field public static final int PIXEL_CAMERA_SERVICES = 9; // 0x9
+    field public static final String PIXEL_CAMERA_SERVICES_NAME = "com.google.android.apps.camera.services";
+    field public static final int PLAY_STORE = 3; // 0x3
+    field public static final String PLAY_STORE_NAME = "com.android.vending";
+    field public static final int TYCHO = 11; // 0xb
+    field public static final String TYCHO_NAME = "com.google.android.apps.tycho";
+    field public static final int UNKNOWN = 0; // 0x0
   }
 
 }
