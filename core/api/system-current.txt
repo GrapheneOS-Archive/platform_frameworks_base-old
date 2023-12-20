@@ -3748,6 +3748,7 @@ package android.content.pm {
     method public boolean hasDerivedFlags(int);
     method public boolean hasFlag(int);
     method public final boolean hasFlags(int);
+    method public final boolean hasPackageFlags(long);
     method public void writeToParcel(@NonNull android.os.Parcel, int);
     field @NonNull public static final android.os.Parcelable.Creator<android.content.pm.GosPackageState> CREATOR;
     field public static final int DFLAGS_SET = 1; // 0x1
@@ -3777,13 +3778,16 @@ package android.content.pm {
 
   public static class GosPackageState.Editor {
     method @NonNull public android.content.pm.GosPackageState.Editor addFlags(int);
+    method @NonNull public android.content.pm.GosPackageState.Editor addPackageFlags(long);
     method public boolean apply();
     method @NonNull public android.content.pm.GosPackageState.Editor clearFlags(int);
+    method @NonNull public android.content.pm.GosPackageState.Editor clearPackageFlags(long);
     method @NonNull public android.content.pm.GosPackageState.Editor killUidAfterApply();
     method @NonNull public android.content.pm.GosPackageState.Editor setContactScopes(@Nullable byte[]);
     method @NonNull public android.content.pm.GosPackageState.Editor setFlagsState(int, boolean);
     method @NonNull public android.content.pm.GosPackageState.Editor setKillUidAfterApply(boolean);
     method @NonNull public android.content.pm.GosPackageState.Editor setNotifyUidAfterApply(boolean);
+    method @NonNull public android.content.pm.GosPackageState.Editor setPackageFlagState(long, boolean);
     method @NonNull public android.content.pm.GosPackageState.Editor setStorageScopes(@Nullable byte[]);
   }
 

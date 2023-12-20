@@ -11,13 +11,17 @@ import java.util.Arrays;
  */
 public abstract class GosPackageStateBase {
     public final int flags;
+    // flags that have package-specific meaning
+    public final long packageFlags;
     @Nullable
     public final byte[] storageScopes;
     @Nullable
     public final byte[] contactScopes;
 
-    protected GosPackageStateBase(int flags, @Nullable byte[] storageScopes, @Nullable byte[] contactScopes) {
+    protected GosPackageStateBase(int flags, long packageFlags,
+                                  @Nullable byte[] storageScopes, @Nullable byte[] contactScopes) {
         this.flags = flags;
+        this.packageFlags = packageFlags;
         this.storageScopes = storageScopes;
         this.contactScopes = contactScopes;
     }
@@ -26,9 +30,13 @@ public abstract class GosPackageStateBase {
         return (this.flags & flags) == flags;
     }
 
+    public final boolean hasPackageFlags(long packageFlags) {
+        return (this.packageFlags & packageFlags) == packageFlags;
+    }
+
     @Override
     public final int hashCode() {
-        return 31 * flags + Arrays.hashCode(storageScopes) + Arrays.hashCode(contactScopes);
+        return 31 * flags + Arrays.hashCode(storageScopes) + Arrays.hashCode(contactScopes) + Long.hashCode(packageFlags);
     }
 
     @Override
@@ -47,6 +55,10 @@ public abstract class GosPackageStateBase {
         }
 
         if (!Arrays.equals(contactScopes, o.contactScopes)) {
+            return false;
+        }
+
+        if (packageFlags != o.packageFlags) {
             return false;
         }
 

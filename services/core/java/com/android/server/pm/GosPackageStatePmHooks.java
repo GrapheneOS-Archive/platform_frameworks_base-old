@@ -26,10 +26,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.GosPackageState;
+import android.content.pm.GosPackageStateBase;
+import android.ext.KnownSystemPackages;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Process;
 import android.os.RemoteException;
+import android.os.ShellCommand;
 import android.os.UserHandle;
 import android.permission.PermissionManager;
 import android.util.Slog;
@@ -41,9 +44,7 @@ import com.android.server.LocalServices;
 import com.android.server.pm.parsing.pkg.AndroidPackageInternal;
 import com.android.server.pm.pkg.AndroidPackage;
 import com.android.server.pm.pkg.GosPackageStatePm;
-import com.android.server.pm.pkg.PackageState;
 import com.android.server.pm.pkg.PackageStateInternal;
-import com.android.server.pm.pkg.PackageUserState;
 import com.android.server.pm.pkg.PackageUserStateInternal;
 import com.android.server.pm.pkg.SharedUserApi;
 import com.android.server.pm.pkg.component.ParsedUsesPermission;
@@ -60,6 +61,7 @@ public class GosPackageStatePmHooks {
     private static final String ATTR_GOS_FLAGS = "GrapheneOS-flags";
     private static final String ATTR_GOS_STORAGE_SCOPES = "GrapheneOS-storage-scopes";
     private static final String ATTR_GOS_CONTACT_SCOPES = "GrapheneOS-contact-scopes";
+    private static final String ATTR_GOS_PACKAGE_FLAGS = "GrapheneOS-package-flags";
 
     // com.android.server.pm.Settings#writePackageRestrictionsLPr
     static void serialize(PackageUserStateInternal packageUserState, TypedXmlSerializer serializer) throws IOException {
@@ -88,6 +90,10 @@ public class GosPackageStatePmHooks {
                 serializer.attributeBytesHex(null, ATTR_GOS_CONTACT_SCOPES, s);
             }
         }
+
+        if ((flags & FLAG_HAS_PACKAGE_FLAGS) != 0) {
+            serializer.attributeLong(null, ATTR_GOS_PACKAGE_FLAGS, ps.packageFlags);
+        }
     }
 
     // com.android.server.pm.Settings#readPackageRestrictionsLPr
@@ -110,7 +116,12 @@ public class GosPackageStatePmHooks {
             contactScopes = parser.getAttributeBytesHex(null, ATTR_GOS_CONTACT_SCOPES, null);
         }
 
-        return new GosPackageStatePm(flags, storageScopes, contactScopes);
+        long packageFlags = 0L;
+        if ((flags & FLAG_HAS_PACKAGE_FLAGS) != 0) {
+            packageFlags = parser.getAttributeLong(null, ATTR_GOS_PACKAGE_FLAGS, 0L);
+        }
+
+        return new GosPackageStatePm(flags, packageFlags, storageScopes, contactScopes);
     }
 
     private static int migrateLegacyFlags(int flags) {
@@ -402,14 +413,11 @@ public class GosPackageStatePmHooks {
     // IPackageManagerImpl.clearApplicationUserData
     public static void onClearApplicationUserData(PackageManagerService pm, String packageName, int userId) {
         switch (packageName) {
-            case CONTACTS_PROVIDER_PACKAGE:
+            case KnownSystemPackages.CONTACTS_PROVIDER ->
                 // discard IDs that refer to entries in the contacts provider database
                 clearContactScopesStorage(pm, userId);
-                break;
         }
     }
-
-    private static final String CONTACTS_PROVIDER_PACKAGE = "com.android.providers.contacts";
 
     private static void clearContactScopesStorage(PackageManagerService pm, int userId) {
         for (PackageStateInternal ps : pm.snapshotComputer().getPackageStates().values()) {
@@ -430,6 +438,7 @@ public class GosPackageStatePmHooks {
 
         private static final int FIELD_STORAGE_SCOPES = 1;
         private static final int FIELD_CONTACT_SCOPES = 1 << 1;
+        private static final int FIELD_PACKAGE_FLAGS = 1 << 2;
 
         // bitmask of fields that can be read/written
         final int readFields;
@@ -479,7 +488,7 @@ public class GosPackageStatePmHooks {
         @Nullable
         static Permission get(int callingUid, int targetAppId, int targetUserId, boolean forWrite) {
             if (callingUid == Process.SYSTEM_UID) {
-                return fullPermission;
+                return systemUidPermission;
             }
 
             int callingAppId = UserHandle.getAppId(callingUid);
@@ -543,25 +552,27 @@ public class GosPackageStatePmHooks {
             if (flags == 0) {
                 return null;
             }
+            int readFields = this.readFields;
             return new GosPackageState(flags,
+                    (readFields & FIELD_PACKAGE_FLAGS) != 0 ? ps.packageFlags : 0L,
                     (readFields & FIELD_STORAGE_SCOPES) != 0 ? ps.storageScopes : null,
                     (readFields & FIELD_CONTACT_SCOPES) != 0 ? ps.contactScopes : null,
                     derivedFlags);
         }
 
         @Nullable
-        GosPackageStatePm filterWrite(@Nullable GosPackageStatePm current, GosPackageState update) {
-            int curFlags = current != null ? current.flags : 0;
+        GosPackageStatePm filterWrite(@Nullable GosPackageStateBase current, GosPackageState update) {
+            if (current == null) {
+                current = GosPackageState.createDefault(update.getPackageName(), update.getUserId());
+            }
+            int curFlags = current.flags;
             int flags = (curFlags & ~writeFlags) | (update.flags & writeFlags);
             if (flags == 0) {
                 return null;
             }
-            byte[] storageScopes = null;
-            byte[] contactScopes = null;
-            if (current != null) {
-                storageScopes = current.storageScopes;
-                contactScopes = current.contactScopes;
-            }
+            byte[] storageScopes = current.storageScopes;
+            byte[] contactScopes = current.contactScopes;
+            long packageFlags = current.packageFlags;
 
             if ((writeFields & FIELD_STORAGE_SCOPES) != 0) {
                 storageScopes = update.storageScopes;
@@ -571,12 +582,16 @@ public class GosPackageStatePmHooks {
                 contactScopes = update.contactScopes;
             }
 
-            return new GosPackageStatePm(flags, storageScopes, contactScopes);
+            if ((writeFields & FIELD_PACKAGE_FLAGS) != 0)  {
+                packageFlags = update.packageFlags;
+            }
+
+            return new GosPackageStatePm(flags, packageFlags, storageScopes, contactScopes);
         }
 
         // Permission that each package has for accessing its own GosPackageState
         private static Permission selfAccessPermission;
-        private static Permission fullPermission;
+        private static Permission systemUidPermission;
 
         // Maps app's appId to its permission.
         // Written only during PackageManager init, no need to synchronize reads
@@ -590,15 +605,13 @@ public class GosPackageStatePmHooks {
                     | FLAG_CONTACT_SCOPES_ENABLED
                     ,0);
 
-            // Used for callers that run as SYSTEM_UID, ie system_server and packages in the
-            // android.uid.system sharedUserId in the primary user (but not in secondary users)
-            fullPermission = new Permission(-1, -1, -1, -1,
-                Permission.ALLOW_CROSS_USER_OR_PROFILE_READS
-                        | Permission.ALLOW_CROSS_USER_OR_PROFILE_WRITES
-            );
-
             grantedPermissions = new SparseArray<>();
             if (Build.isDebuggable()) {
+                var fullPermission = new Permission(-1, -1, -1, -1,
+                    Permission.ALLOW_CROSS_USER_OR_PROFILE_READS
+                            | Permission.ALLOW_CROSS_USER_OR_PROFILE_WRITES
+                );
+
                 grantedPermissions.put(Process.SHELL_UID, fullPermission);
                 // for root adb
                 grantedPermissions.put(Process.ROOT_UID, fullPermission);
@@ -606,25 +619,27 @@ public class GosPackageStatePmHooks {
 
             Computer computer = pm.snapshotComputer();
 
-            grantPermission(computer, "com.android.providers.media.module",
+            grantPermission(computer, KnownSystemPackages.MEDIA_PROVIDER,
                     Permission.readOnly(FLAG_STORAGE_SCOPES_ENABLED, FIELD_STORAGE_SCOPES));
 
-            grantPermission(computer, CONTACTS_PROVIDER_PACKAGE,
+            grantPermission(computer, KnownSystemPackages.CONTACTS_PROVIDER,
                     Permission.readOnly(FLAG_CONTACT_SCOPES_ENABLED, FIELD_CONTACT_SCOPES));
 
-            grantPermission(computer, "com.android.launcher3",
+            grantPermission(computer, KnownSystemPackages.LAUNCHER,
                     Permission.readOnly(FLAG_STORAGE_SCOPES_ENABLED
                                     | FLAG_CONTACT_SCOPES_ENABLED
                             , 0,
                             // work profile is handled by the launcher in profile's parent
                             Permission.ALLOW_CROSS_PROFILE_READS));
 
-            grantPermission(computer, pm.mRequiredPermissionControllerPackage,
+            grantPermission(computer, KnownSystemPackages.PERMISSION_CONTROLLER,
                     Permission.readWrite(
                             FLAG_STORAGE_SCOPES_ENABLED
                                 | FLAG_CONTACT_SCOPES_ENABLED
+                                | FLAG_HAS_PACKAGE_FLAGS
                                 ,FIELD_STORAGE_SCOPES
                                 | FIELD_CONTACT_SCOPES
+                                | FIELD_PACKAGE_FLAGS
                     ));
 
             final int settingsReadWriteFlags =
@@ -649,15 +664,35 @@ public class GosPackageStatePmHooks {
             final int settingsReadFlags = settingsReadWriteFlags
                     | FLAG_STORAGE_SCOPES_ENABLED
                     | FLAG_CONTACT_SCOPES_ENABLED
+                    | FLAG_HAS_PACKAGE_FLAGS
             ;
 
             final int settingsWriteFlags = settingsReadWriteFlags;
 
+            final int settingsReadFields = FIELD_PACKAGE_FLAGS;
+
             // note that this applies to all packages that run in the android.uid.system sharedUserId
             // in secondary users, not just the Settings app. Packages that run in this sharedUserId
             // in the primary user get the fullPermission declared above
-            grantPermission(computer, "com.android.settings",
-                    Permission.readWrite(settingsReadFlags, settingsWriteFlags, 0, 0));
+            grantPermission(computer, KnownSystemPackages.SETTINGS,
+                    Permission.readWrite(settingsReadFlags, settingsWriteFlags, settingsReadFields, 0));
+
+            final int systemUidWriteFlags = settingsWriteFlags
+                    | FLAG_BLOCK_NATIVE_DEBUGGING_SUPPRESS_NOTIF
+                    | FLAG_RESTRICT_MEMORY_DYN_CODE_EXEC_SUPPRESS_NOTIF
+                    | FLAG_RESTRICT_STORAGE_DYN_CODE_EXEC_SUPPRESS_NOTIF
+                    | FLAG_FORCE_MEMTAG_SUPPRESS_NOTIF;
+
+            final int systemUidWriteFields =
+                    FIELD_CONTACT_SCOPES // see onClearApplicationUserData() hook
+            ;
+
+            // Used for callers that run as SYSTEM_UID, e.g. system_server and packages in the
+            // android.uid.system sharedUserId in the primary user (but not in secondary users)
+            systemUidPermission = new Permission(-1, systemUidWriteFlags, -1, systemUidWriteFields,
+                Permission.ALLOW_CROSS_USER_OR_PROFILE_READS
+                        | Permission.ALLOW_CROSS_USER_OR_PROFILE_WRITES
+            );
 
             userManager = Objects.requireNonNull(LocalServices.getService(UserManagerInternal.class));
 
@@ -678,7 +713,7 @@ public class GosPackageStatePmHooks {
                         Slog.d(TAG, "granted permission " + intent.getExtras());
                     }
                 };
-                pm.mContext.registerReceiver(receiver, new IntentFilter("GosPackageState.grant_permission"),
+                pm.getContext().registerReceiver(receiver, new IntentFilter("GosPackageState.grant_permission"),
                         Context.RECEIVER_EXPORTED);
             }
         }
