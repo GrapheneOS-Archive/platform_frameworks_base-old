@@ -30,6 +30,7 @@ import android.telephony.UiccSlotInfo;
 import android.util.Log;
 
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -55,13 +56,20 @@ public class GmcTelephonyManager {
                     "ACCESS_FINE_LOCATION", sb);
         }
 
-        // these events are protected by privileged permissions
-        removeEvents(events, EVENTS_PROT_READ_ACTIVE_EMERGENCY_SESSION,
-                "READ_ACTIVE_EMERGENCY_SESSION", sb);
-        removeEvents(events, EVENTS_PROT_READ_PRIVILEGED_PHONE_STATE,
-                "READ_PRIVILEGED_PHONE_STATE", sb);
-        removeEvents(events, EVENTS_PROT_READ_PRECISE_PHONE_STATE,
-                "READ_PRECISE_PHONE_STATE", sb);
+        if (!GmsCompat.hasPermission(Manifest.permission.READ_ACTIVE_EMERGENCY_SESSION)) {
+            removeEvents(events, EVENTS_PROT_READ_ACTIVE_EMERGENCY_SESSION,
+                    "READ_ACTIVE_EMERGENCY_SESSION", sb);
+        }
+
+        if (!GmsCompat.hasPermission(Manifest.permission.READ_PRIVILEGED_PHONE_STATE)) {
+            removeEvents(events, EVENTS_PROT_READ_PRIVILEGED_PHONE_STATE,
+                    "READ_PRIVILEGED_PHONE_STATE", sb);
+        }
+
+        if (!GmsCompat.hasPermission(Manifest.permission.READ_PRECISE_PHONE_STATE)) {
+            removeEvents(events, EVENTS_PROT_READ_PRECISE_PHONE_STATE,
+                    "READ_PRECISE_PHONE_STATE", sb);
+        }
 
         int[] res = events.stream().mapToInt(Integer::intValue).toArray();
 
