@@ -77,6 +77,7 @@ import com.android.internal.pm.pkg.component.ParsedService;
 import com.android.internal.pm.pkg.component.ParsedServiceImpl;
 import com.android.internal.pm.pkg.component.ParsedUsesPermission;
 import com.android.internal.pm.pkg.component.ParsedUsesPermissionImpl;
+import com.android.internal.pm.pkg.parsing.PackageParsingHooks;
 import com.android.internal.pm.pkg.parsing.ParsingPackage;
 import com.android.internal.pm.pkg.parsing.ParsingPackageHidden;
 import com.android.internal.pm.pkg.parsing.ParsingPackageUtils;
@@ -99,8 +100,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 
 /**
  * Extensions to {@link PackageImpl} including fields/state contained in the system server
@@ -629,6 +632,10 @@ public class PackageImpl implements ParsedPackage, AndroidPackageInternal,
 
     @Override
     public PackageImpl addProvider(ParsedProvider parsedProvider) {
+        if (getPackageParsingHooks().shouldSkipProvider(parsedProvider)) {
+            return this;
+        }
+
         this.providers = CollectionUtils.add(this.providers, parsedProvider);
         addMimeGroupsFromComponent(parsedProvider);
         return this;
@@ -2595,6 +2602,7 @@ public class PackageImpl implements ParsedPackage, AndroidPackageInternal,
 
     public ApplicationInfo toAppInfoWithoutStateWithoutFlags() {
         ApplicationInfo appInfo = new ApplicationInfo();
+        appInfo.setExt(ext.toAppInfoExt(this));
 
         // Lines that are commented below are state related and should not be assigned here.
         // They are left in as placeholders, since there is no good backwards compatible way to
@@ -3822,4 +3830,35 @@ public class PackageImpl implements ParsedPackage, AndroidPackageInternal,
         private static final long APEX = 1L << 1;
         private static final long UPDATABLE_SYSTEM = 1L << 2;
     }
+
+    private PackageParsingHooks packageParsingHooks = PackageParsingHooks.DEFAULT;
+
+    public static Function<String, PackageParsingHooks> packageParsingHooksSupplier;
+
+    @Override
+    public void initPackageParsingHooks() {
+        var supplier = packageParsingHooksSupplier;
+        packageParsingHooks = supplier != null ? supplier.apply(getPackageName()) : PackageParsingHooks.DEFAULT;
+    }
+
+    @Override
+    public PackageParsingHooks getPackageParsingHooks() {
+        return packageParsingHooks;
+    }
+
+    private PackageExtIface ext = PackageExtDefault.INSTANCE;
+
+    @Override
+    public void setPackageExt(@Nullable PackageExtIface ext) {
+        this.ext = ext;
+    }
+
+    @Nullable
+    @Override
+    public PackageExtIface ext() {
+        return ext;
+    }
+
+    public long cachedCompatConfigVersionCode;
+    public Object cachedCompatConfig;
 }

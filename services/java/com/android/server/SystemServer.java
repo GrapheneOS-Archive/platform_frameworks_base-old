@@ -101,6 +101,8 @@ import com.android.internal.annotations.GuardedBy;
 import com.android.internal.notification.SystemNotificationChannels;
 import com.android.internal.os.BinderInternal;
 import com.android.internal.os.RuntimeInit;
+import com.android.internal.pm.parsing.pkg.PackageImpl;
+import com.android.internal.pm.pkg.parsing.ParsingPackageUtils;
 import com.android.internal.policy.AttributeCache;
 import com.android.internal.util.ConcurrentUtils;
 import com.android.internal.util.EmergencyAffordanceManager;
@@ -181,6 +183,8 @@ import com.android.server.pm.PackageManagerService;
 import com.android.server.pm.ShortcutService;
 import com.android.server.pm.UserManagerService;
 import com.android.server.pm.dex.OdsignStatsLogger;
+import com.android.server.pm.ext.PackageExtInit;
+import com.android.server.pm.ext.PackageHooksRegistry;
 import com.android.server.pm.permission.PermissionMigrationHelper;
 import com.android.server.pm.permission.PermissionMigrationHelperImpl;
 import com.android.server.pm.verify.domain.DomainVerificationService;
@@ -696,6 +700,11 @@ public final class SystemServer implements Dumpable {
      */
     public static void main(String[] args) {
         new SystemServer().run();
+    }
+
+    static {
+        PackageImpl.packageParsingHooksSupplier = PackageHooksRegistry::getParsingHooks;
+        ParsingPackageUtils.packageExtInitSupplier = PackageExtInit::new;
     }
 
     public SystemServer() {
