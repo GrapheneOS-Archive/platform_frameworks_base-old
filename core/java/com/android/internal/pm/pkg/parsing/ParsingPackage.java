@@ -540,4 +540,10 @@ public interface ParsingPackage {
     boolean isNormalScreensSupported();
 
     boolean isSmallScreensSupported();
+
+    boolean isPartiallyDirectBootAware();
+
+    void initPackageParsingHooks();
+
+    com.android.server.pm.ext.PackageParsingHooks getPackageParsingHooks();
 }

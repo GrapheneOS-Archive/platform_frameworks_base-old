@@ -3785,4 +3785,16 @@ public class PackageImpl implements ParsedPackage, AndroidPackageInternal,
         private static final long APEX = 1L << 1;
         private static final long UPDATABLE_SYSTEM = 1L << 2;
     }
+
+    private com.android.server.pm.ext.PackageParsingHooks packageParsingHooks;
+
+    @Override
+    public void initPackageParsingHooks() {
+        packageParsingHooks = com.android.server.pm.ext.PackageHooksRegistry.getParsingHooks(getPackageName());
+    }
+
+    @Override
+    public com.android.server.pm.ext.PackageParsingHooks getPackageParsingHooks() {
+        return packageParsingHooks;
+    }
 }
