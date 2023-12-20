@@ -3727,4 +3727,16 @@ public class PackageImpl implements ParsedPackage, AndroidPackageInternal,
         private static final long STUB = 1L;
         private static final long APEX = 1L << 1;
     }
+
+    private com.android.server.pm.ext.PackageParsingHooks packageParsingHooks;
+
+    @Override
+    public void initPackageParsingHooks() {
+        packageParsingHooks = com.android.server.pm.ext.PackageHooksRegistry.getParsingHooks(getPackageName());
+    }
+
+    @Override
+    public com.android.server.pm.ext.PackageParsingHooks getPackageParsingHooks() {
+        return packageParsingHooks;
+    }
 }

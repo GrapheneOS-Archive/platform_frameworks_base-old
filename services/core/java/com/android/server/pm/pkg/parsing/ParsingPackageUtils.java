@@ -635,6 +635,7 @@ public class ParsingPackageUtils {
                     "coreApp", false);
             final ParsingPackage pkg = mCallback.startParsingPackage(
                     pkgName, apkPath, codePath, manifestArray, isCoreApp);
+            pkg.initPackageParsingHooks();
             final ParseResult<ParsingPackage> result =
                     parseBaseApkTags(input, pkg, manifestArray, res, parser, flags);
             if (result.isError()) {
@@ -946,6 +947,27 @@ public class ParsingPackageUtils {
             );
         }
 
+        List<ParsedUsesPermission> usesPermsList = pkg.getUsesPermissions();
+        var usesPerms = new java.util.HashSet<String>(usesPermsList.size() + 10);
+        for (ParsedUsesPermission p : usesPermsList) {
+            usesPerms.add(p.getName());
+        }
+
+        List<ParsedUsesPermissionImpl> extraUsesPerms = pkg.getPackageParsingHooks().addUsesPermissions();
+
+        if (extraUsesPerms != null) {
+            for (ParsedUsesPermission p : extraUsesPerms) {
+                String name = p.getName();
+                if (!usesPerms.add(name)) {
+                    Slog.w(TAG, "PackageParsingHooks.addUsesPermissions() " +
+                            "tried to add duplicate uses-permission " + name
+                            + " to pkg " + pkg.getPackageName());
+                    continue;
+                }
+                pkg.addUsesPermission(p);
+            }
+        }
+
         convertCompatPermissions(pkg);
 
         convertSplitPermissions(pkg);
@@ -1227,7 +1249,9 @@ public class ParsingPackageUtils {
         }
         ParsedPermission permission = result.getResult();
         if (permission != null) {
-            pkg.addPermission(permission);
+            if (!pkg.getPackageParsingHooks().shouldSkipPermissionDefinition(permission)) {
+                pkg.addPermission(permission);
+            }
         }
         return input.success(pkg);
     }
@@ -1387,7 +1411,10 @@ public class ParsingPackageUtils {
             }
 
             if (!found) {
-                pkg.addUsesPermission(new ParsedUsesPermissionImpl(name, usesPermissionFlags));
+                var p = new ParsedUsesPermissionImpl(name, usesPermissionFlags);
+                if (!pkg.getPackageParsingHooks().shouldSkipUsesPermission(p)) {
+                    pkg.addUsesPermission(p);
+                }
             }
             return success;
         } finally {
@@ -2195,6 +2222,15 @@ public class ParsingPackageUtils {
         if (hasReceiverOrder) {
             pkg.sortReceivers();
         }
+
+        List<ParsedService> extraServices = pkg.getPackageParsingHooks().addServices(pkg);
+        if (extraServices != null) {
+            for (var s : extraServices) {
+                hasServiceOrder |= (s.getOrder() != 0);
+                pkg.addService(s);
+            }
+        }
+
         if (hasServiceOrder) {
             pkg.sortServices();
         }
@@ -2286,6 +2322,14 @@ public class ParsingPackageUtils {
                 .setPermission(nonConfigString(0, R.styleable.AndroidManifestApplication_permission, sa));
         // CHECKSTYLE:on
         //@formatter:on
+
+        var hooks = pkg.getPackageParsingHooks();
+        int enabledOverride = hooks.overrideDefaultPackageEnabledState();
+        if (enabledOverride == PackageManager.COMPONENT_ENABLED_STATE_DISABLED) {
+            pkg.setEnabled(false);
+        } else if (enabledOverride == PackageManager.COMPONENT_ENABLED_STATE_ENABLED) {
+            pkg.setEnabled(true);
+        }
     }
 
     /**
