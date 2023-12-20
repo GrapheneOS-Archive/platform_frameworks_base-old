@@ -47,6 +47,7 @@ import android.util.SparseArray;
 import android.util.SparseIntArray;
 
 import com.android.internal.R;
+import com.android.internal.pm.parsing.pkg.PackageExtIface;
 import com.android.internal.pm.pkg.component.ParsedActivity;
 import com.android.internal.pm.pkg.component.ParsedApexSystemService;
 import com.android.internal.pm.pkg.component.ParsedAttribution;
@@ -1514,4 +1515,8 @@ public interface AndroidPackage {
      * @hide
      */
     boolean isAllowCrossUidActivitySwitchFromBelow();
+
+    /** @hide */
+    @Immutable.Ignore
+    PackageExtIface ext();
 }
