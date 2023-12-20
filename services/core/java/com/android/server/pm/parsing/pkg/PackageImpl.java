@@ -3777,4 +3777,16 @@ public class PackageImpl implements ParsedPackage, AndroidPackageInternal,
     public void setGosPackageStateCachedDerivedFlags(int value) {
         gosPackageStateCachedDerivedFlags = value;
     }
+
+    private com.android.server.pm.ext.PackageParsingHooks packageParsingHooks;
+
+    @Override
+    public void initPackageParsingHooks() {
+        packageParsingHooks = com.android.server.pm.ext.PackageHooksRegistry.getParsingHooks(getPackageName());
+    }
+
+    @Override
+    public com.android.server.pm.ext.PackageParsingHooks getPackageParsingHooks() {
+        return packageParsingHooks;
+    }
 }
