@@ -1,20 +1,34 @@
 package android.ext;
 
+import android.annotation.NonNull;
+import android.annotation.SystemApi;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 /** @hide */
-public class AppInfoExt implements Parcelable {
-    public static final AppInfoExt DEFAULT = new AppInfoExt(0, 0L);
+@SystemApi
+public final class AppInfoExt implements Parcelable {
+    /** @hide */
+    public static final AppInfoExt DEFAULT = new AppInfoExt(PackageId.UNKNOWN, 0, 0L);
 
+    private final int packageId;
     private final int flags;
 
+    /** @hide */
     public static final long HAS_COMPAT_CHANGES = 1L << 63;
     private final long compatChanges;
 
-    public AppInfoExt(int flags, long compatChanges) {
+    public AppInfoExt(int packageId, int flags, long compatChanges) {
+        this.packageId = packageId;
         this.flags = flags;
         this.compatChanges = compatChanges;
+    }
+
+    /**
+     * One of {@link android.ext.PackageId} int constants.
+     */
+    public int getPackageId() {
+        return packageId;
     }
 
     public boolean hasFlag(int flag) {
@@ -36,15 +50,26 @@ public class AppInfoExt implements Parcelable {
     }
 
     @Override
-    public void writeToParcel(Parcel dest, int parcelFlags) {
+    public void writeToParcel(@NonNull Parcel dest, int parcelFlags) {
+        boolean def = this == DEFAULT;
+        dest.writeBoolean(def);
+        if (def) {
+            return;
+        }
+
+        dest.writeInt(packageId);
         dest.writeInt(flags);
         dest.writeLong(compatChanges);
     }
 
+    @NonNull
     public static final Creator<AppInfoExt> CREATOR = new Creator<>() {
         @Override
-        public AppInfoExt createFromParcel(Parcel p) {
-            return new AppInfoExt(p.readInt(), p.readLong());
+        public AppInfoExt createFromParcel(@NonNull Parcel p) {
+            if (p.readBoolean()) {
+                return DEFAULT;
+            }
+            return new AppInfoExt(p.readInt(), p.readInt(), p.readLong());
         }
 
         @Override
