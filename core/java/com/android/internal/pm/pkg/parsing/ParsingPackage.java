@@ -32,6 +32,7 @@ import android.util.SparseArray;
 import android.util.SparseIntArray;
 
 import com.android.internal.R;
+import com.android.internal.pm.parsing.pkg.PackageExtIface;
 import com.android.internal.pm.parsing.pkg.ParsedPackage;
 import com.android.internal.pm.pkg.component.ParsedActivity;
 import com.android.internal.pm.pkg.component.ParsedApexSystemService;
@@ -553,4 +554,14 @@ public interface ParsingPackage {
     boolean isNormalScreensSupported();
 
     boolean isSmallScreensSupported();
+
+    boolean isPartiallyDirectBootAware();
+
+    void initPackageParsingHooks();
+
+    default PackageParsingHooks getPackageParsingHooks() {
+        return PackageParsingHooks.DEFAULT;
+    }
+
+    void setPackageExt(@Nullable PackageExtIface ext);
 }
