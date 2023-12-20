@@ -62,6 +62,7 @@ import com.android.internal.util.XmlUtils;
 import com.android.internal.util.dump.DualDumpOutputStream;
 import com.android.modules.utils.TypedXmlPullParser;
 import com.android.modules.utils.TypedXmlSerializer;
+import com.android.server.pm.ext.AndroidAutoHooks;
 import com.android.server.utils.EventLogger;
 
 import libcore.io.IoUtils;
@@ -1076,10 +1077,18 @@ class UsbProfileGroupSettingsManager {
                 if (mDisablePermissionDialogs) {
                     return activityInfo;
                 }
+
+                ApplicationInfo ai = activityInfo.applicationInfo;
+                if (ai == null) {
+                    return null;
+                }
+
                 // System apps are considered default unless there are other matches
-                if (activityInfo.applicationInfo != null
-                        && (activityInfo.applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM)
-                                != 0) {
+                if ((ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0) {
+                    return activityInfo;
+                }
+
+                if (AndroidAutoHooks.isAndroidAutoWithGrantedBasePrivPerms(ai.packageName, UserHandle.getUserId(ai.uid))) {
                     return activityInfo;
                 }
             }
