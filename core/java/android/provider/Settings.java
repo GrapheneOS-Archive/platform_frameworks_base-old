@@ -12565,7 +12565,9 @@ public final class Settings {
         /** @see android.provider.Settings#getPublicSettingsForClass */
         // ExtSettings BEGIN
 
-
+        /** @hide */
+        public static final String ALLOW_DISABLING_HARDENING_VIA_APP_COMPAT_CONFIG =
+                "allow_automatic_pkg_hardening_config"; // historical name
 
         // ExtSettings END
 

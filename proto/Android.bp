@@ -13,7 +13,10 @@ java_library_static {
     proto: {
         type: "nano",
     },
-    srcs: ["src/**/*.proto"],
+    srcs: [
+        "src/**/*.proto",
+        ":app_compat_config_proto-src",
+    ],
     sdk_version: "9",
     // Pin java_version until jarjar is certified to support later versions. http://b/72703434
     java_version: "1.8",

@@ -192,8 +192,10 @@ public class PackageParser2 implements AutoCloseable {
         public final ParsingPackage startParsingPackage(@NonNull String packageName,
                 @NonNull String baseCodePath, @NonNull String codePath,
                 @NonNull TypedArray manifestArray, boolean isCoreApp) {
-            return PackageImpl.forParsing(packageName, baseCodePath, codePath, manifestArray,
+            var res = PackageImpl.forParsing(packageName, baseCodePath, codePath, manifestArray,
                     isCoreApp, Callback.this);
+            res.initPackageParsingHooks();
+            return res;
         }
 
         /**
