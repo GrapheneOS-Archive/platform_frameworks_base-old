@@ -76,6 +76,8 @@ public final class GosPackageState extends GosPackageStateBase implements Parcel
 
     /** @hide */ public static final int FLAG_ENABLE_EXPLOIT_PROTECTION_COMPAT_MODE = 1 << 24;
 
+    /** @hide */ public static final int FLAG_HAS_PACKAGE_FLAGS = 1 << 25;
+
     // to distinguish between the case when no dflags are set and the case when dflags weren't calculated yet
     public static final int DFLAGS_SET = 1;
 
@@ -98,8 +100,10 @@ public final class GosPackageState extends GosPackageStateBase implements Parcel
     public static final int DFLAG_HAS_GET_ACCOUNTS_DECLARATION = 1 << 22;
 
     /** @hide */
-    public GosPackageState(int flags, @Nullable byte[] storageScopes, @Nullable byte[] contactScopes, int derivedFlags) {
-        super(flags, storageScopes, contactScopes);
+    public GosPackageState(int flags, long packageFlags,
+                           @Nullable byte[] storageScopes, @Nullable byte[] contactScopes,
+                           int derivedFlags) {
+        super(flags, packageFlags, storageScopes, contactScopes);
         this.derivedFlags = derivedFlags;
     }
 
@@ -160,16 +164,18 @@ public final class GosPackageState extends GosPackageStateBase implements Parcel
     @Override
     public void writeToParcel(@NonNull Parcel dest, int flags) {
         dest.writeInt(this.flags);
+        dest.writeLong(this.packageFlags);
         dest.writeByteArray(storageScopes);
         dest.writeByteArray(contactScopes);
         dest.writeInt(derivedFlags);
     }
 
     @NonNull
-    public static final Creator<GosPackageState> CREATOR = new Creator<GosPackageState>() {
+    public static final Creator<GosPackageState> CREATOR = new Creator<>() {
         @Override
         public GosPackageState createFromParcel(Parcel in) {
-            return new GosPackageState(in.readInt(), in.createByteArray(), in.createByteArray(),
+            return new GosPackageState(in.readInt(), in.readLong(),
+                    in.createByteArray(), in.createByteArray(),
                     in.readInt());
         }
 
@@ -327,6 +333,7 @@ public final class GosPackageState extends GosPackageStateBase implements Parcel
         private final String packageName;
         private final int userId;
         private int flags;
+        private long packageFlags;
         private byte[] storageScopes;
         private byte[] contactScopes;
         private int editorFlags;
@@ -345,6 +352,7 @@ public final class GosPackageState extends GosPackageStateBase implements Parcel
             this.packageName = packageName;
             this.userId = userId;
             this.flags = s.flags;
+            this.packageFlags = s.packageFlags;
             this.storageScopes = s.storageScopes;
             this.contactScopes = s.contactScopes;
         }
@@ -368,6 +376,29 @@ public final class GosPackageState extends GosPackageStateBase implements Parcel
         @NonNull
         public Editor clearFlags(int flags) {
             this.flags &= ~flags;
+            return this;
+        }
+
+        @NonNull
+        public Editor addPackageFlags(long flags) {
+            this.packageFlags |= flags;
+            return this;
+        }
+
+        @NonNull
+        public Editor clearPackageFlags(long flags) {
+            this.packageFlags &= ~flags;
+            return this;
+        }
+
+        @NonNull
+        public Editor setPackageFlagState(long flags, boolean state) {
+            if (state) {
+                addPackageFlags(flags);
+            } else {
+                clearPackageFlags(flags);
+            }
+
             return this;
         }
 
@@ -411,9 +442,11 @@ public final class GosPackageState extends GosPackageStateBase implements Parcel
         // Returns true if the update was successfully applied and is scheduled to be written back
         // to storage. Actual writeback is performed asynchronously.
         public boolean apply() {
+            setFlagsState(GosPackageState.FLAG_HAS_PACKAGE_FLAGS, packageFlags != 0);
+
             try {
                 return ActivityThread.getPackageManager().setGosPackageState(packageName, userId,
-                        new GosPackageState(flags, storageScopes, contactScopes, 0),
+                        new GosPackageState(flags, packageFlags, storageScopes, contactScopes, 0),
                         editorFlags);
             } catch (RemoteException e) {
                 throw e.rethrowFromSystemServer();
@@ -434,8 +467,9 @@ public final class GosPackageState extends GosPackageStateBase implements Parcel
         return myUserId;
     }
 
-    private static GosPackageState createDefault(String pkgName, int userId) {
-        var ps = new GosPackageState(0, null, null, 0);
+    /** @hide */
+    public static GosPackageState createDefault(String pkgName, int userId) {
+        var ps = new GosPackageState(0, 0L, null, null, 0);
         ps.packageName = pkgName;
         ps.userId = userId;
         return ps;
