@@ -50,8 +50,9 @@ import com.android.server.pm.PackageManagerService;
  */
 public final class GosPackageStatePm extends GosPackageStateBase {
 
-    public GosPackageStatePm(int flags, @Nullable byte[] storageScopes, @Nullable byte[] contactScopes) {
-        super(flags, storageScopes, contactScopes);
+    public GosPackageStatePm(int flags, long packageFlags,
+                             @Nullable byte[] storageScopes, @Nullable byte[] contactScopes) {
+        super(flags, packageFlags, storageScopes, contactScopes);
     }
 
     @Nullable
