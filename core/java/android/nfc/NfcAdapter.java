@@ -952,8 +952,10 @@ public final class NfcAdapter {
     @RequiresPermission(android.Manifest.permission.WRITE_SECURE_SETTINGS)
     public boolean enable() {
         if (GmsCompat.isEnabled()) {
-            GmsHooks.enableNfc();
-            return false;
+            if (!GmsCompat.hasPermission(android.Manifest.permission.WRITE_SECURE_SETTINGS)) {
+                GmsHooks.enableNfc();
+                return false;
+            }
         }
 
         try {
