@@ -2820,7 +2820,8 @@ public class ApplicationInfo extends PackageItemInfo implements Parcelable {
     }
 
     /** @hide */
-    public AppInfoExt ext() {
+    @SystemApi
+    public @NonNull AppInfoExt ext() {
         return ext;
     }
 }
