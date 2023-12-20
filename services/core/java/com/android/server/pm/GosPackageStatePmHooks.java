@@ -737,4 +737,51 @@ public class GosPackageStatePmHooks {
     static void init(PackageManagerService pm) {
         Permission.init(pm);
     }
+
+    public static int runShellCommand(PackageManagerShellCommand cmd) {
+        if (!Build.isDebuggable()) {
+            return 1;
+        }
+
+        String packageName = cmd.getNextArgRequired();
+        int userId = Integer.parseInt(cmd.getNextArgRequired());
+
+        GosPackageState.Editor ed = GosPackageState.edit(packageName, userId);
+
+        for (;;) {
+            String arg = cmd.getNextArg();
+            if (arg == null) {
+                if (!ed.apply()) {
+                    return 1;
+                }
+
+                return 0;
+            }
+
+            switch (arg) {
+                case "add-flags", "clear-flags" ->
+                    ed.setFlagsState(Integer.parseInt(cmd.getNextArgRequired(), 16),
+                            "add-flags".equals(arg));
+                case "add-package-flags", "clear-package-flags" ->
+                    ed.setPackageFlagState(Long.parseLong(cmd.getNextArgRequired(), 16),
+                            "add-package-flags".equals(arg));
+                case "set-storage-scopes" ->
+                    ed.setStorageScopes(getByteArrArg(cmd));
+                case "set-contact-scopes" ->
+                    ed.setContactScopes(getByteArrArg(cmd));
+                case "set-kill-uid-after-apply" ->
+                    ed.setKillUidAfterApply(Boolean.parseBoolean(cmd.getNextArgRequired()));
+                case "set-notify-uid-after-apply" ->
+                    ed.setNotifyUidAfterApply(Boolean.parseBoolean(cmd.getNextArgRequired()));
+                default ->
+                    throw new IllegalArgumentException(arg);
+            }
+        }
+    }
+
+    @Nullable
+    private static byte[] getByteArrArg(ShellCommand cmd) {
+        String s = cmd.getNextArgRequired();
+        return "null".equals(s) ? null : libcore.util.HexEncoding.decode(s);
+    }
 }
