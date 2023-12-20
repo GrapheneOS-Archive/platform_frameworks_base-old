@@ -239,6 +239,8 @@ public class DropBoxMonitor {
                     continue;
                 }
 
+                lines.add(line);
+
                 String bootReasonPrefix = BootReceiver.KMSG_BOOT_REASON_PREFIX;
                 if (line.startsWith(bootReasonPrefix)) {
                     String bootReason = line.substring(bootReasonPrefix.length());
@@ -255,8 +257,6 @@ public class DropBoxMonitor {
 
                     break;
                 }
-
-                lines.add(line);
             }
 
             showCrashNotif(e, "Kernel", String.join("\n", lines));
