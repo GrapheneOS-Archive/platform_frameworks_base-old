@@ -6590,7 +6590,7 @@
          the underlying display device changes. -->
     <bool name="config_persistBrightnessNitsForDefaultDisplay">false</bool>
     <!-- Whether to request the approval before commit sessions. -->
-    <bool name="config_isPreApprovalRequestAvailable">true</bool>
+    <bool name="config_isPreApprovalRequestAvailable">false</bool>
 
     <!-- Whether the AOSP support for app cloning building blocks is to be enabled for the
          device. -->
