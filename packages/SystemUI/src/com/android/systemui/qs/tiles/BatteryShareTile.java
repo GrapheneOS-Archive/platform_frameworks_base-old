@@ -25,12 +25,12 @@ import com.android.systemui.plugins.statusbar.StatusBarStateController;
 import com.android.systemui.qs.QSHost;
 import com.android.systemui.qs.QsEventLogger;
 import com.android.systemui.qs.logging.QSLogger;
-import com.android.systemui.statusbar.policy.KeyguardStateController;
+import com.android.systemui.qs.tileimpl.QSTileImpl;
 
 import javax.inject.Inject;
 import vendor.google.wireless_charger.ReverseWirelessCharger;
 
-public class BatteryShareTile extends SecureQSTile<BooleanState> {
+public class BatteryShareTile extends QSTileImpl<BooleanState> {
 
     public static final String TILE_SPEC = "batteryShare";
 
@@ -55,11 +55,10 @@ public class BatteryShareTile extends SecureQSTile<BooleanState> {
             MetricsLogger metricsLogger,
             StatusBarStateController statusBarStateController,
             ActivityStarter activityStarter,
-            QSLogger qsLogger,
-            KeyguardStateController keyguardStateController
+            QSLogger qsLogger
     ) {
         super(host, uiEventLogger, backgroundLooper, mainHandler, falsingManager, metricsLogger,
-                statusBarStateController, activityStarter, qsLogger, keyguardStateController);
+                statusBarStateController, activityStarter, qsLogger);
         mWirelessCharger = ReverseWirelessCharger.getInstance();
         mContext = host.getContext();
         IntentFilter filter = new IntentFilter();
@@ -103,10 +102,7 @@ public class BatteryShareTile extends SecureQSTile<BooleanState> {
     }
 
     @Override
-    protected void handleClick(@Nullable View view, boolean keyguardShowing) {
-        if (checkKeyguard(view, keyguardShowing)) {
-            return;
-        }
+    protected void handleClick(@Nullable View view) {
         if (getState().state == Tile.STATE_UNAVAILABLE) {
             refreshState();
             return;
