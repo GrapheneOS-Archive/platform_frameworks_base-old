@@ -250,7 +250,7 @@ public final class BroadcastHelper {
      * automatically without needing an explicit launch.
      * Send it a LOCKED_BOOT_COMPLETED/BOOT_COMPLETED if it would ordinarily have gotten ones.
      */
-    private void sendBootCompletedBroadcastToSystemApp(@NonNull String packageName,
+    public void sendBootCompletedBroadcastToSystemApp(@NonNull String packageName,
                                                        boolean includeStopped,
                                                        int userId) {
         // If user is not running, the app didn't miss any broadcast

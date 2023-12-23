@@ -6592,6 +6592,24 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
         public void updateSeInfo(String packageName) {
             SeInfoOverride.updateSeInfo(PackageManagerService.this, packageName);
         }
+
+        @Override
+        public void sendBootCompletedBroadcastToPackage(String packageName, boolean includeStopped,
+                                                    int userId) {
+            mContext.enforceCallingPermission(Manifest.permission.GRANT_RUNTIME_PERMISSIONS, null);
+
+            if (userId != UserHandle.getUserId(Binder.getCallingUid())) {
+                throw new SecurityException("userId mismatch");
+            }
+
+            final long token = Binder.clearCallingIdentity();
+            try {
+                mBroadcastHelper.sendBootCompletedBroadcastToSystemApp(packageName, includeStopped,
+                        userId);
+            } finally {
+                Binder.restoreCallingIdentity(token);
+            }
+        }
     }
 
     private class PackageManagerInternalImpl extends PackageManagerInternalBase {
