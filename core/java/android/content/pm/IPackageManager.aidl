@@ -812,4 +812,7 @@ interface IPackageManager {
     boolean updateListOfBusyPackages(boolean add, in List<String> packageNames, IBinder callerBinder);
 
     void updateSeInfo(String packageName);
+
+    void sendBootCompletedBroadcastToPackage(String packageName, boolean includeStopped,
+                                                    int userId);
 }
