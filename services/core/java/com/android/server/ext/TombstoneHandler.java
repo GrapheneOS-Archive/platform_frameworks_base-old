@@ -94,7 +94,9 @@ public class TombstoneHandler {
         var tombstone = TombstoneProtos.Tombstone.parseFrom(tombstoneBytes);
 
         var sb = new StringBuilder();
-        sb.append("uid: ");
+        sb.append("osVersion: ");
+        sb.append(tombstone.buildFingerprint);
+        sb.append("\nuid: ");
         sb.append(tombstone.uid);
         {
             String sl = tombstone.selinuxLabel;
