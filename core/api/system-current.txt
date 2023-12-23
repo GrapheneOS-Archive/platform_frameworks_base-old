@@ -2076,6 +2076,10 @@ package android.app.compat.gms {
     method public static boolean isEnabledFor(@NonNull String, int);
   }
 
+  public class GmsUtils {
+    method @NonNull public static android.content.Intent createAppPlayStoreIntent(@NonNull String);
+  }
+
 }
 
 package android.app.contentsuggestions {
