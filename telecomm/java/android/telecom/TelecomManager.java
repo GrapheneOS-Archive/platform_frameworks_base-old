@@ -1196,7 +1196,11 @@ public class TelecomManager {
      * @return The user outgoing phone account selected by the user, or {@code null} if there is no
      * user selected outgoing {@link PhoneAccountHandle}.
      */
-    @RequiresPermission(android.Manifest.permission.READ_PHONE_STATE)
+    @RequiresPermission(anyOf = {
+            // upstream incorrectly specifies unprivileged READ_PHONE_STATE permission instead
+            Manifest.permission.READ_PRIVILEGED_PHONE_STATE,
+            Manifest.permission.READ_PRIVILEGED_PHONE_STATE_ANDROID_AUTO
+    })
     public @Nullable PhoneAccountHandle getUserSelectedOutgoingPhoneAccount() {
         ITelecomService service = getTelecomService();
         if (service != null) {
