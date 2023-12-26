@@ -4858,6 +4858,15 @@ public final class ActivityThread extends ClientTransactionHandler
                 r.mLocalProvider.dump(info.fd.getFileDescriptor(), pw, info.args);
                 pw.flush();
             }
+        } catch (NoSuchMethodError e) {
+            if (android.app.compat.gms.GmsCompat.isEnabled()) {
+                // one of the GSF content providers accesses a hidden method from ContentProvider.dump(),
+                // which leads to a confusing crash when a bugreport is being taken (dumps of all
+                // of the active ContentProviders are included in bugreports)
+                Log.d(TAG, "handleDumpProvider", e);
+            } else {
+                throw e;
+            }
         } finally {
             IoUtils.closeQuietly(info.fd);
             StrictMode.setThreadPolicy(oldPolicy);
