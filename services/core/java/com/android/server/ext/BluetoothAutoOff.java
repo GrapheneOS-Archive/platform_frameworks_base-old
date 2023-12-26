@@ -2,6 +2,7 @@ package com.android.server.ext;
 
 import android.annotation.Nullable;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.content.BroadcastReceiver;
@@ -11,6 +12,8 @@ import android.content.IntentFilter;
 import android.ext.settings.ExtSettings;
 import android.os.Build;
 import android.util.Slog;
+
+import java.util.List;
 
 class BluetoothAutoOff extends DelayedConditionalAction {
     private static final String TAG = BluetoothAutoOff.class.getSimpleName();
@@ -58,7 +61,17 @@ class BluetoothAutoOff extends DelayedConditionalAction {
                 if (adapter.getConnectionState() == BluetoothAdapter.STATE_DISCONNECTED) {
                     // Bluetooth GATT Profile (Bluetooth LE) connection state is ignored
                     // by getConnectionState()
-                    return manager.getConnectedDevices(BluetoothProfile.GATT).size() == 0;
+                    List<BluetoothDevice> connectedDevices;
+                    try {
+                        connectedDevices = manager.getConnectedDevices(BluetoothProfile.GATT);
+                    } catch (NullPointerException e) {
+                        // getConnectedDevices() throws an undocumented NullPointerException if
+                        // GattService gets racily stopped
+                        Slog.e(TAG, "", e);
+                        return false;
+                    }
+
+                    return connectedDevices == null || connectedDevices.size() == 0;
                 }
             }
 
