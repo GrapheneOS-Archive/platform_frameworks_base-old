@@ -13,6 +13,8 @@ import android.os.Build;
 import android.util.Slog;
 
 class BluetoothAutoOff extends DelayedConditionalAction {
+    private static final String TAG = BluetoothAutoOff.class.getSimpleName();
+
     private final BluetoothManager manager;
     @Nullable
     private final BluetoothAdapter adapter;
@@ -44,9 +46,7 @@ class BluetoothAutoOff extends DelayedConditionalAction {
         sse.context.registerReceiver(new BroadcastReceiver() {
             @Override
             public void onReceive(Context broadcastContext, Intent intent) {
-                if (Build.isDebuggable()) {
-                    Slog.d("BtAutoOff", "" + intent + ", extras " + intent.getExtras().deepCopy());
-                }
+                Slog.d(TAG, "" + intent + ", extras " + intent.getExtras().deepCopy());
                 update();
             }
         }, f, null, handler);
