@@ -76,11 +76,16 @@ public class MissingSpecialRuntimePermissionNotification {
         var nb = new Notification.Builder(ctx, SystemNotificationChannels.MISSING_PERMISSION);
         nb.setSmallIcon(R.drawable.stat_sys_warning);
 
-        CharSequence appLabel;
+        CharSequence appLabel = null;
         {
             ApplicationInfo appInfo = LocalServices.getService(PackageManagerInternal.class)
                     .getApplicationInfo(packageName, 0, Process.SYSTEM_UID, user.getIdentifier());
-            appLabel = appInfo.loadLabel(ctx.getPackageManager());
+            if (appInfo != null) {
+                appLabel = appInfo.loadLabel(ctx.getPackageManager());
+            }
+            if (appLabel == null) {
+                appLabel = packageName;
+            }
         }
         nb.setContentTitle(ctx.getString(R.string.missing_sensors_permission_title, appLabel));
 
