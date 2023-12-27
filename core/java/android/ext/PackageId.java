@@ -11,4 +11,34 @@ import android.annotation.SystemApi;
 // or by a check that the APK is stored on an immutable OS partition.
 public interface PackageId {
     int UNKNOWN = 0;
+
+    String GSF_NAME = "com.google.android.gsf";
+    int GSF = 1;
+
+    String GMS_CORE_NAME = "com.google.android.gms";
+    int GMS_CORE = 2;
+
+    String PLAY_STORE_NAME = "com.android.vending";
+    int PLAY_STORE = 3;
+
+    String G_SEARCH_APP_NAME = "com.google.android.googlequicksearchbox";
+    int G_SEARCH_APP = 4;
+
+    String EUICC_SUPPORT_PIXEL_NAME = "com.google.euiccpixel";
+    int EUICC_SUPPORT_PIXEL = 5;
+
+    String G_EUICC_LPA_NAME = "com.google.android.euicc";
+    int G_EUICC_LPA = 6;
+
+    String G_CARRIER_SETTINGS_NAME = "com.google.android.carrier";
+    int G_CARRIER_SETTINGS = 7;
+
+    String G_CAMERA_NAME = "com.google.android.GoogleCamera";
+    int G_CAMERA = 8;
+
+    String PIXEL_CAMERA_SERVICES_NAME = "com.google.android.apps.camera.services";
+    int PIXEL_CAMERA_SERVICES = 9;
+
+    String ANDROID_AUTO_NAME = "com.google.android.projection.gearhead";
+    int ANDROID_AUTO = 10;
 }

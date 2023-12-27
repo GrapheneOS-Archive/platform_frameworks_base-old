@@ -4360,6 +4360,26 @@ package android.debug {
 package android.ext {
 
   public interface PackageId {
+    field public static final int ANDROID_AUTO = 10; // 0xa
+    field public static final String ANDROID_AUTO_NAME = "com.google.android.projection.gearhead";
+    field public static final int EUICC_SUPPORT_PIXEL = 5; // 0x5
+    field public static final String EUICC_SUPPORT_PIXEL_NAME = "com.google.euiccpixel";
+    field public static final int GMS_CORE = 2; // 0x2
+    field public static final String GMS_CORE_NAME = "com.google.android.gms";
+    field public static final int GSF = 1; // 0x1
+    field public static final String GSF_NAME = "com.google.android.gsf";
+    field public static final int G_CAMERA = 8; // 0x8
+    field public static final String G_CAMERA_NAME = "com.google.android.GoogleCamera";
+    field public static final int G_CARRIER_SETTINGS = 7; // 0x7
+    field public static final String G_CARRIER_SETTINGS_NAME = "com.google.android.carrier";
+    field public static final int G_EUICC_LPA = 6; // 0x6
+    field public static final String G_EUICC_LPA_NAME = "com.google.android.euicc";
+    field public static final int G_SEARCH_APP = 4; // 0x4
+    field public static final String G_SEARCH_APP_NAME = "com.google.android.googlequicksearchbox";
+    field public static final int PIXEL_CAMERA_SERVICES = 9; // 0x9
+    field public static final String PIXEL_CAMERA_SERVICES_NAME = "com.google.android.apps.camera.services";
+    field public static final int PLAY_STORE = 3; // 0x3
+    field public static final String PLAY_STORE_NAME = "com.android.vending";
     field public static final int UNKNOWN = 0; // 0x0
   }
 
