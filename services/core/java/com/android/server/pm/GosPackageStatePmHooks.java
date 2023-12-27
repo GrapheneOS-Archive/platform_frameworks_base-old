@@ -747,12 +747,17 @@ public class GosPackageStatePmHooks {
         int userId = Integer.parseInt(cmd.getNextArgRequired());
 
         GosPackageState.Editor ed = GosPackageState.edit(packageName, userId);
+        boolean updatePermissionState = false;
 
         for (;;) {
             String arg = cmd.getNextArg();
             if (arg == null) {
                 if (!ed.apply()) {
                     return 1;
+                }
+
+                if (updatePermissionState) {
+                    cmd.mPermissionManager.updatePermissionState(packageName, userId);
                 }
 
                 return 0;
@@ -773,6 +778,8 @@ public class GosPackageStatePmHooks {
                     ed.setKillUidAfterApply(Boolean.parseBoolean(cmd.getNextArgRequired()));
                 case "set-notify-uid-after-apply" ->
                     ed.setNotifyUidAfterApply(Boolean.parseBoolean(cmd.getNextArgRequired()));
+                case "update-permission-state" ->
+                    updatePermissionState = true;
                 default ->
                     throw new IllegalArgumentException(arg);
             }
