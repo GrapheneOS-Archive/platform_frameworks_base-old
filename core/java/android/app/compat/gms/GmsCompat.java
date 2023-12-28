@@ -71,6 +71,11 @@ public final class GmsCompat {
     }
 
     /** @hide */
+    public static boolean isAndroidAuto() {
+        return curPackageId == PackageId.ANDROID_AUTO;
+    }
+
+    /** @hide */
     public static int getCurrentPackageId() {
         return curPackageId;
     }
@@ -133,6 +138,7 @@ public final class GmsCompat {
                 PackageId.GMS_CORE,
                 PackageId.PLAY_STORE,
                 PackageId.G_SEARCH_APP,
+                PackageId.ANDROID_AUTO,
                 PackageId.G_CARRIER_SETTINGS ->
                     true;
             default ->
@@ -154,6 +160,7 @@ public final class GmsCompat {
                 PackageId.GMS_CORE_NAME,
                 PackageId.PLAY_STORE_NAME,
                 PackageId.G_SEARCH_APP_NAME,
+                PackageId.ANDROID_AUTO_NAME,
                 PackageId.G_CARRIER_SETTINGS_NAME ->
                     true;
             default ->
