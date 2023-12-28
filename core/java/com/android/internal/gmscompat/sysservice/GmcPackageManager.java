@@ -62,7 +62,9 @@ public class GmcPackageManager extends ApplicationPackageManager {
         initPseudoDisabledPackages();
         initForceDisabledComponents(ctx);
         if (GmsCompat.isPlayStore()) {
-            HIDDEN_PACKAGES.add(GoogleEuicc.LPA_PKG_NAME);
+            ArraySet<String> hiddenPkgs = HIDDEN_PACKAGES;
+            hiddenPkgs.add(GoogleEuicc.LPA_PKG_NAME);
+            hiddenPkgs.add(PackageId.ANDROID_AUTO_NAME);
         }
     }
 
