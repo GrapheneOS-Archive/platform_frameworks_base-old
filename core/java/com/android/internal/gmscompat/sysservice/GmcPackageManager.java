@@ -34,6 +34,7 @@ import android.content.pm.InstallSourceInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.SharedLibraryInfo;
 import android.content.pm.VersionedPackage;
+import android.ext.PackageId;
 import android.os.Process;
 import android.os.UserHandle;
 import android.util.ArrayMap;
@@ -342,7 +343,7 @@ public class GmcPackageManager extends ApplicationPackageManager {
             return super.getInstallerPackageName(packageName);
         } catch (Exception e) {
             if (isPseudoDisabledPackage(packageName)) {
-                return getInstallerPackageName(selfPkgName());
+                return PackageId.PLAY_STORE_NAME;
             }
             throw e;
         }
@@ -354,7 +355,9 @@ public class GmcPackageManager extends ApplicationPackageManager {
             return super.getInstallSourceInfo(packageName);
         } catch (NameNotFoundException e) {
             if (isPseudoDisabledPackage(packageName)) {
-                return getInstallSourceInfo(selfPkgName());
+                String installer = PackageId.PLAY_STORE_NAME;
+                var isi = new InstallSourceInfo(installer, null, null, installer);
+                return isi;
             }
             throw e;
         }
@@ -393,6 +396,7 @@ public class GmcPackageManager extends ApplicationPackageManager {
         pi.packageName = pkgName;
         pi.applicationInfo.packageName = pkgName;
         pi.applicationInfo.enabled = false;
+        pi.setLongVersionCode(Integer.MAX_VALUE);
         return pi;
     }
 
@@ -406,6 +410,8 @@ public class GmcPackageManager extends ApplicationPackageManager {
         }
         ai.packageName = pkgName;
         ai.enabled = false;
+        ai.longVersionCode = Integer.MAX_VALUE;
+        ai.versionCode = Integer.MAX_VALUE;
         return ai;
     }
 
@@ -427,6 +433,12 @@ public class GmcPackageManager extends ApplicationPackageManager {
         if (GmsCompat.isPlayStore()) {
             // "Play Services for AR"
             pseudoDisabledPackages.add("com.google.ar.core");
+        }
+
+        if (GmsCompat.isAndroidAuto()) {
+            pseudoDisabledPackages.add(PackageId.G_SEARCH_APP_NAME);
+            pseudoDisabledPackages.add("com.google.android.apps.maps");
+            pseudoDisabledPackages.add("com.google.android.tts");
         }
     }
 
