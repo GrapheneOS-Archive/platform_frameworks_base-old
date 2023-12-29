@@ -109,6 +109,7 @@ import android.content.res.ApkAssets;
 import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.ext.PackageId;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.icu.util.ULocale;
@@ -3443,38 +3444,39 @@ public class PackageInstallerSession extends IPackageInstallerSession.Stub {
         mValidatedTargetSdk = packageLite.getTargetSdk();
 
         String initiatingPackageName = mInstallSource.mInitiatingPackageName;
-        if (initiatingPackageName != null && !isInstallerShell && !areUnknownGmsUpdatesAllowed()) {
+        final boolean isFirstPartyInstaller = "app.grapheneos.apps".equals(initiatingPackageName);
+        if (initiatingPackageName != null && !isInstallerShell && !isFirstPartyInstaller && !areUnknownGmsUpdatesAllowed()) {
             final int errorCode = PackageManager.INSTALL_FAILED_SESSION_INVALID;
             switch (mPackageName) {
-                case com.android.internal.gmscompat.GmsInfo.PACKAGE_GSF:
-                case com.android.internal.gmscompat.GmsInfo.PACKAGE_GMS_CORE:
-                case com.android.internal.gmscompat.GmsInfo.PACKAGE_PLAY_STORE:
-                    switch (initiatingPackageName) {
-                        case "app.grapheneos.apps":
+                case PackageId.GSF_NAME:
+                case PackageId.GMS_CORE_NAME:
+                case PackageId.PLAY_STORE_NAME: {
+                    if (PackageId.PLAY_STORE_NAME.equals(initiatingPackageName)) {
+                        if (mVersionCode <= params.maxAllowedVersion) {
                             break;
-                        case com.android.internal.gmscompat.GmsInfo.PACKAGE_PLAY_STORE: {
-                            if (mVersionCode <= params.maxAllowedVersion) {
-                                break;
-                            }
-
-                            // lock that is held at this point is per-session lock, call into
-                            // PackageManager is safe
-                            AndroidPackage pkg = mPm.snapshotComputer().getPackage(mPackageName);
-                            if (pkg != null && pkg.getLongVersionCode() == mVersionCode) {
-                                break;
-                            }
-
-                            String msg = "Installation of " + mPackageName + " version " + mVersionCode
-                                        + " is disallowed to prevent breaking gmscompat. " +
-                                        "Max allowed version is " + params.maxAllowedVersion;
-                            throw new PackageManagerException(errorCode, msg);
                         }
-                        default: {
-                            String msg = "Installation of " + mPackageName
-                                    + " is disallowed to prevent breaking gmscompat";
-                            throw new PackageManagerException(errorCode, msg);
+
+                        // lock that is held at this point is per-session lock, call into
+                        // PackageManager is safe
+                        AndroidPackage pkg = mPm.snapshotComputer().getPackage(mPackageName);
+                        if (pkg != null && pkg.getLongVersionCode() == mVersionCode) {
+                            break;
                         }
+
+                        String msg = "Installation of " + mPackageName + " version " + mVersionCode
+                                    + " is blocked to prevent breaking gmscompat. " +
+                                    "Max allowed version is " + params.maxAllowedVersion;
+                        throw new PackageManagerException(errorCode, msg);
                     }
+
+                    String msg = "Installation of " + mPackageName
+                            + " is blocked to prevent breaking gmscompat";
+                    throw new PackageManagerException(errorCode, msg);
+                }
+
+                case PackageId.ANDROID_AUTO_NAME:
+                    String msg = "Installation of " + mPackageName + " is blocked to prevent breaking gmscompat";
+                    throw new PackageManagerException(errorCode, msg);
             }
         }
 
