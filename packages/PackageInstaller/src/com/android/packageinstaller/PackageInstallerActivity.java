@@ -27,6 +27,7 @@ import android.app.AppOpsManager;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.ActivityNotFoundException;
+import android.content.ClipboardManager;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -39,6 +40,8 @@ import android.content.pm.PackageInstaller.SessionInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.ApplicationInfoFlags;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.pm.Signature;
+import android.content.pm.SigningInfo;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -51,6 +54,7 @@ import android.os.UserManager;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
+import android.util.PackageUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -107,6 +111,7 @@ public class PackageInstallerActivity extends AlertActivity {
     String mCallingPackage;
     private String mCallingAttributionTag;
     ApplicationInfo mSourceInfo;
+    ClipboardManager mClipboard;
 
     /**
      * A collection of unknown sources listeners that are actively listening for app ops mode
@@ -131,6 +136,7 @@ public class PackageInstallerActivity extends AlertActivity {
     private static final int DLG_INSTALL_ERROR = DLG_BASE + 3;
     private static final int DLG_ANONYMOUS_SOURCE = DLG_BASE + 4;
     private static final int DLG_EXTERNAL_SOURCE_BLOCKED = DLG_BASE + 5;
+    private static final int DLG_SIGN = DLG_BASE + 6;
 
     // If unknown sources are temporary allowed
     private boolean mAllowUnknownSources;
@@ -141,6 +147,8 @@ public class PackageInstallerActivity extends AlertActivity {
     private boolean mAllowNextOnPause;
 
     private CheckBox mGrantInternetPermission;
+
+    private Button mSignatureButton;
 
     private void startInstallConfirm() {
         if (mAppInfo != null) {
@@ -178,6 +186,26 @@ public class PackageInstallerActivity extends AlertActivity {
         mEnableOk = true;
         mOk.setEnabled(true);
         mOk.setFilterTouchesWhenObscured(true);
+    }
+
+    private String getSingerDigest() {
+        final String pkgName = mPkgInfo.applicationInfo.packageName;
+        final File sourceFile = new File(mPackageURI.getPath());
+        final SigningInfo si = PackageUtil.getPackageInfo(this, sourceFile, mPm.GET_SIGNING_CERTIFICATES).signingInfo;
+        if (si != null) {
+            Signature[] signatures;
+            if (!si.hasMultipleSigners()) {
+                signatures = si.getApkContentsSigners();
+            } else {
+                signatures = si.getSigningCertificateHistory();
+            }
+            String signatureDigest = PackageUtils.computeSignaturesSha256Digest(signatures);
+            if (mLocalLOGV) Log.i(TAG, "APK SHA256 Digest for " + pkgName + " is: " + signatureDigest);
+            return signatureDigest;
+        } else {
+            if (mLocalLOGV) Log.i(TAG, "SigningInfo is missing.");
+            return null;
+        }
     }
 
     private CharSequence getExistingUpdateOwnerLabel() {
@@ -243,6 +271,8 @@ public class PackageInstallerActivity extends AlertActivity {
                 return ExternalSourcesBlockedDialog.newInstance(mOriginatingPackage);
             case DLG_ANONYMOUS_SOURCE:
                 return AnonymousSourceDialog.newInstance();
+            case DLG_SIGN:
+                return SignatureDialog.newInstance(mPm.getApplicationLabel(mPkgInfo.applicationInfo));
         }
         return null;
     }
@@ -368,6 +398,7 @@ public class PackageInstallerActivity extends AlertActivity {
         mAppOpsManager = (AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
         mInstaller = mPm.getPackageInstaller();
         mUserManager = (UserManager) getSystemService(Context.USER_SERVICE);
+        mClipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
 
         final Intent intent = getIntent();
         final String action = intent.getAction();
@@ -509,6 +540,7 @@ public class PackageInstallerActivity extends AlertActivity {
         mAlert.setIcon(mAppSnippet.icon);
         mAlert.setTitle(mAppSnippet.label);
         mAlert.setView(R.layout.install_content_view);
+        mAlert.setButton(DialogInterface.BUTTON_NEUTRAL, getString(R.string.show_fingerprint_button), null, null);
         mAlert.setButton(DialogInterface.BUTTON_POSITIVE, getString(R.string.install),
                 (ignored, ignored2) -> {
                     if (mOk.isEnabled()) {
@@ -529,6 +561,14 @@ public class PackageInstallerActivity extends AlertActivity {
                     finish();
                 }, null);
         setupAlert();
+
+        mSignatureButton = mAlert.getButton(DialogInterface.BUTTON_NEUTRAL);
+
+        if (getSingerDigest() != null) {
+            mSignatureButton.setOnClickListener(view -> showDialogInner(DLG_SIGN));
+        } else {
+            mSignatureButton.setVisibility(View.GONE);
+        }
 
         mOk = mAlert.getButton(DialogInterface.BUTTON_POSITIVE);
         mOk.setEnabled(false);
@@ -908,6 +948,60 @@ public class PackageInstallerActivity extends AlertActivity {
                 Log.e(TAG, "Did not find app info for " + argument);
                 activity.finish();
                 return null;
+            }
+        }
+    }
+
+    // thats not really an error. using AppErrorDialog just for simplicity
+    public static class SignatureDialog extends AppErrorDialog {
+        static SignatureDialog newInstance(@NonNull CharSequence applicationLabel) {
+            SignatureDialog dialog = new SignatureDialog();
+            dialog.setArgument(applicationLabel);
+            return dialog;
+        }
+
+        @Override
+        protected Dialog createDialog(@NonNull CharSequence applicationLabel) {
+            PackageInstallerActivity activity = ((PackageInstallerActivity) getActivity());
+            String text = getString(R.string.signature_dialog_text, applicationLabel, activity.getSingerDigest().replaceAll("..(?!$)", "$0:"));
+            return new AlertDialog.Builder(getActivity())
+                    .setMessage(text)
+                    .setPositiveButton(R.string.verify_fingerprint_button, null)
+                    .setNegativeButton(R.string.cancel, ((dialog, which) -> activity.onResume()))
+                    .create();
+        }
+
+        @Override
+        public void onStart() {
+            super.onStart();
+
+            PackageInstallerActivity activity = ((PackageInstallerActivity) getActivity());
+            Button verifyButton = ((AlertDialog) getDialog()).getButton(DialogInterface.BUTTON_POSITIVE);
+
+            if (activity.mClipboard.hasPrimaryClip()) {
+                verifyButton.setOnClickListener(view -> {
+                    String providedFingerprint = activity.mClipboard.getPrimaryClip().getItemAt(0).getText().toString().trim();
+                    providedFingerprint = providedFingerprint.replaceAll("\\s+", "");
+                    if (providedFingerprint.contains(":")) providedFingerprint = providedFingerprint.replaceAll(":","");
+                    if (providedFingerprint.matches("^[a-fA-F0-9]{64}$")) {
+                        providedFingerprint = providedFingerprint.toUpperCase();
+                        if (providedFingerprint.equals(activity.getSingerDigest())) {
+                            verifyButton.setText(R.string.verification_success);
+                            verifyButton.setTextColor(0xff7cb342); // light green 50 600
+                            verifyButton.setEnabled(false);
+                        } else {
+                            verifyButton.setText(R.string.verification_failure);
+                            verifyButton.setTextColor(0xffb00020); // error
+                            verifyButton.setEnabled(false);
+                        }
+                    } else {
+                        verifyButton.setText(R.string.hash_mismatch);
+                        verifyButton.setEnabled(false);
+                    }
+                });
+            } else {
+                verifyButton.setText(R.string.empty_clipboard);
+                verifyButton.setEnabled(false);
             }
         }
     }

@@ -261,4 +261,18 @@
     <string name="more_options_button">More options</string>
 
     <string name="allow_network_permission_checkbox">Allow Network permission</string>
+
+    <string name="verify_fingerprint_button">Verify fingerprint from clipboard</string>
+
+    <string name="show_fingerprint_button">Show fingerprint</string>
+
+    <string name="signature_dialog_text">Certificate fingerprint (SHA-256) for <xliff:g id="app_name">%1$s</xliff:g>:\n\n<xliff:g id="signature">%2$s</xliff:g></string>
+
+    <string name="empty_clipboard">Clipboard is empty</string>
+
+    <string name="verification_success">Verification success</string>
+
+    <string name="verification_failure">Verification failure</string>
+
+    <string name="hash_mismatch">Incorrect SHA256 Fingerprint</string>
 </resources>
