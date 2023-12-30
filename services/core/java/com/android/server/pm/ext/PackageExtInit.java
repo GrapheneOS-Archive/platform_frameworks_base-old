@@ -80,9 +80,8 @@ public class PackageExtInit {
                     "1975b2f17177bc89a5dff31f9e64a6cae281a53dc1d1d59b1d147fe1c82afa00");
             case PIXEL_CAMERA_SERVICES_NAME -> validate(PIXEL_CAMERA_SERVICES, 124000L,
                     "226bb0439d6baeaa5a397c586e7031d8addfaec73c65be212f4a5dbfbf621b92");
-            case ANDROID_AUTO_NAME -> validate(ANDROID_AUTO, 108634400L,
-                    "fdb00c43dbde8b51cb312aa81d3b5fa17713adb94b28f598d77f8eb89daceedf",
-                    "1975b2f17177bc89a5dff31f9e64a6cae281a53dc1d1d59b1d147fe1c82afa00");
+            case ANDROID_AUTO_NAME -> validate(ANDROID_AUTO, 11_0_635014L,
+                    "1ca8dcc0bed3cbd872d2cb791200c0292ca9975768a82d676b8b424fb65b5295");
 
             default -> PackageId.UNKNOWN;
         };
