@@ -859,22 +859,15 @@ public abstract class Service extends ContextWrapper implements ComponentCallbac
      */
     public final void startForeground(int id, @NonNull Notification notification,
             @RequiresPermission @ForegroundServiceType int foregroundServiceType) {
-        if (GmsCompat.isAndroidAuto()) {
-            // if ((foregroundServiceType & ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE) != 0) {
-            //     if (!GmsCompat.hasPermission(Manifest.permission.RECORD_AUDIO)) {
-            //         foregroundServiceType &= ~ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE;
-            //     }
-            // }
-            // TODO: investigate why conditionally removing FOREGROUND_SERVICE_TYPE_MICROPHONE
-            //  leads to crashes in some cases, despite Android Auto always being bound by the
-            //  foreground GmsCompat app.
-
-            // microphone recording is allowed even without this flag (when RECORD_AUDIO perm is
-            // granted) due to Android Auto being bound by the foreground GmsCompat app
-            foregroundServiceType &= ~ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE;
+        if (GmsCompat.isEnabled()) {
+            if ((foregroundServiceType & ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE) != 0) {
+                if (!GmsCompat.hasPermission(Manifest.permission.RECORD_AUDIO)) {
+                    foregroundServiceType &= ~ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE;
+                }
+            }
 
             if ((foregroundServiceType & ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION) != 0) {
-                if (!GmsCompat.hasPermission(Manifest.permission.ACCESS_BACKGROUND_LOCATION)) {
+                if (!GmsCompat.hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION)) {
                     foregroundServiceType &= ~ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION;
                 }
             }
