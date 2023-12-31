@@ -93,6 +93,9 @@ public class ExtSettings {
             // also accessed in native code, in frameworks/native/cmds/servicemanager/Access.cpp
             "persist.sys.allow_google_apps_special_access_to_accelerators", true);
 
+    public static final BoolSetting ALLOW_SCREENSHOT_SECURE = new BoolSetting(
+            Setting.Scope.PER_USER, "allow_screenshot_secure", false);
+
     // also read in packages/modules/DnsResolver (DnsTlsTransport.cpp and doh/network/driver.rs)
     public static final IntSysProperty CONNECTIVITY_CHECKS = new IntSysProperty(
             "persist.sys.connectivity_checks",

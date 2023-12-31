@@ -20,7 +20,7 @@ import android.graphics.Rect
 
 interface ImageCapture {
 
-    fun captureDisplay(displayId: Int, crop: Rect? = null): Bitmap?
+    fun captureDisplay(displayId: Int, crop: Rect? = null, captureSecureLayers: Boolean = false): Bitmap?
 
     suspend fun captureTask(taskId: Int): Bitmap?
 }
