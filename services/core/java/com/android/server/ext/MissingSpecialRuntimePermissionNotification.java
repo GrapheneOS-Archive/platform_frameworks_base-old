@@ -82,9 +82,13 @@ public class MissingSpecialRuntimePermissionNotification {
                     .getApplicationInfo(packageName, 0, Process.SYSTEM_UID, user.getIdentifier());
             if (appInfo != null) {
                 appLabel = appInfo.loadLabel(ctx.getPackageManager());
+            } else if (uid < Process.FIRST_APPLICATION_UID) {
+                appLabel = packageName;
             }
             if (appLabel == null) {
-                appLabel = packageName;
+                Slog.d(TAG, "appLabel is null; uid: " + uid + ", pkg: " + packageName
+                        + ", perm: " + permissionName);
+                return;
             }
         }
         nb.setContentTitle(ctx.getString(R.string.missing_sensors_permission_title, appLabel));
