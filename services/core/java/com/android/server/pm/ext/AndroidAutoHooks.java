@@ -27,7 +27,6 @@ public class AndroidAutoHooks extends PackageHooks {
             List<ParsedUsesPermissionImpl> res = super.addUsesPermissions();
 
             res.addAll(createUsesPerms(
-                    Manifest.permission.ACCESS_BACKGROUND_LOCATION,
                     Manifest.permission.ASSOCIATE_COMPANION_DEVICES_RESTRICTED,
                     Manifest.permission.BLUETOOTH_PRIVILEGED_ANDROID_AUTO,
                     Manifest.permission.MANAGE_USB_ANDROID_AUTO,
