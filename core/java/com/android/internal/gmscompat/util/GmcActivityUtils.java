@@ -8,7 +8,9 @@ import android.app.Application;
 import android.app.compat.gms.GmsCompat;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.ext.PackageId;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.os.SystemClock;
@@ -17,6 +19,8 @@ import com.android.internal.gmscompat.GmsCompatApp;
 import com.android.internal.gmscompat.PlayStoreHooks;
 
 public class GmcActivityUtils implements Application.ActivityLifecycleCallbacks {
+    private static final String TAG = GmcActivityUtils.class.getSimpleName();
+
     public static final GmcActivityUtils INSTANCE = new GmcActivityUtils();
 
     @Nullable
@@ -106,5 +110,33 @@ public class GmcActivityUtils implements Application.ActivityLifecycleCallbacks 
         var ao = orig != null ? ActivityOptions.fromBundle(orig) : ActivityOptions.makeBasic();
         ao.setPendingIntentBackgroundActivityStartMode(ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED);
         return ao.toBundle();
+    }
+
+    public static Intent overrideStartActivityIntent(Intent intent) {
+        ComponentName cn = intent.getComponent();
+        if (cn != null && "com.google.android.permissioncontroller".equals(cn.getPackageName())) {
+            // PermissionController activities can't be opened by unprivileged apps.
+            // (Replacing absent com.google.android.permissioncontroller package with
+            // com.android.permissioncontroller would not help)
+            return null;
+        }
+
+        String pkg = cn != null ? cn.getPackageName() : intent.getPackage();
+        if (pkg != null) {
+            boolean checkIntent = false;
+            switch (pkg) {
+                case PackageId.G_SEARCH_APP_NAME ->
+                    checkIntent = true;
+            }
+
+            if (checkIntent) {
+                var pm = GmsCompat.appContext().getPackageManager();
+                if (pm.resolveActivity(intent, 0) == null) {
+                    return null;
+                }
+            }
+        }
+
+        return intent;
     }
 }
