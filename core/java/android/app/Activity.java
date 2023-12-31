@@ -170,8 +170,6 @@ import com.android.internal.app.ToolbarActionBar;
 import com.android.internal.app.WindowDecorActionBar;
 import com.android.internal.gmscompat.GmsCompatApp;
 import com.android.internal.gmscompat.GmsHooks;
-import com.android.internal.gmscompat.GmsInfo;
-import com.android.internal.gmscompat.PlayStoreHooks;
 import com.android.internal.gmscompat.util.GmcActivityUtils;
 import com.android.internal.policy.PhoneWindow;
 import com.android.internal.util.dump.DumpableContainerImpl;
@@ -5620,11 +5618,10 @@ public class Activity extends ContextThemeWrapper
     public void startActivityForResult(@RequiresPermission Intent intent, int requestCode,
             @Nullable Bundle options) {
         if (GmsCompat.isEnabled()) {
-            ComponentName cn = intent.getComponent();
-            if (cn != null && "com.google.android.permissioncontroller".equals(cn.getPackageName())) {
-                // PermissionController activities can't be opened by unprivileged apps.
-                // (Replacing absent com.google.android.permissioncontroller package with
-                // com.android.permissioncontroller would not help)
+            Intent orig = intent;
+            intent = GmcActivityUtils.overrideStartActivityIntent(intent);
+            if (intent == null) {
+                Log.d("GmsCompat", "skipped startActivity for " + orig, new Throwable());
                 return;
             }
         }
