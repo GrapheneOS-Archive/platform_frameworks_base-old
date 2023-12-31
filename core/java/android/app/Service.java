@@ -881,6 +881,12 @@ public abstract class Service extends ContextWrapper implements ComponentCallbac
             clearStartForegroundServiceStackTrace();
             logForegroundServiceStart(comp, foregroundServiceType);
         } catch (RemoteException ex) {
+        } catch (SecurityException e) {
+            if (GmsCompat.isEnabled()) {
+                Log.e(TAG, "fgsType: " + Integer.toHexString(foregroundServiceType), e);
+                return;
+            }
+            throw e;
         }
     }
 
