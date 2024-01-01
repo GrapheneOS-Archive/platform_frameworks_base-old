@@ -77,42 +77,8 @@ public class ScreenCaptureCallbackHandler {
     public void registerScreenCaptureCallback(
             @NonNull @CallbackExecutor Executor executor,
             @NonNull Activity.ScreenCaptureCallback callback) {
-        ScreenCaptureRegistration registration =
-                new ScreenCaptureRegistration(executor, callback);
-        synchronized (mScreenCaptureRegistrations) {
-            if (mScreenCaptureRegistrations.containsKey(callback)) {
-                throw new IllegalStateException(
-                        "Capture observer already registered with the activity");
-            }
-            mScreenCaptureRegistrations.put(callback, registration);
-            // register with system server only once.
-            if (mScreenCaptureRegistrations.size() == 1) {
-                try {
-                    ActivityTaskManager.getService()
-                            .registerScreenCaptureObserver(mActivityToken, mObserver);
-                } catch (RemoteException e) {
-                    e.rethrowFromSystemServer();
-                }
-            }
-        }
     }
     /** Stop monitoring for screen captures of the activity */
     public void unregisterScreenCaptureCallback(@NonNull Activity.ScreenCaptureCallback callback) {
-        synchronized (mScreenCaptureRegistrations) {
-            if (!mScreenCaptureRegistrations.containsKey(callback)) {
-                throw new IllegalStateException(
-                        "Capture observer not registered with the activity");
-            }
-            mScreenCaptureRegistrations.remove(callback);
-            // unregister only if no more registrations are left
-            if (mScreenCaptureRegistrations.size() == 0) {
-                try {
-                    ActivityTaskManager.getService().unregisterScreenCaptureObserver(mActivityToken,
-                            mObserver);
-                } catch (RemoteException e) {
-                    e.rethrowFromSystemServer();
-                }
-            }
-        }
     }
 }
