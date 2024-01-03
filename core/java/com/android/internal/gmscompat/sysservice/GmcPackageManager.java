@@ -64,7 +64,6 @@ public class GmcPackageManager extends ApplicationPackageManager {
         if (GmsCompat.isPlayStore()) {
             ArraySet<String> hiddenPkgs = HIDDEN_PACKAGES;
             hiddenPkgs.add(GoogleEuicc.LPA_PKG_NAME);
-            hiddenPkgs.add(PackageId.ANDROID_AUTO_NAME);
         }
     }
 
