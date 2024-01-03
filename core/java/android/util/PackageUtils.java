@@ -281,4 +281,8 @@ public final class PackageUtils {
         }
         return list;
     }
+
+    public static String getFirstPartyAppSourcePackageName(Context ctx) {
+        return ctx.getString(com.android.internal.R.string.config_first_party_app_source_package_name);
+    }
 }
