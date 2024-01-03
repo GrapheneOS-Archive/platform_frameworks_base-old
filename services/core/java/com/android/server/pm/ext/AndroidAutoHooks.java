@@ -90,6 +90,7 @@ public class AndroidAutoHooks extends PackageHooks {
                 // with any such device. Not clear whether it's feasible to restrict this permission
                 // further.
                 Manifest.permission.ASSOCIATE_COMPANION_DEVICES_RESTRICTED,
+                Manifest.permission.INTERNET,
                 // allows to read MAC address of Bluetooth and WiFi adapters
                 Manifest.permission.LOCAL_MAC_ADDRESS,
                 // unprivileged permission
