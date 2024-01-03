@@ -102,4 +102,11 @@ public class InputMethodManagerGlobal {
     public static void removeImeSurface(@Nullable Consumer<RemoteException> exceptionHandler) {
         IInputMethodManagerGlobalInvoker.removeImeSurface(exceptionHandler);
     }
+
+    @AnyThread
+    @Nullable
+    @RequiresPermission(value = Manifest.permission.INTERACT_ACROSS_USERS_FULL, conditional = true)
+    public static InputMethodSubtype getCurrentInputMethodSubtype(int userId) {
+        return IInputMethodManagerGlobalInvoker.getCurrentInputMethodSubtype(userId);
+    }
 }
