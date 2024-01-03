@@ -40,6 +40,7 @@ import android.os.UserHandle;
 import android.util.ArrayMap;
 import android.util.ArraySet;
 import android.util.Log;
+import android.util.PackageUtils;
 
 import com.android.internal.gmscompat.GmsHooks;
 import com.android.internal.gmscompat.GmsInfo;
@@ -350,10 +351,12 @@ public class GmcPackageManager extends ApplicationPackageManager {
         }
     }
 
+    @NonNull
     @Override
     public InstallSourceInfo getInstallSourceInfo(String packageName) throws NameNotFoundException {
+        InstallSourceInfo res;
         try {
-            return super.getInstallSourceInfo(packageName);
+            res = super.getInstallSourceInfo(packageName);
         } catch (NameNotFoundException e) {
             if (isPseudoDisabledPackage(packageName)) {
                 String installer = PackageId.PLAY_STORE_NAME;
@@ -362,6 +365,25 @@ public class GmcPackageManager extends ApplicationPackageManager {
             }
             throw e;
         }
+
+        if (PackageId.ANDROID_AUTO_NAME.equals(packageName)) {
+            // Android Auto needs to be exempted from updates via Play Store to prevent breaking the
+            // compatibility layer support for Android Auto.
+            //
+            // Play Store respects the value of InstallSourceInfo#getUpdateOwnerPackageName():
+            // packages that have non-Play Store update owners are not updated by Play Store
+            String updateOwnerPackage = PackageUtils.getFirstPartyAppSourcePackageName(GmsCompat.appContext());
+            res = new InstallSourceInfo(
+                    res.getInitiatingPackageName(),
+                    res.getInitiatingPackageSigningInfo(),
+                    res.getOriginatingPackageName(),
+                    res.getInstallingPackageName(),
+                    updateOwnerPackage,
+                    res.getPackageSource()
+            );
+        }
+
+        return res;
     }
 
     private PackageInfo makePseudoDisabledPackageInfoOrThrow(String pkgName, PackageInfoFlags flags) throws NameNotFoundException {
