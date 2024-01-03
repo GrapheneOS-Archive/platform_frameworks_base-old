@@ -44,6 +44,8 @@ import android.service.textservice.SpellCheckerService;
 import android.text.TextUtils;
 import android.util.Slog;
 import android.util.SparseArray;
+import android.view.inputmethod.InputMethodManagerGlobal;
+import android.view.inputmethod.InputMethodSubtype;
 import android.view.textservice.SpellCheckerInfo;
 import android.view.textservice.SpellCheckerSubtype;
 import android.view.textservice.SuggestionsInfo;
@@ -506,7 +508,6 @@ public class TextServicesManagerService extends ITextServicesManager.Stub {
 
         final int subtypeHashCode;
         final SpellCheckerInfo sci;
-        final Locale systemLocale;
 
         synchronized (mLock) {
             final TextServicesData tsd = getDataFromCallingUserIdLocked(userId);
@@ -518,7 +519,6 @@ public class TextServicesManagerService extends ITextServicesManager.Stub {
                 Slog.w(TAG, "getCurrentSpellCheckerSubtype: " + subtypeHashCode);
             }
             sci = tsd.getCurrentSpellChecker();
-            systemLocale = mContext.getResources().getConfiguration().locale;
         }
         if (sci == null || sci.getSubtypeCount() == 0) {
             if (DBG) {
@@ -545,19 +545,44 @@ public class TextServicesManagerService extends ITextServicesManager.Stub {
 
         // subtypeHashCode == 0 means spell checker language settings is "auto"
 
-        if (systemLocale == null) {
-            return null;
+        Locale preferredLocale = null;
+
+        String logPrefix = "getCurrentSpellCheckerSubtype: ";
+
+        final long token = Binder.clearCallingIdentity();
+        try {
+            InputMethodSubtype curSubtype = InputMethodManagerGlobal.getCurrentInputMethodSubtype(userId);
+            if (curSubtype == null) {
+                Slog.d(TAG, "getCurrentSpellCheckerSubtype: getCurrentInputMethodSubtype is null");
+            } else {
+                preferredLocale = curSubtype.getLocaleObject();
+                if (preferredLocale == null) {
+                    Slog.d(TAG, logPrefix + "curSubtype.getLocaleObject is null");
+                }
+            }
+        } finally {
+            Binder.restoreCallingIdentity(token);
         }
+
+        if (preferredLocale == null) {
+            Locale systemLocale = mContext.getResources().getConfiguration().locale;
+            if (systemLocale == null) {
+                Slog.d(TAG, logPrefix + "systemLocale is null");
+                return null;
+            }
+            preferredLocale = systemLocale;
+        }
+
         SpellCheckerSubtype firstLanguageMatchingSubtype = null;
         for (int i = 0; i < sci.getSubtypeCount(); ++i) {
             final SpellCheckerSubtype scs = sci.getSubtypeAt(i);
             final Locale scsLocale = scs.getLocaleObject();
-            if (Objects.equals(scsLocale, systemLocale)) {
+            if (Objects.equals(scsLocale, preferredLocale)) {
                 // Exact match wins.
                 return scs;
             }
             if (firstLanguageMatchingSubtype == null && scsLocale != null
-                    && TextUtils.equals(systemLocale.getLanguage(), scsLocale.getLanguage())) {
+                    && TextUtils.equals(preferredLocale.getLanguage(), scsLocale.getLanguage())) {
                 // Remember as a fall back candidate
                 firstLanguageMatchingSubtype = scs;
             }
