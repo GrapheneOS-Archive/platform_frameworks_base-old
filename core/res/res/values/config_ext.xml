@@ -1,3 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="config_first_party_app_source_package_name">app.grapheneos.apps</string>
+    <java-symbol type="string" name="config_first_party_app_source_package_name" />
 </resources>
