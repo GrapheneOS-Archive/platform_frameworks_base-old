@@ -7,7 +7,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.ext.ErrorReportUi;
+import android.ext.LogViewerApp;
 import android.os.UserHandle;
 
 import com.android.internal.R;
@@ -18,9 +18,9 @@ class SystemJournalNotif {
 
     static void showCrash(Context ctx, String progName, String errorReport,
                           @CurrentTimeMillisLong long crashTimestamp) {
-        var i = ErrorReportUi.createBaseIntent(ErrorReportUi.ACTION_CUSTOM_REPORT, errorReport);
+        var i = LogViewerApp.createBaseErrorReportIntent(errorReport);
         i.putExtra(Intent.EXTRA_TITLE, progName + " crash");
-        i.putExtra(ErrorReportUi.EXTRA_SHOW_REPORT_BUTTON, true);
+        i.putExtra(LogViewerApp.EXTRA_SHOW_REPORT_BUTTON, true);
 
         showGeneric(ctx, crashTimestamp, ctx.getString(R.string.process_crash_notif_title, progName), i);
     }
