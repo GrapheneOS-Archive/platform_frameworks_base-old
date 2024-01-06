@@ -174,9 +174,10 @@ public class ApplicationErrorReport implements Parcelable {
 
         PackageManager pm = context.getPackageManager();
 
-        ComponentName systemUiReceiver = getErrorReportReceiver(pm, packageName, "com.android.systemui");
-        if (systemUiReceiver != null) {
-            return systemUiReceiver;
+        ComponentName logViewerApp = getErrorReportReceiver(pm, packageName,
+                android.ext.LogViewerApp.getPackageName());
+        if (logViewerApp != null) {
+            return logViewerApp;
         }
 
         // look for receiver in the installer package
