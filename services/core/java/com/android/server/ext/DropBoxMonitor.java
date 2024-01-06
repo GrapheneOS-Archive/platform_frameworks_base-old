@@ -5,7 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.ext.ErrorReportUi;
+import android.ext.LogViewerApp;
 import android.os.DropBoxManager;
 import android.os.Environment;
 import android.os.Handler;
@@ -273,10 +273,10 @@ public class DropBoxMonitor {
     void handleFsckEntry(DropBoxManager.Entry e) {
         String text = readEntryText(e, "fsck");
         if (text != null) {
-            var i = ErrorReportUi.createBaseIntent(ErrorReportUi.ACTION_CUSTOM_REPORT, text);
+            var i = LogViewerApp.createBaseErrorReportIntent(text);
             i.putExtra(Intent.EXTRA_TITLE, "File system check error");
-            i.putExtra(ErrorReportUi.EXTRA_TYPE, "fsck_error");
-            i.putExtra(ErrorReportUi.EXTRA_SHOW_REPORT_BUTTON, true);
+            i.putExtra(LogViewerApp.EXTRA_ERROR_TYPE, "fsck_error");
+            i.putExtra(LogViewerApp.EXTRA_SHOW_REPORT_BUTTON, true);
 
             SystemJournalNotif.showGeneric(context, e.getTimeMillis(), context.getString(R.string.fsck_error_notif_title), i);
         }
