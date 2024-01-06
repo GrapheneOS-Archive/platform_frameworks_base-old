@@ -426,7 +426,19 @@ public final class LogcatManagerService extends SystemService {
         return procState == ActivityManager.PROCESS_STATE_TOP;
     }
 
+    private boolean isPrivilegedClient(LogAccessClient client) {
+        PackageManager pm = mContext.getPackageManager();
+        String perm = android.Manifest.permission.READ_LOGS_FULL;
+        return pm.checkPermission(perm, client.mPackageName) == PackageManager.PERMISSION_GRANTED;
+    }
+
     private void processNewLogAccessRequest(LogAccessClient client) {
+        if (isPrivilegedClient(client)) {
+            onAccessApprovedForClient(client);
+            Slog.d(TAG, "approved LogAccessRequest for privileged client: " + client.mPackageName);
+            return;
+        }
+
         boolean isInstrumented = mActivityManagerInternal.getInstrumentationSourceUid(client.mUid)
                 != android.os.Process.INVALID_UID;
         // The instrumented apks only run for testing, so we don't check user permission.

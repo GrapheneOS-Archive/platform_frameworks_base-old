@@ -4743,6 +4743,10 @@
     <permission android:name="android.permission.READ_LOGS"
         android:protectionLevel="signature|privileged|development" />
 
+    <!-- @hide -->
+    <permission android:name="android.permission.READ_LOGS_FULL"
+        android:protectionLevel="signature|privileged" />
+
     <!-- Configure an application for debugging.
     <p>Not for use by third-party applications. -->
     <permission android:name="android.permission.SET_DEBUG_APP"
