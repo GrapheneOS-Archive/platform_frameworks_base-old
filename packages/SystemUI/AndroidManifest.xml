@@ -204,9 +204,6 @@
     <permission android:name="android.permission.CUSTOMIZE_SYSTEM_UI"
         android:protectionLevel="signature|privileged" />
 
-    <permission android:name="android.permission.SHOW_ERROR_REPORT"
-        android:protectionLevel="signature|preinstalled" />
-
     <!-- Adding Quick Settings tiles -->
     <uses-permission android:name="android.permission.BIND_QUICK_SETTINGS_TILE" />
 
@@ -1127,19 +1124,5 @@
             <meta-data android:name="androidx.emoji2.text.EmojiCompatInitializer"
                 tools:node="remove" />
         </provider>
-
-        <activity
-            android:name=".ErrorReportActivity"
-            android:exported="true"
-            android:permission="android.permission.SHOW_ERROR_REPORT"
-            android:theme="@android:style/Theme.DeviceDefault.DayNight"
-            android:documentLaunchMode="always"
-            android:process=":ui"
-        >
-            <intent-filter>
-                <action android:name="android.intent.action.APP_ERROR" />
-            </intent-filter>
-        </activity>
-
     </application>
 </manifest>
