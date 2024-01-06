@@ -9,7 +9,7 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.GosPackageState;
 import android.content.pm.PackageManagerInternal;
-import android.ext.ErrorReportUi;
+import android.ext.LogViewerApp;
 import android.ext.SettingsIntents;
 import android.ext.settings.ExtSettings;
 import android.os.DropBoxManager;
@@ -294,8 +294,8 @@ public class TombstoneHandler {
                                                     String errorReport,
                                                     int packageUid, String firstPackageName) {
         Consumer<Notification.Builder> notifCustomizer = nb -> {
-            Intent i = ErrorReportUi.createBaseIntent(ErrorReportUi.ACTION_CUSTOM_REPORT, errorReport);
-            i.putExtra(ErrorReportUi.EXTRA_SOURCE_PACKAGE, firstPackageName);
+            Intent i = LogViewerApp.createBaseErrorReportIntent(errorReport);
+            i.putExtra(LogViewerApp.EXTRA_SOURCE_PACKAGE, firstPackageName);
 
             UserHandle user = UserHandle.of(UserHandle.getUserId(packageUid));
             var pi = PendingIntent.getActivityAsUser(ctx, 0, i,
