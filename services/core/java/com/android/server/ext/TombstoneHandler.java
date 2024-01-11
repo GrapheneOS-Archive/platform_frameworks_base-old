@@ -253,8 +253,15 @@ public class TombstoneHandler {
 
             if (!isSystem) {
                 if (!isHistorical) {
+                    int aepNotifType = -1;
                     if (isMemtagError(tombstone)) {
-                        maybeShowMemtagNotification(ctx, tombstone, msg, packageUid, firstPackageName);
+                        aepNotifType = AEP_NOTIF_TYPE_MEMTAG;
+                    } else if (isHardenedMallocFatalError(tombstone)) {
+                        aepNotifType = AEP_NOTIF_TYPE_HARDENED_MALLOC;
+                    }
+                    if (aepNotifType != -1) {
+                        maybeShowAepNotification(aepNotifType, ctx, tombstone, msg,
+                                packageUid, firstPackageName);
                     }
                 }
                 // rely on the standard crash dialog for non-memtag crashes
@@ -290,9 +297,17 @@ public class TombstoneHandler {
                 && (s.code == SEGV_MTEAERR || s.code == SEGV_MTESERR);
     }
 
-    private static void maybeShowMemtagNotification(Context ctx, TombstoneProtos.Tombstone tombstone,
-                                                    String errorReport,
-                                                    int packageUid, String firstPackageName) {
+    private static boolean isHardenedMallocFatalError(TombstoneProtos.Tombstone t) {
+        String abortMsg = t.abortMessage;
+        return abortMsg != null && abortMsg.startsWith("hardened_malloc: fatal allocator error: ");
+    }
+
+    private static final int AEP_NOTIF_TYPE_MEMTAG = 0;
+    private static final int AEP_NOTIF_TYPE_HARDENED_MALLOC = 1;
+
+    private static void maybeShowAepNotification(int type, Context ctx, TombstoneProtos.Tombstone tombstone,
+                                                 String errorReport,
+                                                 int packageUid, String firstPackageName) {
         Consumer<Notification.Builder> notifCustomizer = nb -> {
             Intent i = LogViewerApp.createBaseErrorReportIntent(errorReport);
             i.putExtra(LogViewerApp.EXTRA_SOURCE_PACKAGE, firstPackageName);
@@ -303,11 +318,27 @@ public class TombstoneHandler {
             addNotifAction(ctx, pi, R.string.notif_action_more_info, nb);
         };
 
-        AppExploitProtectionNotification.maybeShow(ctx, SettingsIntents.APP_MEMTAG,
+        String intentAction;
+        int notifTitleRes;
+        int gosPsFlagSuppressNotif = 0;
+
+        switch (type) {
+            case AEP_NOTIF_TYPE_MEMTAG -> {
+                intentAction = SettingsIntents.APP_MEMTAG;
+                gosPsFlagSuppressNotif = GosPackageState.FLAG_FORCE_MEMTAG_SUPPRESS_NOTIF;
+                notifTitleRes = R.string.notif_memtag_crash_title;
+            }
+            case AEP_NOTIF_TYPE_HARDENED_MALLOC -> {
+                intentAction = SettingsIntents.APP_HARDENED_MALLOC;
+                notifTitleRes = R.string.notif_hmalloc_crash_title;
+            }
+            default -> throw new IllegalArgumentException(Integer.toString(type));
+        }
+
+        AppExploitProtectionNotification.maybeShow(ctx, intentAction,
                 packageUid, firstPackageName,
-                GosPackageState.FLAG_FORCE_MEMTAG_SUPPRESS_NOTIF,
-                R.string.notif_memtag_crash_title,
-                ctx.getText(R.string.notif_text_tap_to_open_settings),
+                gosPsFlagSuppressNotif,
+                notifTitleRes, ctx.getText(R.string.notif_text_tap_to_open_settings),
                 notifCustomizer);
     }
 }
