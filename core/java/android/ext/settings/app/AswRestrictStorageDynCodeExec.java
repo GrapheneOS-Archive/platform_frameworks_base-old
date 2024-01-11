@@ -46,6 +46,7 @@ public class AswRestrictStorageDynCodeExec extends AppSwitch {
             if (SELinuxFlags.isSystemAppSepolicyWeakeningAllowed()) {
                 return null;
             }
+            si.immutabilityReason = IR_IS_SYSTEM_APP;
             return true;
         }
 
