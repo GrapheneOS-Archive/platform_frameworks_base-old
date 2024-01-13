@@ -12570,6 +12570,9 @@ public final class Settings {
         public static final String ALLOW_DISABLING_HARDENING_VIA_APP_COMPAT_CONFIG =
                 "allow_automatic_pkg_hardening_config"; // historical name
 
+        /** @hide */
+        public static final String AUTO_REBOOT_TIMEOUT = "settings_reboot_after_timeout";
+
         // ExtSettings END
 
         // NOTE: If you add new settings here, be sure to add them to
