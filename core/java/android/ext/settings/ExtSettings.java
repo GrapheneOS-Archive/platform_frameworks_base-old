@@ -28,6 +28,11 @@ public class ExtSettings {
     public static final BoolSetting AUTO_GRANT_OTHER_SENSORS_PERMISSION = new BoolSetting(
             Setting.Scope.PER_USER, "auto_grant_OTHER_SENSORS_perm", true);
 
+    public static final IntSetting AUTO_REBOOT_TIMEOUT = new IntSetting(
+            Setting.Scope.GLOBAL, "settings_reboot_after_timeout",
+            // default value: 18 hours
+            (int) TimeUnit.HOURS.toMillis(18));
+
     // AppCompatConfig specifies which hardening features are compatible/incompatible with a
     // specific app.
     // This setting controls whether incompatible hardening features would be disabled by default
