@@ -89,6 +89,8 @@ public class KeyguardStateMonitor extends IKeyguardStateCallback.Stub {
         mIsShowing = showing;
 
         mCallback.onShowingChanged();
+
+        AutoReboot.onKeyguardShowingStateChanged(mContext, showing, userId);
     }
 
     @Override // Binder interface
