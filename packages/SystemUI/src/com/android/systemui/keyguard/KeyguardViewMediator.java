@@ -2272,6 +2272,8 @@ public class KeyguardViewMediator implements CoreStartable, Dumpable,
             return;
         }
 
+        android.ext.AutoReboot.onDeviceLocked(mLockPatternUtils.getLockSettings());
+
         if (DEBUG) Log.d(TAG, "doKeyguard: showing the lock screen");
         showLocked(options);
     }
@@ -3146,6 +3148,8 @@ public class KeyguardViewMediator implements CoreStartable, Dumpable,
     }
 
     private void onKeyguardExitFinished() {
+        android.ext.AutoReboot.onDeviceUnlocked(mLockPatternUtils.getLockSettings());
+
         if (DEBUG) Log.d(TAG, "onKeyguardExitFinished()");
         // only play "unlock" noises if not on a call (since the incall UI
         // disables the keyguard)
