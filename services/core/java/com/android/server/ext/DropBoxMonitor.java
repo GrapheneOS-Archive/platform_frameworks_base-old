@@ -274,7 +274,7 @@ public class DropBoxMonitor {
             }
 
             if (ExtSettings.SHOW_SYSTEM_PROCESS_CRASH_NOTIFICATIONS.get(context)) {
-                showCrashNotif(e, "Kernel", String.join("\n", lines));
+                showCrashNotif(e, "Kernel", String.join("\n", lines), false);
             }
         }
     }
@@ -282,7 +282,7 @@ public class DropBoxMonitor {
     void handleSystemServerCrash(DropBoxManager.Entry e) {
         String text = readEntryText(e, "sserver");
         if (text != null) {
-            showCrashNotif(e, "system_server", text);
+            showCrashNotif(e, "system_server", text, true);
         }
     }
 
@@ -298,8 +298,10 @@ public class DropBoxMonitor {
         }
     }
 
-    void showCrashNotif(DropBoxManager.Entry entry, String progName, String errorReport) {
-        SystemJournalNotif.showCrash(context, progName, errorReport, entry.getTimeMillis());
+    void showCrashNotif(DropBoxManager.Entry entry, String progName, String errorReport,
+                        boolean showReportButton) {
+        SystemJournalNotif.showCrash(context, progName, errorReport, entry.getTimeMillis(),
+                showReportButton);
     }
 
     private static String readEntryText(DropBoxManager.Entry entry, String logTagSuffix) {
