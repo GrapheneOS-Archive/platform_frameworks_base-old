@@ -17,10 +17,10 @@ import com.android.internal.notification.SystemNotificationChannels;
 class SystemJournalNotif {
 
     static void showCrash(Context ctx, String progName, String errorReport,
-                          @CurrentTimeMillisLong long crashTimestamp) {
+                          @CurrentTimeMillisLong long crashTimestamp, boolean showReportButton) {
         var i = LogViewerApp.createBaseErrorReportIntent(errorReport);
         i.putExtra(Intent.EXTRA_TITLE, progName + " crash");
-        i.putExtra(LogViewerApp.EXTRA_SHOW_REPORT_BUTTON, true);
+        i.putExtra(LogViewerApp.EXTRA_SHOW_REPORT_BUTTON, showReportButton);
 
         showGeneric(ctx, crashTimestamp, ctx.getString(R.string.process_crash_notif_title, progName), i);
     }
