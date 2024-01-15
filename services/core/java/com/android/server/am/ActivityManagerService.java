@@ -9489,6 +9489,14 @@ public class ActivityManagerService extends IActivityManager.Stub
         final String dropboxTag = processClass(process) + "_" + eventType;
         if (dbox == null || !dbox.isTagEnabled(dropboxTag)) return;
 
+        if (dropboxTag.equals("system_server_crash") && Binder.getCallingPid() != Process.myPid()) {
+            // processClass(process) above returns "system_server" when process is null, which
+            // leads to some app crashes being reported as system_server crashes
+            Slog.d(TAG, "addErrorToDropBox: skipping spurious system_server_crash entry, "
+                    + "processName " + processName, new Throwable());
+            return;
+        }
+
         // Check if we should rate limit and abort early if needed.
         final DropboxRateLimiter.RateLimitResult rateLimitResult =
                 mDropboxRateLimiter.shouldRateLimit(eventType, processName);
