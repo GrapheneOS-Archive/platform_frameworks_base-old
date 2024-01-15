@@ -278,8 +278,13 @@ public class TombstoneHandler {
             }
         }
 
-        if (!"system_server".equals(progName)) {
+        final boolean showReportButton;
+
+        if ("system_server".equals(progName)) {
+            showReportButton = true;
+        } else {
             boolean ignoreSetting = !isHistorical && isMemtagError(tombstone);
+            showReportButton = ignoreSetting && !shouldSkip;
 
             if (shouldSkip || (!ignoreSetting && !ExtSettings.SHOW_SYSTEM_PROCESS_CRASH_NOTIFICATIONS.get(ctx))) {
                 Slog.d(TAG, "skipped crash notification for " + progName + "; msg: " + msg);
@@ -287,7 +292,7 @@ public class TombstoneHandler {
             }
         }
 
-        SystemJournalNotif.showCrash(ctx, progName, msg, timestamp);
+        SystemJournalNotif.showCrash(ctx, progName, msg, timestamp, showReportButton);
     }
 
     private static boolean isMemtagError(TombstoneProtos.Tombstone t) {
