@@ -133,12 +133,21 @@ public class DropBoxMonitor {
     int checkTag(Tag tag) {
         int entryCnt = 0;
 
-        for (;;) {
-            try (DropBoxManager.Entry e = dropBoxManager.getNextEntry(tag.name, tag.lastSeen)) {
+        for (int i = 0; i < 1000; ++i) { // limit iteration count in case DropBoxManager misbehaves
+            final long minTime = tag.lastSeen;
+            try (DropBoxManager.Entry e = dropBoxManager.getNextEntry(tag.name, minTime)) {
                 if (e == null) {
-                    return entryCnt;
+                    break;
                 }
+                final long entryTime = e.getTimeMillis();
 
+                // getNextEntry() is supposed to return an entry that is newer than minTime.
+                // In some cases (seemingly right after dropbox trim), it returns old entries.
+                if (entryTime < minTime) {
+                    Slog.e(TAG, "getNextEntry returned an old item; minTime: " + minTime +
+                            ", entryTime: " + entryTime + ", tagName: " + tag.name);
+                    continue;
+                }
                 tag.lastSeen = e.getTimeMillis();
 
                 try {
@@ -153,6 +162,7 @@ public class DropBoxMonitor {
                 return entryCnt;
             }
         }
+        return entryCnt;
     }
 
     void scheduleSaveState() {
