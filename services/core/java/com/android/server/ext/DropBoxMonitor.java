@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.ext.LogViewerApp;
+import android.ext.settings.ExtSettings;
 import android.os.DropBoxManager;
 import android.os.Environment;
 import android.os.Handler;
@@ -272,7 +273,9 @@ public class DropBoxMonitor {
                 }
             }
 
-            showCrashNotif(e, "Kernel", String.join("\n", lines));
+            if (ExtSettings.SHOW_SYSTEM_PROCESS_CRASH_NOTIFICATIONS.get(context)) {
+                showCrashNotif(e, "Kernel", String.join("\n", lines));
+            }
         }
     }
 
