@@ -7,6 +7,7 @@ import android.app.AppBindArgs;
 import android.content.pm.GosPackageState;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManagerInternal;
+import android.ext.PackageId;
 import android.location.HookedLocationManager;
 import android.os.Binder;
 import android.os.Build;
@@ -18,13 +19,12 @@ import android.util.Slog;
 import com.android.internal.app.ContactScopes;
 import com.android.server.pm.GosPackageStatePmHooks;
 import com.android.server.pm.PackageManagerService;
+import com.android.server.pm.ext.PackageExt;
 import com.android.server.pm.ext.PackageHooks;
-import com.android.server.pm.permission.Permission;
 import com.android.server.pm.permission.SpecialRuntimePermUtils;
 import com.android.server.pm.pkg.AndroidPackage;
 import com.android.server.pm.pkg.GosPackageStatePm;
 import com.android.server.pm.pkg.PackageStateInternal;
-import com.android.server.pm.pkg.parsing.ParsingPackage;
 
 public class PackageManagerHooks {
 
@@ -135,6 +135,31 @@ public class PackageManagerHooks {
             return true;
         }
 
+        if (callingPkgSetting != null && isPlayStoreFrontend(callingPkgSetting.getPackageName())) {
+            AndroidPackage pkg = targetPkgSetting.getPkg();
+            if (pkg != null) {
+                switch (PackageExt.get(pkg).getPackageId()) {
+                    case PackageId.GSF:
+                    case PackageId.GMS_CORE:
+                    case PackageId.PLAY_STORE:
+                    case PackageId.EUICC_SUPPORT_PIXEL:
+                    case PackageId.G_EUICC_LPA:
+                    case PackageId.PIXEL_CAMERA_SERVICES:
+                    case PackageId.ANDROID_AUTO:
+                        return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean isPlayStoreFrontend(String pkg) {
+        switch (pkg) {
+            case "com.aurora.store":
+            case "com.aurora.store.nightly":
+                return true;
+        }
         return false;
     }
 
