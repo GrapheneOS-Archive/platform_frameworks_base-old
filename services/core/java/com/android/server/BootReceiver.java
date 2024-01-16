@@ -539,8 +539,12 @@ public class BootReceiver extends BroadcastReceiver {
         int lineNumber = 0;
         int lastFsStatLineNumber = 0;
         for (String line : lines) { // should check all lines
-            if (line.contains(E2FSCK_FS_MODIFIED) || line.contains(F2FS_FSCK_FS_MODIFIED)) {
+            if (line.contains(E2FSCK_FS_MODIFIED)) {
                 uploadNeeded = true;
+            } else if (line.contains(F2FS_FSCK_FS_MODIFIED)) {
+                if (log.contains("[ERROR]") || log.contains("[Failed]")) {
+                    uploadNeeded = true;
+                }
             } else if (line.contains("fs_stat")) {
                 Matcher matcher = pattern.matcher(line);
                 if (matcher.find()) {
