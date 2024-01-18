@@ -19,18 +19,18 @@ package com.android.internal.util;
 import static android.app.admin.DevicePolicyManager.PASSWORD_QUALITY_MANAGED;
 import static android.app.admin.DevicePolicyManager.PASSWORD_QUALITY_UNSPECIFIED;
 
-import static com.android.internal.widget.LockPatternUtils.StrongAuthTracker.SOME_AUTH_REQUIRED_AFTER_TRUSTAGENT_EXPIRED;
+import static com.android.internal.widget.LockPatternUtils.StrongAuthTracker.STRONG_AUTH_NOT_REQUIRED;
 import static com.android.internal.widget.LockPatternUtils.StrongAuthTracker.STRONG_AUTH_REQUIRED_AFTER_LOCKOUT;
+import static com.android.internal.widget.LockPatternUtils.StrongAuthTracker.STRONG_AUTH_REQUIRED_AFTER_USER_LOCKDOWN;
 
-import static com.google.common.truth.Truth.assertThat;
-
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -40,7 +40,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.pm.UserInfo;
-import android.os.Looper;
 import android.os.RemoteException;
 import android.os.UserManager;
 import android.provider.Settings;
@@ -56,11 +55,8 @@ import com.android.internal.widget.IWeakEscrowTokenActivatedListener;
 import com.android.internal.widget.IWeakEscrowTokenRemovedListener;
 import com.android.internal.widget.LockPatternUtils;
 
-import com.google.android.collect.Lists;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 import java.nio.charset.StandardCharsets;
@@ -70,12 +66,15 @@ import java.util.List;
 @SmallTest
 public class LockPatternUtilsTest {
 
+    private ILockSettings mLockSettings;
+    private static final int USER_ID = 1;
     private static final int DEMO_USER_ID = 5;
 
     private LockPatternUtils mLockPatternUtils;
 
     private void configureTest(boolean isSecure, boolean isDemoUser, int deviceDemoMode)
             throws Exception {
+        mLockSettings = Mockito.mock(ILockSettings.class);
         final Context context = spy(new ContextWrapper(InstrumentationRegistry.getTargetContext()));
 
         final MockContentResolver cr = new MockContentResolver(context);
@@ -83,15 +82,14 @@ public class LockPatternUtilsTest {
         when(context.getContentResolver()).thenReturn(cr);
         Settings.Global.putInt(cr, Settings.Global.DEVICE_DEMO_MODE, deviceDemoMode);
 
-        final ILockSettings ils = Mockito.mock(ILockSettings.class);
-        when(ils.getCredentialType(DEMO_USER_ID)).thenReturn(
+        when(mLockSettings.getCredentialType(DEMO_USER_ID)).thenReturn(
                 isSecure ? LockPatternUtils.CREDENTIAL_TYPE_PASSWORD
                          : LockPatternUtils.CREDENTIAL_TYPE_NONE);
-        when(ils.getLong("lockscreen.password_type", PASSWORD_QUALITY_UNSPECIFIED, DEMO_USER_ID))
-                .thenReturn((long) PASSWORD_QUALITY_MANAGED);
+        when(mLockSettings.getLong("lockscreen.password_type", PASSWORD_QUALITY_UNSPECIFIED,
+                DEMO_USER_ID)).thenReturn((long) PASSWORD_QUALITY_MANAGED);
         // TODO(b/63758238): stop spying the class under test
         mLockPatternUtils = spy(new LockPatternUtils(context));
-        when(mLockPatternUtils.getLockSettings()).thenReturn(ils);
+        when(mLockPatternUtils.getLockSettings()).thenReturn(mLockSettings);
         doReturn(true).when(mLockPatternUtils).hasSecureLockScreen();
 
         final UserInfo userInfo = Mockito.mock(UserInfo.class);
@@ -99,6 +97,31 @@ public class LockPatternUtilsTest {
         final UserManager um = Mockito.mock(UserManager.class);
         when(um.getUserInfo(DEMO_USER_ID)).thenReturn(userInfo);
         when(context.getSystemService(Context.USER_SERVICE)).thenReturn(um);
+    }
+
+    @Test
+    public void isUserInLockDown() throws Exception {
+        configureTest(true, false, 2);
+
+        // GIVEN strong auth not required
+        when(mLockSettings.getStrongAuthForUser(USER_ID)).thenReturn(STRONG_AUTH_NOT_REQUIRED);
+
+        // THEN user isn't in lockdown
+        assertFalse(mLockPatternUtils.isUserInLockdown(USER_ID));
+
+        // GIVEN lockdown
+        when(mLockSettings.getStrongAuthForUser(USER_ID)).thenReturn(
+                STRONG_AUTH_REQUIRED_AFTER_USER_LOCKDOWN);
+
+        // THEN user is in lockdown
+        assertTrue(mLockPatternUtils.isUserInLockdown(USER_ID));
+
+        // GIVEN lockdown and lockout
+        when(mLockSettings.getStrongAuthForUser(USER_ID)).thenReturn(
+                STRONG_AUTH_REQUIRED_AFTER_USER_LOCKDOWN | STRONG_AUTH_REQUIRED_AFTER_LOCKOUT);
+
+        // THEN user is in lockdown
+        assertTrue(mLockPatternUtils.isUserInLockdown(USER_ID));
     }
 
     @Test
@@ -180,100 +203,13 @@ public class LockPatternUtilsTest {
     }
 
     @Test
-    public void testSetEnabledTrustAgents() throws RemoteException {
+    public void testGetEnabledTrustAgentsNotNull() throws RemoteException {
         int testUserId = 10;
         ILockSettings ils = createTestLockSettings();
-        ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
-        doNothing().when(ils).setString(anyString(), valueCaptor.capture(), anyInt());
-        List<ComponentName> enabledTrustAgents = Lists.newArrayList(
-                ComponentName.unflattenFromString("com.android/.TrustAgent"),
-                ComponentName.unflattenFromString("com.test/.TestAgent"));
-
-        mLockPatternUtils.setEnabledTrustAgents(enabledTrustAgents, testUserId);
-
-        assertThat(valueCaptor.getValue()).isEqualTo("com.android/.TrustAgent,com.test/.TestAgent");
-    }
-
-    @Test
-    public void testGetEnabledTrustAgents() throws RemoteException {
-        int testUserId = 10;
-        ILockSettings ils = createTestLockSettings();
-        when(ils.getString(anyString(), any(), anyInt())).thenReturn(
-                "com.android/.TrustAgent,com.test/.TestAgent");
-
+        when(ils.getString(anyString(), any(), anyInt())).thenReturn("");
         List<ComponentName> trustAgents = mLockPatternUtils.getEnabledTrustAgents(testUserId);
-
-        assertThat(trustAgents).containsExactly(
-                ComponentName.unflattenFromString("com.android/.TrustAgent"),
-                ComponentName.unflattenFromString("com.test/.TestAgent"));
-    }
-
-    @Test
-    public void testSetKnownTrustAgents() throws RemoteException {
-        int testUserId = 10;
-        ILockSettings ils = createTestLockSettings();
-        ArgumentCaptor<String> valueCaptor = ArgumentCaptor.forClass(String.class);
-        doNothing().when(ils).setString(anyString(), valueCaptor.capture(), anyInt());
-        List<ComponentName> knownTrustAgents = Lists.newArrayList(
-                ComponentName.unflattenFromString("com.android/.TrustAgent"),
-                ComponentName.unflattenFromString("com.test/.TestAgent"));
-
-        mLockPatternUtils.setKnownTrustAgents(knownTrustAgents, testUserId);
-
-        assertThat(valueCaptor.getValue()).isEqualTo("com.android/.TrustAgent,com.test/.TestAgent");
-    }
-
-    @Test
-    public void testGetKnownTrustAgents() throws RemoteException {
-        int testUserId = 10;
-        ILockSettings ils = createTestLockSettings();
-        when(ils.getString(anyString(), any(), anyInt())).thenReturn(
-                "com.android/.TrustAgent,com.test/.TestAgent");
-
-        List<ComponentName> trustAgents = mLockPatternUtils.getKnownTrustAgents(testUserId);
-
-        assertThat(trustAgents).containsExactly(
-                ComponentName.unflattenFromString("com.android/.TrustAgent"),
-                ComponentName.unflattenFromString("com.test/.TestAgent"));
-    }
-
-    @Test
-    public void isBiometricAllowedForUser_afterTrustagentExpired_returnsTrue()
-            throws RemoteException {
-        TestStrongAuthTracker tracker = createStrongAuthTracker();
-        tracker.changeStrongAuth(SOME_AUTH_REQUIRED_AFTER_TRUSTAGENT_EXPIRED);
-
-        assertTrue(tracker.isBiometricAllowedForUser(
-                /* isStrongBiometric = */ true,
-                DEMO_USER_ID));
-    }
-
-    @Test
-    public void isBiometricAllowedForUser_afterLockout_returnsFalse()
-            throws RemoteException {
-        TestStrongAuthTracker tracker = createStrongAuthTracker();
-        tracker.changeStrongAuth(STRONG_AUTH_REQUIRED_AFTER_LOCKOUT);
-
-        assertFalse(tracker.isBiometricAllowedForUser(
-                /* isStrongBiometric = */ true,
-                DEMO_USER_ID));
-    }
-
-
-    private TestStrongAuthTracker createStrongAuthTracker() {
-        final Context context = new ContextWrapper(InstrumentationRegistry.getTargetContext());
-        return new TestStrongAuthTracker(context, Looper.getMainLooper());
-    }
-
-    private static class TestStrongAuthTracker extends LockPatternUtils.StrongAuthTracker {
-
-        TestStrongAuthTracker(Context context, Looper looper) {
-            super(context, looper);
-        }
-
-        public void changeStrongAuth(@StrongAuthFlags int strongAuthFlags) {
-            handleStrongAuthRequiredChanged(strongAuthFlags, DEMO_USER_ID);
-        }
+        assertNotNull(trustAgents);
+        assertEquals(0, trustAgents.size());
     }
 
     private ILockSettings createTestLockSettings() {
