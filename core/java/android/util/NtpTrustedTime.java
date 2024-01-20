@@ -725,12 +725,16 @@ public abstract class NtpTrustedTime implements TrustedTime {
                 @NonNull Network network, @NonNull URI ntpServerUri, @NonNull Duration timeout) {
 
             final SntpClient client = new SntpClient();
-            client.setNtpMode(getNtpConfigInternal().getNtpMode());
-            final String serverName = ntpServerUri.getHost();
+            final String ntpMode = getNtpConfigInternal().getNtpMode();
+            client.setNtpMode(ntpMode);
+            String server = ntpServerUri.getHost();
+            if ((NtpConfig.MODE_HTTPS.equals(ntpMode)) && (ntpServerUri.getPath() != null)) {
+                server += ntpServerUri.getPath();
+            }
             final int port = ntpServerUri.getPort() == -1
                     ? SntpClient.STANDARD_NTP_PORT : ntpServerUri.getPort();
             final int timeoutMillis = saturatedCast(timeout.toMillis());
-            if (client.requestTime(serverName, port, timeoutMillis, network)) {
+            if (client.requestTime(server, port, timeoutMillis, network)) {
                 int ntpUncertaintyMillis = saturatedCast(client.getRoundTripTime() / 2);
                 InetSocketAddress ntpServerSocketAddress = client.getServerSocketAddress();
                 return new TimeResult(
