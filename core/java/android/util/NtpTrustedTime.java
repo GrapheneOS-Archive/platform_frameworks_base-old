@@ -66,12 +66,9 @@ public abstract class NtpTrustedTime implements TrustedTime {
      * @hide
      */
     public static final class NtpConfig {
-        public static final String MODE_HTTPS = "https";
-        public static final String MODE_NTP = "ntp";
 
         @NonNull private final List<URI> mServerUris;
         @NonNull private final Duration mTimeout;
-        @NonNull private final String mNtpMode;
 
         /**
          * Creates an instance with the supplied properties. There must be at least one NTP server
@@ -81,11 +78,7 @@ public abstract class NtpTrustedTime implements TrustedTime {
          * See {@link #parseNtpUriStrict(String)} and {@link #parseNtpServerSetting(String)} to
          * create valid URIs.
          */
-        public NtpConfig(@NonNull List<URI> serverUris, @NonNull Duration timeout) {
-            this(serverUris, timeout, MODE_HTTPS);
-        }
-
-        public NtpConfig(@NonNull List<URI> serverUris, @NonNull Duration timeout, @NonNull String ntpMode)
+        public NtpConfig(@NonNull List<URI> serverUris, @NonNull Duration timeout)
                 throws IllegalArgumentException {
 
             Objects.requireNonNull(serverUris);
@@ -109,7 +102,6 @@ public abstract class NtpTrustedTime implements TrustedTime {
                 throw new IllegalArgumentException("timeout < 0");
             }
             mTimeout = timeout;
-            mNtpMode = ntpMode;
         }
 
         /** Returns a non-empty, immutable list of NTP server URIs. */
@@ -121,11 +113,6 @@ public abstract class NtpTrustedTime implements TrustedTime {
         @NonNull
         public Duration getTimeout() {
             return mTimeout;
-        }
-
-        @NonNull
-        public String getNtpMode() {
-            return mNtpMode;
         }
 
         @Override
@@ -147,15 +134,15 @@ public abstract class NtpTrustedTime implements TrustedTime {
         private final long mUnixEpochTimeMillis;
         private final long mElapsedRealtimeMillis;
         private final int mUncertaintyMillis;
-        @Nullable private final InetSocketAddress mNtpServerSocketAddress;
+        @NonNull private final InetSocketAddress mNtpServerSocketAddress;
 
         public TimeResult(
                 long unixEpochTimeMillis, long elapsedRealtimeMillis, int uncertaintyMillis,
-                @Nullable InetSocketAddress ntpServerSocketAddress) {
+                @NonNull InetSocketAddress ntpServerSocketAddress) {
             mUnixEpochTimeMillis = unixEpochTimeMillis;
             mElapsedRealtimeMillis = elapsedRealtimeMillis;
             mUncertaintyMillis = uncertaintyMillis;
-            mNtpServerSocketAddress = ntpServerSocketAddress;
+            mNtpServerSocketAddress = Objects.requireNonNull(ntpServerSocketAddress);
         }
 
         public long getTimeMillis() {
@@ -203,13 +190,14 @@ public abstract class NtpTrustedTime implements TrustedTime {
             return mUnixEpochTimeMillis == that.mUnixEpochTimeMillis
                     && mElapsedRealtimeMillis == that.mElapsedRealtimeMillis
                     && mUncertaintyMillis == that.mUncertaintyMillis
-                    && Objects.equals(mNtpServerSocketAddress, that.mNtpServerSocketAddress);
+                    && mNtpServerSocketAddress.equals(
+                    that.mNtpServerSocketAddress);
         }
 
         @Override
         public int hashCode() {
             return Objects.hash(mUnixEpochTimeMillis, mElapsedRealtimeMillis, mUncertaintyMillis,
-                    Objects.hashCode(mNtpServerSocketAddress));
+                    mNtpServerSocketAddress);
         }
 
         @Override
@@ -585,7 +573,7 @@ public abstract class NtpTrustedTime implements TrustedTime {
         if (!uri.isAbsolute()) {
             throw new URISyntaxException(uri.toString(), "Relative URI not supported");
         }
-        if (!URI_SCHEME_NTP.equals(uri.getScheme()) && !"https".equals(uri.getScheme())) {
+        if (!URI_SCHEME_NTP.equals(uri.getScheme())) {
             throw new URISyntaxException(uri.toString(), "Unrecognized scheme");
         }
         String host = uri.getHost();
@@ -632,34 +620,33 @@ public abstract class NtpTrustedTime implements TrustedTime {
             final ContentResolver resolver = mContext.getContentResolver();
             final Resources res = mContext.getResources();
 
-            // TODO: add a dynamic setting to switch to standard NTP
-            String ntpMode = res.getString(com.android.internal.R.string.config_ntpMode);
+            // The Settings value has priority over static config. Check settings first.
+            final String serverGlobalSetting =
+                    Settings.Global.getString(resolver, Settings.Global.NTP_SERVER);
+            final List<URI> settingsServerUris = parseNtpServerSetting(serverGlobalSetting);
 
-            int resConfigId;
-            if (NtpConfig.MODE_HTTPS.equals(ntpMode)) {
-                resConfigId = com.android.internal.R.array.config_httpsTimeServers;
-            } else {
-                resConfigId = com.android.internal.R.array.config_ntpServers;
-            }
-
-            String[] configValues = res.getStringArray(resConfigId);
             List<URI> ntpServerUris;
-            try {
-                List<URI> configServerUris = new ArrayList<>();
-                for (String configValue : configValues) {
-                    configServerUris.add(parseNtpUriStrict(configValue));
+            if (settingsServerUris != null) {
+                ntpServerUris = settingsServerUris;
+            } else {
+                String[] configValues =
+                        res.getStringArray(com.android.internal.R.array.config_ntpServers);
+                try {
+                    List<URI> configServerUris = new ArrayList<>();
+                    for (String configValue : configValues) {
+                        configServerUris.add(parseNtpUriStrict(configValue));
+                    }
+                    ntpServerUris = configServerUris;
+                } catch (URISyntaxException e) {
+                    ntpServerUris = null;
                 }
-                ntpServerUris = configServerUris;
-            } catch (URISyntaxException e) {
-                Log.e(TAG, "", e);
-                ntpServerUris = null;
             }
 
             final int defaultTimeoutMillis =
                     res.getInteger(com.android.internal.R.integer.config_ntpTimeout);
             final Duration timeout = Duration.ofMillis(Settings.Global.getInt(
                     resolver, Settings.Global.NTP_TIMEOUT, defaultTimeoutMillis));
-            return ntpServerUris == null ? null : new NtpConfig(ntpServerUris, timeout, ntpMode);
+            return ntpServerUris == null ? null : new NtpConfig(ntpServerUris, timeout);
         }
 
         @Override
@@ -711,7 +698,6 @@ public abstract class NtpTrustedTime implements TrustedTime {
                 @NonNull Network network, @NonNull URI ntpServerUri, @NonNull Duration timeout) {
 
             final SntpClient client = new SntpClient();
-            client.setNtpMode(getNtpConfigInternal().getNtpMode());
             final String serverName = ntpServerUri.getHost();
             final int port = ntpServerUri.getPort() == -1
                     ? SntpClient.STANDARD_NTP_PORT : ntpServerUri.getPort();
