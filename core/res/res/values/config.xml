@@ -2538,6 +2538,12 @@
     <!-- SNTP client config: Timeout to wait for an NTP server response in milliseconds. -->
     <integer name="config_ntpTimeout">5000</integer>
 
+    <string-array translatable="false" name="config_httpsTimeUrls">
+        <item>https://time.grapheneos.org/generate_204</item>
+    </string-array>
+
+    <java-symbol type="array" name="config_httpsTimeUrls" />
+
     <!-- Automatic "network" time detection config: Normal network time polling frequency in
          milliseconds. -->
     <integer name="config_ntpPollingInterval">64800000</integer>
