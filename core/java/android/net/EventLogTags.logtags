@@ -4,3 +4,5 @@ option java_package android.net
 
 50080 ntp_success (server|3),(rtt|2),(offset|2)
 50081 ntp_failure (server|3),(msg|3)
+50082 https_time_success (url|3),(rtt|2),(offset|2)
+50083 https_time_failure (url|3),(msg|3)
