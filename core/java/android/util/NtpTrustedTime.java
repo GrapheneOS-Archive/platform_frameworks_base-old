@@ -23,6 +23,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.res.Resources;
 import android.net.ConnectivityManager;
+import android.net.HttpsTimeClient;
 import android.net.Network;
 import android.net.NetworkInfo;
 import android.net.SntpClient;
@@ -38,6 +39,7 @@ import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -246,6 +248,10 @@ public abstract class NtpTrustedTime implements TrustedTime {
     @Nullable
     private volatile URI mLastSuccessfulNtpServerUri;
 
+    @GuardedBy("mRefreshLock")
+    @Nullable
+    private URL mLastSuccessfulHttpsTimeUrl;
+
     protected NtpTrustedTime() {
     }
 
@@ -270,7 +276,7 @@ public abstract class NtpTrustedTime implements TrustedTime {
 
     /** Forces a refresh using the default network. */
     @UnsupportedAppUsage(maxTargetSdk = Build.VERSION_CODES.R, trackingBug = 170729553)
-    public boolean forceRefresh() {
+    public final boolean forceRefresh() {
         synchronized (mRefreshLock) {
             Network network = getDefaultNetwork();
             if (network == null) {
@@ -283,7 +289,7 @@ public abstract class NtpTrustedTime implements TrustedTime {
     }
 
     /** Forces a refresh using the specified network. */
-    public boolean forceRefresh(@NonNull Network network) {
+    public final boolean forceRefresh(@NonNull Network network) {
         Objects.requireNonNull(network);
 
         synchronized (mRefreshLock) {
@@ -299,6 +305,24 @@ public abstract class NtpTrustedTime implements TrustedTime {
         if (!isNetworkConnected(network)) {
             if (LOGD) Log.d(TAG, "forceRefreshLocked: network=" + network + " is not connected");
             return false;
+        }
+
+        final String networkTimeMode = "https";
+
+        if ("https".equals(networkTimeMode)) {
+            var client = new HttpsTimeClient(getHttpsTimeConfig(), network);
+            HttpsTimeClient.Result res = client.requestTime(mLastSuccessfulHttpsTimeUrl);
+            if (res == null) {
+                return false;
+            }
+
+            mTimeResult = res.timeResult;
+            mLastSuccessfulHttpsTimeUrl = res.url;
+            return true;
+        }
+
+        if (!"ntp".equals(networkTimeMode)) {
+            throw new IllegalStateException(networkTimeMode);
         }
 
         NtpConfig ntpConfig = getNtpConfig();
@@ -374,6 +398,10 @@ public abstract class NtpTrustedTime implements TrustedTime {
             }
             return getNtpConfigInternal();
         }
+    }
+
+    private HttpsTimeClient.Config getHttpsTimeConfig() {
+        return HttpsTimeClient.Config.getDefault(getContext());
     }
 
     /**
@@ -606,6 +634,8 @@ public abstract class NtpTrustedTime implements TrustedTime {
     /** Prints debug information. */
     public void dump(PrintWriter pw) {
         synchronized (mConfigLock) {
+            pw.println("getHttpsTimeConfig()=" + getHttpsTimeConfig());
+            pw.println("mLastSuccessfulHttpsTimeUrl=" + mLastSuccessfulHttpsTimeUrl);
             pw.println("getNtpConfig()=" + getNtpConfig());
             pw.println("mNtpConfigForTests=" + mNtpConfigForTests);
         }
@@ -748,5 +778,14 @@ public abstract class NtpTrustedTime implements TrustedTime {
             }
             return (int) longValue;
         }
+
+        @NonNull
+        @Override
+        protected Context getContext() {
+            return mContext;
+        }
     }
+
+    @NonNull
+    protected abstract Context getContext();
 }
