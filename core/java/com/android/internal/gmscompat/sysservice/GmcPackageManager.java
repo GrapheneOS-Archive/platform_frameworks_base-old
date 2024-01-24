@@ -45,7 +45,6 @@ import android.util.PackageUtils;
 import com.android.internal.gmscompat.GmsHooks;
 import com.android.internal.gmscompat.GmsInfo;
 import com.android.internal.gmscompat.PlayStoreHooks;
-import com.android.internal.util.GoogleEuicc;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,7 +63,6 @@ public class GmcPackageManager extends ApplicationPackageManager {
         initForceDisabledComponents(ctx);
         if (GmsCompat.isPlayStore()) {
             ArraySet<String> hiddenPkgs = HIDDEN_PACKAGES;
-            hiddenPkgs.add(GoogleEuicc.LPA_PKG_NAME);
         }
     }
 
