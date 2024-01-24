@@ -30,8 +30,6 @@ public final class SystemServerExt {
         SystemServerExt sse = new SystemServerExt(systemContext, pm);
         sse.bgHandler.post(sse::initBgThread);
 
-        new GoogleEuiccLpaDisabler(sse);
-
         AppCompatConf.init(systemContext);
     }
 
