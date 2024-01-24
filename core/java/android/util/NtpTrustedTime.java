@@ -302,6 +302,13 @@ public abstract class NtpTrustedTime implements TrustedTime {
     private boolean forceRefreshLocked(@NonNull Network network) {
         Objects.requireNonNull(network);
 
+        final ContentResolver resolver = getContext().getContentResolver();
+
+        if (Settings.Global.getInt(resolver, Settings.Global.AUTO_TIME, 0) == 0) {
+            Log.d(TAG, "skipped forceRefresh: auto time is disabled");
+            return false;
+        }
+
         if (!isNetworkConnected(network)) {
             if (LOGD) Log.d(TAG, "forceRefreshLocked: network=" + network + " is not connected");
             return false;
