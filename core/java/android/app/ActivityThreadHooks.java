@@ -20,6 +20,8 @@ class ActivityThreadHooks {
         }
         called = true;
 
+        AppGlobals.setInitialPackageId(appContext.getApplicationInfo().ext().getPackageId());
+
         if (Process.isIsolated()) {
             return null;
         }
