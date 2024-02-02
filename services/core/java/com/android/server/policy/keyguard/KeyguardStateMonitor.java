@@ -97,6 +97,12 @@ public class KeyguardStateMonitor extends IKeyguardStateCallback.Stub {
                     ExtSettings.DENY_NEW_USB_TRANSIENT_ENABLE :
                     ExtSettings.DENY_NEW_USB_TRANSIENT_DISABLE);
         }
+
+        if (showing) {
+            System.gc();
+            System.runFinalization();
+            System.gc();
+        }
     }
 
     @Override // Binder interface
