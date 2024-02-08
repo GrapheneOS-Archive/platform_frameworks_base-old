@@ -139,7 +139,11 @@ public class GmcPackageManager extends ApplicationPackageManager {
             return;
         }
 
-        super.setApplicationEnabledSetting(packageName, newState, flags);
+        try {
+            super.setApplicationEnabledSetting(packageName, newState, flags);
+        } catch (SecurityException e) {
+            Log.d(TAG, "", e);
+        }
     }
 
     @Override
