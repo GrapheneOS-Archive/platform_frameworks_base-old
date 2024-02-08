@@ -24,6 +24,7 @@ import android.app.Application;
 import android.app.ApplicationPackageManager;
 import android.app.compat.gms.GmsCompat;
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
@@ -35,8 +36,10 @@ import android.content.pm.PackageInfo;
 import android.content.pm.SharedLibraryInfo;
 import android.content.pm.VersionedPackage;
 import android.ext.PackageId;
+import android.os.Build;
 import android.os.Process;
 import android.os.UserHandle;
+import android.provider.Settings;
 import android.util.ArrayMap;
 import android.util.ArraySet;
 import android.util.Log;
@@ -364,7 +367,7 @@ public class GmcPackageManager extends ApplicationPackageManager {
             throw e;
         }
 
-        if (PackageId.ANDROID_AUTO_NAME.equals(packageName)) {
+        if (PackageId.ANDROID_AUTO_NAME.equals(packageName) && isUpdateOwnershipOverrideEnabled()) {
             // Android Auto needs to be exempted from updates via Play Store to prevent breaking the
             // compatibility layer support for Android Auto.
             //
@@ -382,6 +385,15 @@ public class GmcPackageManager extends ApplicationPackageManager {
         }
 
         return res;
+    }
+
+    private static boolean isUpdateOwnershipOverrideEnabled() {
+        if (!Build.isDebuggable()) {
+            return true;
+        }
+
+        ContentResolver cr = GmsCompat.appContext().getContentResolver();
+        return Settings.Global.getInt(cr, "gmscompat_allow_unknown_updates", 0) == 0;
     }
 
     private PackageInfo makePseudoDisabledPackageInfoOrThrow(String pkgName, PackageInfoFlags flags) throws NameNotFoundException {
