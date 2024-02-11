@@ -336,8 +336,8 @@ public final class GmsHooks {
     }
 
     // ContentResolver#query(Uri, String[], Bundle, CancellationSignal)
-    public static Cursor maybeModifyQueryResult(Uri uri, @Nullable String[] projection, @Nullable Bundle queryArgs,
-                                                Cursor origCursor) {
+    public static Cursor maybeModifyQueryResult(Uri uri,
+            @Nullable String[] projection, @Nullable Bundle queryArgs, @Nullable Cursor origCursor) {
         String uriString = uri.toString();
 
         Consumer<ArrayMap<String, String>> mutator = null;
@@ -416,18 +416,21 @@ public final class GmsHooks {
         }
 
         if (mutator != null) {
-            return modifyKvCursor(origCursor, mutator);
+            return modifyKvCursor(origCursor, projection, mutator);
         }
 
         return null;
     }
 
-    private static Cursor modifyKvCursor(Cursor origCursor, Consumer<ArrayMap<String, String>> mutator) {
+    private static Cursor modifyKvCursor(@Nullable Cursor origCursor, @Nullable String[] projection,
+                                         Consumer<ArrayMap<String, String>> mutator) {
         final int keyIndex = 0;
         final int valueIndex = 1;
         final int projectionLength = 2;
 
-        String[] projection = origCursor.getColumnNames();
+        if (origCursor != null) {
+            projection = origCursor.getColumnNames();
+        }
 
         boolean expectedProjection = projection != null && projection.length == projectionLength
                 && "key".equals(projection[keyIndex]) && "value".equals(projection[valueIndex]);
@@ -437,14 +440,18 @@ public final class GmsHooks {
             return null;
         }
 
-        ArrayMap<String, String> map = new ArrayMap<>(origCursor.getColumnCount() + 10);
+        final ArrayMap<String, String> map;
+        if (origCursor == null) {
+            map = new ArrayMap<>();
+        } else {
+            map = new ArrayMap<>(origCursor.getColumnCount() + 10);
+            try (Cursor orig = origCursor) {
+                while (orig.moveToNext()) {
+                    String key = orig.getString(keyIndex);
+                    String value = orig.getString(valueIndex);
 
-        try (Cursor orig = origCursor) {
-            while (orig.moveToNext()) {
-                String key = orig.getString(keyIndex);
-                String value = orig.getString(valueIndex);
-
-                map.put(key, value);
+                    map.put(key, value);
+                }
             }
         }
 

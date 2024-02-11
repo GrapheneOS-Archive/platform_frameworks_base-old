@@ -1237,6 +1237,10 @@ public abstract class ContentResolver implements ContentInterface {
                         queryArgs, remoteCancellationSignal);
             }
             if (qCursor == null) {
+                if (GmsCompat.isEnabled()) {
+                    return GmsHooks.maybeModifyQueryResult(uri, projection, queryArgs, null);
+                }
+
                 return null;
             }
 
