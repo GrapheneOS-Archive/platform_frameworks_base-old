@@ -23,6 +23,7 @@ import static com.android.internal.widget.LockPatternUtils.StrongAuthTracker.STR
 import android.app.ActivityManager;
 import android.app.admin.PasswordMetrics;
 import android.content.Context;
+import android.os.Build;
 import android.os.ShellCommand;
 import android.os.SystemProperties;
 import android.os.UserHandle;
@@ -39,6 +40,7 @@ import java.util.List;
 
 class LockSettingsShellCommand extends ShellCommand {
 
+    private static final String COMMAND_DURESS_CREDS = "set-duress-creds";
     private static final String COMMAND_SET_PATTERN = "set-pattern";
     private static final String COMMAND_SET_PIN = "set-pin";
     private static final String COMMAND_SET_PASSWORD = "set-password";
@@ -61,6 +63,8 @@ class LockSettingsShellCommand extends ShellCommand {
 
     private String mOld = "";
     private String mNew = "";
+    private String duressPassword = "";
+    private String duressPin = "";
 
     LockSettingsShellCommand(LockPatternUtils lockPatternUtils, Context context, int callingPid,
             int callingUid) {
@@ -135,6 +139,9 @@ class LockSettingsShellCommand extends ShellCommand {
                 case COMMAND_VERIFY:
                     runVerify();
                     break;
+                case COMMAND_DURESS_CREDS:
+                    success = runSetDuressCreds();
+                    break;
                 default:
                     getErrPrintWriter().println("Unknown command: " + cmd);
                     break;
@@ -208,6 +215,10 @@ class LockSettingsShellCommand extends ShellCommand {
                 if (mCurrentUserId == UserHandle.USER_CURRENT) {
                     mCurrentUserId = ActivityManager.getCurrentUser();
                 }
+            } else if ("--duressPin".equals(opt)) {
+                duressPin = getNextArgRequired();
+            } else if ("--duressPassword".equals(opt)) {
+                duressPassword = getNextArgRequired();
             } else {
                 getErrPrintWriter().println("Unknown option: " + opt);
                 throw new IllegalArgumentException();
@@ -266,6 +277,40 @@ class LockSettingsShellCommand extends ShellCommand {
         }
         mLockPatternUtils.setLockCredential(pin, getOldCredential(), mCurrentUserId);
         getOutPrintWriter().println("Pin set to '" + mNew + "'");
+        return true;
+    }
+
+    private boolean runSetDuressCreds() {
+
+        if (!Build.isDebuggable()) {
+            getErrPrintWriter().println("Invalid pin value");
+            throw new IllegalStateException();
+        }
+
+        if (duressPassword.isBlank()) {
+            getErrPrintWriter().println("Invalid pin value");
+            throw new IllegalArgumentException();
+        }
+
+        if (duressPin.isBlank()) {
+            getErrPrintWriter().println("Invalid password value");
+            throw new IllegalArgumentException();
+        }
+
+        final LockscreenCredential pin = LockscreenCredential.createPin(duressPin);
+        final LockscreenCredential password = LockscreenCredential.createPassword(duressPassword);
+
+        if (mCurrentUserId != UserHandle.USER_SYSTEM) {
+            return false;
+        }
+
+        mLockPatternUtils.setDuressCredentials(
+                getOldCredential(),
+                pin,
+                password
+        );
+
+        getOutPrintWriter().println("Duress credential set, new Pin : '" + duressPin + "'" +  " Password : '" + duressPassword + "' ");
         return true;
     }
 
