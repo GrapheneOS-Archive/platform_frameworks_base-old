@@ -1,0 +1,18 @@
+java_test_host {
+    name: "DuressVendorTest",
+    srcs: [
+        "src/**/*.java",
+    ],
+    libs: [
+        "tradefed",
+        "compatibility-tradefed",
+        "compatibility-host-util",
+    ],
+    static_libs: [
+        "cts-host-utils",
+        "frameworks-base-hostutils",
+    ],
+    test_suites: [
+        "general-tests",
+    ],
+}
