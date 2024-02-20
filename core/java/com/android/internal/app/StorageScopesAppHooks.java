@@ -47,6 +47,10 @@ public class StorageScopesAppHooks {
         }
     }
 
+    public static boolean isEnabled() {
+        return isEnabled;
+    }
+
     public static boolean shouldSkipPermissionCheckSpoof(int gosPsDflags, int permDerivedFlag) {
         if ((gosPsDflags & DFLAG_HAS_READ_MEDIA_VISUAL_USER_SELECTED_DECLARATION) != 0) {
             switch (permDerivedFlag) {
