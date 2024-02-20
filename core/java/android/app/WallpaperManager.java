@@ -648,6 +648,11 @@ public class WallpaperManager {
                         return getDefaultWallpaper(context, FLAG_SYSTEM);
                     }
 
+                    if (GmsCompat.isEnabled()) {
+                        Log.d("GmsCompat", "", e);
+                        return getDefaultWallpaper(context, FLAG_SYSTEM);
+                    }
+
                     if (context.getApplicationInfo().targetSdkVersion < Build.VERSION_CODES.O_MR1) {
                         Log.w(TAG, "No permission to access wallpaper, suppressing"
                                 + " exception to avoid crashing legacy app.");
@@ -971,12 +976,6 @@ public class WallpaperManager {
     public Drawable getDrawable(@SetWallpaperFlags int which) {
         if (StorageScopesAppHooks.shouldSpoofSelfPermissionCheck(android.Manifest.permission.MANAGE_EXTERNAL_STORAGE)) {
             return null;
-        }
-
-        if (GmsCompat.isEnabled()) {
-            if (!GmsCompat.hasPermission(READ_WALLPAPER_INTERNAL)) {
-                return null;
-            }
         }
 
         final ColorManagementProxy cmProxy = getColorManagementProxy();
@@ -1731,6 +1730,12 @@ public class WallpaperManager {
                             + " wallpaper file to avoid crashing legacy app.");
                     return getDefaultSystemWallpaperFile();
                 }
+
+                if (GmsCompat.isEnabled()) {
+                    Log.d("GmsCompat", "", e);
+                    return getDefaultSystemWallpaperFile();
+                }
+
                 if (mContext.getApplicationInfo().targetSdkVersion < Build.VERSION_CODES.O_MR1) {
                     Log.w(TAG, "No permission to access wallpaper, suppressing"
                             + " exception to avoid crashing legacy app.");
