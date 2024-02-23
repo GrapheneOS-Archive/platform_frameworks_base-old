@@ -34,6 +34,7 @@ java_library_static {
         "android.hardware.usb-V1.2-java",
         "android.hardware.usb-V1.3-java",
         "android.hardware.usb-V3-java",
+        "android.hardware.usb.ext-V1-java",
         "usb_flags_lib",
     ],
     lint: {
