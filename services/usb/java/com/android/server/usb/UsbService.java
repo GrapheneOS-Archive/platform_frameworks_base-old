@@ -911,6 +911,12 @@ public class UsbService extends IUsbManager.Stub {
         }
     }
 
+    public void setPortSecurityState(@NonNull String portId,
+                                     @android.hardware.usb.ext.PortSecurityState int state) {
+        mContext.enforceCallingOrSelfPermission(android.Manifest.permission.MANAGE_USB, null);
+        mPortManager.setPortSecurityState(portId, state);
+    }
+
     @Override
     public void setUsbDeviceConnectionHandler(ComponentName usbDeviceConnectionHandler) {
         mContext.enforceCallingOrSelfPermission(android.Manifest.permission.MANAGE_USB, null);

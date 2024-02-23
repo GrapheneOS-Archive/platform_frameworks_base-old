@@ -39,6 +39,8 @@ import android.hardware.usb.DisplayPortAltModeInfo;
 import android.hardware.usb.AltModeData;
 import android.hardware.usb.AltModeData.DisplayPortAltModeData;
 import android.hardware.usb.DisplayPortAltModePinAssignment;
+import android.hardware.usb.ext.IUsbExt;
+import android.hardware.usb.ext.PortSecurityState;
 import android.os.Build;
 import android.os.ServiceManager;
 import android.os.IBinder;
@@ -454,6 +456,30 @@ public final class UsbPortAidl implements UsbPortHal {
                         + portName + " opID:" + operationID, e);
             }
         }
+    }
+
+    @Override
+    public void setPortSecurityState(String portName, @android.hardware.usb.ext.PortSecurityState int state) {
+        IBinder ext;
+        try {
+            ext = mBinder.getExtension();
+        } catch (RemoteException e) {
+            Slog.e(TAG, "", e);
+            throw new UnsupportedOperationException(e);
+        }
+
+        if (ext == null) {
+            Slog.d(TAG, "setPortSecurityState: no IUsbExt");
+            throw new UnsupportedOperationException();
+        }
+
+        IUsbExt i = IUsbExt.Stub.asInterface(ext);
+        try {
+            i.setPortSecurityState(portName, state);
+        } catch (RemoteException e) {
+            Slog.e(TAG, "", e);
+        }
+        Slog.d(TAG, "setPortSecurityState: " + state);
     }
 
     private static class HALCallback extends IUsbCallback.Stub {
