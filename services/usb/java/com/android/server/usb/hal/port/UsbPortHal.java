@@ -18,6 +18,7 @@ package com.android.server.usb.hal.port;
 import android.annotation.IntDef;
 import android.hardware.usb.IUsbOperationInternal;
 import android.hardware.usb.UsbManager.UsbHalVersion;
+import android.hardware.usb.ext.PortSecurityState;
 import android.os.RemoteException;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -205,4 +206,8 @@ public interface UsbPortHal {
      */
     public void resetUsbPort(String portName, long transactionId,
             IUsbOperationInternal callback);
+
+    default void setPortSecurityState(String portName, @android.hardware.usb.ext.PortSecurityState int state) {
+        throw new UnsupportedOperationException();
+    }
 }
