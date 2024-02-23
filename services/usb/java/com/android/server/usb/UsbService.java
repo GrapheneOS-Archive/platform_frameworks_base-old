@@ -272,6 +272,9 @@ public class UsbService extends IUsbManager.Stub {
         if (mDeviceManager != null) {
             mDeviceManager.bootCompleted();
         }
+
+        com.android.server.policy.keyguard.UsbPortSecurityHooks.init(mContext);
+
         if (android.hardware.usb.flags.Flags.enableUsbDataSignalStaking()) {
             new PackageUninstallMonitor()
                     .register(mContext, UserHandle.ALL, BackgroundThread.getHandler());
