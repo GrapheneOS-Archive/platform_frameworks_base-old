@@ -211,4 +211,7 @@ interface IUsbManager
             "@android.annotation.RequiresPermission(android.Manifest.permission.MANAGE_USB)")
     void unregisterForDisplayPortEvents(IDisplayPortAltModeInfoListener listener);
 
+    @JavaPassthrough(annotation=
+            "@android.annotation.RequiresPermission(android.Manifest.permission.MANAGE_USB)")
+    void setPortSecurityState(String portId, int state);
 }
