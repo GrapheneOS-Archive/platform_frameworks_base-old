@@ -1619,6 +1619,17 @@ public class UsbManager {
         }
     }
 
+    /** @hide */
+    public void setPortSecurityState(@NonNull UsbPort port,
+            @android.hardware.usb.ext.PortSecurityState int state,
+            @NonNull android.os.ResultReceiver statusCallback) {
+        try {
+            mService.setPortSecurityState(port.getId(), state, statusCallback);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
     /**
      * Should only be called by {@link UsbPort#enableUsbDataWhileDocked}.
      * <p>

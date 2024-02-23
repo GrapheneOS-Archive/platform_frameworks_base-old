@@ -447,6 +447,12 @@ public class UsbPortManager implements IBinder.DeathRecipient {
         }
     }
 
+    public void setPortSecurityState(@NonNull String portId,
+                                     @android.hardware.usb.ext.PortSecurityState int state,
+                                     android.os.ResultReceiver callback) {
+        mUsbPortHal.setPortSecurityState(portId, state, callback);
+    }
+
     /**
      * Enable/disable the USB data signaling
      *
