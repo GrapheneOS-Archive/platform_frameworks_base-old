@@ -2,8 +2,6 @@ package com.android.server.ext;
 
 import android.annotation.CurrentTimeMillisLong;
 import android.app.ActivityManagerInternal;
-import android.app.Notification;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
@@ -32,9 +30,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.List;
-import java.util.function.Consumer;
-
-import static com.android.server.ext.SseUtils.addNotifAction;
 
 public class TombstoneHandler {
     private static final String TAG = TombstoneHandler.class.getSimpleName();
@@ -253,14 +248,14 @@ public class TombstoneHandler {
 
             if (!isSystem) {
                 if (!isHistorical) {
-                    int aepNotifType = -1;
+                    int aswNotifType = -1;
                     if (isMemtagError(tombstone)) {
-                        aepNotifType = AEP_NOTIF_TYPE_MEMTAG;
+                        aswNotifType = ASW_NOTIF_TYPE_MEMTAG;
                     } else if (isHardenedMallocFatalError(tombstone)) {
-                        aepNotifType = AEP_NOTIF_TYPE_HARDENED_MALLOC;
+                        aswNotifType = ASW_NOTIF_TYPE_HARDENED_MALLOC;
                     }
-                    if (aepNotifType != -1) {
-                        maybeShowAepNotification(aepNotifType, ctx, tombstone, msg,
+                    if (aswNotifType != -1) {
+                        maybeShowAswNotification(aswNotifType, ctx, tombstone, msg,
                                 packageUid, firstPackageName);
                     }
                 }
@@ -307,43 +302,37 @@ public class TombstoneHandler {
         return abortMsg != null && abortMsg.startsWith("hardened_malloc: fatal allocator error: ");
     }
 
-    private static final int AEP_NOTIF_TYPE_MEMTAG = 0;
-    private static final int AEP_NOTIF_TYPE_HARDENED_MALLOC = 1;
+    private static final int ASW_NOTIF_TYPE_MEMTAG = 0;
+    private static final int ASW_NOTIF_TYPE_HARDENED_MALLOC = 1;
 
-    private static void maybeShowAepNotification(int type, Context ctx, TombstoneProtos.Tombstone tombstone,
+    private static void maybeShowAswNotification(int type, Context ctx, TombstoneProtos.Tombstone tombstone,
                                                  String errorReport,
                                                  int packageUid, String firstPackageName) {
-        Consumer<Notification.Builder> notifCustomizer = nb -> {
-            Intent i = LogViewerApp.createBaseErrorReportIntent(errorReport);
-            i.putExtra(LogViewerApp.EXTRA_SOURCE_PACKAGE, firstPackageName);
-
-            UserHandle user = UserHandle.of(UserHandle.getUserId(packageUid));
-            var pi = PendingIntent.getActivityAsUser(ctx, 0, i,
-                    PendingIntent.FLAG_IMMUTABLE, null, user);
-            addNotifAction(ctx, pi, R.string.notif_action_more_info, nb);
-        };
-
-        String intentAction;
-        int notifTitleRes;
-        int gosPsFlagSuppressNotif = 0;
-
+        AppSwitchNotification n;
         switch (type) {
-            case AEP_NOTIF_TYPE_MEMTAG -> {
-                intentAction = SettingsIntents.APP_MEMTAG;
-                gosPsFlagSuppressNotif = GosPackageState.FLAG_FORCE_MEMTAG_SUPPRESS_NOTIF;
-                notifTitleRes = R.string.notif_memtag_crash_title;
+            case ASW_NOTIF_TYPE_MEMTAG -> {
+                n = AppSwitchNotification.maybeCreate(ctx, firstPackageName, packageUid,
+                        SettingsIntents.APP_MEMTAG);
+                if (n == null) {
+                    return;
+                }
+                n.titleRes = R.string.notif_memtag_crash_title;
+                n.gosPsFlagSuppressNotif = GosPackageState.FLAG_FORCE_MEMTAG_SUPPRESS_NOTIF;
             }
-            case AEP_NOTIF_TYPE_HARDENED_MALLOC -> {
-                intentAction = SettingsIntents.APP_HARDENED_MALLOC;
-                notifTitleRes = R.string.notif_hmalloc_crash_title;
+            case ASW_NOTIF_TYPE_HARDENED_MALLOC -> {
+                n = AppSwitchNotification.maybeCreate(ctx, firstPackageName, packageUid,
+                        SettingsIntents.APP_HARDENED_MALLOC);
+                if (n == null) {
+                    return;
+                }
+                n.titleRes = R.string.notif_hmalloc_crash_title;
             }
             default -> throw new IllegalArgumentException(Integer.toString(type));
         }
+        Intent i = LogViewerApp.createBaseErrorReportIntent(errorReport);
+        i.putExtra(LogViewerApp.EXTRA_SOURCE_PACKAGE, firstPackageName);
+        n.moreInfoIntent = i;
 
-        AppExploitProtectionNotification.maybeShow(ctx, intentAction,
-                packageUid, firstPackageName,
-                gosPsFlagSuppressNotif,
-                notifTitleRes, ctx.getText(R.string.notif_text_tap_to_open_settings),
-                notifCustomizer);
+        n.maybeShow();
     }
 }
