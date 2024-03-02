@@ -162,6 +162,7 @@ internal fun <T : AppRecord> TogglePermissionAppListModel<T>.TogglePermissionApp
                 packageName = packageName) })
         RestrictedSwitchPreference(switchModel, restrictions, restrictionsProviderFactory)
         InfoPageAdditionalContent(record, isAllowed)
+        extContent(record, this)
     }
 }
 
