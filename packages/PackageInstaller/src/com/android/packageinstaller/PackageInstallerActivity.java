@@ -355,14 +355,13 @@ public class PackageInstallerActivity extends AlertActivity {
     protected void onCreate(Bundle icicle) {
         if (mLocalLOGV) Log.i(TAG, "creating for user " + UserHandle.myUserId());
         getWindow().addSystemFlags(SYSTEM_FLAG_HIDE_NON_SYSTEM_OVERLAY_WINDOWS);
-        getWindow().setCloseOnTouchOutside(false);
 
         super.onCreate(null);
 
         if (icicle != null) {
             mAllowUnknownSources = icicle.getBoolean(ALLOW_UNKNOWN_SOURCES_KEY);
         }
-        setFinishOnTouchOutside(true);
+        getWindow().setCloseOnTouchOutside(false);
 
         mPm = getPackageManager();
         mAppOpsManager = (AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
