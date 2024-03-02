@@ -130,7 +130,7 @@ internal fun <T : AppRecord> TogglePermissionAppListModel<T>.TogglePermissionApp
 
 @VisibleForTesting
 @Composable
-internal fun TogglePermissionAppListModel<out AppRecord>.TogglePermissionAppInfoPage(
+internal fun <T : AppRecord> TogglePermissionAppListModel<T>.TogglePermissionAppInfoPage(
     packageName: String,
     userId: Int,
     packageManagers: IPackageManagers = PackageManagers,
@@ -144,18 +144,20 @@ internal fun TogglePermissionAppListModel<out AppRecord>.TogglePermissionAppInfo
         footerContent = footerContent(),
         packageManagers = packageManagers,
     ) {
-        val model = createSwitchModel(applicationInfo)
+        val appInfo = applicationInfo
+        val record = remember(appInfo) { transformItem(appInfo) }
+        val model = createSwitchModel(record)
         val restrictions = Restrictions(userId, switchRestrictionKeys)
         RestrictedSwitchPreference(model, restrictions, restrictionsProviderFactory)
+        extContent(record, this)
     }
 }
 
 @Composable
 private fun <T : AppRecord> TogglePermissionAppListModel<T>.createSwitchModel(
-    app: ApplicationInfo,
+    record: T
 ): TogglePermissionSwitchModel<T> {
     val context = LocalContext.current
-    val record = remember(app) { transformItem(app) }
     val isAllowed = isAllowed(record)
     return remember(record) { TogglePermissionSwitchModel(context, this, record, isAllowed) }
         .also { model -> LaunchedEffect(model, Dispatchers.IO) { model.initState() } }
