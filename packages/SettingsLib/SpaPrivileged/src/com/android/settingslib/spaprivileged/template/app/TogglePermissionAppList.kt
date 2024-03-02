@@ -18,6 +18,7 @@ package com.android.settingslib.spaprivileged.template.app
 
 import android.content.Context
 import android.content.pm.ApplicationInfo
+import android.content.pm.PackageInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.ui.text.AnnotatedString
@@ -37,6 +38,11 @@ interface TogglePermissionAppListModel<T : AppRecord> {
     val footerResId: Int
     val switchRestrictionKeys: List<String>
         get() = emptyList()
+
+    // called after main switch, but before footer content
+    @Composable
+    fun extContent(record: T, pkgInfo: PackageInfo) {}
+
     @Composable
     fun footerContent(): (@Composable () -> Unit)? {
         return null
