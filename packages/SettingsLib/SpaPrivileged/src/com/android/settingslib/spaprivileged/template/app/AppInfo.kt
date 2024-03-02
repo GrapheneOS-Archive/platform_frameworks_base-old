@@ -27,10 +27,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Divider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
@@ -41,6 +44,8 @@ import com.android.settingslib.spa.widget.ui.SettingsBody
 import com.android.settingslib.spa.widget.ui.SettingsTitle
 import com.android.settingslib.spaprivileged.R
 import com.android.settingslib.spaprivileged.model.app.rememberAppRepository
+import java.text.DateFormat
+import java.util.Date
 
 class AppInfoProvider(private val packageInfo: PackageInfo) {
     @Composable
@@ -84,7 +89,9 @@ class AppInfoProvider(private val packageInfo: PackageInfo) {
         if (packageInfo.versionName == null) return
         Divider()
         Box(modifier = Modifier.padding(SettingsDimension.itemPadding)) {
-            SettingsBody(stringResource(R.string.version_text, packageInfo.versionNameBidiWrapped))
+            SelectionContainer {
+                SettingsBody(getFooterText())
+            }
         }
     }
 
@@ -92,6 +99,50 @@ class AppInfoProvider(private val packageInfo: PackageInfo) {
         /** Wrapped the version name, so its directionality still keep same when RTL. */
         val PackageInfo.versionNameBidiWrapped: String
             get() = BidiFormatter.getInstance().unicodeWrap(versionName)
+    }
+
+    @Composable
+    private fun getFooterText(): String {
+        val ctx = LocalContext.current
+        val pi = packageInfo
+
+        val dateFormat = remember { android.text.format.DateFormat.getMediumDateFormat(ctx) }
+        val timeFormat = remember { android.text.format.DateFormat.getTimeFormat(ctx) }
+
+        fun formatDate(unixTs: Long, dateFormat: DateFormat, timeFormat: DateFormat): String {
+            val d = Date(unixTs)
+            return dateFormat.format(d) + "; " + timeFormat.format(d)
+        }
+
+        // some system apps report being installed in January 2009, skip showing install time for them
+        val minTime = 1_240_000_000_000 // April 2009
+
+        var times: String? = null
+        if (pi.firstInstallTime > minTime) {
+            val s = formatDate(pi.firstInstallTime, dateFormat, timeFormat)
+            times = stringResource(R.string.app_info_install_time, s)
+        }
+
+        if (pi.lastUpdateTime != pi.firstInstallTime) {
+            val s = formatDate(pi.lastUpdateTime, dateFormat, timeFormat)
+            val updateTime = stringResource(R.string.app_info_update_time, s)
+            if (times != null) {
+                times += "\n${updateTime}"
+            } else {
+                times = updateTime
+            }
+        }
+
+        return """${
+stringResource(R.string.version_text, pi.versionNameBidiWrapped)}
+       
+${pi.packageName}
+versionCode ${pi.getLongVersionCode()}
+
+targetSdk ${pi.applicationInfo.targetSdkVersion}
+minSdk ${pi.applicationInfo.minSdkVersion}${
+    if (times != null) "\n\n" + times else ""
+}"""
     }
 }
 
