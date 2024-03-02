@@ -5,20 +5,18 @@ import android.app.ActivityManagerInternal.ProcessRecordSnapshot;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.GosPackageState;
-import android.content.pm.PackageManagerInternal;
 import android.ext.SettingsIntents;
-import android.os.UserHandle;
 import android.util.Slog;
 
 import com.android.internal.R;
 import com.android.internal.os.SELinuxFlags;
 import com.android.server.LocalServices;
-import com.android.server.ext.AppExploitProtectionNotification;
+import com.android.server.ext.AppSwitchNotification;
 import com.android.server.os.nano.AppCompatProtos;
-import com.android.server.pm.pkg.GosPackageStatePm;
 
 import java.lang.reflect.Field;
-import java.nio.charset.StandardCharsets;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class LogdNotableMessage {
     static final String TAG = LogdNotableMessage.class.getSimpleName();
@@ -26,7 +24,7 @@ public class LogdNotableMessage {
     private static final int TYPE_SELINUX_TSEC_FLAG_DENIAL = 0;
 
     static void onNotableMessage(Context ctx, int type, int uid, int pid, byte[] msgBytes) {
-        Slog.d(TAG, "uid " + uid + ", pid " + pid + ", msg " + new String(msgBytes, StandardCharsets.UTF_8));
+        Slog.d(TAG, "uid " + uid + ", pid " + pid + ", msg " + new String(msgBytes, UTF_8));
 
         switch (type) {
             case TYPE_SELINUX_TSEC_FLAG_DENIAL -> handleSELinuxTsecFlagDenial(ctx, msgBytes);
@@ -36,7 +34,7 @@ public class LogdNotableMessage {
     static void handleSELinuxTsecFlagDenial(Context ctx, byte[] msgBytes) {
         String TAG = "SELinuxTsecFlagDenial";
 
-        String msg = new String(msgBytes, StandardCharsets.UTF_8);
+        String msg = new String(msgBytes, UTF_8);
 
         String[] msgParts = msg.split(",");
 
@@ -66,7 +64,7 @@ public class LogdNotableMessage {
             }
             if (part.startsWith(topPidPrefix)) {
                 if (topPidWithSameUid != -1) {
-                    Slog.w(TAG, "duplicate topPid prefix; " +msg);
+                    Slog.w(TAG, "duplicate topPid prefix; " + msg);
                     return;
                 }
                 topPidWithSameUid = Integer.parseInt(part.substring(topPidPrefix.length()));
@@ -118,35 +116,20 @@ public class LogdNotableMessage {
         }
 
         ApplicationInfo appInfo = prs.appInfo;
-        int processPackageUid = appInfo.uid;
-        String firstPackageName = appInfo.packageName;
 
-        int notifTitleRes;
-        int gosPsFlagSuppressNotif;
-        String intentAction;
         if (flagValue == SELinuxFlags.DENY_PROCESS_PTRACE) {
-            notifTitleRes = R.string.notif_native_debug_title;
-            gosPsFlagSuppressNotif = GosPackageState.FLAG_BLOCK_NATIVE_DEBUGGING_SUPPRESS_NOTIF;
-            intentAction = SettingsIntents.APP_NATIVE_DEBUGGING;
             if (appInfo.ext().hasCompatChange(AppCompatProtos.SUPPRESS_NATIVE_DEBUGGING_NOTIFICATION)) {
-                Slog.d(TAG, "ptrace notification is disabled by compat change for " + firstPackageName);
+                Slog.d(TAG, "ptrace notification is disabled by compat change for " + appInfo.packageName);
                 return;
             }
-        } else {
+
+            var n = AppSwitchNotification.create(ctx, appInfo, SettingsIntents.APP_NATIVE_DEBUGGING);
+            n.titleRes = R.string.notif_native_debug_title;
+            n.gosPsFlagSuppressNotif = GosPackageState.FLAG_BLOCK_NATIVE_DEBUGGING_SUPPRESS_NOTIF;
+            n.maybeShow();
+        }
+        else {
             Slog.w(TAG, "unknown flag " + msg);
-            return;
         }
-
-        var pm = LocalServices.getService(PackageManagerInternal.class);
-        GosPackageStatePm gosPs = pm.getGosPackageState(firstPackageName, UserHandle.getUserId(processPackageUid));
-        if (gosPs != null && gosPs.hasFlags(gosPsFlagSuppressNotif)) {
-            Slog.d(TAG, "suppress notif flag is set; " + msg);
-            return;
-        }
-
-        String notifMessage = ctx.getString(R.string.notif_text_tap_to_open_settings);
-
-        AppExploitProtectionNotification.maybeShow(ctx, intentAction, processPackageUid, firstPackageName, gosPsFlagSuppressNotif,
-            notifTitleRes, notifMessage);
     }
 }
