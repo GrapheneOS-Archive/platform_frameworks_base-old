@@ -18,6 +18,7 @@ package com.android.settingslib.spaprivileged.template.app
 
 import android.content.Context
 import android.content.pm.ApplicationInfo
+import android.content.pm.PackageInfo
 import androidx.compose.runtime.Composable
 import com.android.settingslib.spa.framework.common.SettingsEntryBuilder
 import com.android.settingslib.spa.framework.common.SettingsPageProvider
@@ -38,6 +39,10 @@ interface TogglePermissionAppListModel<T : AppRecord> {
 
     val enhancedConfirmationKey: String?
         get() = null
+
+    // called after main switch, but before footer content
+    @Composable
+    fun extContent(record: T, pkgInfo: PackageInfo) {}
 
     /**
      * Loads the extra info for the App List, and generates the [AppRecord] List.
