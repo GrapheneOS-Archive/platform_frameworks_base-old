@@ -406,8 +406,8 @@ message SystemMessage {
     // abusive apps, with notification ID based off this ID.
     NOTE_ABUSIVE_BG_APPS_BASE = 0xc1b2508; // 203105544
 
-    NOTE_APP_EXPLOIT_PROTECTION_BASE = 0xf000000;
-    NOTE_APP_EXPLOIT_PROTECTION_MAX =  0xf00ffff;
+    NOTE_APP_SWITCH_BASE = 0xf000000;
+    NOTE_APP_SWITCH_MAX =  0xf00ffff;
     NOTE_SYSTEM_JOURNAL_BASE = 0xf010000;
     NOTE_SYSTEM_JOURNAL_MAX =  0xf01ffff;
 
