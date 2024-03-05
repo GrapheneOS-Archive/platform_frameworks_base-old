@@ -3863,30 +3863,6 @@ public class PackageImpl implements ParsedPackage, AndroidPackageInternal,
         return ext;
     }
 
-    private long cachedCompatConfigVersionCode;
-    private com.android.server.os.nano.AppCompatProtos.CompatConfig cachedCompatConfig;
-
-    @Nullable
-    public com.android.server.os.nano.AppCompatProtos.CompatConfig getAppCompatConfig() {
-        var configs = com.android.server.ext.AppCompatConf.getParsedConfigs();
-
-        if (configs == null) {
-            return null;
-        }
-
-        synchronized (this) {
-            if (configs.versionCode == cachedCompatConfigVersionCode) {
-                return cachedCompatConfig;
-            }
-        }
-
-        var config = com.android.server.ext.AppCompatConf.get(configs, this);
-
-        synchronized (this) {
-            cachedCompatConfigVersionCode = configs.versionCode;
-            cachedCompatConfig = config;
-        }
-
-        return config;
-    }
+    public long cachedCompatConfigVersionCode;
+    public Object cachedCompatConfig;
 }
