@@ -4,16 +4,27 @@ import android.ext.AppInfoExt;
 import android.ext.PackageId;
 import android.os.Parcel;
 
+import com.android.internal.pm.parsing.pkg.PackageExtIface;
+import com.android.internal.pm.parsing.pkg.PackageImpl;
+import com.android.server.ext.AppCompatConf;
 import com.android.server.os.nano.AppCompatProtos;
-import com.android.server.pm.parsing.pkg.PackageImpl;
+import com.android.server.pm.pkg.AndroidPackage;
 
-public class PackageExt {
+public class PackageExt implements PackageExtIface {
     public static final PackageExt DEFAULT = new PackageExt(PackageId.UNKNOWN, 0);
 
     private final int packageId;
     private final int flags;
 
     private final PackageHooks hooks;
+
+    public static PackageExt get(AndroidPackage pkg) {
+        PackageExtIface i = pkg.ext();
+        if (i != null) {
+            return (PackageExt) i;
+        }
+        return DEFAULT;
+    }
 
     public PackageExt(int packageId, int flags) {
         this.packageId = packageId;
@@ -30,7 +41,7 @@ public class PackageExt {
     }
 
     public AppInfoExt toAppInfoExt(PackageImpl pkg) {
-        AppCompatProtos.CompatConfig compatConfig = pkg.getAppCompatConfig();
+        AppCompatProtos.CompatConfig compatConfig = AppCompatConf.get(pkg);
 
         if (this == DEFAULT && compatConfig == null) {
             return AppInfoExt.DEFAULT;

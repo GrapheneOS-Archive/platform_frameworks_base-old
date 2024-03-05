@@ -1,14 +1,13 @@
-package com.android.server.pm.ext;
+package com.android.internal.pm.pkg.parsing;
 
 import android.annotation.Nullable;
 import android.content.pm.PackageManager;
 
-import com.android.server.pm.pkg.component.ParsedPermission;
-import com.android.server.pm.pkg.component.ParsedService;
-import com.android.server.pm.pkg.component.ParsedServiceImpl;
-import com.android.server.pm.pkg.component.ParsedUsesPermission;
-import com.android.server.pm.pkg.component.ParsedUsesPermissionImpl;
-import com.android.server.pm.pkg.parsing.ParsingPackage;
+import com.android.internal.pm.pkg.component.ParsedPermission;
+import com.android.internal.pm.pkg.component.ParsedService;
+import com.android.internal.pm.pkg.component.ParsedServiceImpl;
+import com.android.internal.pm.pkg.component.ParsedUsesPermission;
+import com.android.internal.pm.pkg.component.ParsedUsesPermissionImpl;
 
 import java.util.ArrayList;
 import java.util.List;
