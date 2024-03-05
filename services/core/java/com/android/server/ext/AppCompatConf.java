@@ -12,11 +12,11 @@ import android.util.ArrayMap;
 import android.util.Slog;
 
 import com.android.internal.os.BackgroundThread;
+import com.android.internal.pm.parsing.pkg.PackageImpl;
 import com.android.server.LocalServices;
 import com.android.server.os.nano.AppCompatProtos;
 import com.android.server.os.nano.AppCompatProtos.AppCompatConfig;
 import com.android.server.os.nano.AppCompatProtos.CompatConfig;
-import com.android.server.pm.parsing.pkg.PackageImpl;
 import com.android.server.pm.pkg.AndroidPackage;
 
 import java.util.zip.ZipEntry;
@@ -167,5 +167,29 @@ public class AppCompatConf {
             Slog.e(TAG, "", e);
             return null;
         }
+    }
+
+    @Nullable
+    public static AppCompatProtos.CompatConfig get(PackageImpl pkg) {
+        var configs = com.android.server.ext.AppCompatConf.getParsedConfigs();
+
+        if (configs == null) {
+            return null;
+        }
+
+        synchronized (pkg) {
+            if (configs.versionCode == pkg.cachedCompatConfigVersionCode) {
+                return (AppCompatProtos.CompatConfig) pkg.cachedCompatConfig;
+            }
+        }
+
+        var config = get(configs, pkg);
+
+        synchronized (pkg) {
+            pkg.cachedCompatConfigVersionCode = configs.versionCode;
+            pkg.cachedCompatConfig = config;
+        }
+
+        return config;
     }
 }
