@@ -32,6 +32,7 @@ import android.util.SparseArray;
 import android.util.SparseIntArray;
 
 import com.android.internal.R;
+import com.android.internal.pm.parsing.pkg.PackageExtIface;
 import com.android.internal.pm.parsing.pkg.ParsedPackage;
 import com.android.internal.pm.pkg.component.ParsedActivity;
 import com.android.internal.pm.pkg.component.ParsedApexSystemService;
@@ -545,7 +546,7 @@ public interface ParsingPackage {
 
     void initPackageParsingHooks();
 
-    com.android.server.pm.ext.PackageParsingHooks getPackageParsingHooks();
+    PackageParsingHooks getPackageParsingHooks();
 
-    void setPackageExt(@Nullable com.android.server.pm.ext.PackageExt ext);
+    void setPackageExt(@Nullable PackageExtIface ext);
 }

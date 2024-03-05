@@ -66,7 +66,7 @@ public class PackageHooks {
             PackageStateInternal pkgSetting, int pkgUserId, PackageStateInternal otherPkgSetting) {
         AndroidPackage pkg = pkgSetting.getPkg();
         if (pkg != null) {
-            return pkg.ext().hooks().shouldBlockPackageVisibility(pkgUserId, otherPkgSetting);
+            return PackageExt.get(pkg).hooks().shouldBlockPackageVisibility(pkgUserId, otherPkgSetting);
         }
 
         return false;

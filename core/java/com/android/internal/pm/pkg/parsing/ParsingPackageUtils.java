@@ -142,6 +142,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.function.Function;
 
 /**
  * TODO(b/135203078): Differentiate between parse_ methods and some add_ method for whether it
@@ -633,13 +634,19 @@ public class ParsingPackageUtils {
 
             pkg.setVolumeUuid(volumeUuid);
 
-            var pkgExtInit = new com.android.server.pm.ext.PackageExtInit(input, pkg,
-                    (flags & PARSE_IS_SYSTEM_DIR) != 0);
-            pkgExtInit.run();
+            PackageExtInitIface pkgExtInit = null;
+            PackageExtInitSupplier pkgExtInitSupplier = packageExtInitSupplier;
+            if (pkgExtInitSupplier != null) {
+                pkgExtInit = pkgExtInitSupplier.invoke(input, pkg, (flags & PARSE_IS_SYSTEM_DIR) != 0);
+                if (pkgExtInit != null) {
+                    pkgExtInit.run();
+                }
+            }
 
             if ((flags & PARSE_COLLECT_CERTIFICATES) != 0) {
                 // skip reparsing certificates if they were already parsed by PackageExtInit
-                ParseResult<SigningDetails> ret = pkgExtInit.getSigningDetailsParseResult();
+                ParseResult<SigningDetails> ret = pkgExtInit != null ?
+                        pkgExtInit.getSigningDetailsParseResult() : null;
                 if (ret == null) {
                     ret = parseSigningDetails(input, pkg);
                 }
@@ -656,6 +663,18 @@ public class ParsingPackageUtils {
             return input.error(INSTALL_PARSE_FAILED_UNEXPECTED_EXCEPTION,
                     "Failed to read manifest from " + apkPath, e);
         }
+    }
+
+    public interface PackageExtInitSupplier {
+        PackageExtInitIface invoke(ParseInput input, ParsingPackage pkg, boolean isSystem);
+    }
+
+    @Nullable
+    public static PackageExtInitSupplier packageExtInitSupplier;
+
+    public interface PackageExtInitIface {
+        void run();
+        ParseResult<SigningDetails> getSigningDetailsParseResult();
     }
 
     public static ParseResult<SigningDetails> parseSigningDetails(ParseInput input, ParsingPackage pkg) {
@@ -2355,9 +2374,11 @@ public class ParsingPackageUtils {
             }
         }
 
-        ParsedService gmsCompatClientSvc = com.android.server.pm.ext.GmsCompatPkgParsingHooks.maybeCreateClientService(pkg);
-        if (gmsCompatClientSvc != null) {
-            pkg.addService(gmsCompatClientSvc);
+        if (gmsCompatClientServiceSupplier != null) {
+            ParsedService gmsCompatClientSvc = gmsCompatClientServiceSupplier.apply(pkg);
+            if (gmsCompatClientSvc != null) {
+                pkg.addService(gmsCompatClientSvc);
+            }
         }
 
         if (hasServiceOrder) {
@@ -2368,6 +2389,8 @@ public class ParsingPackageUtils {
 
         return input.success(pkg);
     }
+
+    public static Function<ParsingPackage, ParsedService> gmsCompatClientServiceSupplier;
 
     // Must be run after the entire {@link ApplicationInfo} has been fully processed and after
     // every activity info has had a chance to set it from its attributes.

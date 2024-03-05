@@ -77,6 +77,7 @@ import com.android.internal.pm.pkg.component.ParsedService;
 import com.android.internal.pm.pkg.component.ParsedServiceImpl;
 import com.android.internal.pm.pkg.component.ParsedUsesPermission;
 import com.android.internal.pm.pkg.component.ParsedUsesPermissionImpl;
+import com.android.internal.pm.pkg.parsing.PackageParsingHooks;
 import com.android.internal.pm.pkg.parsing.ParsingPackage;
 import com.android.internal.pm.pkg.parsing.ParsingPackageHidden;
 import com.android.internal.pm.pkg.parsing.ParsingPackageUtils;
@@ -99,8 +100,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 
 /**
  * Extensions to {@link PackageImpl} including fields/state contained in the system server
@@ -3283,7 +3286,6 @@ public class PackageImpl implements ParsedPackage, AndroidPackageInternal,
         dest.writeInt(this.uid);
         dest.writeLong(this.mBooleans);
         dest.writeLong(this.mBooleans2);
-        this.ext.writeToParcel(dest);
     }
 
     public PackageImpl(Parcel in) {
@@ -3447,8 +3449,6 @@ public class PackageImpl implements ParsedPackage, AndroidPackageInternal,
 
         assignDerivedFields();
         assignDerivedFields2();
-
-        this.ext = com.android.server.pm.ext.PackageExt.createFromParcel(this, in);
 
         // Do not call makeImmutable here as cached parsing will need
         // to mutate this instance before it's finalized.
@@ -3835,28 +3835,31 @@ public class PackageImpl implements ParsedPackage, AndroidPackageInternal,
         gosPackageStateCachedDerivedFlags = value;
     }
 
-    private com.android.server.pm.ext.PackageParsingHooks packageParsingHooks;
+    private PackageParsingHooks packageParsingHooks;
+
+    public static Function<String, PackageParsingHooks> packageParsingHooksSupplier;
 
     @Override
     public void initPackageParsingHooks() {
-        packageParsingHooks = com.android.server.pm.ext.PackageHooksRegistry.getParsingHooks(getPackageName());
+        var supplier = packageParsingHooksSupplier;
+        packageParsingHooks = supplier != null ? supplier.apply(getPackageName()) : PackageParsingHooks.DEFAULT;
     }
 
     @Override
-    public com.android.server.pm.ext.PackageParsingHooks getPackageParsingHooks() {
+    public PackageParsingHooks getPackageParsingHooks() {
         return packageParsingHooks;
     }
 
-    private com.android.server.pm.ext.PackageExt ext = com.android.server.pm.ext.PackageExt.DEFAULT;
+    private PackageExtIface ext;
 
     @Override
-    public void setPackageExt(@Nullable com.android.server.pm.ext.PackageExt ext) {
+    public void setPackageExt(@Nullable PackageExtIface ext) {
         this.ext = ext;
     }
 
     @Nullable
     @Override
-    public com.android.server.pm.ext.PackageExt ext() {
+    public PackageExtIface ext() {
         return ext;
     }
 

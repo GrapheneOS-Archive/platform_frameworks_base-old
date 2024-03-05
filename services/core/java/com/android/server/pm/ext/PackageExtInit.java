@@ -4,20 +4,20 @@ import android.annotation.Nullable;
 import android.content.pm.SigningDetails;
 import android.content.pm.parsing.result.ParseInput;
 import android.content.pm.parsing.result.ParseResult;
-import android.ext.PackageId;
 import android.ext.AppInfoExt;
+import android.ext.PackageId;
 import android.os.Bundle;
 import android.util.Slog;
 
-import com.android.server.pm.parsing.pkg.PackageImpl;
-import com.android.server.pm.pkg.parsing.ParsingPackage;
-import com.android.server.pm.pkg.parsing.ParsingPackageUtils;
+import com.android.internal.pm.parsing.pkg.PackageImpl;
+import com.android.internal.pm.pkg.parsing.ParsingPackage;
+import com.android.internal.pm.pkg.parsing.ParsingPackageUtils;
 
 import libcore.util.HexEncoding;
 
 import static android.ext.PackageId.*;
 
-public class PackageExtInit {
+public class PackageExtInit implements ParsingPackageUtils.PackageExtInitIface {
     private static final String TAG = PackageExtInit.class.getSimpleName();
 
     private final ParseInput input;
