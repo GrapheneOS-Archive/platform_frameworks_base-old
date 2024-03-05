@@ -24,6 +24,7 @@ import com.android.server.pm.PackageManagerService;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
@@ -54,7 +55,7 @@ public class BgDexoptUi {
     }
 
     // null result indicates an error, durationMs parameter is invalid in that case
-    public static void onBgDexoptCompleted(PackageManagerService pm, @Nullable DexoptResult result, long durationMs) {
+    public static void onBgDexoptCompleted(PackageManagerService pm, @Nullable Map<Integer, DexoptResult> resultsByPass, long durationMs) {
         Context ctx = pm.getContext();
 
         var notifM = ctx.getSystemService(NotificationManager.class);
@@ -62,11 +63,11 @@ public class BgDexoptUi {
             notifM.cancel(NOTIF_ID);
         }
 
-        if (result == null) {
+        if (resultsByPass == null) {
             return;
         }
 
-        HashSet<String> changedPackages = getChangedPackages(result);
+        HashSet<String> changedPackages = getChangedPackages(resultsByPass);
 
         if (changedPackages.isEmpty()) {
             return;
@@ -79,8 +80,7 @@ public class BgDexoptUi {
         b.setSmallIcon(R.drawable.ic_pending);
         b.setContentTitle(ctx.getText(R.string.bg_dexopt_completed_notif_title));
         b.setStyle(new Notification.BigTextStyle());
-        b.setContentText(ctx.getString(R.string.bg_dexopt_completed_notif_text,
-            DateUtils.formatDuration(durationMs)));
+        b.setContentText(ctx.getString(R.string.bg_dexopt_completed_notif_text));
         b.setAutoCancel(true);
 
         var args = new Bundle();
@@ -109,27 +109,30 @@ public class BgDexoptUi {
         am.killProcessesWhenImperceptible(pids, "imperceptible-after-bg-dexopt");
     }
 
-    private static HashSet<String> getChangedPackages(DexoptResult dexoptResult) {
+    private static HashSet<String> getChangedPackages(Map<Integer, DexoptResult> resultsByPass) {
         var pm = LocalServices.getService(PackageManagerInternal.class);
 
-        var results = dexoptResult.getPackageDexoptResults();
-        var set = new HashSet<String>(results.size());
+        var set = new HashSet<String>(200);
 
-        for (DexoptResult.PackageDexoptResult r : results) {
-            if (!r.hasUpdatedArtifacts()) {
-                continue;
-            }
+        for (DexoptResult dexoptResult : resultsByPass.values()) {
+            var results = dexoptResult.getPackageDexoptResults();
 
-            String pkgName = r.getPackageName();
-            var psi = pm.getPackageStateInternal(pkgName);
-            if (psi == null || psi.isSystem()) {
-                continue;
-            }
-            for (DexoptResult.DexContainerFileDexoptResult cr : r.getDexContainerFileDexoptResults()) {
-                Slog.d(TAG, cr.toString());
-                if (cr.getDexContainerFile().endsWith("base.apk") && cr.getStatus() == DexoptResult.DEXOPT_PERFORMED) {
-                    set.add(r.getPackageName());
-                    break;
+            for (DexoptResult.PackageDexoptResult r : results) {
+                if (!r.hasUpdatedArtifacts()) {
+                    continue;
+                }
+
+                String pkgName = r.getPackageName();
+                var psi = pm.getPackageStateInternal(pkgName);
+                if (psi == null || psi.isSystem()) {
+                    continue;
+                }
+                for (DexoptResult.DexContainerFileDexoptResult cr : r.getDexContainerFileDexoptResults()) {
+                    Slog.d(TAG, cr.toString());
+                    if (cr.getDexContainerFile().endsWith("base.apk") && cr.getStatus() == DexoptResult.DEXOPT_PERFORMED) {
+                        set.add(r.getPackageName());
+                        break;
+                    }
                 }
             }
         }
