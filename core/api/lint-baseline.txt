@@ -1169,6 +1169,12 @@ Todo: android.provider.ContactsContract.RawContacts#newEntityIterator(android.da
     Documentation mentions 'TODO'
 
 
+UnflaggedApi: android.Manifest.permission#OTHER_SENSORS:
+    New API must be flagged with @FlaggedApi: field android.Manifest.permission.OTHER_SENSORS
+UnflaggedApi: android.Manifest.permission_group#NETWORK:
+    New API must be flagged with @FlaggedApi: field android.Manifest.permission_group.NETWORK
+UnflaggedApi: android.Manifest.permission_group#OTHER_SENSORS:
+    New API must be flagged with @FlaggedApi: field android.Manifest.permission_group.OTHER_SENSORS
 UnflaggedApi: android.accessibilityservice.AccessibilityService#OVERLAY_RESULT_INTERNAL_ERROR:
     New API must be flagged with @FlaggedApi: field android.accessibilityservice.AccessibilityService.OVERLAY_RESULT_INTERNAL_ERROR
 UnflaggedApi: android.accessibilityservice.AccessibilityService#OVERLAY_RESULT_INVALID:
