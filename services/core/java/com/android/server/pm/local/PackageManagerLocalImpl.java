@@ -266,10 +266,10 @@ public class PackageManagerLocalImpl implements PackageManagerLocal {
     }
 
     @Override
-    public void onBgDexoptCompleted(@Nullable Object dexOptResult, long durationMs) {
+    public void onBgDexoptCompleted(@Nullable Object dexOptResultByPass, long durationMs) {
         // DexoptResult can't be used as a parameter in PackageManagerLocal interface, it's declared
         // in libartservice
-        BgDexoptUi.onBgDexoptCompleted(mService, (DexoptResult) dexOptResult, durationMs);
+        BgDexoptUi.onBgDexoptCompleted(mService, (Map<Integer, DexoptResult>) dexOptResultByPass, durationMs);
     }
 
     @Nullable

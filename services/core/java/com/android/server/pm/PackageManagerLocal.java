@@ -208,8 +208,8 @@ public interface PackageManagerLocal {
     void onBgDexoptProgressUpdate(@ElapsedRealtimeLong long start, int percentage, int current, int total);
 
     void onBgDexoptCompleted(
-            // com.android.server.art.model.DexoptResult
-            @Nullable Object dexOptResult,
+            // Map<Integer, com.android.server.art.model.DexoptResult>
+            @Nullable Object dexOptResultByPass,
             long durationMs);
 
     @Nullable
