@@ -11,7 +11,6 @@ import android.content.Intent;
 import android.content.pm.PackageManagerInternal;
 import android.os.Bundle;
 import android.os.SystemClock;
-import android.text.format.DateUtils;
 import android.util.Slog;
 
 import com.android.internal.R;
@@ -69,6 +68,8 @@ public class BgDexoptUi {
 
         HashSet<String> changedPackages = getChangedPackages(resultsByPass);
 
+        Slog.d(TAG, "onBgDexoptCompleted: number of changedPackages: " + changedPackages.size());
+
         if (changedPackages.isEmpty()) {
             return;
         }
@@ -85,7 +86,8 @@ public class BgDexoptUi {
 
         var args = new Bundle();
         args.putStringArrayList(Intent.EXTRA_PACKAGES, new ArrayList<>(changedPackages));
-        b.setContentIntent(IntentReceiver.getPendingIntent(NotifActionReceiver.class, ctx, args));
+        b.setContentIntent(IntentReceiver.getPendingIntent(
+                NotifActionReceiver.class, NotifActionReceiver::new, args, ctx));
 
         showNotif(ctx, b);
     }
