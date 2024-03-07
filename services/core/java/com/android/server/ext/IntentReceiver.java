@@ -13,6 +13,8 @@ import android.util.Slog;
 
 import com.android.internal.os.BackgroundThread;
 
+import java.util.function.Supplier;
+
 // Note that instances of IntentReceiver subclasses are:
 // - singletons
 // - registered lazily
@@ -23,15 +25,12 @@ public abstract class IntentReceiver extends BroadcastReceiver {
 
     private static final ArrayMap<Class, IntentReceiver> map = new ArrayMap<>();
 
-    public static <T extends IntentReceiver> IntentReceiver getInstance(Class<T> cls, Context ctx) {
+    public static <T extends IntentReceiver> IntentReceiver getInstance(
+            Class<T> cls, Supplier<T> supplier, Context ctx) {
         synchronized (map) {
             IntentReceiver instance = map.get(cls);
             if (instance == null) {
-                try {
-                    instance = cls.getDeclaredConstructor().newInstance();
-                } catch (ReflectiveOperationException e) {
-                    throw new IllegalStateException(e);
-                }
+                instance = supplier.get();
                 instance.context = ctx;
                 var filter = new IntentFilter(instance.getIntentAction());
                 ctx.registerReceiver(instance, filter, null,
@@ -58,8 +57,8 @@ public abstract class IntentReceiver extends BroadcastReceiver {
     }
 
     public static <T extends IntentReceiver> PendingIntent getPendingIntent(
-            Class<T> cls, Context ctx, @Nullable Bundle args) {
-        return getInstance(cls, ctx).getPendingIntent(args);
+            Class<T> cls, Supplier<T> supplier, @Nullable Bundle args, Context ctx) {
+        return getInstance(cls, supplier, ctx).getPendingIntent(args);
     }
 
     public PendingIntent getPendingIntent(@Nullable Bundle args) {
