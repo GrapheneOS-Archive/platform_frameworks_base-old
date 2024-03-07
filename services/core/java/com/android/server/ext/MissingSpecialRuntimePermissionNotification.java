@@ -112,7 +112,8 @@ public class MissingSpecialRuntimePermissionNotification {
         args.putString(Intent.EXTRA_PERMISSION_NAME, permissionName);
         args.putParcelable(Intent.EXTRA_USER, user);
 
-        PendingIntent dontShowAgainPi = IntentReceiver.getPendingIntent(NotifActionReceiver.class, ctx, args);
+        PendingIntent dontShowAgainPi = IntentReceiver.getPendingIntent(NotifActionReceiver.class,
+                NotifActionReceiver::new, args, ctx);
 
         addNotifAction(ctx, dontShowAgainPi, R.string.notification_action_dont_show_again, nb);
 
