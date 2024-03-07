@@ -195,7 +195,8 @@ public class AppSwitchNotification {
             args.putInt(EXTRA_GOSPS_FLAG_SUPPRESS_NOTIF, gosPsFlagSuppressNotif);
             args.putInt(EXTRA_NOTIF_ID, notifId);
 
-            PendingIntent dontShowAgainPi = IntentReceiver.getPendingIntent(NotifActionReceiver.class, ctx, args);
+            PendingIntent dontShowAgainPi = IntentReceiver.getPendingIntent(
+                    NotifActionReceiver.class, NotifActionReceiver::new, args, ctx);
 
             addNotifAction(ctx, dontShowAgainPi, R.string.notification_action_dont_show_again, nb);
         }
