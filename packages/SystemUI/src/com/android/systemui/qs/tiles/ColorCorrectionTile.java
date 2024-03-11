@@ -109,6 +109,11 @@ public class ColorCorrectionTile extends QSTileImpl<BooleanState> {
     }
 
     @Override
+    public boolean isAllowedWhenLocked(QSTileImpl.Action action) {
+        return true;
+    }
+
+    @Override
     protected void handleClick(@Nullable View view) {
         mSetting.setValue(mState.value ? 0 : 1);
     }
