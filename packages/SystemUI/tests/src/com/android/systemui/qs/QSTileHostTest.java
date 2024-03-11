@@ -72,6 +72,7 @@ import com.android.systemui.settings.UserFileManager;
 import com.android.systemui.settings.UserTracker;
 import com.android.systemui.shade.ShadeController;
 import com.android.systemui.statusbar.phone.AutoTileManager;
+import com.android.systemui.statusbar.policy.KeyguardStateController;
 import com.android.systemui.tuner.TunerService;
 import com.android.systemui.util.FakeSharedPreferences;
 import com.android.systemui.util.concurrency.FakeExecutor;
@@ -126,6 +127,8 @@ public class QSTileHostTest extends SysuiTestCase {
     private TileLifecycleManager mTileLifecycleManager;
     @Mock
     private UserFileManager mUserFileManager;
+    @Mock
+    private KeyguardStateController mKeyguardStateController;
 
     private SecureSettings mSecureSettings;
 
@@ -170,6 +173,7 @@ public class QSTileHostTest extends SysuiTestCase {
         saveSetting("");
         setUpTileFactory();
         mQSTileHost = new TestQSTileHost(mContext, () -> null, mDefaultFactory, mMainExecutor,
+                mKeyguardStateController,
                 mPluginManager, mTunerService, () -> mAutoTiles, mShadeController,
                 mQSLogger, mUserTracker, mSecureSettings, mCustomTileStatePersister,
                 mTileLifecycleManagerFactory, mUserFileManager, mQSPipelineFlagsRepository);
@@ -687,6 +691,7 @@ public class QSTileHostTest extends SysuiTestCase {
     private class TestQSTileHost extends QSTileHost {
         TestQSTileHost(Context context, Lazy<NewQSTileFactory> newQSTileFactoryProvider,
                 QSFactory defaultFactory, Executor mainExecutor,
+                KeyguardStateController keyguardStateController,
                 PluginManager pluginManager, TunerService tunerService,
                 Provider<AutoTileManager> autoTiles,
                 ShadeController shadeController, QSLogger qsLogger,
@@ -694,7 +699,7 @@ public class QSTileHostTest extends SysuiTestCase {
                 CustomTileStatePersister customTileStatePersister,
                 TileLifecycleManager.Factory tileLifecycleManagerFactory,
                 UserFileManager userFileManager, QSPipelineFlagsRepository featureFlags) {
-            super(context, newQSTileFactoryProvider, defaultFactory, mainExecutor, pluginManager,
+            super(context, newQSTileFactoryProvider, defaultFactory, mainExecutor, keyguardStateController, pluginManager,
                     tunerService, autoTiles, shadeController, qsLogger,
                     userTracker, secureSettings, customTileStatePersister,
                     tileLifecycleManagerFactory, userFileManager, featureFlags);
