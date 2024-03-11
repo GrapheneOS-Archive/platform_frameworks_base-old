@@ -4,8 +4,6 @@ import android.content.Context;
 import android.service.carrier.CarrierIdentifier;
 import android.telephony.TelephonyManager;
 
-import com.android.internal.util.PackageSpec;
-
 import java.util.Objects;
 
 // A set of hooks that are needed to obtain output of Google's CarrierSettings app for arbitrary
@@ -25,11 +23,6 @@ public class GCarrierSettingsApp {
 
     public static void init() {
         carrierIdOverride = new ThreadLocal<>();
-    }
-
-    public static PackageSpec getPackageSpec() {
-        return new PackageSpec(PKG_NAME, 37L,
-                new String[] { "c00409b6524658c2e8eb48975a5952959ea3707dd57bc50fd74d6249262f0e82" });
     }
 
     public static int maybeOverrideSlotIndex(int subId) {
