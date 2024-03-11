@@ -112,6 +112,11 @@ public class NightDisplayTile extends QSTileImpl<BooleanState> implements
     }
 
     @Override
+    public boolean isAllowedWhenLocked(QSTileImpl.Action action) {
+        return true;
+    }
+
+    @Override
     protected void handleClick(@Nullable View view) {
         // Enroll in forced auto mode if eligible.
         if ("1".equals(Settings.Global.getString(mContext.getContentResolver(),
