@@ -409,6 +409,11 @@ public class CustomTile extends QSTileImpl<State> implements TileChangeListener,
     }
 
     @Override
+    public boolean isAllowedWhenLocked(QSTileImpl.Action action) {
+        return true;
+    }
+
+    @Override
     protected void handleClick(@Nullable View view) {
         if (mTile.getState() == Tile.STATE_UNAVAILABLE) {
             return;
