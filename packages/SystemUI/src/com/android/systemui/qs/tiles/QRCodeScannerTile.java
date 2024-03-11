@@ -99,6 +99,11 @@ public class QRCodeScannerTile extends QSTileImpl<QSTile.State> {
     }
 
     @Override
+    public boolean isAllowedWhenLocked(QSTileImpl.Action action) {
+        return true;
+    }
+
+    @Override
     protected void handleClick(@Nullable View view) {
         Intent intent = mQRCodeScannerController.getIntent();
         if (intent == null) {
