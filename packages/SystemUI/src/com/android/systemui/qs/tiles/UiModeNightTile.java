@@ -107,6 +107,11 @@ public class UiModeNightTile extends QSTileImpl<QSTile.BooleanState> implements
     }
 
     @Override
+    public boolean isAllowedWhenLocked(QSTileImpl.Action action) {
+        return true;
+    }
+
+    @Override
     protected void handleClick(@Nullable View view) {
         if (getState().state == Tile.STATE_UNAVAILABLE) {
             return;
