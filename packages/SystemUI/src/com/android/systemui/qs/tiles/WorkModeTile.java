@@ -44,12 +44,11 @@ import com.android.systemui.qs.QsEventLogger;
 import com.android.systemui.qs.logging.QSLogger;
 import com.android.systemui.qs.tileimpl.QSTileImpl;
 import com.android.systemui.statusbar.phone.ManagedProfileController;
-import com.android.systemui.statusbar.policy.KeyguardStateController;
 
 import javax.inject.Inject;
 
 /** Quick settings tile: Work profile on/off */
-public class WorkModeTile extends SecureQSTile<BooleanState> implements
+public class WorkModeTile extends QSTileImpl<BooleanState> implements
         ManagedProfileController.Callback {
 
     public static final String TILE_SPEC = "work";
@@ -70,11 +69,10 @@ public class WorkModeTile extends SecureQSTile<BooleanState> implements
             StatusBarStateController statusBarStateController,
             ActivityStarter activityStarter,
             QSLogger qsLogger,
-            ManagedProfileController managedProfileController,
-            KeyguardStateController keyguardStateController
+            ManagedProfileController managedProfileController
     ) {
         super(host, uiEventLogger, backgroundLooper, mainHandler, falsingManager, metricsLogger,
-                statusBarStateController, activityStarter, qsLogger, keyguardStateController);
+                statusBarStateController, activityStarter, qsLogger);
         mProfileController = managedProfileController;
         mProfileController.observe(getLifecycle(), this);
     }
@@ -90,11 +88,7 @@ public class WorkModeTile extends SecureQSTile<BooleanState> implements
     }
 
     @Override
-    protected void handleClick(@Nullable View view, boolean keyguardShowing) {
-        if (checkKeyguard(view, keyguardShowing)) {
-            return;
-        }
-
+    public void handleClick(@Nullable View view) {
         mProfileController.setWorkModeEnabled(!mState.value);
     }
 
