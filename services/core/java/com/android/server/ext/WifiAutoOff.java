@@ -1,16 +1,16 @@
 package com.android.server.ext;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.ext.settings.ExtSettings;
-import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import android.os.Build;
+import android.os.HandlerExecutor;
 import android.util.Slog;
 
-class WifiAutoOff extends DelayedConditionalAction {
+import static android.net.wifi.WifiManager.WifiNetworkStateChangedListener;
+import static java.util.Objects.requireNonNull;
+
+class WifiAutoOff extends DelayedConditionalAction implements WifiNetworkStateChangedListener {
+    private static final String TAG = WifiAutoOff.class.getSimpleName();
+
     private final WifiManager wifiManager;
 
     WifiAutoOff(SystemServerExt sse) {
@@ -20,45 +20,82 @@ class WifiAutoOff extends DelayedConditionalAction {
 
     @Override
     protected boolean shouldScheduleAlarm() {
-        return isWifiEnabledAndNotConnected();
+        return isWifiEnabledAndNotConnectedOrConnecting();
     }
 
     @Override
     protected void alarmTriggered() {
-        if (isWifiEnabledAndNotConnected()) {
+        if (isWifiEnabledAndNotConnectedOrConnecting()) {
+            Slog.d(TAG, "setWifiEnabled(false)");
+            // setWifiEnabled() is not deprecated for system apps and components
+            // noinspection deprecation
             wifiManager.setWifiEnabled(false);
         }
     }
 
-    private boolean isWifiEnabledAndNotConnected() {
+    private boolean isWifiEnabledAndNotConnectedOrConnecting() {
         if (wifiManager.isWifiEnabled()) {
-            WifiInfo i = wifiManager.getConnectionInfo();
-            if (i == null) {
+            int state = currentWifiState;
+            Slog.d(TAG, "isWifiEnabledAndNotConnected: Wifi enabled, curState: " +
+                    networkStateToString(state));
+            return !isConnectedOrConnectingState(state);
+        }
+        Slog.d(TAG, "isWifiEnabledAndNotConnected: Wifi not enabled");
+        return false;
+    }
+
+    private static boolean isConnectedOrConnectingState(int state) {
+        switch (state) {
+            case WifiNetworkStateChangedListener.WIFI_NETWORK_STATUS_CONNECTING:
+            case WifiNetworkStateChangedListener.WIFI_NETWORK_STATUS_AUTHENTICATING:
+            case WifiNetworkStateChangedListener.WIFI_NETWORK_STATUS_OBTAINING_IPADDR:
+            case WifiNetworkStateChangedListener.WIFI_NETWORK_STATUS_CONNECTED:
                 return true;
-            }
-            return i.getBSSID() == null;
+            default:
+                return false;
+        }
+    }
+
+    private int currentWifiState;
+
+    /** @see WifiNetworkStateChangedListener */
+    @Override
+    public void onWifiNetworkStateChanged(int cmmRole, int state) {
+        Slog.d(TAG, "onWifiNetworkStateChanged: cmmRole " + cmmRole +
+                ", state " + networkStateToString(state));
+        if (cmmRole != WIFI_ROLE_CLIENT_PRIMARY) {
+            return;
         }
 
-        return false;
+        currentWifiState = state;
+
+        if (!isConnectedOrConnectingState(state)) {
+            update();
+        }
     }
 
     @Override
     protected void registerStateListener() {
-        IntentFilter f = new IntentFilter();
-        f.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
-        f.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
-        // ConnectivityManager APIs seem unfit for listening to Wi-Fi state specifically, they look
-        // to be higher level than that, eg VPN over Wi-Fi isn't considered to be a Wi-Fi connection
-        // by ConnectivityManager
+        WifiManager wifiManager = requireNonNull(sse.context.getSystemService(WifiManager.class));
+        wifiManager.addWifiNetworkStateChangedListener(new HandlerExecutor(handler), this);
+    }
 
-        sse.context.registerReceiver(new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                if (Build.isDebuggable()) {
-                    Slog.d("WifiAutoOff", "" + intent + ", extras " + intent.getExtras().deepCopy());
-                }
-                update();
-            }
-        }, f, null, handler);
+    static String networkStateToString(int state) {
+        return switch (state) {
+            case WifiNetworkStateChangedListener.WIFI_NETWORK_STATUS_IDLE -> "IDLE";
+            case WifiNetworkStateChangedListener.WIFI_NETWORK_STATUS_SCANNING -> "SCANNING";
+            case WifiNetworkStateChangedListener.WIFI_NETWORK_STATUS_CONNECTING -> "CONNECTING";
+            case WifiNetworkStateChangedListener.WIFI_NETWORK_STATUS_AUTHENTICATING -> "AUTHENTICATING";
+            case WifiNetworkStateChangedListener.WIFI_NETWORK_STATUS_OBTAINING_IPADDR -> "OBTAINING_IPADDR";
+            case WifiNetworkStateChangedListener.WIFI_NETWORK_STATUS_CONNECTED -> "CONNECTED";
+            case WifiNetworkStateChangedListener.WIFI_NETWORK_STATUS_DISCONNECTED -> "DISCONNECTED";
+            case WifiNetworkStateChangedListener.WIFI_NETWORK_STATUS_FAILED -> "FAILED";
+            default -> throw new IllegalArgumentException(Integer.toString(state));
+        };
+    }
+
+    @Override
+    protected String getLogTag() {
+        return TAG;
     }
 }
