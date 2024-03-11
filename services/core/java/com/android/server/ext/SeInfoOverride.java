@@ -4,35 +4,36 @@ import android.annotation.Nullable;
 import android.app.ActivityManager;
 import android.app.ActivityThread;
 import android.content.Context;
+import android.ext.PackageId;
 import android.ext.settings.BoolSysProperty;
 import android.ext.settings.ExtSettings;
 import android.os.Binder;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.UserHandle;
-import android.util.ArrayMap;
+import android.util.SparseArray;
 
 import com.android.internal.util.GoogleCameraUtils;
-import com.android.internal.util.PackageSpec;
 import com.android.server.pm.PackageManagerService;
+import com.android.server.pm.ext.PackageExt;
 import com.android.server.pm.pkg.AndroidPackage;
 
 import java.util.function.BooleanSupplier;
 
 public class SeInfoOverride {
     private final String seInfo;
-    private final PackageSpec packageSpec;
+    private final int packageId;
     private final BooleanSupplier setting;
 
-    private SeInfoOverride(String seInfo, PackageSpec packageSpec, BooleanSupplier setting) {
+    private SeInfoOverride(String seInfo, int packageId, BooleanSupplier setting) {
         this.setting = setting;
-        this.packageSpec = packageSpec;
+        this.packageId = packageId;
         this.seInfo = seInfo;
     }
 
     @Nullable
     public static String maybeGet(AndroidPackage pkg) {
-        SeInfoOverride sio = map.get(pkg.getPackageName());
+        SeInfoOverride sio = map.get(PackageExt.get(pkg).getPackageId());
         if (sio == null) {
             return null;
         }
@@ -42,11 +43,9 @@ public class SeInfoOverride {
             return null;
         }
 
-        if (PackageManagerUtils.validatePackage(pkg, sio.packageSpec)) {
-            return sio.seInfo;
-        }
+        // PackageIds are assigned to packages only after verification
 
-        return null;
+        return sio.seInfo;
     }
 
     // called by Settings app when state of the override setting changes
@@ -66,14 +65,14 @@ public class SeInfoOverride {
     }
 
     // should be immutable after static class initializer completes to ensure thread safety
-    private static final ArrayMap<String, SeInfoOverride> map = new ArrayMap<>();
+    private static final SparseArray<SeInfoOverride> map = new SparseArray<>();
 
-    private static void add(String seInfo, PackageSpec packageSpec, BooleanSupplier setting) {
-        map.put(packageSpec.packageName, new SeInfoOverride(seInfo, packageSpec, setting));
+    private static void add(String seInfo, int packageId, BooleanSupplier setting) {
+        map.put(packageId, new SeInfoOverride(seInfo, packageId, setting));
     }
 
-    private static void add(String seInfo, PackageSpec packageSpec, BoolSysProperty sysProp) {
-        add(seInfo, packageSpec, sysProp::get);
+    private static void add(String seInfo, int packageId, BoolSysProperty sysProp) {
+        add(seInfo, packageId, sysProp::get);
     }
 
     static {
