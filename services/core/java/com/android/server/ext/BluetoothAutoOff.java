@@ -10,7 +10,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.ext.settings.ExtSettings;
-import android.os.Build;
 import android.util.Slog;
 
 import java.util.List;
@@ -36,7 +35,8 @@ class BluetoothAutoOff extends DelayedConditionalAction {
     @Override
     protected void alarmTriggered() {
         if (isAdapterOnAndDisconnected()) {
-            adapter.disable();
+            Slog.d(TAG, "adapter.disable(true)");
+            adapter.disable(true);
         }
     }
 
@@ -56,14 +56,19 @@ class BluetoothAutoOff extends DelayedConditionalAction {
     }
 
     private boolean isAdapterOnAndDisconnected() {
+        Slog.d(TAG, "isAdapterOnAndDisconnected");
         if (adapter != null) {
-            if (adapter.isLeEnabled()) {
-                if (adapter.getConnectionState() == BluetoothAdapter.STATE_DISCONNECTED) {
+            boolean isLeEnabled = adapter.isLeEnabled();
+            Slog.d(TAG, "isLeEnabled: " + isLeEnabled);
+            if (isLeEnabled) {
+                int connState = adapter.getConnectionState();
+                Slog.d(TAG, "leConnState: " + connState);
+                if (connState == BluetoothAdapter.STATE_DISCONNECTED) {
                     // Bluetooth GATT Profile (Bluetooth LE) connection state is ignored
                     // by getConnectionState()
-                    List<BluetoothDevice> connectedDevices;
+                    List<BluetoothDevice> connectedLeDevices;
                     try {
-                        connectedDevices = manager.getConnectedDevices(BluetoothProfile.GATT);
+                        connectedLeDevices = manager.getConnectedDevices(BluetoothProfile.GATT);
                     } catch (NullPointerException e) {
                         // getConnectedDevices() throws an undocumented NullPointerException if
                         // GattService gets racily stopped
@@ -71,17 +76,34 @@ class BluetoothAutoOff extends DelayedConditionalAction {
                         return false;
                     }
 
-                    return connectedDevices == null || connectedDevices.size() == 0;
+                    if (connectedLeDevices == null) {
+                        Slog.d(TAG, "connectedLeDevices list is null");
+                    } else {
+                        Slog.d(TAG, "connectedLeDevices list size: " + connectedLeDevices.size());
+                    }
+
+                    return connectedLeDevices == null || connectedLeDevices.isEmpty();
                 }
             }
 
             // isLeEnabled() currently implies isEnabled(), but check again anyway in case
             // this changes in the future
-            if (adapter.isEnabled()) {
-                return adapter.getConnectionState() == BluetoothAdapter.STATE_DISCONNECTED;
+            boolean isEnabled = adapter.isEnabled();
+            Slog.d(TAG, "isEnabled: " + isEnabled);
+            if (isEnabled) {
+                int connState = adapter.getConnectionState();
+                Slog.d(TAG, "connState: " + connState);
+                return connState == BluetoothAdapter.STATE_DISCONNECTED;
             }
+        } else {
+            Slog.d(TAG, "adapter is null");
         }
 
         return false;
+    }
+
+    @Override
+    protected String getLogTag() {
+        return TAG;
     }
 }
