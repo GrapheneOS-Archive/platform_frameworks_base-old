@@ -73,6 +73,4 @@ interface IPackageInstallerSession {
     ParcelFileDescriptor getAppMetadataFd();
     ParcelFileDescriptor openWriteAppMetadata();
     void removeAppMetadata();
-
-    long getSilentUpdateWaitMillis();
 }
