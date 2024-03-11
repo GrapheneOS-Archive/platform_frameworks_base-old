@@ -12,5 +12,5 @@ public class UsbPortSecurity {
 
     // keep in sync with USB HAL implementations that check this sysprop during init
     public static final IntSysProperty MODE_SETTING = new IntSysProperty(
-            "persist.security.usb_mode", MODE_ENABLED);
+            "persist.security.usb_mode", MODE_CHARGING_ONLY_WHEN_LOCKED_AFU);
 }
