@@ -78,7 +78,7 @@ public class SeInfoOverride {
     static {
         Context ctx = ActivityThread.currentActivityThread().getSystemContext();
         if (GoogleCameraUtils.isCustomSeInfoNeededForAccessToAccelerators(ctx)) {
-            add("GoogleCamera", GoogleCameraUtils.PACKAGE_SPEC, ExtSettings.ALLOW_GOOGLE_APPS_SPECIAL_ACCESS_TO_ACCELERATORS);
+            add("GoogleCamera", PackageId.G_CAMERA, ExtSettings.ALLOW_GOOGLE_APPS_SPECIAL_ACCESS_TO_ACCELERATORS);
         }
     }
 }
