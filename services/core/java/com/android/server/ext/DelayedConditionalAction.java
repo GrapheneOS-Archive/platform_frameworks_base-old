@@ -28,13 +28,11 @@ import android.util.Slog;
 
 /**
  * Infrastructure for actions that:
- * - happen after a user-configurable device-wide (Settings.Global) delay
+ * - happen after a user-configurable device-wide delay
  * - need to be taken even when the device is in deep sleep
  * - need to be rescheduled based on some listenable event
  */
 public abstract class DelayedConditionalAction {
-    private static final String TAG = "DelayedConditionalAction";
-
     protected final SystemServerExt sse;
     protected final Thread thread;
     protected final Handler handler;
@@ -61,7 +59,11 @@ public abstract class DelayedConditionalAction {
         alarmManager = ctx.getSystemService(AlarmManager.class);
 
         alarmListener = () -> {
+            String TAG = getLogTag();
+            Slog.d(TAG, "alarm triggered");
+
             if (getDelayDurationMillis() == 0) {
+                Slog.d(TAG, "alarm has been disabled, returning");
                 return;
             }
 
@@ -80,7 +82,9 @@ public abstract class DelayedConditionalAction {
     private boolean alarmScheduled;
 
     protected final void update() {
+        final String TAG = getLogTag();
         final Thread curThread = Thread.currentThread();
+
         if (curThread != thread) {
             String msg = "update() called on an unknown thread " + curThread;
             if (Build.isDebuggable()) {
@@ -91,16 +95,22 @@ public abstract class DelayedConditionalAction {
             }
         }
 
+        Slog.d(TAG, "update: alarm already scheduled: " + alarmScheduled);
+
         if (alarmScheduled) {
             alarmManager.cancel(alarmListener);
+            Slog.d(TAG, "canceled previous alarm");
             alarmScheduled = false;
         }
 
-        if (!shouldScheduleAlarm()) {
+        boolean shouldScheduleAlarm = shouldScheduleAlarm();
+        Slog.d(TAG, "shouldScheduleAlarm: " + shouldScheduleAlarm);
+        if (!shouldScheduleAlarm) {
             return;
         }
 
         long delayMillis = getDelayDurationMillis();
+        Slog.d(TAG, "delayMillis: " + delayMillis);
 
         if (delayMillis == 0) {
             return;
@@ -116,6 +126,7 @@ public abstract class DelayedConditionalAction {
 
         alarmManager.setExact(AlarmManager.ELAPSED_REALTIME_WAKEUP, triggerAt,
                     getClass().getName(), alarmListener, handler);
+        Slog.d(TAG, "scheduled alarm");
         alarmScheduled = true;
     }
 
@@ -130,4 +141,6 @@ public abstract class DelayedConditionalAction {
 
     protected abstract boolean shouldScheduleAlarm();
     protected abstract void alarmTriggered();
+
+    protected abstract String getLogTag();
 }
