@@ -1969,22 +1969,6 @@ public class PackageInstaller {
          */
         public void commit(@NonNull IntentSender statusReceiver) {
             if (GmsCompat.isPlayStore()) {
-                long waitMs = 0;
-                try {
-                    waitMs = mSession.getSilentUpdateWaitMillis();
-                } catch (Exception e) {
-                    // getSilentUpdateWaitMillis() will fail if Play Store didn't set packageName
-                    // of this session. It always does currently AFAIK (September 2022)
-                    Log.e("GmsCompat", "", e);
-                }
-
-                if (waitMs > 0) {
-                    // Should happen only if the same package is updated twice within 30 seconds
-                    // (likely a Play Store bug, possibly related to APK splits)
-                    Log.d("GmsCompat", "PackageInstaller.Session.getSilentUpdateWaitMillis returned " + waitMs + ", sleeping...");
-                    SystemClock.sleep(waitMs + 100);
-                }
-
                 statusReceiver = PlayStoreHooks.wrapCommitStatusReceiver(this, statusReceiver);
             }
 
