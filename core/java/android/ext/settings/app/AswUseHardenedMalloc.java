@@ -5,8 +5,11 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.GosPackageState;
 import android.content.pm.GosPackageStateBase;
+import android.ext.BluetoothUtils;
 
 import com.android.server.os.nano.AppCompatProtos;
+
+import java.util.Objects;
 
 import dalvik.system.VMRuntime;
 
@@ -23,6 +26,14 @@ public class AswUseHardenedMalloc extends AppSwitch {
     @Override
     public Boolean getImmutableValue(Context ctx, int userId, ApplicationInfo appInfo,
                                      @Nullable GosPackageStateBase ps, StateInfo si) {
+        if (appInfo.isSystemApp()) {
+            if (Objects.equals(appInfo.packageName, BluetoothUtils.getBluetoothStackPackageName(ctx))) {
+                return null;
+            }
+            si.immutabilityReason = IR_IS_SYSTEM_APP;
+            return true;
+        }
+
         String primaryAbi = appInfo.primaryCpuAbi;
         if (primaryAbi == null) {
             si.immutabilityReason = IR_NO_NATIVE_CODE;
@@ -42,11 +53,6 @@ public class AswUseHardenedMalloc extends AppSwitch {
             return true;
         }
 
-        if (appInfo.isSystemApp()) {
-            si.immutabilityReason = IR_IS_SYSTEM_APP;
-            return true;
-        }
-
         if (ps != null && ps.hasFlags(GosPackageState.FLAG_ENABLE_EXPLOIT_PROTECTION_COMPAT_MODE)) {
             si.immutabilityReason = IR_EXPLOIT_PROTECTION_COMPAT_MODE;
             return false;
@@ -58,6 +64,12 @@ public class AswUseHardenedMalloc extends AppSwitch {
     @Override
     protected boolean getDefaultValueInner(Context ctx, int userId, ApplicationInfo appInfo,
                                            @Nullable GosPackageStateBase ps, StateInfo si) {
+        if (appInfo.isSystemApp()) {
+            if (Objects.equals(appInfo.packageName, BluetoothUtils.getBluetoothStackPackageName(ctx))) {
+                return false;
+            }
+        }
+
         return true;
     }
 }
