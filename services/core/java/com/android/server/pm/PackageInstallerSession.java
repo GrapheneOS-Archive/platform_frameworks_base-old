@@ -3758,6 +3758,15 @@ public class PackageInstallerSession extends IPackageInstallerSession.Stub {
             }
         }
 
+        if (initiatingPackageName != null && !isInstallerShell && !isFirstPartyInstaller
+                && !areUnknownSystemAppsUpdatesAllowed()) {
+            final int errorCode = PackageManager.INSTALL_FAILED_SESSION_INVALID;
+            String msg = "Installation of system package is not allowed for unknown sources.";
+            if (existingPkgSetting != null && existingPkgSetting.isSystem()) {
+                throw new PackageManagerException(errorCode, msg);
+            }
+        }
+
         return packageLite;
     }
 
@@ -3767,6 +3776,16 @@ public class PackageInstallerSession extends IPackageInstallerSession.Stub {
         }
         var cr = mContext.getContentResolver();
         var key = "gmscompat_allow_unknown_updates";
+        int def = 0;
+        return android.provider.Settings.Global.getInt(cr, key, def) == 1;
+    }
+
+    private boolean areUnknownSystemAppsUpdatesAllowed() {
+        if (!Build.isDebuggable()) {
+            return false;
+        }
+        var cr = mContext.getContentResolver();
+        var key = "system_apps_allow_unknown_updates";
         int def = 0;
         return android.provider.Settings.Global.getInt(cr, key, def) == 1;
     }
