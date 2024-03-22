@@ -39,6 +39,9 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Trace;
+import android.os.UserHandle;
+import android.service.notification.StatusBarNotification;
+import android.util.ArraySet;
 import android.util.AttributeSet;
 import android.util.FloatProperty;
 import android.util.IndentingPrintWriter;
@@ -370,7 +373,7 @@ public class ExpandableNotificationRow extends ActivatableNotificationView
     private boolean mUseIncreasedHeadsUpHeight;
     private float mTranslationWhenRemoved;
     private boolean mWasChildInGroupWhenRemoved;
-    private NotificationInlineImageResolver mImageResolver;
+    private final NotificationInlineImageResolver mImageResolver;
     private BigPictureIconManager mBigPictureIconManager;
     @Nullable
     private OnExpansionChangedListener mExpansionChangedListener;
@@ -1670,13 +1673,41 @@ public class ExpandableNotificationRow extends ActivatableNotificationView
     }
 
     /**
-     * Constructs an ExpandableNotificationRow.
-     * @param context context passed to image resolver
+     * Constructs an ExpandableNotificationRow. Used by layout inflation.
+     *
+     * @param context passed to image resolver
      * @param attrs attributes used to initialize parent view
      */
     public ExpandableNotificationRow(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        mImageResolver = new NotificationInlineImageResolver(context,
+        this(context, attrs, context);
+        Log.wtf(TAG, "This constructor shouldn't be called");
+    }
+
+    /**
+     * Constructs an ExpandableNotificationRow. Used by layout inflation (with a custom {@code
+     * AsyncLayoutFactory} in {@link RowInflaterTask}.
+     *
+     * @param context context context of the view
+     * @param attrs attributes used to initialize parent view
+     * @param entry notification that the row will be associated to (determines the user for the
+     *              ImageResolver)
+     */
+    public ExpandableNotificationRow(Context context, AttributeSet attrs, NotificationEntry entry) {
+        this(context, attrs, userContextForEntry(context, entry));
+    }
+
+    private static Context userContextForEntry(Context base, NotificationEntry entry) {
+        if (base.getUserId() == entry.getSbn().getNormalizedUserId()) {
+            return base;
+        }
+        return base.createContextAsUser(
+                UserHandle.of(entry.getSbn().getNormalizedUserId()), /* flags= */ 0);
+    }
+
+    private ExpandableNotificationRow(Context sysUiContext, AttributeSet attrs,
+            Context userContext) {
+        super(sysUiContext, attrs);
+        mImageResolver = new NotificationInlineImageResolver(userContext,
                 new NotificationInlineImageCache());
         float radius = getResources().getDimension(R.dimen.notification_corner_radius_small);
         mSmallRoundness = radius / getMaxRadius();
