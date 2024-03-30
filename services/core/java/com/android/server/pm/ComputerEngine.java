@@ -3828,11 +3828,32 @@ public class ComputerEngine implements Computer {
             return null;
         }
 
+        final boolean isPrivilegedInstaller = mContext.checkCallingOrSelfPermission(INSTALL_PACKAGES)
+                == PERMISSION_GRANTED;
+
+        long exemptedFlags = 0L;
+        if (isPrivilegedInstaller) {
+            exemptedFlags = flags & PackageManager.MATCH_ANY_USER;
+            flags &= ~PackageManager.MATCH_ANY_USER;
+            // updateFlagsForPackage() below throws SecurityException if caller doesn't have
+            // INTERACT_ACROSS_USERS perm and tries to use the MATCH_ANY_USER flag.
+            //
+            // In this particular codepath, MATCH_ANY_USER reveals only the global list of shared
+            // libraries and the global list of packages that depend on those libraries.
+            //
+            // Access to global list of libraries is required to properly handle shared library
+            // updates in multi-user scenarios, since installing the same version of library for the
+            // second time is not allowed, but the installer doesn't know whether that version is
+            // already installed if it was installed in another user.
+            //
+            // It's preferable to add this minor exemption instead of requiring installer to hold
+            // the INTERACT_ACROSS_USERS permission, which grants much more privileges.
+        }
         flags = updateFlagsForPackage(flags, userId);
+        flags |= exemptedFlags;
 
         final boolean canSeeStaticAndSdkLibraries =
-                mContext.checkCallingOrSelfPermission(INSTALL_PACKAGES)
-                        == PERMISSION_GRANTED
+                isPrivilegedInstaller
                         || mContext.checkCallingOrSelfPermission(DELETE_PACKAGES)
                         == PERMISSION_GRANTED
                         || canRequestPackageInstalls(packageName, callingUid, userId,
