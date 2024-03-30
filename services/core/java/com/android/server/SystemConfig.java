@@ -1685,6 +1685,7 @@ public class SystemConfig {
         }
 
         addFeature("grapheneos.package_update_preserves_package_enabled_setting", 0);
+        addFeature("grapheneos.priv_installer_can_use_getSharedLibraries_MATCH_ANY_USER", 0);
 
         for (String featureName : mUnavailableFeatures) {
             removeFeature(featureName);
