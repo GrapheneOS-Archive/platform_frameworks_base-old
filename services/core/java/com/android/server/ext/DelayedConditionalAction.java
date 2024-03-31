@@ -58,6 +58,8 @@ public abstract class DelayedConditionalAction {
         if (setting.canObserveState()) {
             setting.registerObserver(sse.context, s -> update(), handler);
         }
+
+        update();
     }
 
     private boolean alarmScheduled;
