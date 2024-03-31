@@ -28,6 +28,7 @@ public abstract class DelayedConditionalAction {
 
     protected DelayedConditionalAction(SystemServerExt sse, IntSetting setting, Handler handler) {
         this.sse = sse;
+        this.setting = setting;
 
         Looper looper = handler.getLooper();
         thread = looper.getThread();
@@ -37,9 +38,7 @@ public abstract class DelayedConditionalAction {
             throw new IllegalStateException("all calls should happen on the same thread");
         }
 
-        Context ctx = sse.context;
-        alarmManager = ctx.getSystemService(AlarmManager.class);
-
+        alarmManager = sse.context.getSystemService(AlarmManager.class);
         alarmListener = () -> {
             String TAG = getLogTag();
             Slog.d(TAG, "alarm triggered");
@@ -51,13 +50,13 @@ public abstract class DelayedConditionalAction {
 
             alarmTriggered();
         };
+    }
 
+    public void init() {
         registerStateListener();
 
-        this.setting = setting;
-
         if (setting.canObserveState()) {
-            setting.registerObserver(ctx, s -> update(), handler);
+            setting.registerObserver(sse.context, s -> update(), handler);
         }
     }
 
