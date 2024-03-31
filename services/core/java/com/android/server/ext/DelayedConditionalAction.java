@@ -1,19 +1,3 @@
-/*
- * Copyright (C) 2022 GrapheneOS
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.android.server.ext;
 
 import android.annotation.IntRange;
@@ -49,10 +33,8 @@ public abstract class DelayedConditionalAction {
         thread = looper.getThread();
         this.handler = handler;
 
-        if (Build.isDebuggable()) {
-            if (thread != Thread.currentThread()) {
-                throw new IllegalStateException("all calls should happen on the same thread");
-            }
+        if (thread != Thread.currentThread()) {
+            throw new IllegalStateException("all calls should happen on the same thread");
         }
 
         Context ctx = sse.context;
@@ -87,12 +69,7 @@ public abstract class DelayedConditionalAction {
 
         if (curThread != thread) {
             String msg = "update() called on an unknown thread " + curThread;
-            if (Build.isDebuggable()) {
-                throw new IllegalStateException(msg);
-            } else {
-                Slog.e(TAG, msg, new Throwable());
-                return;
-            }
+            throw new IllegalStateException(msg);
         }
 
         Slog.d(TAG, "update: alarm already scheduled: " + alarmScheduled);
