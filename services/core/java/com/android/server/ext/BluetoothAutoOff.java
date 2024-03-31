@@ -9,6 +9,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.ext.settings.ExtSettings;
 import android.util.Slog;
 
@@ -21,10 +22,16 @@ class BluetoothAutoOff extends DelayedConditionalAction {
     @Nullable
     private final BluetoothAdapter adapter;
 
-    BluetoothAutoOff(SystemServerExt sse) {
+    private BluetoothAutoOff(SystemServerExt sse) {
         super(sse, ExtSettings.BLUETOOTH_AUTO_OFF, sse.bgHandler);
         manager = sse.context.getSystemService(BluetoothManager.class);
         adapter = manager.getAdapter();
+    }
+
+    static void maybeInit(SystemServerExt sse) {
+        if (sse.packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH, 0)) {
+            new BluetoothAutoOff(sse).init();
+        }
     }
 
     @Override
