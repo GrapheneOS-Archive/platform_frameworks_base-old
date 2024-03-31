@@ -1,7 +1,13 @@
 package com.android.server.ext;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.ext.settings.ExtSettings;
 import android.net.wifi.WifiManager;
+import android.os.Bundle;
 import android.os.HandlerExecutor;
 import android.util.Slog;
 
@@ -13,19 +19,25 @@ class WifiAutoOff extends DelayedConditionalAction implements WifiNetworkStateCh
 
     private final WifiManager wifiManager;
 
-    WifiAutoOff(SystemServerExt sse) {
+    private WifiAutoOff(SystemServerExt sse) {
         super(sse, ExtSettings.WIFI_AUTO_OFF, sse.bgHandler);
         wifiManager = sse.context.getSystemService(WifiManager.class);
     }
 
+    static void maybeInit(SystemServerExt sse) {
+        if (sse.packageManager.hasSystemFeature(PackageManager.FEATURE_WIFI, 0)) {
+            new WifiAutoOff(sse).init();
+        }
+    }
+
     @Override
     protected boolean shouldScheduleAlarm() {
-        return isWifiEnabledAndNotConnectedOrConnecting();
+        return isEligibleForAutoOff();
     }
 
     @Override
     protected void alarmTriggered() {
-        if (isWifiEnabledAndNotConnectedOrConnecting()) {
+        if (isEligibleForAutoOff()) {
             Slog.d(TAG, "setWifiEnabled(false)");
             // setWifiEnabled() is not deprecated for system apps and components
             // noinspection deprecation
@@ -33,18 +45,18 @@ class WifiAutoOff extends DelayedConditionalAction implements WifiNetworkStateCh
         }
     }
 
-    private boolean isWifiEnabledAndNotConnectedOrConnecting() {
-        if (wifiManager.isWifiEnabled()) {
-            int state = currentWifiState;
-            Slog.d(TAG, "isWifiEnabledAndNotConnected: Wifi enabled, curState: " +
-                    networkStateToString(state));
-            return !isConnectedOrConnectingState(state);
-        }
-        Slog.d(TAG, "isWifiEnabledAndNotConnected: Wifi not enabled");
-        return false;
+    private boolean isEligibleForAutoOff() {
+        boolean res = currentWifiState == WifiManager.WIFI_STATE_ENABLED
+                && !isConnectedOrConnectingNetworkState(currentWifiNetworkState);
+
+        Slog.d(TAG, "isEligibleForAutoOff: " + res
+                + "; wifiState: " + wifiStateToString(currentWifiState)
+                + ", wifiNetworkState: " + wifiNetworkStateToString(currentWifiNetworkState));
+
+        return res;
     }
 
-    private static boolean isConnectedOrConnectingState(int state) {
+    private static boolean isConnectedOrConnectingNetworkState(int state) {
         switch (state) {
             case WifiNetworkStateChangedListener.WIFI_NETWORK_STATUS_CONNECTING:
             case WifiNetworkStateChangedListener.WIFI_NETWORK_STATUS_AUTHENTICATING:
@@ -57,30 +69,58 @@ class WifiAutoOff extends DelayedConditionalAction implements WifiNetworkStateCh
     }
 
     private int currentWifiState;
+    private int currentWifiNetworkState;
 
     /** @see WifiNetworkStateChangedListener */
     @Override
     public void onWifiNetworkStateChanged(int cmmRole, int state) {
         Slog.d(TAG, "onWifiNetworkStateChanged: cmmRole " + cmmRole +
-                ", state " + networkStateToString(state));
+                ", state " + wifiNetworkStateToString(state));
         if (cmmRole != WIFI_ROLE_CLIENT_PRIMARY) {
             return;
         }
 
-        currentWifiState = state;
+        currentWifiNetworkState = state;
 
-        if (!isConnectedOrConnectingState(state)) {
+        if (!isConnectedOrConnectingNetworkState(state)) {
             update();
         }
     }
 
     @Override
     protected void registerStateListener() {
-        WifiManager wifiManager = requireNonNull(sse.context.getSystemService(WifiManager.class));
+        var filter = new IntentFilter(WifiManager.WIFI_STATE_CHANGED_ACTION);
+        var receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Bundle extras = requireNonNull(intent.getExtras());
+                currentWifiState = requireNonNull(extras.getNumber(WifiManager.EXTRA_WIFI_STATE));
+                Slog.d(TAG, "WIFI_STATE_CHANGED broadcast, extras " + extras);
+
+                update();
+            }
+        };
+        sse.context.registerReceiver(receiver, filter, null, handler);
+        currentWifiState = wifiManager.getWifiState();
+
         wifiManager.addWifiNetworkStateChangedListener(new HandlerExecutor(handler), this);
+        currentWifiNetworkState = wifiManager.getCurrentNetwork() != null ?
+                WifiNetworkStateChangedListener.WIFI_NETWORK_STATUS_CONNECTED :
+                WifiNetworkStateChangedListener.WIFI_NETWORK_STATUS_DISCONNECTED;
     }
 
-    static String networkStateToString(int state) {
+    static String wifiStateToString(int state) {
+        return switch (state) {
+            case WifiManager.WIFI_STATE_DISABLING -> "DISABLING";
+            case WifiManager.WIFI_STATE_DISABLED -> "DISABLED";
+            case WifiManager.WIFI_STATE_ENABLING -> "ENABLING";
+            case WifiManager.WIFI_STATE_ENABLED -> "ENABLED";
+            case WifiManager.WIFI_STATE_UNKNOWN -> "UNKNOWN";
+            default -> throw new IllegalArgumentException(Integer.toString(state));
+        };
+    }
+
+    static String wifiNetworkStateToString(int state) {
         return switch (state) {
             case WifiNetworkStateChangedListener.WIFI_NETWORK_STATUS_IDLE -> "IDLE";
             case WifiNetworkStateChangedListener.WIFI_NETWORK_STATUS_SCANNING -> "SCANNING";
