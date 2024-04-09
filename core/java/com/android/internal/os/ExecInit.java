@@ -1,5 +1,6 @@
 package com.android.internal.os;
 
+import android.os.Process;
 import android.os.Trace;
 import android.system.ErrnoException;
 import android.system.Os;
@@ -140,6 +141,9 @@ public class ExecInit {
 
         // Perform the same initialization that would happen after the Zygote forks.
         Zygote.nativePreApplicationInit();
+        if (Process.isIsolated()) {
+            System.gc();
+        }
         return RuntimeInit.applicationInit(targetSdkVersion, /*disabledCompatChanges*/ null, argv, classLoader);
     }
 }
