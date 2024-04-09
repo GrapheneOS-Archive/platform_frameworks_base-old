@@ -4,6 +4,7 @@ import android.annotation.Nullable;
 import android.content.pm.PackageManager;
 
 import com.android.internal.pm.pkg.component.ParsedPermission;
+import com.android.internal.pm.pkg.component.ParsedProvider;
 import com.android.internal.pm.pkg.component.ParsedService;
 import com.android.internal.pm.pkg.component.ParsedServiceImpl;
 import com.android.internal.pm.pkg.component.ParsedUsesPermission;
@@ -20,6 +21,10 @@ public class PackageParsingHooks {
     }
 
     public boolean shouldSkipUsesPermission(ParsedUsesPermission p) {
+        return false;
+    }
+
+    public boolean shouldSkipProvider(ParsedProvider p) {
         return false;
     }
 
