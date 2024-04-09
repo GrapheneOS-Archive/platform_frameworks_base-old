@@ -626,6 +626,10 @@ public class PackageImpl implements ParsedPackage, AndroidPackageInternal,
 
     @Override
     public PackageImpl addProvider(ParsedProvider parsedProvider) {
+        if (getPackageParsingHooks().shouldSkipProvider(parsedProvider)) {
+            return this;
+        }
+
         this.providers = CollectionUtils.add(this.providers, parsedProvider);
         addMimeGroupsFromComponent(parsedProvider);
         return this;
