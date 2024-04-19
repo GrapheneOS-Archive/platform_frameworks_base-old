@@ -41,4 +41,8 @@ public interface PackageId {
 
     String ANDROID_AUTO_NAME = "com.google.android.projection.gearhead";
     int ANDROID_AUTO = 10;
+
+    // "Google Fi"
+    String TYCHO_NAME = "com.google.android.apps.tycho";
+    int TYCHO = 11;
 }

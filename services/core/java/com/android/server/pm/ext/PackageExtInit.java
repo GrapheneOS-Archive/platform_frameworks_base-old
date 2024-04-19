@@ -82,6 +82,8 @@ public class PackageExtInit implements ParsingPackageUtils.PackageExtInitIface {
                     "226bb0439d6baeaa5a397c586e7031d8addfaec73c65be212f4a5dbfbf621b92");
             case ANDROID_AUTO_NAME -> validate(ANDROID_AUTO, 11_0_635014L,
                     "1ca8dcc0bed3cbd872d2cb791200c0292ca9975768a82d676b8b424fb65b5295");
+            case TYCHO_NAME -> validate(TYCHO, 3044673L,
+                    "8c4e8f364cb132d41626f67749a6385605f51d365098c0cb5976eb5c1500a3ce");
 
             default -> PackageId.UNKNOWN;
         };
