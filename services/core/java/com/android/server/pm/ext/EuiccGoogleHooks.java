@@ -2,9 +2,11 @@ package com.android.server.pm.ext;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.ext.PackageId;
 
 import com.android.internal.pm.pkg.component.ParsedUsesPermission;
 import com.android.internal.pm.pkg.parsing.PackageParsingHooks;
+import com.android.server.pm.pkg.AndroidPackage;
 import com.android.server.pm.pkg.PackageStateInternal;
 
 class EuiccGoogleHooks extends PackageHooks {
@@ -32,6 +34,11 @@ class EuiccGoogleHooks extends PackageHooks {
 
     @Override
     public boolean shouldBlockPackageVisibility(int userId, PackageStateInternal otherPkg) {
+        AndroidPackage otherApk = otherPkg.getAndroidPackage();
+        if (otherApk != null && PackageExt.get(otherApk).getPackageId() == PackageId.TYCHO) {
+            return false;
+        }
+
         // Block EuiccGoogle from interacting with GmsCore, which is used for feature flags, logging,
         // perf data reporting etc.
         //

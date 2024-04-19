@@ -4506,6 +4506,8 @@ package android.ext {
     field public static final String PIXEL_CAMERA_SERVICES_NAME = "com.google.android.apps.camera.services";
     field public static final int PLAY_STORE = 3; // 0x3
     field public static final String PLAY_STORE_NAME = "com.android.vending";
+    field public static final int TYCHO = 11; // 0xb
+    field public static final String TYCHO_NAME = "com.google.android.apps.tycho";
     field public static final int UNKNOWN = 0; // 0x0
   }
 

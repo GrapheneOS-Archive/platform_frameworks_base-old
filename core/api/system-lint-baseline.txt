@@ -2279,6 +2279,10 @@ UnflaggedApi: android.ext.PackageId#PLAY_STORE:
     New API must be flagged with @FlaggedApi: field android.ext.PackageId.PLAY_STORE
 UnflaggedApi: android.ext.PackageId#PLAY_STORE_NAME:
     New API must be flagged with @FlaggedApi: field android.ext.PackageId.PLAY_STORE_NAME
+UnflaggedApi: android.ext.PackageId#TYCHO:
+    New API must be flagged with @FlaggedApi: field android.ext.PackageId.TYCHO
+UnflaggedApi: android.ext.PackageId#TYCHO_NAME:
+    New API must be flagged with @FlaggedApi: field android.ext.PackageId.TYCHO_NAME
 UnflaggedApi: android.ext.PackageId#UNKNOWN:
     New API must be flagged with @FlaggedApi: field android.ext.PackageId.UNKNOWN
 UnflaggedApi: android.ext.cscopes.ContactScope:
