@@ -68,6 +68,7 @@ class FooterActionsTestUtils(
     private val testableLooper: TestableLooper,
     private val scheduler: TestCoroutineScheduler,
 ) {
+    private val mockActivityStarter: ActivityStarter = mock<ActivityStarter>()
     /** Enable or disable the user switcher in the settings. */
     fun setUserSwitcherEnabled(settings: GlobalSettings, enabled: Boolean) {
         settings.putBool(Settings.Global.USER_SWITCHER_ENABLED, enabled)
@@ -91,12 +92,13 @@ class FooterActionsTestUtils(
             falsingManager,
             globalActionsDialogLite,
             showPowerButton,
+            mockActivityStarter,
         )
     }
 
     /** Create a [FooterActionsInteractor] to be used in tests. */
     fun footerActionsInteractor(
-        activityStarter: ActivityStarter = mock(),
+        activityStarter: ActivityStarter = mockActivityStarter,
         metricsLogger: MetricsLogger = FakeMetricsLogger(),
         uiEventLogger: UiEventLogger = UiEventLoggerFake(),
         deviceProvisionedController: DeviceProvisionedController = mock(),
