@@ -7228,6 +7228,15 @@ public class Activity extends ContextThemeWrapper
     }
 
     /**
+     * @hide
+     */
+    @PackageManager.PermissionResult
+    public int checkLaunchedFromPermission(@NonNull String permission) {
+        return ActivityClient.getInstance().checkLaunchedFromPermission(getActivityToken(),
+                permission, getDeviceId());
+    }
+
+    /**
      * Control whether this activity's main window is visible.  This is intended
      * only for the special case of an activity that is not going to show a
      * UI itself, but can't just finish prior to onResume() because it needs

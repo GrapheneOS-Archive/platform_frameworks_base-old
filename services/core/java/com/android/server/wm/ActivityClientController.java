@@ -1764,4 +1764,16 @@ class ActivityClientController extends IActivityClientController.Stub {
             }
         }
     }
+
+    @Override
+    public int checkLaunchedFromPermission(IBinder token, String permission, int deviceId) {
+        if (!ActivityClientControllerHooks.canAccessLaunchedFromPackagePermission(permission)) {
+            throw new SecurityException();
+        }
+        final ActivityRecord r;
+        synchronized (mGlobalLock) {
+            r = ActivityRecord.forTokenLocked(token);
+        }
+        return ActivityClientControllerHooks.checkLaunchedFromPermission(r, permission, deviceId);
+    }
 }

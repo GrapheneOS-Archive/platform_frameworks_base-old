@@ -729,4 +729,12 @@ public class ActivityClient {
             }
         }
     }
+
+    public int checkLaunchedFromPermission(IBinder token, String permission, int deviceId) {
+        try {
+            return getActivityClientController().checkLaunchedFromPermission(token, permission, deviceId);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
 }
