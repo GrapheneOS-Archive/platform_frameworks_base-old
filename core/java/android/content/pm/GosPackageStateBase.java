@@ -41,11 +41,10 @@ public abstract class GosPackageStateBase {
 
     @Override
     public final boolean equals(Object obj) {
-        if (!(obj instanceof GosPackageStateBase)) {
+        if (!(obj instanceof GosPackageStateBase o)) {
             return false;
         }
 
-        GosPackageStateBase o = (GosPackageStateBase) obj;
         if (flags != o.flags) {
             return false;
         }
