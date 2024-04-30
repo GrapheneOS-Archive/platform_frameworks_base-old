@@ -7522,7 +7522,7 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
             accessGranted = mInstantAppRegistry.grantInstantAccess(userId, intent,
                     recipientAppId, UserHandle.getAppId(visibleUid) /*instantAppId*/);
         } else {
-            accessGranted = mAppsFilter.grantImplicitAccess(recipientUid, visibleUid,
+            accessGranted = mAppsFilter.grantImplicitAccess2(recipientUid, visibleUid,
                     retainOnUpdate);
         }
 
