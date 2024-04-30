@@ -71,6 +71,7 @@ import android.view.WindowManager;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.internal.ext.EuiccGoogleHooks;
 import com.android.internal.util.ArrayUtils;
 import com.android.internal.util.GrowingArrayUtils;
 import com.android.internal.util.Preconditions;
@@ -456,8 +457,12 @@ public class Resources {
         CharSequence res = mResourcesImpl.getAssets().getResourceText(id);
         if (res != null) {
             if (android.app.AppGlobals.getInitialPackageId() == android.ext.PackageId.G_EUICC_LPA) {
-                if (res.toString().contains("Google")) {
-                    return "";
+                if (!EuiccGoogleHooks.isResourceFilteringSuppressed()) {
+                    String s = res.toString();
+                    if (s.contains("Google")) {
+                        Log.d("GEuiccLpa", "replaced getText() with empty string: " + s);
+                        return "";
+                    }
                 }
             }
             return res;
