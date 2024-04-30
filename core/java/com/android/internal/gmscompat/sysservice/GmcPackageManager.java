@@ -371,13 +371,15 @@ public class GmcPackageManager extends ApplicationPackageManager {
             throw e;
         }
 
-        if (PackageId.ANDROID_AUTO_NAME.equals(packageName) && isUpdateOwnershipOverrideEnabled()) {
+        if (PackageId.ANDROID_AUTO_NAME.equals(packageName)) {
             // Android Auto needs to be exempted from updates via Play Store to prevent breaking the
             // compatibility layer support for Android Auto.
             //
             // Play Store respects the value of InstallSourceInfo#getUpdateOwnerPackageName():
             // packages that have non-Play Store update owners are not updated by Play Store
-            String updateOwnerPackage = PackageUtils.getFirstPartyAppSourcePackageName(GmsCompat.appContext());
+            String updateOwnerPackage = areUnknownGmsUpdatesRestricted() ?
+                    PackageUtils.getFirstPartyAppSourcePackageName(GmsCompat.appContext()) :
+                    PackageId.PLAY_STORE_NAME;
             res = new InstallSourceInfo(
                     res.getInitiatingPackageName(),
                     res.getInitiatingPackageSigningInfo(),
@@ -391,7 +393,7 @@ public class GmcPackageManager extends ApplicationPackageManager {
         return res;
     }
 
-    private static boolean isUpdateOwnershipOverrideEnabled() {
+    private static boolean areUnknownGmsUpdatesRestricted() {
         if (!Build.isDebuggable()) {
             return true;
         }
