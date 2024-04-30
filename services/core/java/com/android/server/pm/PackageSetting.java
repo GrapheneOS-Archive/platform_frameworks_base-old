@@ -28,6 +28,7 @@ import android.annotation.UserIdInt;
 import android.content.ComponentName;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.PackageManagerInternal;
 import android.content.pm.SharedLibraryInfo;
 import android.content.pm.SigningDetails;
 import android.content.pm.SigningInfo;
@@ -48,6 +49,7 @@ import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.pm.parsing.pkg.AndroidPackageInternal;
 import com.android.internal.util.CollectionUtils;
 import com.android.internal.util.DataClass;
+import com.android.server.LocalServices;
 import com.android.server.pm.parsing.pkg.AndroidPackageUtils;
 import com.android.server.pm.permission.LegacyPermissionDataProvider;
 import com.android.server.pm.permission.LegacyPermissionState;
@@ -62,6 +64,7 @@ import com.android.server.pm.pkg.PackageUserStateImpl;
 import com.android.server.pm.pkg.PackageUserStateInternal;
 import com.android.server.pm.pkg.SharedLibrary;
 import com.android.server.pm.pkg.SharedLibraryWrapper;
+import com.android.server.pm.pkg.SharedUserApi;
 import com.android.server.pm.pkg.SuspendParams;
 import com.android.server.utils.SnapshotCache;
 import com.android.server.utils.WatchedArraySet;
@@ -781,6 +784,16 @@ public class PackageSetting extends SettingBase implements PackageStateInternal 
 
     void setInstalled(boolean inst, int userId) {
         modifyUserState(userId).setInstalled(inst);
+        if (inst) {
+            int sharedUserAppId = getSharedUserAppId();
+            if (sharedUserAppId > 0) {
+                var pmi = LocalServices.getService(PackageManagerInternal.class);
+                SharedUserApi sharedUser = pmi.getSharedUserApi(sharedUserAppId);
+                if (sharedUser != null) {
+                    sharedUser.syncGosPackageState();
+                }
+            }
+        }
         onChanged();
     }
 
