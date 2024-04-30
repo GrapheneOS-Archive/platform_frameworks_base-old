@@ -48,7 +48,7 @@ import com.android.server.pm.PackageManagerService;
  *
  * @hide
  */
-public final class GosPackageStatePm extends GosPackageStateBase {
+public final class GosPackageStatePm extends GosPackageStateBase implements GosPackageStatePmApi {
 
     public GosPackageStatePm(int flags, long packageFlags,
                              @Nullable byte[] storageScopes, @Nullable byte[] contactScopes) {
