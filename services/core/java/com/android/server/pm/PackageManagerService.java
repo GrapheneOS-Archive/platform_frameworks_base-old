@@ -366,7 +366,7 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
 
     static final String SHELL_PACKAGE_NAME = "com.android.shell";
 
-    static final boolean HIDE_EPHEMERAL_APIS = false;
+    static final boolean HIDE_EPHEMERAL_APIS = true;
 
     static final String PRECOMPILE_LAYOUTS = "pm.precompile_layouts";
 
