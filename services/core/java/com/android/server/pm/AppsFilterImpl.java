@@ -444,7 +444,7 @@ public final class AppsFilterImpl extends AppsFilterLocked implements Watchable,
      * @param retainOnUpdate if the implicit access retained across package updates.
      * @return {@code true} if implicit access was not already granted.
      */
-    public boolean grantImplicitAccess(int recipientUid, int visibleUid, boolean retainOnUpdate) {
+    public boolean grantImplicitAccess2(int recipientUid, int visibleUid, boolean retainOnUpdate) {
         if (recipientUid == visibleUid) {
             return false;
         }
