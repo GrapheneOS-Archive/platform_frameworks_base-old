@@ -546,7 +546,9 @@ public interface ParsingPackage {
 
     void initPackageParsingHooks();
 
-    PackageParsingHooks getPackageParsingHooks();
+    default PackageParsingHooks getPackageParsingHooks() {
+        return PackageParsingHooks.DEFAULT;
+    }
 
     void setPackageExt(@Nullable PackageExtIface ext);
 }
