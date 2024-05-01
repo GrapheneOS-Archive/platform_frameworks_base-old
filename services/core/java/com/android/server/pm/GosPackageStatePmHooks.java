@@ -167,7 +167,7 @@ public class GosPackageStatePmHooks {
             return null;
         }
 
-        GosPackageStatePm gosPs = GosPackageStatePm.get(snapshot, packageState, userId);
+        GosPackageStatePm gosPs = packageState.getUserStateOrDefault(userId).getGosPackageState();
 
         if (gosPs == null) {
             return null;
