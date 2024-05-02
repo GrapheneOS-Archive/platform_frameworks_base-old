@@ -3305,6 +3305,11 @@ public class PackageInstallerSession extends IPackageInstallerSession.Stub {
     @GuardedBy("mLock")
     private void validateApexInstallLocked()
             throws PackageManagerException {
+        if (true) {
+            throw new PackageManagerException(PackageManager.INSTALL_FAILED_SESSION_INVALID,
+                    "APEX installation is not allowed");
+        }
+
         final List<File> addedFiles = getAddedApksLocked();
         if (addedFiles.isEmpty()) {
             throw new PackageManagerException(INSTALL_FAILED_INVALID_APK,
