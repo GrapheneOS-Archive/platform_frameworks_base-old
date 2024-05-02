@@ -3721,9 +3721,11 @@ public class PackageInstallerSession extends IPackageInstallerSession.Stub {
         // {@link PackageLite#getTargetSdk()}
         mValidatedTargetSdk = packageLite.getTargetSdk();
 
-        String initiatingPackageName = mInstallSource.mInitiatingPackageName;
-        final boolean isFirstPartyInstaller = "app.grapheneos.apps".equals(initiatingPackageName);
-        if (initiatingPackageName != null && !isInstallerShell && !isFirstPartyInstaller && !areUnknownGmsUpdatesAllowed()) {
+        final String initiatingPackageName = mInstallSource.mInitiatingPackageName;
+        if (initiatingPackageName != null && !isInstallerShell
+                && !android.util.PackageUtils.getFirstPartyAppSourcePackageName(mContext)
+                        .equals(initiatingPackageName)
+                && !areUnknownGmsUpdatesAllowed()) {
             final int errorCode = PackageManager.INSTALL_FAILED_SESSION_INVALID;
             switch (mPackageName) {
                 case PackageId.GSF_NAME:
