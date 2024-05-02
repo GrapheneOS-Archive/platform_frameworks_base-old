@@ -90,7 +90,21 @@ public class PackageVerityExt {
         Slog.d(TAG, "Performing verification of system package update "
                 + systemPkgUpdate.getManifestPackageName());
 
-        if (systemPkg.getLongVersionCode() >= systemPkgUpdate.getLongVersionCode()) {
+        boolean checkVersionCode = true;
+        if (Build.IS_DEBUGGABLE) {
+            // also checked in InstallPackageHelper before package installation
+            if (SystemProperties.getBoolean("persist.disable_same_versionCode_sys_pkg_update_check", false)) {
+                checkVersionCode = false;
+                long version = systemPkgUpdate.getLongVersionCode();
+                if (systemPkg.getLongVersionCode() == version) {
+                    Slog.w(TAG, "Updated system package is used for " + systemPkg.getPackageName()
+                            + " despite it having same version code ("
+                            + version + ") as the system image package");
+                }
+            }
+        }
+
+        if (checkVersionCode && systemPkg.getLongVersionCode() >= systemPkgUpdate.getLongVersionCode()) {
             throw new PackageManagerException(INSTALL_FAILED_UPDATE_INCOMPATIBLE,
                     "versionCode of system image package (" + systemPkg.getLongVersionCode()
                             + ") is >= versionCode of system package update ("
