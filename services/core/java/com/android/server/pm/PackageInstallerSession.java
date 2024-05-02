@@ -3472,6 +3472,23 @@ public class PackageInstallerSession extends IPackageInstallerSession.Stub {
         final PackageManagerInternal pmi = LocalServices.getService(PackageManagerInternal.class);
         final PackageStateInternal existingPkgSetting = pmi.getPackageStateInternal(mPackageName);
 
+        if (existingPkgSetting != null && (existingPkgSetting.isSystem() || existingPkgSetting.isUpdatedSystemApp())) {
+            String firstPartyInstaller = android.util.PackageUtils.getFirstPartyAppSourcePackageName(mContext);
+            boolean isFirstPartyInstaller = firstPartyInstaller.equals(mInstallSource.mInitiatingPackageName);
+            if (!isFirstPartyInstaller && mInstallerUid != Process.SHELL_UID) {
+                String debugSysprop = "persist.allow_unknown_system_app_updates";
+                boolean allow = Build.IS_DEBUGGABLE
+                        && SystemProperties.getBoolean(debugSysprop, false);
+                if (!allow) {
+                    String msg = "System app updates from unknown sources are blocked";
+                    if (Build.IS_DEBUGGABLE) {
+                        msg += ". To unblock them, run setprop persist.allow_unknown_system_app_updates 1";
+                    }
+                    throw new PackageManagerException(PackageManager.INSTALL_FAILED_SESSION_INVALID, msg);
+                }
+            }
+        }
+
         if (!isInstallationAllowed(existingPkgSetting)) {
             throw new PackageManagerException(
                     PackageManager.INSTALL_FAILED_SESSION_INVALID,
