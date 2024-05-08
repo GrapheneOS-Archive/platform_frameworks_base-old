@@ -1211,6 +1211,8 @@ public final class PermissionManager {
         pkgNames.add(FUSED_LOCATION_PKG);
         // indicator pops up when determining location during a geofenced alert
         pkgNames.add(CELL_BROADCAST_SERVICE_PKG);
+        // location indicator sometimes gets triggered when turning on Wi-Fi hotspot
+        pkgNames.add(android.ext.KnownSystemPackages.SETTINGS);
 
         for (int i = 0; i < INDICATOR_EXEMPTED_PACKAGES.length; i++) {
             String exemptedPackage = INDICATOR_EXEMPTED_PACKAGES[i];
