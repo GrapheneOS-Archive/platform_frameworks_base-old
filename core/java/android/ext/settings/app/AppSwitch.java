@@ -160,7 +160,7 @@ public abstract class AppSwitch {
         if (flag == 0) {
             return false;
         }
-        return ps == null || ps.hasFlags(flag);
+        return ps != null && ps.hasFlags(flag);
     }
 
     public final void addSuppressNotificationFlag(GosPackageState.Editor ed) {
