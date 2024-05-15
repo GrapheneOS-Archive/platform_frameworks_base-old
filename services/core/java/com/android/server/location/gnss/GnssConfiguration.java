@@ -35,6 +35,8 @@ import libcore.io.IoUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -517,23 +519,46 @@ public class GnssConfiguration {
     }
 
     private static void applyPsdsConfigOverrides(Context ctx, Properties props) {
-        final int psdsMode = ExtSettings.GNSS_PSDS_STANDARD.get(ctx);
-
         final String psdsType = ctx.getString(com.android.internal.R.string.config_gnssPsdsType);
         Slog.d(TAG, "PSDS type: " + psdsType);
 
+        final int psdsMode;
+        if (psdsType.isEmpty()) {
+            Slog.e(TAG, "PSDS type is not specified, disabling PSDS");
+            psdsMode = GnssConstants.PSDS_DISABLED;
+        } else {
+            psdsMode = ExtSettings.GNSS_PSDS_STANDARD.get(ctx);
+        }
+
         switch (psdsMode) {
             case GnssConstants.PSDS_SERVER_GRAPHENEOS:
-                Slog.d(TAG, "PSDS: using the GrapheneOS server");
-                clearPsdsServerProps(props);
+                final String hostname = psdsType + ".psds.grapheneos.org";
+                Slog.d(TAG, "PSDS: using GrapheneOS server " + hostname);
 
-                switch (psdsType) {
-                    case GnssConstants.PSDS_TYPE_BROADCOM:
-                        final String host = GnssConstants.PSDS_SERVER_GRAPHENEOS_BROADCOM;
-                        props.setProperty(CONFIG_LONGTERM_PSDS_SERVER_1, host + "/lto2.dat");
-                        props.setProperty(CONFIG_NORMAL_PSDS_SERVER, host + "/rto.dat");
-                        props.setProperty(CONFIG_REALTIME_PSDS_SERVER, host + "/rtistatus.dat");
-                        break;
+                for (String propName : getPsdsPropNames()) {
+                    String origValue = props.getProperty(propName);
+                    if (TextUtils.isEmpty(origValue)) {
+                        continue;
+                    }
+
+                    final URL origUrl;
+                    try {
+                        origUrl = new URL(origValue);
+                    } catch (MalformedURLException e) {
+                        props.remove(propName);
+                        Slog.e(TAG, "malformed value of " + propName + ": " + origValue, e);
+                        continue;
+                    }
+
+                    final URL url;
+                    try {
+                        url = new URL("https", hostname, origUrl.getFile());
+                    } catch (MalformedURLException e) {
+                        throw new IllegalStateException(e);
+                    }
+                    final String urlString = url.toString();
+                    props.setProperty(propName, urlString);
+                    Slog.d(TAG, "overridden " + propName + " from " + origValue + " to " + urlString);
                 }
                 break;
             case GnssConstants.PSDS_SERVER_STANDARD:
@@ -550,10 +575,18 @@ public class GnssConfiguration {
     }
 
     private static void clearPsdsServerProps(Properties props) {
-        props.remove(CONFIG_LONGTERM_PSDS_SERVER_1);
-        props.remove(CONFIG_LONGTERM_PSDS_SERVER_2);
-        props.remove(CONFIG_LONGTERM_PSDS_SERVER_3);
-        props.remove(CONFIG_NORMAL_PSDS_SERVER);
-        props.remove(CONFIG_REALTIME_PSDS_SERVER);
+        for (String n : getPsdsPropNames()) {
+            props.remove(n);
+        }
+    }
+
+    private static String[] getPsdsPropNames() {
+        return new String[] {
+                CONFIG_LONGTERM_PSDS_SERVER_1,
+                CONFIG_LONGTERM_PSDS_SERVER_2,
+                CONFIG_LONGTERM_PSDS_SERVER_3,
+                CONFIG_NORMAL_PSDS_SERVER,
+                CONFIG_REALTIME_PSDS_SERVER,
+        };
     }
 }
