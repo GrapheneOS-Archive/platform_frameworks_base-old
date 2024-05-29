@@ -94,6 +94,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.IProgressListener;
+import android.os.ParcelableException;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.ResultReceiver;
@@ -678,6 +679,8 @@ public class LockSettingsService extends ILockSettings.Stub {
                 mStorage);
 
         LocalServices.addService(LockSettingsInternal.class, new LocalService());
+
+        duressPasswordHelper = new DuressPasswordHelper(this, mStorage, mSpManager);
     }
 
     private void updateActivatedEncryptionNotifications(String reason) {
@@ -2312,6 +2315,18 @@ public class LockSettingsService extends ILockSettings.Stub {
     private VerifyCredentialResponse doVerifyCredential(LockscreenCredential credential,
             int userId, ICheckCredentialProgressCallback progressCallback,
             @LockPatternUtils.VerifyFlag int flags) {
+        VerifyCredentialResponse res = null;
+        try {
+            res = doVerifyCredentialInner(credential, userId, progressCallback, flags);
+            return res;
+        } finally {
+            duressPasswordHelper.onVerifyCredentialResult(res, credential);
+        }
+    }
+
+    private VerifyCredentialResponse doVerifyCredentialInner(LockscreenCredential credential,
+            int userId, ICheckCredentialProgressCallback progressCallback,
+            @LockPatternUtils.VerifyFlag int flags) {
         if (credential == null || credential.isNone()) {
             throw new IllegalArgumentException("Credential can't be null or empty");
         }
@@ -3758,5 +3773,31 @@ public class LockSettingsService extends ILockSettings.Stub {
             Slogf.i(TAG, "Restored synthetic password for user %d using reboot escrow", userId);
             onCredentialVerified(sp, loadPasswordMetrics(sp, userId), userId);
         }
+    }
+
+    private final DuressPasswordHelper duressPasswordHelper;
+
+    @Override
+    public void setDuressCredentials(LockscreenCredential ownerCredential,
+            LockscreenCredential pin, LockscreenCredential password) {
+        checkWritePermission();
+
+        try {
+            duressPasswordHelper.setDuressCredentials(ownerCredential, pin, password);
+        } catch (Throwable e) {
+            throw new ParcelableException(e);
+        } finally {
+            scheduleGc();
+        }
+    }
+
+    @Override
+    public boolean hasDuressCredentials(LockscreenCredential ownerCredential) {
+        checkPasswordHavePermission();
+        return duressPasswordHelper.hasDuressCredentials(ownerCredential);
+    }
+
+    Context getContext() {
+        return mContext;
     }
 }
