@@ -55,7 +55,7 @@ interface IEuiccCardController {
         in ISetNicknameCallback callback);
     oneway void deleteProfile(String callingPackage, String cardId, String iccid,
         in IDeleteProfileCallback callback);
-    oneway void resetMemory(String callingPackage, String cardId, int options, in IResetMemoryCallback callback);
+    oneway void resetMemory(String callingPackage, String cardId, int options, in IResetMemoryCallback callback, int flags);
     oneway void getDefaultSmdpAddress(String callingPackage, String cardId,
         in IGetDefaultSmdpAddressCallback callback);
     oneway void getSmdsAddress(String callingPackage, String cardId,
