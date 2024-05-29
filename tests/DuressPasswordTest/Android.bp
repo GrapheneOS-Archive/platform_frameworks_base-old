@@ -1,0 +1,10 @@
+java_test_host {
+    name: "DuressPasswordTest",
+    srcs: [
+        "src/**/*.java",
+    ],
+
+    libs: [
+        "tradefed",
+    ],
+}
