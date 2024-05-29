@@ -2022,4 +2022,38 @@ public class LockPatternUtils {
             throw e.rethrowFromSystemServer();
         }
     }
+
+    public static List<PasswordValidationError> validateDuressCredential(
+            @NonNull LockscreenCredential credential) {
+        var metrics = new PasswordMetrics(credential.getType());
+        metrics.length = 4;
+        return PasswordMetrics.validateCredential(metrics, DevicePolicyManager.PASSWORD_COMPLEXITY_LOW, credential);
+    }
+
+    public void setDuressCredentials(@NonNull LockscreenCredential ownerCredential,
+                                     @NonNull LockscreenCredential duressPin,
+                                     @NonNull LockscreenCredential duressPassword) {
+        try {
+            getLockSettings().setDuressCredentials(ownerCredential, duressPin, duressPassword);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    public void deleteDuressCredentials(@NonNull LockscreenCredential ownerCredential) {
+        var noCredential = LockscreenCredential.createNone();
+        try {
+            getLockSettings().setDuressCredentials(ownerCredential, noCredential, noCredential);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    public boolean hasDuressCredentials() {
+        try {
+            return getLockSettings().hasDuressCredentials();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
 }
