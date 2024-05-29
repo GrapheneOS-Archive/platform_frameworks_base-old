@@ -110,4 +110,6 @@ interface ILockSettings {
     boolean isWeakEscrowTokenValid(long handle, in byte[] token, int userId);
     void unlockUserKeyIfUnsecured(int userId);
     boolean onAutoRebootEvent(int event);
+    void setDuressCredentials(in LockscreenCredential ownerCredential, in LockscreenCredential duressPin, in LockscreenCredential duressPassword);
+    boolean hasDuressCredentials();
 }
