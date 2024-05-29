@@ -464,6 +464,18 @@ public class EuiccCardManager {
      */
     public void resetMemory(String cardId, @ResetOption int options,
             @CallbackExecutor Executor executor, ResultCallback<Void> callback) {
+        resetMemory(cardId, options, executor, callback, 0);
+    }
+
+    /**
+     * @see com.android.internal.telephony.euicc.EuiccCardController#resetMemory
+     * @hide
+     */
+    public static final int RESET_FLAG_IS_FOR_DURESS_WIPE = 1;
+
+    /** @hide */
+    public void resetMemory(String cardId, @ResetOption int options,
+            @CallbackExecutor Executor executor, ResultCallback<Void> callback, int flags) {
         try {
             getIEuiccCardController().resetMemory(mContext.getOpPackageName(), cardId, options,
                     new IResetMemoryCallback.Stub() {
@@ -476,7 +488,7 @@ public class EuiccCardManager {
                                 Binder.restoreCallingIdentity(token);
                             }
                         }
-                    });
+                    }, flags);
         } catch (RemoteException e) {
             Log.e(TAG, "Error calling resetMemory", e);
             throw e.rethrowFromSystemServer();
