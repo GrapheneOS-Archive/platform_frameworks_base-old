@@ -1412,15 +1412,6 @@ class StorageManagerService extends IStorageManager.Stub
         @Override
         public void onDiskCreated(String diskId, int flags) {
             synchronized (mLock) {
-                final String value = SystemProperties.get(StorageManager.PROP_ADOPTABLE);
-                switch (value) {
-                    case "force_on":
-                        flags |= DiskInfo.FLAG_ADOPTABLE;
-                        break;
-                    case "force_off":
-                        flags &= ~DiskInfo.FLAG_ADOPTABLE;
-                        break;
-                }
                 mDisks.put(diskId, new DiskInfo(diskId, flags));
             }
         }
