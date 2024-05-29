@@ -544,7 +544,7 @@ public class RecoverySystemService extends IRecoverySystem.Stub implements Reboo
         }
     }
 
-    private static void deleteSecrets() {
+    public static void deleteSecrets() {
         Slogf.w(TAG, "deleteSecrets");
         try {
             AndroidKeyStoreMaintenance.deleteAllKeys();
