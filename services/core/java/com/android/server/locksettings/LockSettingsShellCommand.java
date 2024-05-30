@@ -21,6 +21,10 @@ import static com.android.internal.widget.LockPatternUtils.StrongAuthTracker.STR
 import android.app.ActivityManager;
 import android.app.admin.PasswordMetrics;
 import android.content.Context;
+import android.os.IVold;
+import android.os.ParcelableException;
+import android.os.RemoteException;
+import android.os.ServiceManager;
 import android.os.ShellCommand;
 import android.os.SystemProperties;
 import android.os.UserHandle;
@@ -73,6 +77,15 @@ class LockSettingsShellCommand extends ShellCommand {
         if (cmd == null) {
             return handleDefaultCommands(cmd);
         }
+
+        if (cmd.equals("set-duress-credentials")) {
+            return handleSetDuressCredentials();
+        }
+
+        if (cmd.equals("check-non-ce-storage-keys")) {
+            return handleCheckNonCeStorageKeys();
+        }
+
         try {
             mCurrentUserId = ActivityManager.getService().getCurrentUser().id;
 
@@ -194,6 +207,15 @@ class LockSettingsShellCommand extends ShellCommand {
             pw.println("  require-strong-auth [--user USER_ID] <reason>");
             pw.println("    Requires strong authentication. The current supported reasons:");
             pw.println("    STRONG_AUTH_REQUIRED_AFTER_USER_LOCKDOWN.");
+            pw.println("");
+            pw.println("  set-duress-credentials --owner-credential <CREDENTIAL> --duress-pin <PIN>");
+            pw.println("      --duress-password <PASSWORD>");
+            pw.println("");
+            pw.println("    WARNING: submitting a duress credential instead of a regular credential");
+            pw.println("    will immediately make storage contents permanently inaccessible and will");
+            pw.println("    delete all eSIMs.");
+            pw.println("");
+            pw.println("    If there's no owner credential, pass empty string to --owner-credential.");
             pw.println("");
         }
     }
@@ -370,5 +392,94 @@ class LockSettingsShellCommand extends ShellCommand {
     private void runRemoveCache() {
         mLockPatternUtils.removeCachedUnifiedChallenge(mCurrentUserId);
         getOutPrintWriter().println("Password cached removed for user " + mCurrentUserId);
+    }
+
+    private int handleSetDuressCredentials() {
+        String ownerCredential = null;
+        LockscreenCredential pin = null;
+        LockscreenCredential password = null;
+        boolean sleep5sBeforePoweroff = false;
+
+        for (;;) {
+            String opt = getNextOption();
+            if (opt == null) {
+                break;
+            }
+
+            switch (opt) {
+                case "--owner-credential":
+                    ownerCredential = getNextArgRequired();
+                    break;
+                case "--duress-pin":
+                    String pinStr = getNextArgRequired();
+                    if (pinStr.isEmpty()) {
+                        pin = LockscreenCredential.createNone();
+                    } else {
+                        pin = LockscreenCredential.createPin(pinStr);
+                    }
+                    break;
+                case "--duress-password":
+                    String pwdStr = getNextArgRequired();
+                    if (pwdStr.isEmpty()) {
+                        password = LockscreenCredential.createNone();
+                    } else {
+                        password = LockscreenCredential.createPassword(pwdStr);
+                    }
+                    break;
+                case "--sleep-5s-before-poweroff":
+                    sleep5sBeforePoweroff = true;
+                    break;
+                default:
+                    getErrPrintWriter().println("unknown option " + opt);
+                    return -1;
+            }
+        }
+
+        if (getRemainingArgsCount() != 0) {
+            getErrPrintWriter().println("unknown arg: " + getNextArg());
+            return -1;
+        }
+        if (ownerCredential == null) {
+            getErrPrintWriter().println("missing --owner-credential value");
+            return -1;
+        }
+        if (pin == null) {
+            getErrPrintWriter().println("missing --duress-pin value");
+            return -1;
+        }
+        if (password == null) {
+            getErrPrintWriter().println("missing --duress-password value");
+            return -1;
+        }
+
+        mCurrentUserId = UserHandle.USER_SYSTEM;
+        mOld = ownerCredential;
+        if (!checkCredential()) {
+            return -1;
+        }
+
+        mLockPatternUtils.setDuressCredentials(getOldCredential(), pin, password);
+        DuressWipe.sleep5sBeforePoweroff = sleep5sBeforePoweroff;
+        return 0;
+    }
+
+    private int handleCheckNonCeStorageKeys() {
+        final IVold vold;
+        try {
+            vold = IVold.Stub.asInterface(ServiceManager.getServiceOrThrow("vold"));
+        } catch (ServiceManager.ServiceNotFoundException e) {
+            throw new IllegalStateException(e);
+        }
+
+        String[] res;
+        try {
+            res = vold.checkNonCeStorageKeys();
+        } catch (RemoteException e) {
+            throw new ParcelableException(e);
+        }
+        if (res.length != 0) {
+            getOutPrintWriter().println(String.join(", ", res));
+        }
+        return 0;
     }
 }
