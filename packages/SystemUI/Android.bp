@@ -274,6 +274,7 @@ android_library {
     static_libs: [
         "SystemUI-res",
         "WifiTrackerLib",
+        "ReverseWirelessCharging",
         "SystemUIAnimationLib",
         "SystemUIPluginLib",
         "SystemUISharedLib",
