@@ -20,6 +20,7 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.app.ActivityManager;
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.text.TextUtils;
@@ -259,7 +260,9 @@ public final class PackageUtils {
         }
         PackageManager pm = ctx.getPackageManager();
         try {
-            return pm.getApplicationInfo(pkg, 0).isSystemApp();
+            ApplicationInfo appInfo = pm.getApplicationInfo(pkg, 0);
+            // even though getApplicationInfo() is @NonNull, it returns null in some tests
+            return appInfo != null && appInfo.isSystemApp();
         } catch (PackageManager.NameNotFoundException e) {
             return false;
         }
