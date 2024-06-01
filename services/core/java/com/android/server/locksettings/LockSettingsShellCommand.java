@@ -63,6 +63,7 @@ class LockSettingsShellCommand extends ShellCommand {
 
     private String mOld = "";
     private String mNew = "";
+    private boolean mCaptureWeaverOps;
 
     LockSettingsShellCommand(LockPatternUtils lockPatternUtils, Context context, int callingPid,
             int callingUid) {
@@ -86,10 +87,15 @@ class LockSettingsShellCommand extends ShellCommand {
             return handleCheckNonCeStorageKeys();
         }
 
+        WeaverOpCapturer.Session weaverOpCapture = null;
         try {
             mCurrentUserId = ActivityManager.getService().getCurrentUser().id;
 
             parseArgs();
+            if (mCaptureWeaverOps) {
+                weaverOpCapture = new WeaverOpCapturer.Session();
+            }
+
             if (!mLockPatternUtils.hasSecureLockScreen()) {
                 switch (cmd) {
                     case COMMAND_HELP:
@@ -155,6 +161,13 @@ class LockSettingsShellCommand extends ShellCommand {
             getErrPrintWriter().println("Error while executing command: " + cmd);
             e.printStackTrace(getErrPrintWriter());
             return -1;
+        } finally {
+            if (weaverOpCapture != null) {
+                weaverOpCapture.close();
+                for (WeaverOpCapturer.WeaverOp wo : weaverOpCapture.getCapturedOps()) {
+                    getOutPrintWriter().println(wo);
+                }
+            }
         }
     }
 
@@ -230,6 +243,8 @@ class LockSettingsShellCommand extends ShellCommand {
                 if (mCurrentUserId == UserHandle.USER_CURRENT) {
                     mCurrentUserId = ActivityManager.getCurrentUser();
                 }
+            } else if ("--capture-weaver-ops".equals(opt)) {
+                mCaptureWeaverOps = true;
             } else {
                 getErrPrintWriter().println("Unknown option: " + opt);
                 throw new IllegalArgumentException();
