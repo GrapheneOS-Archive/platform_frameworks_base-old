@@ -30,6 +30,7 @@ import static com.android.internal.widget.LockSettingsInternal.ARM_REBOOT_ERROR_
 import static com.android.internal.widget.LockSettingsInternal.ARM_REBOOT_ERROR_NO_PROVIDER;
 
 import android.annotation.IntDef;
+import android.annotation.Nullable;
 import android.apex.CompressedApexInfo;
 import android.apex.CompressedApexInfoList;
 import android.content.Context;
@@ -553,8 +554,14 @@ public class RecoverySystemService extends IRecoverySystem.Stub implements Reboo
         Slogf.w(TAG, "deleteSecrets");
         try {
             AndroidKeyStoreMaintenance.deleteAllKeys();
-        } catch (android.security.KeyStoreException e) {
-            Log.wtf(TAG, "Failed to delete all keys from keystore.", e);
+        } catch (Throwable e) {
+            Slog.e(TAG, "Failed to delete all keys from keystore.", e);
+        }
+
+        try {
+            ExtendedWipeWithoutReboot.run();
+        } catch (Throwable e) {
+            Slog.e(TAG, "ExtendedWipeWithoutReboot failed", e);
         }
     }
 
