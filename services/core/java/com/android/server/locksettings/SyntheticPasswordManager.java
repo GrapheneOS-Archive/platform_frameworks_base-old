@@ -649,6 +649,7 @@ class SyntheticPasswordManager {
 
         mWeaver = weaver;
         mWeaverConfig = weaverConfig;
+        Slog.d(TAG, "WeaverConfig.slots = " + weaverConfig.slots);
         mPasswordSlotManager.refreshActiveSlots(getUsedWeaverSlots());
         Slog.i(TAG, "Weaver service initialized");
         return weaver;
@@ -675,10 +676,13 @@ class SyntheticPasswordManager {
         }
         try {
             weaver.write(slot, key, value);
+            WeaverOpCapturer.onWrite(slot, key, value, null);
         } catch (RemoteException e) {
+            WeaverOpCapturer.onWrite(slot, key, value, e);
             Slog.e(TAG, "weaver write binder call failed, slot: " + slot, e);
             return null;
         } catch (ServiceSpecificException e) {
+            WeaverOpCapturer.onWrite(slot, key, value, e);
             Slog.e(TAG, "weaver write failed, slot: " + slot, e);
             return null;
         }
@@ -715,7 +719,9 @@ class SyntheticPasswordManager {
         final WeaverReadResponse readResponse;
         try {
             readResponse = weaver.read(slot, key);
+            WeaverOpCapturer.onRead(slot, key, readResponse, null);
         } catch (RemoteException e) {
+            WeaverOpCapturer.onRead(slot, key, null, e);
             Slog.e(TAG, "weaver read failed, slot: " + slot, e);
             return VerifyCredentialResponse.ERROR;
         }
