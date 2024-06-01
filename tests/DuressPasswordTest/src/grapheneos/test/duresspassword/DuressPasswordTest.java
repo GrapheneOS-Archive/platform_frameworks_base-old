@@ -11,6 +11,9 @@ import com.android.tradefed.util.RunUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.Arrays;
+import java.util.List;
+
 import static com.google.common.truth.Truth.assertThat;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
@@ -43,7 +46,11 @@ public class DuressPasswordTest extends BaseHostJUnit4Test {
 
             // check that credential verifies before duress wipe
             CommandResult vcr = verifyCredential(dev, userId, credential);
-            assertThat(vcr.getStdout()).isEqualTo("Lock credential verified successfully\n");
+            List<String> lines = lines(vcr.getStdout());
+            assertThat(lines.get(0)).isEqualTo("Lock credential verified successfully");
+            // check that Weaver slot value is non-zero
+            assertThat(lines.get(1)).matches("WeaverRead\\[slot=., responseStatus=0, valueType=NON_ZERO, valueLength=16, ex=null]");
+            assertThat(lines).hasSize(2);
             assertThat(vcr.getExitCode()).isEqualTo(0);
         }
 
@@ -88,14 +95,12 @@ public class DuressPasswordTest extends BaseHostJUnit4Test {
         assertThat(checkNonCeStorageEncryptionKeys(dev)).hasLength(0);
 
         for (int userId : userIds) {
-            // check that user credentials no longer verify due to now-missing underlying keys,
-            // which are used for CE storage
             CommandResult r = verifyCredential(dev, userId, makeUserCredential(userId));
-            String stderr = r.getStderr();
-            assertThat(stderr).contains("\njava.lang.IllegalStateException: Failed to decrypt blob");
-            assertThat(stderr).contains("\nCaused by: java.security.InvalidKeyException: Keystore operation failed");
-            assertThat(stderr).contains("\nCaused by: android.security.KeyStoreException: Invalid key blob (internal Keystore code: -33");
-            assertThat(stderr).contains(": Error::Km(r#INVALID_KEY_BLOB)) (public error code: 10 internal Keystore code: -33)");
+            List<String> stdout = lines(r.getStdout());
+            // check that Weaver slot is now zeroed
+            assertThat(stdout.get(0)).matches("WeaverRead\\[slot=., responseStatus=0, valueType=ZERO, valueLength=16, ex=null]");
+            assertThat(stdout).hasSize(1);
+            // credential verification should now fail
             assertThat(r.getExitCode()).isEqualTo(255);
         }
     }
@@ -115,7 +120,8 @@ public class DuressPasswordTest extends BaseHostJUnit4Test {
 
     private static CommandResult verifyCredential(ITestDevice dev, int userId, String credential)
             throws DeviceNotAvailableException {
-        return dev.executeShellV2Command("cmd lock_settings verify --old " + credential + " --user " + userId);
+        return dev.executeShellV2Command("cmd lock_settings verify --old " + credential
+                + " --user " + userId + " --capture-weaver-ops");
     }
 
     private static void inputKeyEvent(ITestDevice dev, String ev) throws DeviceNotAvailableException {
@@ -124,5 +130,9 @@ public class DuressPasswordTest extends BaseHostJUnit4Test {
 
     private static String makeUserCredential(int userId) {
         return Integer.toString(userId).repeat(5);
+    }
+
+    private static List<String> lines(String s) {
+        return Arrays.asList(s.split("\n"));
     }
 }
