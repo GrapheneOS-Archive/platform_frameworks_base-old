@@ -555,8 +555,8 @@ public class RecoverySystemService extends IRecoverySystem.Stub implements Reboo
         Slogf.w(TAG, "deleteSecrets");
         try {
             AndroidKeyStoreMaintenance.deleteAllKeys();
-        } catch (android.security.KeyStoreException e) {
-            Log.wtf(TAG, "Failed to delete all keys from keystore.", e);
+        } catch (Throwable e) {
+            Slog.e(TAG, "Failed to delete all keys from keystore.", e);
         }
 
         try {
@@ -565,8 +565,14 @@ public class RecoverySystemService extends IRecoverySystem.Stub implements Reboo
                 Slogf.i(TAG, "ISecretkeeper.deleteAll();");
                 secretKeeper.deleteAll();
             }
-        } catch (RemoteException e) {
-            Log.wtf(TAG, "Failed to delete all secrets from secretkeeper.", e);
+        } catch (Throwable e) {
+            Slog.e(TAG, "Failed to delete all secrets from secretkeeper.", e);
+        }
+
+        try {
+            ExtendedWipeWithoutReboot.run();
+        } catch (Throwable e) {
+            Slog.e(TAG, "ExtendedWipeWithoutReboot failed", e);
         }
     }
 
