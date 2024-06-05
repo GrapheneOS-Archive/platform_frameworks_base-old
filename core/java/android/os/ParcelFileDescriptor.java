@@ -46,6 +46,8 @@ import android.system.OsConstants;
 import android.system.StructStat;
 import android.util.Log;
 
+import com.android.internal.gmscompat.dynamite.GmsDynamiteClientHooks;
+
 import dalvik.system.CloseGuard;
 import dalvik.system.VMRuntime;
 
@@ -336,6 +338,14 @@ public class ParcelFileDescriptor implements Parcelable, Closeable {
         if ((mode & MODE_WORLD_WRITEABLE) != 0) realMode |= S_IWOTH;
 
         final String path = file.getPath();
+
+        if (GmsDynamiteClientHooks.enabled()) {
+            FileDescriptor override = GmsDynamiteClientHooks.openFileDescriptor(path);
+            if (override != null) {
+                return override;
+            }
+        }
+
         try {
             return Os.open(path, flags, realMode);
         } catch (ErrnoException e) {
