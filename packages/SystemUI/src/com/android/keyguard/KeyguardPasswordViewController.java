@@ -79,6 +79,8 @@ public class KeyguardPasswordViewController
 
     private final View.OnKeyListener mKeyListener = (v, keyCode, keyEvent) -> {
         final boolean isKeyboardEnterKey = keyEvent != null
+                // isConfirmKey() returns true for KEYCODE_SPACE
+                && keyCode != KeyEvent.KEYCODE_SPACE
                 && KeyEvent.isConfirmKey(keyCode)
                 && keyEvent.getAction() == KeyEvent.ACTION_UP;
         if (isKeyboardEnterKey) {
