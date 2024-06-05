@@ -17,13 +17,13 @@
 package com.android.internal.gmscompat.dynamite;
 
 import android.app.compat.gms.GmsCompat;
-import android.content.Context;
 import android.content.res.ApkAssets;
 import android.content.res.loader.AssetsProvider;
 import android.os.Environment;
-import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
 import android.os.RemoteException;
+import android.system.ErrnoException;
+import android.system.Os;
 import android.util.ArrayMap;
 import android.util.Log;
 
@@ -37,6 +37,8 @@ import java.io.IOException;
 import java.util.regex.Pattern;
 
 import dalvik.system.DelegateLastClassLoader;
+
+import static android.system.OsConstants.F_DUPFD_CLOEXEC;
 
 public final class GmsDynamiteClientHooks {
     static final String TAG = "GmsCompat/DynamiteClient";
@@ -127,6 +129,24 @@ public final class GmsDynamiteClientHooks {
         return 0L;
     }
 
+    public static FileDescriptor openFileDescriptor(String path) {
+        if (!path.startsWith(gmsCoreDataPrefix)) {
+            return null;
+        }
+
+        FileDescriptor fd = modulePathToFd(path);
+        int dupFd;
+        try {
+            dupFd = Os.fcntlInt(fd, F_DUPFD_CLOEXEC, 0);
+        } catch (ErrnoException e) {
+            throw new RuntimeException(e);
+        }
+
+        var dupJfd = new FileDescriptor();
+        dupJfd.setInt$(dupFd);
+        return dupJfd;
+    }
+
     // Replaces file paths of Dynamite modules with "/proc/self/fd" file descriptor references
     // DelegateLastClassLoader#maybeModifyClassLoaderPath(String, Boolean)
     public static String maybeModifyClassLoaderPath(String path, Boolean nativeLibsPathB) {
@@ -175,7 +195,7 @@ public final class GmsDynamiteClientHooks {
     // Returned file descriptor should never be closed, because it may be dup()-ed at any time by the native code
     private static FileDescriptor modulePathToFd(String path) {
         if (DEBUG) {
-            new Exception("path " + path).printStackTrace();
+            Log.d(TAG, "path " + path, new Throwable());
         }
         try {
             ArrayMap<String, ParcelFileDescriptor> cache = pfdCache;
