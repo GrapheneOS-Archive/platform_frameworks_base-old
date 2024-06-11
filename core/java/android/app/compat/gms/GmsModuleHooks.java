@@ -26,6 +26,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.os.Build;
 import android.os.RemoteException;
+import android.provider.Settings;
 import android.util.Log;
 
 import com.android.internal.gmscompat.GmsCompatApp;
@@ -117,4 +118,15 @@ public class GmsModuleHooks {
     }
 
     private GmsModuleHooks() {}
+
+    // NfcAdapter#enable()
+    public static void enableNfc() {
+        Activity activity = GmcActivityUtils.getMostRecentVisibleActivity();
+        if (activity != null) {
+            activity.runOnUiThread(() -> {
+                Intent i = new Intent(Settings.ACTION_NFC_SETTINGS);
+                activity.startActivity(i);
+            });
+        }
+    }
 }
