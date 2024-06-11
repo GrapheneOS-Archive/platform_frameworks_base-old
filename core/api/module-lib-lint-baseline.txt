@@ -1747,6 +1747,22 @@ UnflaggedApi: android.Manifest.permission#USE_REMOTE_AUTH:
     New API must be flagged with @FlaggedApi: field android.Manifest.permission.USE_REMOTE_AUTH
 UnflaggedApi: android.app.Activity#isResumed():
     New API must be flagged with @FlaggedApi: method android.app.Activity.isResumed()
+UnflaggedApi: android.app.compat.gms.GmsModuleHooks:
+    New API must be flagged with @FlaggedApi: class android.app.compat.gms.GmsModuleHooks
+UnflaggedApi: android.app.compat.gms.GmsModuleHooks#deviceConfigGetProperty(String, String):
+    New API must be flagged with @FlaggedApi: method android.app.compat.gms.GmsModuleHooks.deviceConfigGetProperty(String,String)
+UnflaggedApi: android.app.compat.gms.GmsModuleHooks#deviceConfigSetProperties(android.provider.DeviceConfig.Properties):
+    New API must be flagged with @FlaggedApi: method android.app.compat.gms.GmsModuleHooks.deviceConfigSetProperties(android.provider.DeviceConfig.Properties)
+UnflaggedApi: android.app.compat.gms.GmsModuleHooks#deviceConfigSetProperty(String, String, String):
+    New API must be flagged with @FlaggedApi: method android.app.compat.gms.GmsModuleHooks.deviceConfigSetProperty(String,String,String)
+UnflaggedApi: android.app.compat.gms.GmsModuleHooks#enableBluetoothAdapter():
+    New API must be flagged with @FlaggedApi: method android.app.compat.gms.GmsModuleHooks.enableBluetoothAdapter()
+UnflaggedApi: android.app.compat.gms.GmsModuleHooks#enableNfc():
+    New API must be flagged with @FlaggedApi: method android.app.compat.gms.GmsModuleHooks.enableNfc()
+UnflaggedApi: android.app.compat.gms.GmsModuleHooks#interceptSynchronousResultReceiverException(RuntimeException):
+    New API must be flagged with @FlaggedApi: method android.app.compat.gms.GmsModuleHooks.interceptSynchronousResultReceiverException(RuntimeException)
+UnflaggedApi: android.app.compat.gms.GmsModuleHooks#makeBluetoothAdapterDiscoverable():
+    New API must be flagged with @FlaggedApi: method android.app.compat.gms.GmsModuleHooks.makeBluetoothAdapterDiscoverable()
 UnflaggedApi: android.companion.CompanionDeviceManager#MESSAGE_REQUEST_CONTEXT_SYNC:
     New API must be flagged with @FlaggedApi: field android.companion.CompanionDeviceManager.MESSAGE_REQUEST_CONTEXT_SYNC
 UnflaggedApi: android.companion.CompanionDeviceManager#MESSAGE_REQUEST_PERMISSION_RESTORE:
@@ -1773,7 +1789,41 @@ UnflaggedApi: android.companion.CompanionDeviceManager.OnTransportsChangedListen
     New API must be flagged with @FlaggedApi: method android.companion.CompanionDeviceManager.OnTransportsChangedListener.onTransportsChanged(java.util.List<android.companion.AssociationInfo>)
 UnflaggedApi: android.content.Context#REMOTE_AUTH_SERVICE:
     New API must be flagged with @FlaggedApi: field android.content.Context.REMOTE_AUTH_SERVICE
+UnflaggedApi: android.ext.settings.ConnChecksSetting:
+    New API must be flagged with @FlaggedApi: class android.ext.settings.ConnChecksSetting
+UnflaggedApi: android.ext.settings.ConnChecksSetting#VAL_DEFAULT:
+    New API must be flagged with @FlaggedApi: field android.ext.settings.ConnChecksSetting.VAL_DEFAULT
+UnflaggedApi: android.ext.settings.ConnChecksSetting#VAL_DISABLED:
+    New API must be flagged with @FlaggedApi: field android.ext.settings.ConnChecksSetting.VAL_DISABLED
+UnflaggedApi: android.ext.settings.ConnChecksSetting#VAL_GRAPHENEOS:
+    New API must be flagged with @FlaggedApi: field android.ext.settings.ConnChecksSetting.VAL_GRAPHENEOS
+UnflaggedApi: android.ext.settings.ConnChecksSetting#VAL_STANDARD:
+    New API must be flagged with @FlaggedApi: field android.ext.settings.ConnChecksSetting.VAL_STANDARD
+UnflaggedApi: android.ext.settings.ConnChecksSetting#get():
+    New API must be flagged with @FlaggedApi: method android.ext.settings.ConnChecksSetting.get()
+UnflaggedApi: android.ext.settings.ConnChecksSetting#put(int):
+    New API must be flagged with @FlaggedApi: method android.ext.settings.ConnChecksSetting.put(int)
+UnflaggedApi: android.ext.settings.RemoteKeyProvisioningSettings:
+    New API must be flagged with @FlaggedApi: class android.ext.settings.RemoteKeyProvisioningSettings
+UnflaggedApi: android.ext.settings.RemoteKeyProvisioningSettings#GRAPHENEOS_PROXY:
+    New API must be flagged with @FlaggedApi: field android.ext.settings.RemoteKeyProvisioningSettings.GRAPHENEOS_PROXY
+UnflaggedApi: android.ext.settings.RemoteKeyProvisioningSettings#STANDARD_SERVER:
+    New API must be flagged with @FlaggedApi: field android.ext.settings.RemoteKeyProvisioningSettings.STANDARD_SERVER
+UnflaggedApi: android.ext.settings.RemoteKeyProvisioningSettings#getServerUrlOverride(android.content.Context):
+    New API must be flagged with @FlaggedApi: method android.ext.settings.RemoteKeyProvisioningSettings.getServerUrlOverride(android.content.Context)
+UnflaggedApi: android.ext.settings.WidevineProvisioningSettings:
+    New API must be flagged with @FlaggedApi: class android.ext.settings.WidevineProvisioningSettings
+UnflaggedApi: android.ext.settings.WidevineProvisioningSettings#WV_GRAPHENEOS_PROXY:
+    New API must be flagged with @FlaggedApi: field android.ext.settings.WidevineProvisioningSettings.WV_GRAPHENEOS_PROXY
+UnflaggedApi: android.ext.settings.WidevineProvisioningSettings#WV_STANDARD_SERVER:
+    New API must be flagged with @FlaggedApi: field android.ext.settings.WidevineProvisioningSettings.WV_STANDARD_SERVER
+UnflaggedApi: android.ext.settings.WidevineProvisioningSettings#getServerHostnameOverride(android.content.Context):
+    New API must be flagged with @FlaggedApi: method android.ext.settings.WidevineProvisioningSettings.getServerHostnameOverride(android.content.Context)
 UnflaggedApi: android.os.IpcDataCache#MODULE_TELEPHONY:
     New API must be flagged with @FlaggedApi: field android.os.IpcDataCache.MODULE_TELEPHONY
+UnflaggedApi: android.os.UserHandle#getUid(int, int):
+    New API must be flagged with @FlaggedApi: method android.os.UserHandle.getUid(int,int)
+UnflaggedApi: android.os.UserHandle#getUserId(int):
+    New API must be flagged with @FlaggedApi: method android.os.UserHandle.getUserId(int)
 UnflaggedApi: android.provider.Settings.Config#getAllStrings():
     New API must be flagged with @FlaggedApi: method android.provider.Settings.Config.getAllStrings()

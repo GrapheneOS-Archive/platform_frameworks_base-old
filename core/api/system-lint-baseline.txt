@@ -1921,6 +1921,8 @@ UnflaggedApi: android.Manifest.permission#ACCESS_SMARTSPACE:
     New API must be flagged with @FlaggedApi: field android.Manifest.permission.ACCESS_SMARTSPACE
 UnflaggedApi: android.Manifest.permission#ALWAYS_UPDATE_WALLPAPER:
     New API must be flagged with @FlaggedApi: field android.Manifest.permission.ALWAYS_UPDATE_WALLPAPER
+UnflaggedApi: android.Manifest.permission#BLUETOOTH_PRIVILEGED_ANDROID_AUTO:
+    New API must be flagged with @FlaggedApi: field android.Manifest.permission.BLUETOOTH_PRIVILEGED_ANDROID_AUTO
 UnflaggedApi: android.Manifest.permission#CAMERA_HEADLESS_SYSTEM_USER:
     New API must be flagged with @FlaggedApi: field android.Manifest.permission.CAMERA_HEADLESS_SYSTEM_USER
 UnflaggedApi: android.Manifest.permission#KEYPHRASE_ENROLLMENT_APPLICATION:
@@ -1935,18 +1937,198 @@ UnflaggedApi: android.Manifest.permission#REGISTER_NSD_OFFLOAD_ENGINE:
     New API must be flagged with @FlaggedApi: field android.Manifest.permission.REGISTER_NSD_OFFLOAD_ENGINE
 UnflaggedApi: android.Manifest.permission#REPORT_USAGE_STATS:
     New API must be flagged with @FlaggedApi: field android.Manifest.permission.REPORT_USAGE_STATS
+UnflaggedApi: android.Manifest.permission#WIFI_PRIVILEGED_ANDROID_AUTO:
+    New API must be flagged with @FlaggedApi: field android.Manifest.permission.WIFI_PRIVILEGED_ANDROID_AUTO
 UnflaggedApi: android.R.string#config_defaultRetailDemo:
     New API must be flagged with @FlaggedApi: field android.R.string.config_defaultRetailDemo
 UnflaggedApi: android.app.ActivityManager#getExternalHistoricalProcessStartReasons(String, int):
     New API must be flagged with @FlaggedApi: method android.app.ActivityManager.getExternalHistoricalProcessStartReasons(String,int)
 UnflaggedApi: android.app.AppOpsManager#OPSTR_RECEIVE_SANDBOX_TRIGGER_AUDIO:
     New API must be flagged with @FlaggedApi: field android.app.AppOpsManager.OPSTR_RECEIVE_SANDBOX_TRIGGER_AUDIO
+UnflaggedApi: android.app.StorageScope:
+    New API must be flagged with @FlaggedApi: class android.app.StorageScope
+UnflaggedApi: android.app.StorageScope#EXTERNAL_STORAGE_PROVIDER_METHOD_CONVERT_DOC_ID_TO_PATH:
+    New API must be flagged with @FlaggedApi: field android.app.StorageScope.EXTERNAL_STORAGE_PROVIDER_METHOD_CONVERT_DOC_ID_TO_PATH
+UnflaggedApi: android.app.StorageScope#FLAG_ALLOW_WRITES:
+    New API must be flagged with @FlaggedApi: field android.app.StorageScope.FLAG_ALLOW_WRITES
+UnflaggedApi: android.app.StorageScope#FLAG_IS_DIR:
+    New API must be flagged with @FlaggedApi: field android.app.StorageScope.FLAG_IS_DIR
+UnflaggedApi: android.app.StorageScope#MEDIA_PROVIDER_METHOD_INVALIDATE_MEDIA_PROVIDER_CACHE:
+    New API must be flagged with @FlaggedApi: field android.app.StorageScope.MEDIA_PROVIDER_METHOD_INVALIDATE_MEDIA_PROVIDER_CACHE
+UnflaggedApi: android.app.StorageScope#MEDIA_PROVIDER_METHOD_MEDIA_ID_TO_FILE_PATH:
+    New API must be flagged with @FlaggedApi: field android.app.StorageScope.MEDIA_PROVIDER_METHOD_MEDIA_ID_TO_FILE_PATH
+UnflaggedApi: android.app.StorageScope#StorageScope(String, int):
+    New API must be flagged with @FlaggedApi: constructor android.app.StorageScope(String,int)
+UnflaggedApi: android.app.StorageScope#createConfigActivityIntent(String):
+    New API must be flagged with @FlaggedApi: method android.app.StorageScope.createConfigActivityIntent(String)
+UnflaggedApi: android.app.StorageScope#deserializeArray(android.content.pm.GosPackageState):
+    New API must be flagged with @FlaggedApi: method android.app.StorageScope.deserializeArray(android.content.pm.GosPackageState)
+UnflaggedApi: android.app.StorageScope#flags:
+    New API must be flagged with @FlaggedApi: field android.app.StorageScope.flags
+UnflaggedApi: android.app.StorageScope#isDirectory():
+    New API must be flagged with @FlaggedApi: method android.app.StorageScope.isDirectory()
+UnflaggedApi: android.app.StorageScope#isFile():
+    New API must be flagged with @FlaggedApi: method android.app.StorageScope.isFile()
+UnflaggedApi: android.app.StorageScope#isWritable():
+    New API must be flagged with @FlaggedApi: method android.app.StorageScope.isWritable()
+UnflaggedApi: android.app.StorageScope#maxArrayLength():
+    New API must be flagged with @FlaggedApi: method android.app.StorageScope.maxArrayLength()
+UnflaggedApi: android.app.StorageScope#path:
+    New API must be flagged with @FlaggedApi: field android.app.StorageScope.path
+UnflaggedApi: android.app.StorageScope#serializeArray(android.app.StorageScope[]):
+    New API must be flagged with @FlaggedApi: method android.app.StorageScope.serializeArray(android.app.StorageScope[])
+UnflaggedApi: android.app.compat.gms.AndroidAuto:
+    New API must be flagged with @FlaggedApi: class android.app.compat.gms.AndroidAuto
+UnflaggedApi: android.app.compat.gms.AndroidAuto#PKG_FLAG_GRANT_AUDIO_ROUTING_PERM:
+    New API must be flagged with @FlaggedApi: field android.app.compat.gms.AndroidAuto.PKG_FLAG_GRANT_AUDIO_ROUTING_PERM
+UnflaggedApi: android.app.compat.gms.AndroidAuto#PKG_FLAG_GRANT_PERMS_FOR_ANDROID_AUTO_PHONE_CALLS:
+    New API must be flagged with @FlaggedApi: field android.app.compat.gms.AndroidAuto.PKG_FLAG_GRANT_PERMS_FOR_ANDROID_AUTO_PHONE_CALLS
+UnflaggedApi: android.app.compat.gms.AndroidAuto#PKG_FLAG_GRANT_PERMS_FOR_WIRED_ANDROID_AUTO:
+    New API must be flagged with @FlaggedApi: field android.app.compat.gms.AndroidAuto.PKG_FLAG_GRANT_PERMS_FOR_WIRED_ANDROID_AUTO
+UnflaggedApi: android.app.compat.gms.AndroidAuto#PKG_FLAG_GRANT_PERMS_FOR_WIRELESS_ANDROID_AUTO:
+    New API must be flagged with @FlaggedApi: field android.app.compat.gms.AndroidAuto.PKG_FLAG_GRANT_PERMS_FOR_WIRELESS_ANDROID_AUTO
+UnflaggedApi: android.app.compat.gms.GmsCompat:
+    New API must be flagged with @FlaggedApi: class android.app.compat.gms.GmsCompat
+UnflaggedApi: android.app.compat.gms.GmsCompat#hasPermission(String):
+    New API must be flagged with @FlaggedApi: method android.app.compat.gms.GmsCompat.hasPermission(String)
+UnflaggedApi: android.app.compat.gms.GmsCompat#isEnabled():
+    New API must be flagged with @FlaggedApi: method android.app.compat.gms.GmsCompat.isEnabled()
+UnflaggedApi: android.app.compat.gms.GmsCompat#isEnabledFor(String, int):
+    New API must be flagged with @FlaggedApi: method android.app.compat.gms.GmsCompat.isEnabledFor(String,int)
+UnflaggedApi: android.app.compat.gms.GmsCompat#isEnabledFor(android.content.pm.ApplicationInfo):
+    New API must be flagged with @FlaggedApi: method android.app.compat.gms.GmsCompat.isEnabledFor(android.content.pm.ApplicationInfo)
+UnflaggedApi: android.app.compat.gms.GmsCompat#isEnabledFor(int, boolean):
+    New API must be flagged with @FlaggedApi: method android.app.compat.gms.GmsCompat.isEnabledFor(int,boolean)
+UnflaggedApi: android.app.compat.gms.GmsUtils:
+    New API must be flagged with @FlaggedApi: class android.app.compat.gms.GmsUtils
+UnflaggedApi: android.app.compat.gms.GmsUtils#createAppPlayStoreIntent(String):
+    New API must be flagged with @FlaggedApi: method android.app.compat.gms.GmsUtils.createAppPlayStoreIntent(String)
 UnflaggedApi: android.companion.virtual.VirtualDeviceManager.VirtualDevice#getPersistentDeviceId():
     New API must be flagged with @FlaggedApi: method android.companion.virtual.VirtualDeviceManager.VirtualDevice.getPersistentDeviceId()
 UnflaggedApi: android.content.Context#THREAD_NETWORK_SERVICE:
     New API must be flagged with @FlaggedApi: field android.content.Context.THREAD_NETWORK_SERVICE
 UnflaggedApi: android.content.Intent#ACTION_UNARCHIVE_PACKAGE:
     New API must be flagged with @FlaggedApi: field android.content.Intent.ACTION_UNARCHIVE_PACKAGE
+UnflaggedApi: android.content.pm.AppPermissionUtils:
+    New API must be flagged with @FlaggedApi: class android.content.pm.AppPermissionUtils
+UnflaggedApi: android.content.pm.AppPermissionUtils#shouldSkipPermissionRequestDialog(android.content.pm.GosPackageState, String):
+    New API must be flagged with @FlaggedApi: method android.content.pm.AppPermissionUtils.shouldSkipPermissionRequestDialog(android.content.pm.GosPackageState,String)
+UnflaggedApi: android.content.pm.AppPermissionUtils#shouldSpoofPermissionRequestResult(android.content.pm.GosPackageState, String):
+    New API must be flagged with @FlaggedApi: method android.content.pm.AppPermissionUtils.shouldSpoofPermissionRequestResult(android.content.pm.GosPackageState,String)
+UnflaggedApi: android.content.pm.ApplicationInfo#ext():
+    New API must be flagged with @FlaggedApi: method android.content.pm.ApplicationInfo.ext()
+UnflaggedApi: android.content.pm.GosPackageState:
+    New API must be flagged with @FlaggedApi: class android.content.pm.GosPackageState
+UnflaggedApi: android.content.pm.GosPackageState#CREATOR:
+    New API must be flagged with @FlaggedApi: field android.content.pm.GosPackageState.CREATOR
+UnflaggedApi: android.content.pm.GosPackageState#DFLAGS_SET:
+    New API must be flagged with @FlaggedApi: field android.content.pm.GosPackageState.DFLAGS_SET
+UnflaggedApi: android.content.pm.GosPackageState#DFLAG_EXPECTS_ACCESS_TO_MEDIA_FILES_ONLY:
+    New API must be flagged with @FlaggedApi: field android.content.pm.GosPackageState.DFLAG_EXPECTS_ACCESS_TO_MEDIA_FILES_ONLY
+UnflaggedApi: android.content.pm.GosPackageState#DFLAG_EXPECTS_ALL_FILES_ACCESS:
+    New API must be flagged with @FlaggedApi: field android.content.pm.GosPackageState.DFLAG_EXPECTS_ALL_FILES_ACCESS
+UnflaggedApi: android.content.pm.GosPackageState#DFLAG_EXPECTS_LEGACY_EXTERNAL_STORAGE:
+    New API must be flagged with @FlaggedApi: field android.content.pm.GosPackageState.DFLAG_EXPECTS_LEGACY_EXTERNAL_STORAGE
+UnflaggedApi: android.content.pm.GosPackageState#DFLAG_EXPECTS_STORAGE_WRITE_ACCESS:
+    New API must be flagged with @FlaggedApi: field android.content.pm.GosPackageState.DFLAG_EXPECTS_STORAGE_WRITE_ACCESS
+UnflaggedApi: android.content.pm.GosPackageState#DFLAG_HAS_ACCESS_MEDIA_LOCATION_DECLARATION:
+    New API must be flagged with @FlaggedApi: field android.content.pm.GosPackageState.DFLAG_HAS_ACCESS_MEDIA_LOCATION_DECLARATION
+UnflaggedApi: android.content.pm.GosPackageState#DFLAG_HAS_GET_ACCOUNTS_DECLARATION:
+    New API must be flagged with @FlaggedApi: field android.content.pm.GosPackageState.DFLAG_HAS_GET_ACCOUNTS_DECLARATION
+UnflaggedApi: android.content.pm.GosPackageState#DFLAG_HAS_MANAGE_EXTERNAL_STORAGE_DECLARATION:
+    New API must be flagged with @FlaggedApi: field android.content.pm.GosPackageState.DFLAG_HAS_MANAGE_EXTERNAL_STORAGE_DECLARATION
+UnflaggedApi: android.content.pm.GosPackageState#DFLAG_HAS_MANAGE_MEDIA_DECLARATION:
+    New API must be flagged with @FlaggedApi: field android.content.pm.GosPackageState.DFLAG_HAS_MANAGE_MEDIA_DECLARATION
+UnflaggedApi: android.content.pm.GosPackageState#DFLAG_HAS_READ_CONTACTS_DECLARATION:
+    New API must be flagged with @FlaggedApi: field android.content.pm.GosPackageState.DFLAG_HAS_READ_CONTACTS_DECLARATION
+UnflaggedApi: android.content.pm.GosPackageState#DFLAG_HAS_READ_EXTERNAL_STORAGE_DECLARATION:
+    New API must be flagged with @FlaggedApi: field android.content.pm.GosPackageState.DFLAG_HAS_READ_EXTERNAL_STORAGE_DECLARATION
+UnflaggedApi: android.content.pm.GosPackageState#DFLAG_HAS_READ_MEDIA_AUDIO_DECLARATION:
+    New API must be flagged with @FlaggedApi: field android.content.pm.GosPackageState.DFLAG_HAS_READ_MEDIA_AUDIO_DECLARATION
+UnflaggedApi: android.content.pm.GosPackageState#DFLAG_HAS_READ_MEDIA_IMAGES_DECLARATION:
+    New API must be flagged with @FlaggedApi: field android.content.pm.GosPackageState.DFLAG_HAS_READ_MEDIA_IMAGES_DECLARATION
+UnflaggedApi: android.content.pm.GosPackageState#DFLAG_HAS_READ_MEDIA_VIDEO_DECLARATION:
+    New API must be flagged with @FlaggedApi: field android.content.pm.GosPackageState.DFLAG_HAS_READ_MEDIA_VIDEO_DECLARATION
+UnflaggedApi: android.content.pm.GosPackageState#DFLAG_HAS_READ_MEDIA_VISUAL_USER_SELECTED_DECLARATION:
+    New API must be flagged with @FlaggedApi: field android.content.pm.GosPackageState.DFLAG_HAS_READ_MEDIA_VISUAL_USER_SELECTED_DECLARATION
+UnflaggedApi: android.content.pm.GosPackageState#DFLAG_HAS_WRITE_CONTACTS_DECLARATION:
+    New API must be flagged with @FlaggedApi: field android.content.pm.GosPackageState.DFLAG_HAS_WRITE_CONTACTS_DECLARATION
+UnflaggedApi: android.content.pm.GosPackageState#DFLAG_HAS_WRITE_EXTERNAL_STORAGE_DECLARATION:
+    New API must be flagged with @FlaggedApi: field android.content.pm.GosPackageState.DFLAG_HAS_WRITE_EXTERNAL_STORAGE_DECLARATION
+UnflaggedApi: android.content.pm.GosPackageState#EDITOR_FLAG_KILL_UID_AFTER_APPLY:
+    New API must be flagged with @FlaggedApi: field android.content.pm.GosPackageState.EDITOR_FLAG_KILL_UID_AFTER_APPLY
+UnflaggedApi: android.content.pm.GosPackageState#EDITOR_FLAG_NOTIFY_UID_AFTER_APPLY:
+    New API must be flagged with @FlaggedApi: field android.content.pm.GosPackageState.EDITOR_FLAG_NOTIFY_UID_AFTER_APPLY
+UnflaggedApi: android.content.pm.GosPackageState#FLAG_ALLOW_ACCESS_TO_OBB_DIRECTORY:
+    New API must be flagged with @FlaggedApi: field android.content.pm.GosPackageState.FLAG_ALLOW_ACCESS_TO_OBB_DIRECTORY
+UnflaggedApi: android.content.pm.GosPackageState#FLAG_CONTACT_SCOPES_ENABLED:
+    New API must be flagged with @FlaggedApi: field android.content.pm.GosPackageState.FLAG_CONTACT_SCOPES_ENABLED
+UnflaggedApi: android.content.pm.GosPackageState#FLAG_STORAGE_SCOPES_ENABLED:
+    New API must be flagged with @FlaggedApi: field android.content.pm.GosPackageState.FLAG_STORAGE_SCOPES_ENABLED
+UnflaggedApi: android.content.pm.GosPackageState#attachableToPackage(String):
+    New API must be flagged with @FlaggedApi: method android.content.pm.GosPackageState.attachableToPackage(String)
+UnflaggedApi: android.content.pm.GosPackageState#derivedFlags:
+    New API must be flagged with @FlaggedApi: field android.content.pm.GosPackageState.derivedFlags
+UnflaggedApi: android.content.pm.GosPackageState#describeContents():
+    New API must be flagged with @FlaggedApi: method android.content.pm.GosPackageState.describeContents()
+UnflaggedApi: android.content.pm.GosPackageState#edit():
+    New API must be flagged with @FlaggedApi: method android.content.pm.GosPackageState.edit()
+UnflaggedApi: android.content.pm.GosPackageState#edit(String):
+    New API must be flagged with @FlaggedApi: method android.content.pm.GosPackageState.edit(String)
+UnflaggedApi: android.content.pm.GosPackageState#edit(String, int):
+    New API must be flagged with @FlaggedApi: method android.content.pm.GosPackageState.edit(String,int)
+UnflaggedApi: android.content.pm.GosPackageState#get(String):
+    New API must be flagged with @FlaggedApi: method android.content.pm.GosPackageState.get(String)
+UnflaggedApi: android.content.pm.GosPackageState#get(String, int):
+    New API must be flagged with @FlaggedApi: method android.content.pm.GosPackageState.get(String,int)
+UnflaggedApi: android.content.pm.GosPackageState#getForSelf():
+    New API must be flagged with @FlaggedApi: method android.content.pm.GosPackageState.getForSelf()
+UnflaggedApi: android.content.pm.GosPackageState#getOrDefault(String):
+    New API must be flagged with @FlaggedApi: method android.content.pm.GosPackageState.getOrDefault(String)
+UnflaggedApi: android.content.pm.GosPackageState#getOrDefault(String, int):
+    New API must be flagged with @FlaggedApi: method android.content.pm.GosPackageState.getOrDefault(String,int)
+UnflaggedApi: android.content.pm.GosPackageState#getPackageName():
+    New API must be flagged with @FlaggedApi: method android.content.pm.GosPackageState.getPackageName()
+UnflaggedApi: android.content.pm.GosPackageState#getUserId():
+    New API must be flagged with @FlaggedApi: method android.content.pm.GosPackageState.getUserId()
+UnflaggedApi: android.content.pm.GosPackageState#hasDerivedFlag(int):
+    New API must be flagged with @FlaggedApi: method android.content.pm.GosPackageState.hasDerivedFlag(int)
+UnflaggedApi: android.content.pm.GosPackageState#hasDerivedFlags(int):
+    New API must be flagged with @FlaggedApi: method android.content.pm.GosPackageState.hasDerivedFlags(int)
+UnflaggedApi: android.content.pm.GosPackageState#hasFlag(int):
+    New API must be flagged with @FlaggedApi: method android.content.pm.GosPackageState.hasFlag(int)
+UnflaggedApi: android.content.pm.GosPackageState#hasFlags(int):
+    New API must be flagged with @FlaggedApi: method android.content.pm.GosPackageState.hasFlags(int)
+UnflaggedApi: android.content.pm.GosPackageState#hasPackageFlags(long):
+    New API must be flagged with @FlaggedApi: method android.content.pm.GosPackageState.hasPackageFlags(long)
+UnflaggedApi: android.content.pm.GosPackageState#writeToParcel(android.os.Parcel, int):
+    New API must be flagged with @FlaggedApi: method android.content.pm.GosPackageState.writeToParcel(android.os.Parcel,int)
+UnflaggedApi: android.content.pm.GosPackageState.Editor:
+    New API must be flagged with @FlaggedApi: class android.content.pm.GosPackageState.Editor
+UnflaggedApi: android.content.pm.GosPackageState.Editor#addFlags(int):
+    New API must be flagged with @FlaggedApi: method android.content.pm.GosPackageState.Editor.addFlags(int)
+UnflaggedApi: android.content.pm.GosPackageState.Editor#addPackageFlags(long):
+    New API must be flagged with @FlaggedApi: method android.content.pm.GosPackageState.Editor.addPackageFlags(long)
+UnflaggedApi: android.content.pm.GosPackageState.Editor#apply():
+    New API must be flagged with @FlaggedApi: method android.content.pm.GosPackageState.Editor.apply()
+UnflaggedApi: android.content.pm.GosPackageState.Editor#clearFlags(int):
+    New API must be flagged with @FlaggedApi: method android.content.pm.GosPackageState.Editor.clearFlags(int)
+UnflaggedApi: android.content.pm.GosPackageState.Editor#clearPackageFlags(long):
+    New API must be flagged with @FlaggedApi: method android.content.pm.GosPackageState.Editor.clearPackageFlags(long)
+UnflaggedApi: android.content.pm.GosPackageState.Editor#killUidAfterApply():
+    New API must be flagged with @FlaggedApi: method android.content.pm.GosPackageState.Editor.killUidAfterApply()
+UnflaggedApi: android.content.pm.GosPackageState.Editor#setContactScopes(byte[]):
+    New API must be flagged with @FlaggedApi: method android.content.pm.GosPackageState.Editor.setContactScopes(byte[])
+UnflaggedApi: android.content.pm.GosPackageState.Editor#setFlagsState(int, boolean):
+    New API must be flagged with @FlaggedApi: method android.content.pm.GosPackageState.Editor.setFlagsState(int,boolean)
+UnflaggedApi: android.content.pm.GosPackageState.Editor#setKillUidAfterApply(boolean):
+    New API must be flagged with @FlaggedApi: method android.content.pm.GosPackageState.Editor.setKillUidAfterApply(boolean)
+UnflaggedApi: android.content.pm.GosPackageState.Editor#setNotifyUidAfterApply(boolean):
+    New API must be flagged with @FlaggedApi: method android.content.pm.GosPackageState.Editor.setNotifyUidAfterApply(boolean)
+UnflaggedApi: android.content.pm.GosPackageState.Editor#setPackageFlagState(long, boolean):
+    New API must be flagged with @FlaggedApi: method android.content.pm.GosPackageState.Editor.setPackageFlagState(long,boolean)
+UnflaggedApi: android.content.pm.GosPackageState.Editor#setStorageScopes(byte[]):
+    New API must be flagged with @FlaggedApi: method android.content.pm.GosPackageState.Editor.setStorageScopes(byte[])
 UnflaggedApi: android.content.pm.PackageInstaller#readInstallInfo(android.os.ParcelFileDescriptor, String, int):
     New API must be flagged with @FlaggedApi: method android.content.pm.PackageInstaller.readInstallInfo(android.os.ParcelFileDescriptor,String,int)
 UnflaggedApi: android.content.pm.PackageInstaller.InstallInfo#calculateInstalledSize(android.content.pm.PackageInstaller.SessionParams, android.os.ParcelFileDescriptor):
@@ -1957,6 +2139,164 @@ UnflaggedApi: android.content.pm.PackageManager#EXTRA_REQUEST_PERMISSIONS_DEVICE
     New API must be flagged with @FlaggedApi: field android.content.pm.PackageManager.EXTRA_REQUEST_PERMISSIONS_DEVICE_ID
 UnflaggedApi: android.content.pm.PackageManager#MATCH_ARCHIVED_PACKAGES:
     New API must be flagged with @FlaggedApi: field android.content.pm.PackageManager.MATCH_ARCHIVED_PACKAGES
+UnflaggedApi: android.content.pm.PackageManager#sendBootCompletedBroadcastToPackage(String, boolean, int):
+    New API must be flagged with @FlaggedApi: method android.content.pm.PackageManager.sendBootCompletedBroadcastToPackage(String,boolean,int)
+UnflaggedApi: android.content.pm.SpecialRuntimePermAppUtils:
+    New API must be flagged with @FlaggedApi: class android.content.pm.SpecialRuntimePermAppUtils
+UnflaggedApi: android.content.pm.SpecialRuntimePermAppUtils#isInternetCompatEnabled():
+    New API must be flagged with @FlaggedApi: method android.content.pm.SpecialRuntimePermAppUtils.isInternetCompatEnabled()
+UnflaggedApi: android.ext.AppInfoExt:
+    New API must be flagged with @FlaggedApi: class android.ext.AppInfoExt
+UnflaggedApi: android.ext.AppInfoExt#AppInfoExt(int, int, long):
+    New API must be flagged with @FlaggedApi: constructor android.ext.AppInfoExt(int,int,long)
+UnflaggedApi: android.ext.AppInfoExt#CREATOR:
+    New API must be flagged with @FlaggedApi: field android.ext.AppInfoExt.CREATOR
+UnflaggedApi: android.ext.AppInfoExt#FLAG_HAS_GMSCORE_CLIENT_LIBRARY:
+    New API must be flagged with @FlaggedApi: field android.ext.AppInfoExt.FLAG_HAS_GMSCORE_CLIENT_LIBRARY
+UnflaggedApi: android.ext.AppInfoExt#describeContents():
+    New API must be flagged with @FlaggedApi: method android.ext.AppInfoExt.describeContents()
+UnflaggedApi: android.ext.AppInfoExt#getPackageId():
+    New API must be flagged with @FlaggedApi: method android.ext.AppInfoExt.getPackageId()
+UnflaggedApi: android.ext.AppInfoExt#hasCompatChange(int):
+    New API must be flagged with @FlaggedApi: method android.ext.AppInfoExt.hasCompatChange(int)
+UnflaggedApi: android.ext.AppInfoExt#hasCompatConfig():
+    New API must be flagged with @FlaggedApi: method android.ext.AppInfoExt.hasCompatConfig()
+UnflaggedApi: android.ext.AppInfoExt#hasFlag(int):
+    New API must be flagged with @FlaggedApi: method android.ext.AppInfoExt.hasFlag(int)
+UnflaggedApi: android.ext.AppInfoExt#writeToParcel(android.os.Parcel, int):
+    New API must be flagged with @FlaggedApi: method android.ext.AppInfoExt.writeToParcel(android.os.Parcel,int)
+UnflaggedApi: android.ext.PackageId:
+    New API must be flagged with @FlaggedApi: class android.ext.PackageId
+UnflaggedApi: android.ext.PackageId#ANDROID_AUTO:
+    New API must be flagged with @FlaggedApi: field android.ext.PackageId.ANDROID_AUTO
+UnflaggedApi: android.ext.PackageId#ANDROID_AUTO_NAME:
+    New API must be flagged with @FlaggedApi: field android.ext.PackageId.ANDROID_AUTO_NAME
+UnflaggedApi: android.ext.PackageId#EUICC_SUPPORT_PIXEL:
+    New API must be flagged with @FlaggedApi: field android.ext.PackageId.EUICC_SUPPORT_PIXEL
+UnflaggedApi: android.ext.PackageId#EUICC_SUPPORT_PIXEL_NAME:
+    New API must be flagged with @FlaggedApi: field android.ext.PackageId.EUICC_SUPPORT_PIXEL_NAME
+UnflaggedApi: android.ext.PackageId#GMS_CORE:
+    New API must be flagged with @FlaggedApi: field android.ext.PackageId.GMS_CORE
+UnflaggedApi: android.ext.PackageId#GMS_CORE_NAME:
+    New API must be flagged with @FlaggedApi: field android.ext.PackageId.GMS_CORE_NAME
+UnflaggedApi: android.ext.PackageId#GSF:
+    New API must be flagged with @FlaggedApi: field android.ext.PackageId.GSF
+UnflaggedApi: android.ext.PackageId#GSF_NAME:
+    New API must be flagged with @FlaggedApi: field android.ext.PackageId.GSF_NAME
+UnflaggedApi: android.ext.PackageId#G_CAMERA:
+    New API must be flagged with @FlaggedApi: field android.ext.PackageId.G_CAMERA
+UnflaggedApi: android.ext.PackageId#G_CAMERA_NAME:
+    New API must be flagged with @FlaggedApi: field android.ext.PackageId.G_CAMERA_NAME
+UnflaggedApi: android.ext.PackageId#G_CARRIER_SETTINGS:
+    New API must be flagged with @FlaggedApi: field android.ext.PackageId.G_CARRIER_SETTINGS
+UnflaggedApi: android.ext.PackageId#G_CARRIER_SETTINGS_NAME:
+    New API must be flagged with @FlaggedApi: field android.ext.PackageId.G_CARRIER_SETTINGS_NAME
+UnflaggedApi: android.ext.PackageId#G_EUICC_LPA:
+    New API must be flagged with @FlaggedApi: field android.ext.PackageId.G_EUICC_LPA
+UnflaggedApi: android.ext.PackageId#G_EUICC_LPA_NAME:
+    New API must be flagged with @FlaggedApi: field android.ext.PackageId.G_EUICC_LPA_NAME
+UnflaggedApi: android.ext.PackageId#G_SEARCH_APP:
+    New API must be flagged with @FlaggedApi: field android.ext.PackageId.G_SEARCH_APP
+UnflaggedApi: android.ext.PackageId#G_SEARCH_APP_NAME:
+    New API must be flagged with @FlaggedApi: field android.ext.PackageId.G_SEARCH_APP_NAME
+UnflaggedApi: android.ext.PackageId#PIXEL_CAMERA_SERVICES:
+    New API must be flagged with @FlaggedApi: field android.ext.PackageId.PIXEL_CAMERA_SERVICES
+UnflaggedApi: android.ext.PackageId#PIXEL_CAMERA_SERVICES_NAME:
+    New API must be flagged with @FlaggedApi: field android.ext.PackageId.PIXEL_CAMERA_SERVICES_NAME
+UnflaggedApi: android.ext.PackageId#PLAY_STORE:
+    New API must be flagged with @FlaggedApi: field android.ext.PackageId.PLAY_STORE
+UnflaggedApi: android.ext.PackageId#PLAY_STORE_NAME:
+    New API must be flagged with @FlaggedApi: field android.ext.PackageId.PLAY_STORE_NAME
+UnflaggedApi: android.ext.PackageId#TYCHO:
+    New API must be flagged with @FlaggedApi: field android.ext.PackageId.TYCHO
+UnflaggedApi: android.ext.PackageId#TYCHO_NAME:
+    New API must be flagged with @FlaggedApi: field android.ext.PackageId.TYCHO_NAME
+UnflaggedApi: android.ext.PackageId#UNKNOWN:
+    New API must be flagged with @FlaggedApi: field android.ext.PackageId.UNKNOWN
+UnflaggedApi: android.ext.cscopes.ContactScope:
+    New API must be flagged with @FlaggedApi: class android.ext.cscopes.ContactScope
+UnflaggedApi: android.ext.cscopes.ContactScope#CREATOR:
+    New API must be flagged with @FlaggedApi: field android.ext.cscopes.ContactScope.CREATOR
+UnflaggedApi: android.ext.cscopes.ContactScope#ContactScope(int, long, String, String, android.net.Uri):
+    New API must be flagged with @FlaggedApi: constructor android.ext.cscopes.ContactScope(int,long,String,String,android.net.Uri)
+UnflaggedApi: android.ext.cscopes.ContactScope#TYPE_CONTACT:
+    New API must be flagged with @FlaggedApi: field android.ext.cscopes.ContactScope.TYPE_CONTACT
+UnflaggedApi: android.ext.cscopes.ContactScope#TYPE_COUNT:
+    New API must be flagged with @FlaggedApi: field android.ext.cscopes.ContactScope.TYPE_COUNT
+UnflaggedApi: android.ext.cscopes.ContactScope#TYPE_EMAIL:
+    New API must be flagged with @FlaggedApi: field android.ext.cscopes.ContactScope.TYPE_EMAIL
+UnflaggedApi: android.ext.cscopes.ContactScope#TYPE_GROUP:
+    New API must be flagged with @FlaggedApi: field android.ext.cscopes.ContactScope.TYPE_GROUP
+UnflaggedApi: android.ext.cscopes.ContactScope#TYPE_NUMBER:
+    New API must be flagged with @FlaggedApi: field android.ext.cscopes.ContactScope.TYPE_NUMBER
+UnflaggedApi: android.ext.cscopes.ContactScope#describeContents():
+    New API must be flagged with @FlaggedApi: method android.ext.cscopes.ContactScope.describeContents()
+UnflaggedApi: android.ext.cscopes.ContactScope#detailsUri:
+    New API must be flagged with @FlaggedApi: field android.ext.cscopes.ContactScope.detailsUri
+UnflaggedApi: android.ext.cscopes.ContactScope#id:
+    New API must be flagged with @FlaggedApi: field android.ext.cscopes.ContactScope.id
+UnflaggedApi: android.ext.cscopes.ContactScope#summary:
+    New API must be flagged with @FlaggedApi: field android.ext.cscopes.ContactScope.summary
+UnflaggedApi: android.ext.cscopes.ContactScope#title:
+    New API must be flagged with @FlaggedApi: field android.ext.cscopes.ContactScope.title
+UnflaggedApi: android.ext.cscopes.ContactScope#type:
+    New API must be flagged with @FlaggedApi: field android.ext.cscopes.ContactScope.type
+UnflaggedApi: android.ext.cscopes.ContactScope#writeToParcel(android.os.Parcel, int):
+    New API must be flagged with @FlaggedApi: method android.ext.cscopes.ContactScope.writeToParcel(android.os.Parcel,int)
+UnflaggedApi: android.ext.cscopes.ContactScopesApi:
+    New API must be flagged with @FlaggedApi: class android.ext.cscopes.ContactScopesApi
+UnflaggedApi: android.ext.cscopes.ContactScopesApi#ACTION_NOTIFY_CONTENT_OBSERVERS:
+    New API must be flagged with @FlaggedApi: field android.ext.cscopes.ContactScopesApi.ACTION_NOTIFY_CONTENT_OBSERVERS
+UnflaggedApi: android.ext.cscopes.ContactScopesApi#KEY_IDS:
+    New API must be flagged with @FlaggedApi: field android.ext.cscopes.ContactScopesApi.KEY_IDS
+UnflaggedApi: android.ext.cscopes.ContactScopesApi#KEY_RESULT:
+    New API must be flagged with @FlaggedApi: field android.ext.cscopes.ContactScopesApi.KEY_RESULT
+UnflaggedApi: android.ext.cscopes.ContactScopesApi#KEY_URIS:
+    New API must be flagged with @FlaggedApi: field android.ext.cscopes.ContactScopesApi.KEY_URIS
+UnflaggedApi: android.ext.cscopes.ContactScopesApi#METHOD_GET_GROUPS:
+    New API must be flagged with @FlaggedApi: field android.ext.cscopes.ContactScopesApi.METHOD_GET_GROUPS
+UnflaggedApi: android.ext.cscopes.ContactScopesApi#METHOD_GET_IDS_FROM_URIS:
+    New API must be flagged with @FlaggedApi: field android.ext.cscopes.ContactScopesApi.METHOD_GET_IDS_FROM_URIS
+UnflaggedApi: android.ext.cscopes.ContactScopesApi#METHOD_GET_VIEW_MODEL:
+    New API must be flagged with @FlaggedApi: field android.ext.cscopes.ContactScopesApi.METHOD_GET_VIEW_MODEL
+UnflaggedApi: android.ext.cscopes.ContactScopesApi#SCOPED_CONTACTS_PROVIDER_AUTHORITY:
+    New API must be flagged with @FlaggedApi: field android.ext.cscopes.ContactScopesApi.SCOPED_CONTACTS_PROVIDER_AUTHORITY
+UnflaggedApi: android.ext.cscopes.ContactScopesApi#createConfigActivityIntent(String):
+    New API must be flagged with @FlaggedApi: method android.ext.cscopes.ContactScopesApi.createConfigActivityIntent(String)
+UnflaggedApi: android.ext.cscopes.ContactScopesStorage:
+    New API must be flagged with @FlaggedApi: class android.ext.cscopes.ContactScopesStorage
+UnflaggedApi: android.ext.cscopes.ContactScopesStorage#MAX_COUNT_PER_PACKAGE:
+    New API must be flagged with @FlaggedApi: field android.ext.cscopes.ContactScopesStorage.MAX_COUNT_PER_PACKAGE
+UnflaggedApi: android.ext.cscopes.ContactScopesStorage#add(int, long):
+    New API must be flagged with @FlaggedApi: method android.ext.cscopes.ContactScopesStorage.add(int,long)
+UnflaggedApi: android.ext.cscopes.ContactScopesStorage#deserialize(android.content.pm.GosPackageState):
+    New API must be flagged with @FlaggedApi: method android.ext.cscopes.ContactScopesStorage.deserialize(android.content.pm.GosPackageState)
+UnflaggedApi: android.ext.cscopes.ContactScopesStorage#getCount():
+    New API must be flagged with @FlaggedApi: method android.ext.cscopes.ContactScopesStorage.getCount()
+UnflaggedApi: android.ext.cscopes.ContactScopesStorage#getIds(int):
+    New API must be flagged with @FlaggedApi: method android.ext.cscopes.ContactScopesStorage.getIds(int)
+UnflaggedApi: android.ext.cscopes.ContactScopesStorage#isEmpty(android.content.pm.GosPackageState):
+    New API must be flagged with @FlaggedApi: method android.ext.cscopes.ContactScopesStorage.isEmpty(android.content.pm.GosPackageState)
+UnflaggedApi: android.ext.cscopes.ContactScopesStorage#remove(int, long):
+    New API must be flagged with @FlaggedApi: method android.ext.cscopes.ContactScopesStorage.remove(int,long)
+UnflaggedApi: android.ext.cscopes.ContactScopesStorage#serialize():
+    New API must be flagged with @FlaggedApi: method android.ext.cscopes.ContactScopesStorage.serialize()
+UnflaggedApi: android.ext.cscopes.ContactsGroup:
+    New API must be flagged with @FlaggedApi: class android.ext.cscopes.ContactsGroup
+UnflaggedApi: android.ext.cscopes.ContactsGroup#CREATOR:
+    New API must be flagged with @FlaggedApi: field android.ext.cscopes.ContactsGroup.CREATOR
+UnflaggedApi: android.ext.cscopes.ContactsGroup#ContactsGroup(long, String, String):
+    New API must be flagged with @FlaggedApi: constructor android.ext.cscopes.ContactsGroup(long,String,String)
+UnflaggedApi: android.ext.cscopes.ContactsGroup#describeContents():
+    New API must be flagged with @FlaggedApi: method android.ext.cscopes.ContactsGroup.describeContents()
+UnflaggedApi: android.ext.cscopes.ContactsGroup#id:
+    New API must be flagged with @FlaggedApi: field android.ext.cscopes.ContactsGroup.id
+UnflaggedApi: android.ext.cscopes.ContactsGroup#summary:
+    New API must be flagged with @FlaggedApi: field android.ext.cscopes.ContactsGroup.summary
+UnflaggedApi: android.ext.cscopes.ContactsGroup#title:
+    New API must be flagged with @FlaggedApi: field android.ext.cscopes.ContactsGroup.title
+UnflaggedApi: android.ext.cscopes.ContactsGroup#writeToParcel(android.os.Parcel, int):
+    New API must be flagged with @FlaggedApi: method android.ext.cscopes.ContactsGroup.writeToParcel(android.os.Parcel,int)
 UnflaggedApi: android.media.audiopolicy.AudioMix#CREATOR:
     New API must be flagged with @FlaggedApi: field android.media.audiopolicy.AudioMix.CREATOR
 UnflaggedApi: android.media.audiopolicy.AudioMix#describeContents():
@@ -1983,8 +2323,14 @@ UnflaggedApi: android.nfc.cardemulation.NfcFServiceInfo#CONTENTS_FILE_DESCRIPTOR
     New API must be flagged with @FlaggedApi: field android.nfc.cardemulation.NfcFServiceInfo.CONTENTS_FILE_DESCRIPTOR
 UnflaggedApi: android.nfc.cardemulation.NfcFServiceInfo#PARCELABLE_WRITE_RETURN_VALUE:
     New API must be flagged with @FlaggedApi: field android.nfc.cardemulation.NfcFServiceInfo.PARCELABLE_WRITE_RETURN_VALUE
+UnflaggedApi: android.os.BaseBundle#getBoolean2(String):
+    New API must be flagged with @FlaggedApi: method android.os.BaseBundle.getBoolean2(String)
+UnflaggedApi: android.os.BaseBundle#getNumber(String):
+    New API must be flagged with @FlaggedApi: method android.os.BaseBundle.getNumber(String)
 UnflaggedApi: android.os.BugreportParams#BUGREPORT_MODE_ONBOARDING:
     New API must be flagged with @FlaggedApi: field android.os.BugreportParams.BUGREPORT_MODE_ONBOARDING
+UnflaggedApi: android.permission.PermissionManager#updatePermissionState(String, int):
+    New API must be flagged with @FlaggedApi: method android.permission.PermissionManager.updatePermissionState(String,int)
 UnflaggedApi: android.provider.Settings#ACTION_APP_PERMISSIONS_SETTINGS:
     New API must be flagged with @FlaggedApi: field android.provider.Settings.ACTION_APP_PERMISSIONS_SETTINGS
 UnflaggedApi: android.provider.Settings.System#putString(android.content.ContentResolver, String, String, boolean, boolean):

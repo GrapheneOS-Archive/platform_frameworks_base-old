@@ -1109,6 +1109,12 @@ Todo: android.provider.ContactsContract.RawContacts#newEntityIterator(android.da
     Documentation mentions 'TODO'
 
 
+UnflaggedApi: android.Manifest.permission#OTHER_SENSORS:
+    New API must be flagged with @FlaggedApi: field android.Manifest.permission.OTHER_SENSORS
+UnflaggedApi: android.Manifest.permission_group#NETWORK:
+    New API must be flagged with @FlaggedApi: field android.Manifest.permission_group.NETWORK
+UnflaggedApi: android.Manifest.permission_group#OTHER_SENSORS:
+    New API must be flagged with @FlaggedApi: field android.Manifest.permission_group.OTHER_SENSORS
 UnflaggedApi: android.R.color#on_surface_disabled_material:
     New API must be flagged with @FlaggedApi: field android.R.color.on_surface_disabled_material
 UnflaggedApi: android.R.color#outline_disabled_material:
@@ -1461,7 +1467,6 @@ UnflaggedApi: android.graphics.text.PositionedGlyphs#getItalicOverride(int):
     New API must be flagged with @FlaggedApi: method android.graphics.text.PositionedGlyphs.getItalicOverride(int)
 UnflaggedApi: android.graphics.text.PositionedGlyphs#getWeightOverride(int):
     New API must be flagged with @FlaggedApi: method android.graphics.text.PositionedGlyphs.getWeightOverride(int)
-
 UnflaggedApi: android.hardware.camera2.ExtensionCaptureRequest:
     New API must be flagged with @FlaggedApi: class android.hardware.camera2.ExtensionCaptureRequest
 UnflaggedApi: android.hardware.camera2.ExtensionCaptureRequest#ExtensionCaptureRequest():
