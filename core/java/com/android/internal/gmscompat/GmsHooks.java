@@ -63,7 +63,6 @@ import com.android.internal.gmscompat.flags.GmsFlag;
 import com.android.internal.gmscompat.gcarriersettings.GCarrierSettingsApp;
 import com.android.internal.gmscompat.gcarriersettings.TestCarrierConfigService;
 import com.android.internal.gmscompat.sysservice.GmcPackageManager;
-import com.android.internal.gmscompat.util.GmcActivityUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -534,17 +533,6 @@ public final class GmsHooks {
         // "Nearby devices" user-facing permission grants multiple underlying permissions,
         // checking one is enough
         return GmsCompat.hasPermission(Manifest.permission.BLUETOOTH_SCAN);
-    }
-
-    // NfcAdapter#enable()
-    public static void enableNfc() {
-        Activity activity = GmcActivityUtils.getMostRecentVisibleActivity();
-        if (activity != null) {
-            activity.runOnUiThread(() -> {
-                Intent i = new Intent(Settings.ACTION_NFC_SETTINGS);
-                activity.startActivity(i);
-            });
-        }
     }
 
     // ContextImpl#sendBroadcast
