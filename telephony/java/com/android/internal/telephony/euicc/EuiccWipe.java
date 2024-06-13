@@ -42,7 +42,7 @@ public class EuiccWipe {
 
         for (UiccSlotInfo usi : usiArr) {
             Log.d(TAG, "processing " + usi);
-            if (!usi.getIsEuicc()) {
+            if (usi == null || !usi.getIsEuicc()) {
                 continue;
             }
 
