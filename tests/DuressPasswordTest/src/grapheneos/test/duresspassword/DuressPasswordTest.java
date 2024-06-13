@@ -49,7 +49,7 @@ public class DuressPasswordTest extends BaseHostJUnit4Test {
             List<String> lines = lines(vcr.getStdout());
             assertThat(lines.get(0)).isEqualTo("Lock credential verified successfully");
             // check that Weaver slot value is non-zero
-            assertThat(lines.get(1)).matches("WeaverRead\\[slot=., responseStatus=0, valueType=NON_ZERO, valueLength=16, ex=null]");
+            assertThat(lines.get(1)).matches("WeaverOpCapturer\\$WeaverRead\\[slot=., responseStatus=0, valueType=NON_ZERO, valueLength=16, ex=null]");
             assertThat(lines).hasSize(2);
             assertThat(vcr.getExitCode()).isEqualTo(0);
         }
@@ -98,7 +98,7 @@ public class DuressPasswordTest extends BaseHostJUnit4Test {
             CommandResult r = verifyCredential(dev, userId, makeUserCredential(userId));
             List<String> stdout = lines(r.getStdout());
             // check that Weaver slot is now zeroed
-            assertThat(stdout.get(0)).matches("WeaverRead\\[slot=., responseStatus=0, valueType=ZERO, valueLength=16, ex=null]");
+            assertThat(stdout.get(0)).matches("WeaverOpCapturer\\$WeaverRead\\[slot=., responseStatus=0, valueType=ZERO, valueLength=16, ex=null]");
             assertThat(stdout).hasSize(1);
             // credential verification should now fail
             assertThat(r.getExitCode()).isEqualTo(255);
