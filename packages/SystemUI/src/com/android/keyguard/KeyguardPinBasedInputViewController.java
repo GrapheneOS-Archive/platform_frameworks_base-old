@@ -19,6 +19,8 @@ package com.android.keyguard;
 import static com.android.systemui.Flags.pinInputFieldStyledFocusState;
 import static com.android.systemui.util.kotlin.JavaAdapterKt.collectFlow;
 
+import android.content.Context;
+import android.ext.settings.ExtSettings;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.StateListDrawable;
@@ -84,6 +86,10 @@ public abstract class KeyguardPinBasedInputViewController<T extends KeyguardPinB
         mFalsingCollector = falsingCollector;
         mKeyguardKeyboardInteractor = keyguardKeyboardInteractor;
         mPasswordEntry = mView.findViewById(mView.getPasswordTextViewId());
+
+        Context ctx = view.getContext().getApplicationContext();
+        int userId = mSelectedUserInteractor.getSelectedUserId();
+        view.setupPinScrambling(ExtSettings.SCRAMBLE_PIN_LAYOUT.get(ctx, userId));
     }
 
     @Override
