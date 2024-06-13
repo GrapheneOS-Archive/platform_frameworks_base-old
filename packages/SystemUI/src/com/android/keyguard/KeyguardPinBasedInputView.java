@@ -35,7 +35,6 @@ import android.content.Context;
 import android.ext.settings.ExtSettings;
 import android.graphics.Rect;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 
@@ -199,8 +198,6 @@ public abstract class KeyguardPinBasedInputView extends KeyguardAbsKeyInputView 
         mPasswordEntry.requestFocus();
         super.onFinishInflate();
         reloadColors();
-
-        updateScrambling();
     }
 
     NumPadKey[] getButtons() {
@@ -273,10 +270,7 @@ public abstract class KeyguardPinBasedInputView extends KeyguardAbsKeyInputView 
 
     private final int[] digitToViewIndexMap = new int[mButtons.length];
 
-    void updateScrambling() {
-        boolean scramblePin = ExtSettings.SCRAMBLE_PIN_LAYOUT.get(mContext,
-                KeyguardUpdateMonitor.getCurrentUser());
-
+    void setupPinScrambling(boolean enabled) {
         NumPadKey[] buttons = mButtons;
         int numButtons = buttons.length;
 
@@ -286,7 +280,7 @@ public abstract class KeyguardPinBasedInputView extends KeyguardAbsKeyInputView 
             digits.add(i);
         }
 
-        if (scramblePin) {
+        if (enabled) {
             Collections.shuffle(digits, secureRandom);
         }
 
