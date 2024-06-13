@@ -253,10 +253,6 @@ public class PackageManagerLocalImpl implements PackageManagerLocal {
 
         Slog.d(TAG, "msg: " + msg);
 
-        if (true) {
-            return;
-        }
-
         try {
             ActivityManager.getService().showBootMessage(msg, true);
         } catch (RemoteException e) {
