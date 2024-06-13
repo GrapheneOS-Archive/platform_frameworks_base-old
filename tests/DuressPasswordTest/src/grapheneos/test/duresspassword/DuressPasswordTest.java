@@ -34,6 +34,13 @@ public class DuressPasswordTest extends BaseHostJUnit4Test {
         ITestDevice dev = getDevice();
         assertThat(dev.waitForBootComplete(MINUTES.toMillis(5))).isTrue();
 
+        IRunUtil runUtil = RunUtil.getDefault();
+
+        // wake up the device before setting PIN/password, otherwise lockscreen would not be active
+        // later on in the test
+        inputKeyEvent(dev, "WAKEUP");
+        runUtil.sleep(1000);
+
         final int secondaryUserId = dev.createUser("SecondaryUser");
 
         int[] userIds = { 0, secondaryUserId };
@@ -71,8 +78,6 @@ public class DuressPasswordTest extends BaseHostJUnit4Test {
                     + " --sleep-5s-before-poweroff";
             assertThat(dev.executeShellV2Command(cmd).getExitCode()).isEqualTo(0);
         }
-
-        IRunUtil runUtil = RunUtil.getDefault();
 
         // put device to sleep
         inputKeyEvent(dev, "SLEEP");
