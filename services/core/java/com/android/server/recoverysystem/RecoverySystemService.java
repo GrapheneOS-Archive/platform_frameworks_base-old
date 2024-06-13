@@ -560,19 +560,19 @@ public class RecoverySystemService extends IRecoverySystem.Stub implements Reboo
         }
 
         try {
-            ExtendedWipeWithoutReboot.run();
-        } catch (Throwable e) {
-            Slog.e(TAG, "ExtendedWipeWithoutReboot failed", e);
-        }
-
-        try {
             ISecretkeeper secretKeeper = getSecretKeeper();
             if (secretKeeper != null) {
                 Slogf.i(TAG, "ISecretkeeper.deleteAll();");
                 secretKeeper.deleteAll();
             }
-        } catch (RemoteException e) {
-            Log.wtf(TAG, "Failed to delete all secrets from secretkeeper.", e);
+        } catch (Throwable e) {
+            Slog.e(TAG, "Failed to delete all secrets from secretkeeper.", e);
+        }
+
+        try {
+            ExtendedWipeWithoutReboot.run();
+        } catch (Throwable e) {
+            Slog.e(TAG, "ExtendedWipeWithoutReboot failed", e);
         }
     }
 
