@@ -5,6 +5,7 @@ import static android.provider.Settings.Global.AIRPLANE_MODE_ON;
 import static android.telephony.SignalStrength.NUM_SIGNAL_STRENGTH_BINS;
 import static android.telephony.SignalStrength.SIGNAL_STRENGTH_GREAT;
 import static android.telephony.SignalStrength.SIGNAL_STRENGTH_POOR;
+
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.mockitoSession;
 import static com.android.settingslib.wifi.WifiUtils.getHotspotIconResource;
 import static com.android.systemui.qs.tiles.dialog.InternetDialogController.TOAST_PARAMS_HORIZONTAL_WEIGHT;
@@ -12,7 +13,9 @@ import static com.android.systemui.qs.tiles.dialog.InternetDialogController.TOAS
 import static com.android.wifitrackerlib.WifiEntry.WIFI_LEVEL_MAX;
 import static com.android.wifitrackerlib.WifiEntry.WIFI_LEVEL_MIN;
 import static com.android.wifitrackerlib.WifiEntry.WIFI_LEVEL_UNREACHABLE;
+
 import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -98,7 +101,7 @@ import java.util.Map;
 @SmallTest
 @RunWith(AndroidTestingRunner.class)
 @TestableLooper.RunWithLooper(setAsMainLooper = true)
-public class InternetDialogDelegateControllerTest extends SysuiTestCase {
+public class InternetDialogControllerTest extends SysuiTestCase {
 
     private static final int SUB_ID = 1;
     private static final int SUB_ID2 = 2;
