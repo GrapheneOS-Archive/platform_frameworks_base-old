@@ -281,7 +281,7 @@ public class TombstoneHandler {
             boolean ignoreSetting = !isHistorical && isMemtagError(tombstone);
             showReportButton = ignoreSetting && !shouldSkip;
 
-            if (shouldSkip) {
+            if (shouldSkip || (!ignoreSetting && !ExtSettings.SHOW_SYSTEM_PROCESS_CRASH_NOTIFICATIONS.get(ctx))) {
                 Slog.d(TAG, "skipped crash notification for " + progName + "; msg: " + msg);
                 return;
             }

@@ -273,7 +273,9 @@ public class DropBoxMonitor {
                 }
             }
 
-            showCrashNotif(e, "Kernel", String.join("\n", lines), false);
+            if (ExtSettings.SHOW_SYSTEM_PROCESS_CRASH_NOTIFICATIONS.get(context)) {
+                showCrashNotif(e, "Kernel", String.join("\n", lines), false);
+            }
         }
     }
 
