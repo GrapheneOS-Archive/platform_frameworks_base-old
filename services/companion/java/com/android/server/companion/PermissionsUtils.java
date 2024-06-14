@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.server.companion.utils;
+package com.android.server.companion;
 
 import static android.Manifest.permission.INTERACT_ACROSS_USERS;
 import static android.Manifest.permission.MANAGE_COMPANION_DEVICES;
@@ -75,22 +75,16 @@ public final class PermissionsUtils {
         DEVICE_PROFILE_TO_PERMISSION = unmodifiableMap(map);
     }
 
-    /**
-     * Require the app to declare necessary permission for creating association.
-     */
-    public static void enforcePermissionForCreatingAssociation(@NonNull Context context,
+    static void enforcePermissionsForAssociation(@NonNull Context context,
             @NonNull AssociationRequest request, int packageUid) {
-        enforcePermissionForRequestingProfile(context, request.getDeviceProfile(), packageUid);
+        enforceRequestDeviceProfilePermissions(context, request.getDeviceProfile(), packageUid);
 
         if (request.isSelfManaged()) {
-            enforcePermissionForRequestingSelfManaged(context, packageUid);
+            enforceRequestSelfManagedPermission(context, packageUid);
         }
     }
 
-    /**
-     * Require the app to declare necessary permission for creating association with profile.
-     */
-    public static void enforcePermissionForRequestingProfile(
+    static void enforceRequestDeviceProfilePermissions(
             @NonNull Context context, @Nullable String deviceProfile, int packageUid) {
         // Device profile can be null.
         if (deviceProfile == null) return;
@@ -107,11 +101,7 @@ public final class PermissionsUtils {
         }
     }
 
-    /**
-     * Require the app to declare necessary permission for creating self-managed association.
-     */
-    public static void enforcePermissionForRequestingSelfManaged(@NonNull Context context,
-            int packageUid) {
+    static void enforceRequestSelfManagedPermission(@NonNull Context context, int packageUid) {
         if (context.checkPermission(REQUEST_COMPANION_SELF_MANAGED, getCallingPid(), packageUid)
                 != PERMISSION_GRANTED) {
             throw new SecurityException("Application does not hold "
@@ -119,39 +109,25 @@ public final class PermissionsUtils {
         }
     }
 
-    /**
-     * Check if the caller can interact with the user.
-     */
-    public static boolean checkCallerCanInteractWithUserId(@NonNull Context context, int userId) {
+    static boolean checkCallerCanInteractWithUserId(@NonNull Context context, int userId) {
         if (getCallingUserId() == userId) return true;
 
         return context.checkCallingPermission(INTERACT_ACROSS_USERS) == PERMISSION_GRANTED;
     }
 
-    /**
-     * Require the caller to be able to interact with the user.
-     */
-    public static void enforceCallerCanInteractWithUserId(@NonNull Context context, int userId) {
+    static void enforceCallerCanInteractWithUserId(@NonNull Context context, int userId) {
         if (getCallingUserId() == userId) return;
 
         context.enforceCallingPermission(INTERACT_ACROSS_USERS, null);
     }
 
-    /**
-     * Require the caller to be system UID or to be able to interact with the user.
-     */
-    public static void enforceCallerIsSystemOrCanInteractWithUserId(@NonNull Context context,
-            int userId) {
+    static void enforceCallerIsSystemOrCanInteractWithUserId(@NonNull Context context, int userId) {
         if (getCallingUid() == SYSTEM_UID) return;
 
         enforceCallerCanInteractWithUserId(context, userId);
     }
 
-    /**
-     * Check if the caller is system UID or the provided user.
-     */
-    public static boolean checkCallerIsSystemOr(@UserIdInt int userId,
-            @NonNull String packageName) {
+    static boolean checkCallerIsSystemOr(@UserIdInt int userId, @NonNull String packageName) {
         final int callingUid = getCallingUid();
         if (callingUid == SYSTEM_UID) return true;
 
@@ -182,19 +158,13 @@ public final class PermissionsUtils {
         }
     }
 
-    /**
-     * Check if the caller holds the necessary permission to manage companion devices.
-     */
-    public static boolean checkCallerCanManageCompanionDevice(@NonNull Context context) {
+    static boolean checkCallerCanManageCompanionDevice(@NonNull Context context) {
         if (getCallingUid() == SYSTEM_UID) return true;
 
         return context.checkCallingPermission(MANAGE_COMPANION_DEVICES) == PERMISSION_GRANTED;
     }
 
-    /**
-     * Require the caller to be able to manage the associations for the package.
-     */
-    public static void enforceCallerCanManageAssociationsForPackage(@NonNull Context context,
+    static void enforceCallerCanManageAssociationsForPackage(@NonNull Context context,
             @UserIdInt int userId, @NonNull String packageName,
             @Nullable String actionDescription) {
         if (checkCallerCanManageAssociationsForPackage(context, userId, packageName)) return;
@@ -205,10 +175,7 @@ public final class PermissionsUtils {
                 + " for u" + userId + "/" + packageName);
     }
 
-    /**
-     * Require the caller to hold necessary permission to observe device presence by UUID.
-     */
-    public static void enforceCallerCanObservingDevicePresenceByUuid(@NonNull Context context) {
+    static void enforceCallerCanObservingDevicePresenceByUuid(@NonNull Context context) {
         if (context.checkCallingPermission(REQUEST_OBSERVE_DEVICE_UUID_PRESENCE)
                 != PERMISSION_GRANTED) {
             throw new SecurityException("Caller (uid=" + getCallingUid() + ") does not have "
@@ -226,7 +193,7 @@ public final class PermissionsUtils {
      * </ul>
      * @return whether the caller is one of the above.
      */
-    public static boolean checkCallerCanManageAssociationsForPackage(@NonNull Context context,
+    static boolean checkCallerCanManageAssociationsForPackage(@NonNull Context context,
             @UserIdInt int userId, @NonNull String packageName) {
         if (checkCallerIsSystemOr(userId, packageName)) return true;
 
