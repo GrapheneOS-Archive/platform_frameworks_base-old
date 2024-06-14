@@ -25,12 +25,12 @@ import static android.content.ComponentName.createRelative;
 import static android.content.pm.PackageManager.FEATURE_WATCH;
 
 import static com.android.server.companion.CompanionDeviceManagerService.DEBUG;
-import static com.android.server.companion.utils.MetricUtils.logCreateAssociation;
-import static com.android.server.companion.utils.PackageUtils.enforceUsesCompanionDeviceFeature;
-import static com.android.server.companion.utils.PermissionsUtils.enforcePermissionForCreatingAssociation;
-import static com.android.server.companion.utils.RolesUtils.addRoleHolderForAssociation;
-import static com.android.server.companion.utils.RolesUtils.isRoleHolder;
-import static com.android.server.companion.utils.Utils.prepareForIpc;
+import static com.android.server.companion.MetricUtils.logCreateAssociation;
+import static com.android.server.companion.PackageUtils.enforceUsesCompanionDeviceFeature;
+import static com.android.server.companion.PermissionsUtils.enforcePermissionsForAssociation;
+import static com.android.server.companion.RolesUtils.addRoleHolderForAssociation;
+import static com.android.server.companion.RolesUtils.isRoleHolder;
+import static com.android.server.companion.Utils.prepareForIpc;
 
 import static com.android.server.pm.ext.AndroidAutoHooks.isAndroidAutoWithGrantedBasePrivPerms;
 import static java.util.Objects.requireNonNull;
@@ -60,7 +60,6 @@ import android.os.UserHandle;
 import android.util.Slog;
 
 import com.android.internal.R;
-import com.android.server.companion.utils.PackageUtils;
 
 import java.util.List;
 
@@ -169,7 +168,7 @@ class AssociationRequestsProcessor {
         }
 
         // 1. Enforce permissions and other requirements.
-        enforcePermissionForCreatingAssociation(mContext, request, packageUid);
+        enforcePermissionsForAssociation(mContext, request, packageUid);
         enforceUsesCompanionDeviceFeature(mContext, userId, packageName);
 
         final boolean shouldSkipAddRoleHolderCheck =
@@ -263,7 +262,7 @@ class AssociationRequestsProcessor {
         // 1. Need to check permissions again in case something changed, since we first received
         // this request.
         try {
-            enforcePermissionForCreatingAssociation(mContext, request, packageUid);
+            enforcePermissionsForAssociation(mContext, request, packageUid);
         } catch (SecurityException e) {
             // Since, at this point the caller is our own UI, we need to catch the exception on
             // forward it back to the application via the callback.
@@ -331,9 +330,6 @@ class AssociationRequestsProcessor {
         // If it is null, then the operation will succeed without granting any role.
         addRoleHolderForAssociation(mService.getContext(), association, success -> {
             if (success) {
-                Slog.i(TAG, "Added " + association.getDeviceProfile() + " role to userId="
-                        + association.getUserId() + ", packageName="
-                        + association.getPackageName());
                 addAssociationToStore(association);
                 sendCallbackAndFinish(association, callback, resultReceiver);
             } else {

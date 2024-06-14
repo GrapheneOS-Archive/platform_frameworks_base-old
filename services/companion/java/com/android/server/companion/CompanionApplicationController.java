@@ -38,9 +38,6 @@ import android.util.SparseArray;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.infra.PerUser;
 import com.android.server.companion.presence.CompanionDevicePresenceMonitor;
-import com.android.server.companion.presence.ObservableUuid;
-import com.android.server.companion.presence.ObservableUuidStore;
-import com.android.server.companion.utils.PackageUtils;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -64,7 +61,7 @@ import java.util.Map;
  * <ul>
  * <li> {@link #bindCompanionApplication(int, String, boolean)}
  * <li> {@link #unbindCompanionApplication(int, String)}
- * <li> {@link #notifyCompanionDevicePresenceEvent(AssociationInfo, int)}
+ * <li> {@link #notifyCompanionApplicationDevicePresenceEvent(AssociationInfo, int)}
  * <li> {@link #isCompanionApplicationBound(int, String)}
  * <li> {@link #isRebindingCompanionApplicationScheduled(int, String)}
  * </ul>
@@ -254,13 +251,7 @@ public class CompanionApplicationController {
         serviceConnector.connect();
     }
 
-    /**
-     * Notify the app that the device appeared.
-     *
-     * @deprecated use {@link #notifyCompanionDevicePresenceEvent(AssociationInfo, int)} instead
-     */
-    @Deprecated
-    public void notifyCompanionApplicationDeviceAppeared(AssociationInfo association) {
+    void notifyCompanionApplicationDeviceAppeared(AssociationInfo association) {
         final int userId = association.getUserId();
         final String packageName = association.getPackageName();
 
@@ -282,13 +273,7 @@ public class CompanionApplicationController {
         primaryServiceConnector.postOnDeviceAppeared(association);
     }
 
-    /**
-     * Notify the app that the device disappeared.
-     *
-     * @deprecated use {@link #notifyCompanionDevicePresenceEvent(AssociationInfo, int)} instead
-     */
-    @Deprecated
-    public void notifyCompanionApplicationDeviceDisappeared(AssociationInfo association) {
+    void notifyCompanionApplicationDeviceDisappeared(AssociationInfo association) {
         final int userId = association.getUserId();
         final String packageName = association.getPackageName();
 
@@ -310,10 +295,7 @@ public class CompanionApplicationController {
         primaryServiceConnector.postOnDeviceDisappeared(association);
     }
 
-    /**
-     * Notify the app that the device appeared.
-     */
-    public void notifyCompanionDevicePresenceEvent(AssociationInfo association, int event) {
+    void notifyCompanionApplicationDevicePresenceEvent(AssociationInfo association, int event) {
         final int userId = association.getUserId();
         final String packageName = association.getPackageName();
         final CompanionDeviceServiceConnector primaryServiceConnector =
@@ -336,10 +318,7 @@ public class CompanionApplicationController {
         primaryServiceConnector.postOnDevicePresenceEvent(devicePresenceEvent);
     }
 
-    /**
-     * Notify the app that the device disappeared.
-     */
-    public void notifyUuidDevicePresenceEvent(ObservableUuid uuid, int event) {
+    void notifyApplicationDevicePresenceEvent(ObservableUuid uuid, int event) {
         final int userId = uuid.getUserId();
         final ParcelUuid parcelUuid = uuid.getUuid();
         final String packageName = uuid.getPackageName();

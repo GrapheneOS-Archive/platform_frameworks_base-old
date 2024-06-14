@@ -38,15 +38,15 @@ import static com.android.internal.util.CollectionUtils.any;
 import static com.android.internal.util.Preconditions.checkState;
 import static com.android.internal.util.function.pooled.PooledLambda.obtainMessage;
 import static com.android.server.companion.AssociationStore.CHANGE_TYPE_UPDATED_ADDRESS_UNCHANGED;
-import static com.android.server.companion.utils.PackageUtils.isRestrictedSettingsAllowed;
-import static com.android.server.companion.utils.PackageUtils.enforceUsesCompanionDeviceFeature;
-import static com.android.server.companion.utils.PackageUtils.getPackageInfo;
-import static com.android.server.companion.utils.PermissionsUtils.checkCallerCanManageCompanionDevice;
-import static com.android.server.companion.utils.PermissionsUtils.enforceCallerCanManageAssociationsForPackage;
-import static com.android.server.companion.utils.PermissionsUtils.enforceCallerCanObservingDevicePresenceByUuid;
-import static com.android.server.companion.utils.PermissionsUtils.enforceCallerIsSystemOr;
-import static com.android.server.companion.utils.PermissionsUtils.enforceCallerIsSystemOrCanInteractWithUserId;
-import static com.android.server.companion.utils.PermissionsUtils.sanitizeWithCallerChecks;
+import static com.android.server.companion.PackageUtils.isRestrictedSettingsAllowed;
+import static com.android.server.companion.PackageUtils.enforceUsesCompanionDeviceFeature;
+import static com.android.server.companion.PackageUtils.getPackageInfo;
+import static com.android.server.companion.PermissionsUtils.checkCallerCanManageCompanionDevice;
+import static com.android.server.companion.PermissionsUtils.enforceCallerCanManageAssociationsForPackage;
+import static com.android.server.companion.PermissionsUtils.enforceCallerCanObservingDevicePresenceByUuid;
+import static com.android.server.companion.PermissionsUtils.enforceCallerIsSystemOr;
+import static com.android.server.companion.PermissionsUtils.enforceCallerIsSystemOrCanInteractWithUserId;
+import static com.android.server.companion.PermissionsUtils.sanitizeWithCallerChecks;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.TimeUnit.DAYS;
@@ -123,8 +123,6 @@ import com.android.server.companion.datatransfer.contextsync.CrossDeviceCall;
 import com.android.server.companion.datatransfer.contextsync.CrossDeviceSyncController;
 import com.android.server.companion.datatransfer.contextsync.CrossDeviceSyncControllerCallback;
 import com.android.server.companion.presence.CompanionDevicePresenceMonitor;
-import com.android.server.companion.presence.ObservableUuid;
-import com.android.server.companion.presence.ObservableUuidStore;
 import com.android.server.companion.transport.CompanionTransportManager;
 import com.android.server.pm.UserManagerInternal;
 import com.android.server.wm.ActivityTaskManagerInternal;
@@ -437,7 +435,7 @@ public class CompanionDeviceManagerService extends SystemService {
 
                 bindApplicationIfNeeded(association);
 
-                mCompanionAppController.notifyCompanionDevicePresenceEvent(
+                mCompanionAppController.notifyCompanionApplicationDevicePresenceEvent(
                         association, event);
                 break;
             case EVENT_BLE_DISAPPEARED:
@@ -448,7 +446,7 @@ public class CompanionDeviceManagerService extends SystemService {
                     return;
                 }
                 if (association.shouldBindWhenPresent()) {
-                    mCompanionAppController.notifyCompanionDevicePresenceEvent(
+                    mCompanionAppController.notifyCompanionApplicationDevicePresenceEvent(
                             association, event);
                 }
                 // Check if there are other devices associated to the app that are present.
@@ -477,7 +475,7 @@ public class CompanionDeviceManagerService extends SystemService {
                     Log.i(TAG, "u" + userId + "\\" + packageName + " is already bound");
                 }
 
-                mCompanionAppController.notifyUuidDevicePresenceEvent(uuid, event);
+                mCompanionAppController.notifyApplicationDevicePresenceEvent(uuid, event);
 
                 break;
             case EVENT_BT_DISCONNECTED:
@@ -486,7 +484,7 @@ public class CompanionDeviceManagerService extends SystemService {
                     return;
                 }
 
-                mCompanionAppController.notifyUuidDevicePresenceEvent(uuid, event);
+                mCompanionAppController.notifyApplicationDevicePresenceEvent(uuid, event);
                 // Check if there are other devices associated to the app or the UUID to be
                 // observed are present.
                 if (shouldBindPackage(userId, packageName)) return;

@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
-package com.android.server.companion.utils;
+package com.android.server.companion;
 
 import static android.app.role.RoleManager.MANAGE_HOLDERS_FLAG_DONT_KILL_APP;
+
+import static com.android.server.companion.CompanionDeviceManagerService.DEBUG;
+import static com.android.server.companion.CompanionDeviceManagerService.TAG;
 
 import android.annotation.NonNull;
 import android.annotation.SuppressLint;
@@ -26,6 +29,7 @@ import android.companion.AssociationInfo;
 import android.content.Context;
 import android.os.Binder;
 import android.os.UserHandle;
+import android.util.Log;
 import android.util.Slog;
 
 import java.util.List;
@@ -33,14 +37,9 @@ import java.util.function.Consumer;
 
 /** Utility methods for accessing {@link RoleManager} APIs. */
 @SuppressLint("LongLogTag")
-public final class RolesUtils {
+final class RolesUtils {
 
-    private static final String TAG = "CDM_RolesUtils";
-
-    /**
-     * Check if the package holds the role.
-     */
-    public static boolean isRoleHolder(@NonNull Context context, @UserIdInt int userId,
+    static boolean isRoleHolder(@NonNull Context context, @UserIdInt int userId,
             @NonNull String packageName, @NonNull String role) {
         final RoleManager roleManager = context.getSystemService(RoleManager.class);
         final List<String> roleHolders = roleManager.getRoleHoldersAsUser(
@@ -59,9 +58,13 @@ public final class RolesUtils {
      *                        false if failed. If the association does not have any device profile
      *                        specified, then the operation will always be successful as a no-op.
      */
-    public static void addRoleHolderForAssociation(
+    static void addRoleHolderForAssociation(
             @NonNull Context context, @NonNull AssociationInfo associationInfo,
             @NonNull Consumer<Boolean> roleGrantResult) {
+        if (DEBUG) {
+            Log.d(TAG, "addRoleHolderForAssociation() associationInfo=" + associationInfo);
+        }
+
         final String deviceProfile = associationInfo.getDeviceProfile();
         if (deviceProfile == null) {
             // If no device profile is specified, then no-op and resolve callback with success.
@@ -80,30 +83,33 @@ public final class RolesUtils {
                 roleGrantResult);
     }
 
-    /**
-     * Remove the role for the package association.
-     */
-    public static void removeRoleHolderForAssociation(
-            @NonNull Context context, int userId, String packageName, String deviceProfile) {
+    static void removeRoleHolderForAssociation(
+            @NonNull Context context, @NonNull AssociationInfo associationInfo) {
+        if (DEBUG) {
+            Log.d(TAG, "removeRoleHolderForAssociation() associationInfo=" + associationInfo);
+        }
+
+        final String deviceProfile = associationInfo.getDeviceProfile();
         if (deviceProfile == null) return;
 
         final RoleManager roleManager = context.getSystemService(RoleManager.class);
 
+        final String packageName = associationInfo.getPackageName();
+        final int userId = associationInfo.getUserId();
         final UserHandle userHandle = UserHandle.of(userId);
 
-        Slog.i(TAG, "Removing CDM role=" + deviceProfile
-                + " for userId=" + userId + ", packageName=" + packageName);
+        Slog.i(TAG, "Removing CDM role holder, role=" + deviceProfile
+                + ", package=u" + userId + "\\" + packageName);
         final long identity = Binder.clearCallingIdentity();
         try {
             roleManager.removeRoleHolderAsUser(deviceProfile, packageName,
-                    MANAGE_HOLDERS_FLAG_DONT_KILL_APP, userHandle, context.getMainExecutor(),
-                    success -> {
-                        if (!success) {
-                            Slog.e(TAG, "Failed to remove userId=" + userId + ", packageName="
-                                    + packageName + " from the list of " + deviceProfile
-                                    + " holders.");
-                        }
-                    });
+                MANAGE_HOLDERS_FLAG_DONT_KILL_APP, userHandle, context.getMainExecutor(),
+                success -> {
+                    if (!success) {
+                        Slog.e(TAG, "Failed to remove u" + userId + "\\" + packageName
+                                + " from the list of " + deviceProfile + " holders.");
+                    }
+                });
         } finally {
             Binder.restoreCallingIdentity(identity);
         }
