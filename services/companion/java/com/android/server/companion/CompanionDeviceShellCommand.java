@@ -45,7 +45,6 @@ class CompanionDeviceShellCommand extends ShellCommand {
     private static final String TAG = "CDM_CompanionDeviceShellCommand";
 
     private final CompanionDeviceManagerService mService;
-    private final AssociationRevokeProcessor mRevokeProcessor;
     private final AssociationStoreImpl mAssociationStore;
     private final CompanionDevicePresenceMonitor mDevicePresenceMonitor;
     private final CompanionTransportManager mTransportManager;
@@ -60,8 +59,7 @@ class CompanionDeviceShellCommand extends ShellCommand {
             CompanionTransportManager transportManager,
             SystemDataTransferProcessor systemDataTransferProcessor,
             AssociationRequestsProcessor associationRequestsProcessor,
-            BackupRestoreProcessor backupRestoreProcessor,
-            AssociationRevokeProcessor revokeProcessor) {
+            BackupRestoreProcessor backupRestoreProcessor) {
         mService = service;
         mAssociationStore = associationStore;
         mDevicePresenceMonitor = devicePresenceMonitor;
@@ -69,7 +67,6 @@ class CompanionDeviceShellCommand extends ShellCommand {
         mSystemDataTransferProcessor = systemDataTransferProcessor;
         mAssociationRequestsProcessor = associationRequestsProcessor;
         mBackupRestoreProcessor = backupRestoreProcessor;
-        mRevokeProcessor = revokeProcessor;
     }
 
     @Override
@@ -129,7 +126,7 @@ class CompanionDeviceShellCommand extends ShellCommand {
                     final AssociationInfo association =
                             mService.getAssociationWithCallerChecks(userId, packageName, address);
                     if (association != null) {
-                        mRevokeProcessor.disassociateInternal(association.getId());
+                        mService.disassociateInternal(association.getId());
                     }
                 }
                 break;
@@ -141,7 +138,7 @@ class CompanionDeviceShellCommand extends ShellCommand {
                             mAssociationStore.getAssociationsForPackage(userId, packageName);
                     for (AssociationInfo association : userAssociations) {
                         if (sanitizeWithCallerChecks(mService.getContext(), association) != null) {
-                            mRevokeProcessor.disassociateInternal(association.getId());
+                            mService.disassociateInternal(association.getId());
                         }
                     }
                 }
