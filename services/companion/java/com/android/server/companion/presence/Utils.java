@@ -14,41 +14,18 @@
  * limitations under the License.
  */
 
-package com.android.server.companion.utils;
+package com.android.server.companion.presence;
 
 import android.annotation.NonNull;
 import android.bluetooth.BluetoothDevice;
-import android.os.Parcel;
-import android.os.ResultReceiver;
 
-/**
- * A miscellaneous util class for CDM
- *
- * @hide
- */
-public final class Utils {
+/** Utilities for working with Bluetooth and BLE devices. */
+class Utils {
 
     /**
-     * Convert an instance of a "locally-defined" ResultReceiver to an instance of
-     * {@link android.os.ResultReceiver} itself, which the receiving process will be able to
-     * unmarshall.
-     * @hide
+     * @return short String representation of {@link BluetoothDevice}.
      */
-    public static <T extends ResultReceiver> ResultReceiver prepareForIpc(T resultReceiver) {
-        final Parcel parcel = Parcel.obtain();
-        resultReceiver.writeToParcel(parcel, 0);
-        parcel.setDataPosition(0);
-
-        final ResultReceiver ipcFriendly = ResultReceiver.CREATOR.createFromParcel(parcel);
-        parcel.recycle();
-
-        return ipcFriendly;
-    }
-
-    /**
-     * Return a human-readable string for the BluetoothDevice.
-     */
-    public static String btDeviceToString(@NonNull BluetoothDevice btDevice) {
+    static String btDeviceToString(@NonNull BluetoothDevice btDevice) {
         final StringBuilder sb = new StringBuilder(btDevice.getAddress());
 
         sb.append(" [name=");
@@ -67,5 +44,6 @@ public final class Utils {
         return sb.append(']').toString();
     }
 
-    private Utils() {}
+    private Utils() {
+    }
 }
