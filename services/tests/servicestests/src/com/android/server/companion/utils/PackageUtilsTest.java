@@ -32,6 +32,7 @@ import android.testing.AndroidTestingRunner;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.server.companion.PackageUtils;
 import com.android.server.pm.pkg.AndroidPackage;
 
 import org.junit.Test;
