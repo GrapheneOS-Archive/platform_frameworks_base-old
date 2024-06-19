@@ -7023,4 +7023,7 @@
     <java-symbol type="bool" name="config_usbPortSecuritySupported" />
     <bool name="config_usb_port_security_applies_to_pogo_pins">false</bool>
     <java-symbol type="bool" name="config_usb_port_security_applies_to_pogo_pins" />
+
+    <bool name="config_has_alternative_touchscreen_mode">false</bool>
+    <java-symbol type="bool" name="config_has_alternative_touchscreen_mode" />
 </resources>
