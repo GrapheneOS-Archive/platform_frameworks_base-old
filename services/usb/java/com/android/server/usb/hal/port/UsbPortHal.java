@@ -207,7 +207,9 @@ public interface UsbPortHal {
     public void resetUsbPort(String portName, long transactionId,
             IUsbOperationInternal callback);
 
-    default void setPortSecurityState(String portName, @android.hardware.usb.ext.PortSecurityState int state) {
+    default void setPortSecurityState(String portName,
+                                      @android.hardware.usb.ext.PortSecurityState int state,
+                                      android.os.ResultReceiver callback) {
         throw new UnsupportedOperationException();
     }
 }

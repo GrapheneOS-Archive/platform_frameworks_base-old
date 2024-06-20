@@ -998,10 +998,13 @@ public class UsbService extends IUsbManager.Stub {
         }
     }
 
+    @Override
     public void setPortSecurityState(@NonNull String portId,
-                                     @android.hardware.usb.ext.PortSecurityState int state) {
+                                     @android.hardware.usb.ext.PortSecurityState int state,
+                                     android.os.ResultReceiver callback) {
         mContext.enforceCallingOrSelfPermission(android.Manifest.permission.MANAGE_USB, null);
-        mPortManager.setPortSecurityState(portId, state);
+        Objects.requireNonNull(callback, "callback");
+        mPortManager.setPortSecurityState(portId, state, callback);
     }
 
     @android.annotation.EnforcePermission(android.Manifest.permission.MANAGE_USB)
