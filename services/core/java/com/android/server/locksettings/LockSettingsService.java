@@ -3775,11 +3775,6 @@ public class LockSettingsService extends ILockSettings.Stub {
         }
     }
 
-    @Override
-    public boolean onAutoRebootEvent(int event) {
-        return android.ext.AutoReboot.handleEventInSystemServer(mContext, event);
-    }
-
     private final DuressPasswordHelper duressPasswordHelper;
 
     @Override
