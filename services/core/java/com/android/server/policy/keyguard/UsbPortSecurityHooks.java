@@ -9,7 +9,9 @@ import android.ext.settings.UsbPortSecurity;
 import android.hardware.usb.UsbManager;
 import android.hardware.usb.UsbPort;
 import android.hardware.usb.UsbPortStatus;
+import android.os.Bundle;
 import android.os.Handler;
+import android.os.ResultReceiver;
 import android.os.UserHandle;
 import android.util.Slog;
 
@@ -125,13 +127,19 @@ public class UsbPortSecurityHooks {
             return;
         }
 
-        for (UsbPort p : um.getPorts()) {
-            try {
-                um.setPortSecurityState(p, state);
-            } catch (Exception e) {
-                // don't crash the system_server
-                Slog.e(TAG, "", e);
-            }
+        for (UsbPort port : um.getPorts()) {
+            var resultReceiver = new ResultReceiver(null) {
+                @Override
+                protected void onReceiveResult(int resultCode, Bundle resultData) {
+                    if (resultCode != android.hardware.usb.ext.IUsbExt.NO_ERROR) {
+                        throw new IllegalStateException("setPortSecurityState failed, resultCode: " + resultCode + ", port: " + port);
+                    }
+
+                    Slog.d(TAG, "setPortSecurityState succeeded for port : " + port.getId());
+                }
+            };
+
+            um.setPortSecurityState(port, state, resultReceiver);
         }
     }
 }
