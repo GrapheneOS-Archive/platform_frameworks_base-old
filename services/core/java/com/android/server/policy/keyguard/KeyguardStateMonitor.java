@@ -96,6 +96,8 @@ public class KeyguardStateMonitor extends IKeyguardStateCallback.Stub {
 
         mCallback.onShowingChanged();
 
+        AutoReboot.onKeyguardShowingStateChanged(mContext, showing, userId);
+
         if (DenyNewUsbSetting.DYNAMIC.equals(DenyNewUsbSetting.SYS_PROP.get())) {
             SystemProperties.set(DenyNewUsbSetting.TRANSIENT_PROP, showing ?
                     DenyNewUsbSetting.TRANSIENT_ENABLE :
