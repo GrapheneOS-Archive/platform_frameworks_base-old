@@ -460,7 +460,9 @@ public final class UsbPortAidl implements UsbPortHal {
     }
 
     @Override
-    public void setPortSecurityState(String portName, @android.hardware.usb.ext.PortSecurityState int state) {
+    public void setPortSecurityState(String portName,
+                                     @android.hardware.usb.ext.PortSecurityState int state,
+                                     android.os.ResultReceiver callback) {
         IBinder ext;
         try {
             ext = mBinder.getExtension();
@@ -474,13 +476,39 @@ public final class UsbPortAidl implements UsbPortHal {
             throw new UnsupportedOperationException();
         }
 
-        IUsbExt i = IUsbExt.Stub.asInterface(ext);
+        var halCallback = new android.hardware.usb.ext.IPortSecurityStateCallback.Stub() {
+            @Override
+            public void onSetPortSecurityStateCompleted(int status, int arg1, String arg2) {
+                Slog.d(TAG, "onSetPortSecurityStateCompleted, status: " + status);
+                android.os.Bundle b = null;
+                if (arg1 != 0 || arg2 != null) {
+                    b = new android.os.Bundle();
+                    b.putInt("arg1", arg1);
+                    b.putString("arg2", arg2);
+                }
+                callback.send(status, b);
+            }
+
+            @Override
+            public String getInterfaceHash() {
+                return android.hardware.usb.ext.IPortSecurityStateCallback.HASH;
+            }
+
+            @Override
+            public int getInterfaceVersion() {
+                return android.hardware.usb.ext.IPortSecurityStateCallback.VERSION;
+            }
+        };
+
+        Slog.d(TAG, "setPortSecurityState, port: " + portName + ", state " + state);
+
+        IUsbExt usbExt = IUsbExt.Stub.asInterface(ext);
         try {
-            i.setPortSecurityState(portName, state);
+            usbExt.setPortSecurityState(portName, state, halCallback);
         } catch (RemoteException e) {
             Slog.e(TAG, "", e);
+            throw new android.os.ParcelableException(e);
         }
-        Slog.d(TAG, "setPortSecurityState: " + state);
     }
 
     private static class HALCallback extends IUsbCallback.Stub {
