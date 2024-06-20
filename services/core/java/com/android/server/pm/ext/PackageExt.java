@@ -20,7 +20,7 @@ public class PackageExt implements PackageExtIface {
 
     public static PackageExt get(AndroidPackage pkg) {
         PackageExtIface i = pkg.ext();
-        if (i != null) {
+        if (i instanceof PackageExt) {
             return (PackageExt) i;
         }
         return DEFAULT;
