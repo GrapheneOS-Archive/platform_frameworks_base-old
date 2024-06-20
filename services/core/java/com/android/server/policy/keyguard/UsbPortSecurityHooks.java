@@ -134,8 +134,6 @@ public class UsbPortSecurityHooks {
                     if (resultCode != android.hardware.usb.ext.IUsbExt.NO_ERROR) {
                         throw new IllegalStateException("setPortSecurityState failed, resultCode: " + resultCode + ", port: " + port);
                     }
-
-                    Slog.d(TAG, "setPortSecurityState succeeded for port : " + port.getId());
                 }
             };
 
