@@ -217,5 +217,5 @@ interface IUsbManager
 
     @JavaPassthrough(annotation=
             "@android.annotation.RequiresPermission(android.Manifest.permission.MANAGE_USB)")
-    void setPortSecurityState(String portId, int state);
+    void setPortSecurityState(String portId, int state, in android.os.ResultReceiver callback);
 }
