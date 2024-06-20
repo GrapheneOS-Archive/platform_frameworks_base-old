@@ -96,6 +96,8 @@ public class KeyguardStateMonitor extends IKeyguardStateCallback.Stub {
 
         mCallback.onShowingChanged();
 
+        AutoReboot.onKeyguardShowingStateChanged(mContext, showing, userId);
+
         if (ExtSettings.DENY_NEW_USB_DYNAMIC.equals(ExtSettings.DENY_NEW_USB.get())) {
             SystemProperties.set(ExtSettings.DENY_NEW_USB_TRANSIENT_PROP, showing ?
                     ExtSettings.DENY_NEW_USB_TRANSIENT_ENABLE :
