@@ -65,6 +65,10 @@ public class ExtSettings {
     public static final BoolSysProperty ALLOW_NATIVE_DEBUG_BY_DEFAULT = new BoolSysProperty(
             "persist.native_debug", defaultBool(R.bool.setting_default_allow_native_debugging));
 
+    public static final IntSetting CLIPBOARD_READ_ACCESS = new IntSetting(
+            Setting.Scope.PER_USER, "clipboard_read_access",
+            ClipboardReadSetting.DEFAULT, ClipboardReadSetting.VALID_VALUES);
+
     // AppCompatConfig specifies which hardening features are compatible/incompatible with a
     // specific app.
     // This setting controls whether incompatible hardening features would be disabled by default
