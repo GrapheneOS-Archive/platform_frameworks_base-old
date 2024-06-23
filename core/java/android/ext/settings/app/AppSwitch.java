@@ -166,4 +166,8 @@ public abstract class AppSwitch {
     public final void addSuppressNotificationFlag(GosPackageState.Editor ed) {
         ed.addFlags(gosPsFlagSuppressNotif);
     }
+
+    public final void removeSuppressNotificationFlag(GosPackageState.Editor ed) {
+        ed.clearFlags(gosPsFlagSuppressNotif);
+    }
 }
