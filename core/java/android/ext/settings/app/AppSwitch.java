@@ -147,7 +147,7 @@ public abstract class AppSwitch {
         }
     }
 
-    private boolean isUsingDefaultValue(@Nullable GosPackageStateBase ps) {
+    protected boolean isUsingDefaultValue(@Nullable GosPackageStateBase ps) {
         return ps == null || (gosPsFlagNonDefault != 0 && !ps.hasFlags(gosPsFlagNonDefault));
     }
 
