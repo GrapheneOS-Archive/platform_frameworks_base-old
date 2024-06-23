@@ -27,6 +27,8 @@
     <java-symbol type="string" name="notif_text_tap_to_see_details" />
     <string name="notif_action_more_info">More info</string>
     <java-symbol type="string" name="notif_action_more_info" />
+    <string name="notif_action_allow_once">Allow once</string>
+    <java-symbol type="string" name="notif_action_allow_once" />
 
     <string name="notif_native_debug_title">%1$s tried to use native code debugging</string>
     <java-symbol type="string" name="notif_native_debug_title" />
@@ -45,5 +47,10 @@
 
     <string name="notif_hmalloc_crash_title">hardened_malloc detected an error in %1$s</string>
     <java-symbol type="string" name="notif_hmalloc_crash_title" />
+
+    <string name="notif_clipboard_read_title">Allow %1$s to read the clipboard?</string>
+    <java-symbol type="string" name="notif_clipboard_read_title" />
+    <string name="notif_clipboard_read_content_text">Clipboard holds data from %1$s. Tap to allow in settings.</string>
+    <java-symbol type="string" name="notif_clipboard_read_content_text" />
 
 </resources>
