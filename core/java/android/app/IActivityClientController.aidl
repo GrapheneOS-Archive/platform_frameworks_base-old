@@ -207,4 +207,10 @@ interface IActivityClientController {
     @JavaPassthrough(annotation = "@android.annotation.RequiresPermission(android.Manifest"
             + ".permission.INTERNAL_SYSTEM_WINDOW)")
     oneway void setActivityRecordInputSinkEnabled(in IBinder activityToken, boolean enabled);
+
+    /**
+     * @return {@link PackageManager#PERMISSION_GRANTED} if the app launching the activity has the permission.
+     * This method is only accessible to select system apps such as browser app.
+     */
+    int checkLaunchedFromPermission(in IBinder token, String permission, int deviceId);
 }
