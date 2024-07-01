@@ -84,6 +84,8 @@ public class PackageExtInit implements ParsingPackageUtils.PackageExtInitIface {
                     "1ca8dcc0bed3cbd872d2cb791200c0292ca9975768a82d676b8b424fb65b5295");
             case TYCHO_NAME -> validate(TYCHO, 3044673L,
                     "8c4e8f364cb132d41626f67749a6385605f51d365098c0cb5976eb5c1500a3ce");
+            case G_TEXT_TO_SPEECH_NAME -> validate(G_TEXT_TO_SPEECH, 2104800_00L,
+                    "7ce83c1b71f3d572fed04c8d40c5cb10ff75e6d87d9df6fbd53f0468c2905053");
 
             default -> PackageId.UNKNOWN;
         };
