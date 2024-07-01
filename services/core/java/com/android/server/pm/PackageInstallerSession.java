@@ -5010,6 +5010,11 @@ public class PackageInstallerSession extends IPackageInstallerSession.Stub {
     }
 
     @Override
+    public int getId() {
+        return sessionId;
+    }
+
+    @Override
     public int getParentSessionId() {
         synchronized (mLock) {
             return mParentSessionId;
