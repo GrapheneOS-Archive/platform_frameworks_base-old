@@ -96,13 +96,27 @@ public class UsbPortSecurityHooks {
                 setSecurityStateForAllPorts(android.hardware.usb.ext.PortSecurityState.CHARGING_ONLY);
                 usbConnectEventCountBeforeLocked = usbConnectEventCount;
             } else {
-                if (usbConnectEventCountBeforeLocked == usbConnectEventCount) {
+                boolean forceReconnect = false;
+                if (!keyguardDismissedAtLeastOnce) {
+                    for (UsbPort port : usbManager.getPorts()) {
+                        UsbPortStatus s = port.getStatus();
+                        if (s == null || s.isConnected()) {
+                            // at boot-time, "port connected" event might not be delivered if the
+                            // event fires before UsbService is initialized, which breaks the
+                            // usbConnectEventCountBeforeLocked check below
+                            forceReconnect = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!forceReconnect && usbConnectEventCountBeforeLocked == usbConnectEventCount) {
                     setSecurityStateForAllPorts(android.hardware.usb.ext.PortSecurityState.ENABLED);
                 } else {
                     // Turn USB ports off and on to trigger reconnection of devices that were connected
                     // in charging-only state. Simply enabling the data path is not enough in some
                     // advanced scenarios, e.g. when port alt mode or port role switching are used.
-                    Slog.d(TAG, "usbConnectEventCount changed, toggling USB ports");
+                    Slog.d(TAG, "toggling USB ports");
                     setSecurityStateForAllPorts(android.hardware.usb.ext.PortSecurityState.DISABLED);
                     final long curShowingChangeCount = keyguardShowingChangeCount;
                     final long delayMs = 1500;
