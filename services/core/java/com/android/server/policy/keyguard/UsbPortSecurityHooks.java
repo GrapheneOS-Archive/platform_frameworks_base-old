@@ -18,6 +18,8 @@ import android.util.Slog;
 import com.android.internal.R;
 import com.android.internal.os.BackgroundThread;
 
+import java.util.Objects;
+
 public class UsbPortSecurityHooks {
     private static final String TAG = UsbPortSecurityHooks.class.getSimpleName();
     @Nullable
@@ -25,9 +27,11 @@ public class UsbPortSecurityHooks {
 
     private final Context context;
     private final Handler handler = BackgroundThread.getHandler();
+    private final UsbManager usbManager;
 
     private UsbPortSecurityHooks(Context ctx) {
         this.context = ctx;
+        this.usbManager = Objects.requireNonNull(ctx.getSystemService(UsbManager.class));
     }
 
     public static void init(Context ctx) {
@@ -89,22 +93,22 @@ public class UsbPortSecurityHooks {
               || (keyguardDismissedAtLeastOnce && setting == UsbPortSecurity.MODE_CHARGING_ONLY_WHEN_LOCKED_AFU))
         {
             if (showing) {
-                setSecurityStateForAllPorts(ctx, android.hardware.usb.ext.PortSecurityState.CHARGING_ONLY);
+                setSecurityStateForAllPorts(android.hardware.usb.ext.PortSecurityState.CHARGING_ONLY);
                 usbConnectEventCountBeforeLocked = usbConnectEventCount;
             } else {
                 if (usbConnectEventCountBeforeLocked == usbConnectEventCount) {
-                    setSecurityStateForAllPorts(ctx, android.hardware.usb.ext.PortSecurityState.ENABLED);
+                    setSecurityStateForAllPorts(android.hardware.usb.ext.PortSecurityState.ENABLED);
                 } else {
                     // Turn USB ports off and on to trigger reconnection of devices that were connected
                     // in charging-only state. Simply enabling the data path is not enough in some
                     // advanced scenarios, e.g. when port alt mode or port role switching are used.
                     Slog.d(TAG, "usbConnectEventCount changed, toggling USB ports");
-                    setSecurityStateForAllPorts(ctx, android.hardware.usb.ext.PortSecurityState.DISABLED);
+                    setSecurityStateForAllPorts(android.hardware.usb.ext.PortSecurityState.DISABLED);
                     final long curShowingChangeCount = keyguardShowingChangeCount;
                     final long delayMs = 1500;
                     handler.postDelayed(() -> {
                         if (keyguardShowingChangeCount == curShowingChangeCount) {
-                            setSecurityStateForAllPorts(ctx, android.hardware.usb.ext.PortSecurityState.ENABLED);
+                            setSecurityStateForAllPorts(android.hardware.usb.ext.PortSecurityState.ENABLED);
                         } else {
                             Slog.d(TAG, "showingChangeCount changed, skipping delayed enable");
                         }
@@ -118,16 +122,10 @@ public class UsbPortSecurityHooks {
         }
     }
 
-    private static void setSecurityStateForAllPorts(Context ctx, int state) {
+    private void setSecurityStateForAllPorts(int state) {
         Slog.d(TAG, "setSecurityStateForAllPorts: " + state);
 
-        UsbManager um = ctx.getSystemService(UsbManager.class);
-        if (um == null) {
-            Slog.e(TAG, "UsbManager is null");
-            return;
-        }
-
-        for (UsbPort port : um.getPorts()) {
+        for (UsbPort port : usbManager.getPorts()) {
             var resultReceiver = new ResultReceiver(null) {
                 @Override
                 protected void onReceiveResult(int resultCode, Bundle resultData) {
@@ -137,7 +135,7 @@ public class UsbPortSecurityHooks {
                 }
             };
 
-            um.setPortSecurityState(port, state, resultReceiver);
+            usbManager.setPortSecurityState(port, state, resultReceiver);
         }
     }
 }
