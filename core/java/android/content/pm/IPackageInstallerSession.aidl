@@ -61,6 +61,7 @@ interface IPackageInstallerSession {
     int[] getChildSessionIds();
     void addChildSessionId(in int sessionId);
     void removeChildSessionId(in int sessionId);
+    int getId();
     int getParentSessionId();
 
     boolean isStaged();

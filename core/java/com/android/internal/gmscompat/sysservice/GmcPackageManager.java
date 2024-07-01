@@ -30,14 +30,17 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.IPackageDataObserver;
 import android.content.pm.IPackageDeleteObserver;
+import android.content.pm.IPackageInstaller;
 import android.content.pm.IPackageManager;
 import android.content.pm.InstallSourceInfo;
 import android.content.pm.PackageInfo;
+import android.content.pm.PackageInstaller;
 import android.content.pm.SharedLibraryInfo;
 import android.content.pm.VersionedPackage;
 import android.ext.PackageId;
 import android.os.Build;
 import android.os.Process;
+import android.os.RemoteException;
 import android.os.UserHandle;
 import android.provider.Settings;
 import android.util.ArrayMap;
@@ -66,6 +69,30 @@ public class GmcPackageManager extends ApplicationPackageManager {
         initForceDisabledComponents(ctx);
         if (GmsCompat.isPlayStore()) {
             ArraySet<String> hiddenPkgs = HIDDEN_PACKAGES;
+
+            if (Application.getProcessName().equals(PackageId.PLAY_STORE_NAME)) {
+                // PackageInstaller.abandonSession() calls are conditionally stubbed out to prevent
+                // Play Store from destroying sessions that are waiting for confirmation from the
+                // user.
+                //
+                // To avoid having too many pending sessions, clean them up when the main Play Store
+                // process starts up, before any of its code is executed.
+                PackageInstaller installerWrapper = ctx.getPackageManager().getPackageInstaller();
+                IPackageInstaller installer = installerWrapper.getIPackageInstaller();
+
+                for (PackageInstaller.SessionInfo si : installerWrapper.getAllSessions()) {
+                    try {
+                        // PackageInstaller.abandonSession() is conditionally stubbed out, call
+                        // the binder method directly
+                        installer.abandonSession(si.sessionId);
+                    } catch (RemoteException | SecurityException e) {
+                        // confusingly, SecurityException is thrown when session is already racily
+                        // abandoned
+                        Log.e(TAG, "", e);
+                    }
+                    Log.d(TAG, "abandoned session " + si.sessionId);
+                }
+            }
         }
     }
 
