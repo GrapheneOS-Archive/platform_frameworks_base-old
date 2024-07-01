@@ -3534,6 +3534,13 @@ public final class Settings {
                         return null;
                     }
 
+                    if (cr.getContext().getApplicationInfo().ext()
+                            .getPackageId() == android.ext.PackageId.G_TEXT_TO_SPEECH) {
+                        // Google's text-to-speech app expects to be a system app, which are exempted
+                        // from this restriction. Stub out the read to prevent it from crashing the app
+                        return null;
+                    }
+
                     throw new SecurityException(
                             "Settings key: <" + name + "> is not readable. From S+, settings keys "
                                     + "annotated with @hide are restricted to system_server and "
