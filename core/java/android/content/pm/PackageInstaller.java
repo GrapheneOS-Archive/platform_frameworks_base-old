@@ -883,6 +883,16 @@ public class PackageInstaller {
      *             the session is invalid.
      */
     public void abandonSession(int sessionId) {
+        if (GmsCompat.isPlayStore()) {
+            SessionInfo si = getSessionInfo(sessionId);
+            if (si != null && si.isCommitted()) {
+                // Play Store doesn't expect committed sessions to be waiting for confirmation from
+                // the user and tries to destroy them after ~10 minutes
+                Log.d("GmsCompat", "skipped PackageInstaller.abandonSession(), sessionId " + sessionId);
+                return;
+            }
+        }
+
         try {
             mInstaller.abandonSession(sessionId);
         } catch (RemoteException e) {
@@ -2076,6 +2086,20 @@ public class PackageInstaller {
          * would be destroyed and the created {@link Session} information will be discarded.</p>
          */
         public void abandon() {
+            if (GmsCompat.isPlayStore()) {
+                final int id;
+                try {
+                    id = mSession.getId();
+                } catch (RemoteException e) {
+                    throw e.rethrowFromSystemServer();
+                }
+                PackageInstaller packageInstaller = GmsCompat.appContext().getPackageManager()
+                        .getPackageInstaller();
+                // see comment in abandonSession()
+                packageInstaller.abandonSession(id);
+                return;
+            }
+
             try {
                 mSession.abandon();
             } catch (RemoteException e) {
@@ -5431,4 +5455,8 @@ public class PackageInstaller {
         }
     }
 
+    /** @hide **/
+    public IPackageInstaller getIPackageInstaller() {
+        return mInstaller;
+    }
 }
