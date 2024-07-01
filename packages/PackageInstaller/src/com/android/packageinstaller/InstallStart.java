@@ -41,6 +41,8 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.android.packageinstaller.v2.ui.InstallLaunch;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
@@ -150,7 +152,7 @@ public class InstallStart extends Activity {
             mAbortInstall = true;
         }
 
-        checkDevicePolicyRestrictions();
+        checkDevicePolicyRestrictions(isTrustedSource);
 
         final String installerPackageNameFromIntent = getIntent().getStringExtra(
                 Intent.EXTRA_INSTALLER_PACKAGE_NAME);
@@ -304,12 +306,13 @@ public class InstallStart extends Activity {
         return originatingUid == installerUid;
     }
 
-    private void checkDevicePolicyRestrictions() {
-        final String[] restrictions = new String[] {
-            UserManager.DISALLOW_INSTALL_APPS,
-            UserManager.DISALLOW_INSTALL_UNKNOWN_SOURCES,
-            UserManager.DISALLOW_INSTALL_UNKNOWN_SOURCES_GLOBALLY
-        };
+    private void checkDevicePolicyRestrictions(boolean isTrustedSource) {
+        var restrictions = new ArrayList<String>();
+        restrictions.add(UserManager.DISALLOW_INSTALL_APPS);
+        if (!isTrustedSource) {
+            restrictions.add(UserManager.DISALLOW_INSTALL_UNKNOWN_SOURCES);
+            restrictions.add(UserManager.DISALLOW_INSTALL_UNKNOWN_SOURCES_GLOBALLY);
+        }
 
         final DevicePolicyManager dpm = getSystemService(DevicePolicyManager.class);
         for (String restriction : restrictions) {
