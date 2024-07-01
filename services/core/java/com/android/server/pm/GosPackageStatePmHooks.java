@@ -206,7 +206,7 @@ public class GosPackageStatePmHooks {
 
             GosPackageStatePm updatedGosPs = permission.filterWrite(currentGosPs, update);
 
-            SharedUserSetting sharedUser = pm.mSettings.getSharedUserSettingLPr(packageSetting);;
+            SharedUserSetting sharedUser = pm.mSettings.getSharedUserSettingLPr(packageSetting);
 
             if (sharedUser != null) {
                 List<AndroidPackage> sharedPkgs = sharedUser.getPackages();
