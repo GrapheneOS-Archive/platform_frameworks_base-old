@@ -2962,7 +2962,7 @@ public class ComputerEngine implements Computer {
             }
             final int clientAppUid = Process.getAppUidForSdkSandboxUid(uid);
             // Client app of this sdk sandbox process should be able to see it.
-            if (clientAppUid == uid) {
+            if (callingUid == clientAppUid) {
                 return false;
             }
             // Nobody else should be able to see the sdk sandbox process.
