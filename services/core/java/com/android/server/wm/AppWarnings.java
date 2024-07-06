@@ -350,8 +350,7 @@ class AppWarnings {
             mDeprecatedAbiDialog.dismiss();
             mDeprecatedAbiDialog = null;
         }
-        if (ar != null && !hasPackageFlag(
-                ar.packageName, FLAG_HIDE_DEPRECATED_ABI)) {
+        if (ar != null) {
             mDeprecatedAbiDialog = new DeprecatedAbiDialog(
                     AppWarnings.this, mUiContext, ar.info.applicationInfo);
             mDeprecatedAbiDialog.show();
