@@ -6494,4 +6494,6 @@ ul.</string>
 
     <!-- Button that opens the screen with details of an application error -->
     <string name="aerr_show_details">Show details</string>
+
+    <string name="deprecated_abi_message_grapheneos">This app only supports 32-bit and therefore isn\'t compatible with more recent devices. If the app is still developed, switch to a build for modern devices. GrapheneOS plans to phase out 32-bit app support on older devices for improved security.</string>
 </resources>
