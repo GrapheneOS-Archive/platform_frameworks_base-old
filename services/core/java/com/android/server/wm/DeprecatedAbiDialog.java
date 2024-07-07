@@ -36,7 +36,7 @@ class DeprecatedAbiDialog extends AppWarnings.BaseDialog {
                 PackageItemInfo.DEFAULT_MAX_LABEL_SIZE_PX,
                 PackageItemInfo.SAFE_LABEL_FLAG_FIRST_LINE
                         | PackageItemInfo.SAFE_LABEL_FLAG_TRIM);
-        final CharSequence message = context.getString(R.string.deprecated_abi_message);
+        final CharSequence message = context.getString(R.string.deprecated_abi_message_grapheneos);
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(context)
                 .setPositiveButton(R.string.ok, (dialog, which) ->
