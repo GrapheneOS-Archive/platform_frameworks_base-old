@@ -21,6 +21,8 @@ import com.android.internal.R
 import com.android.systemui.CoreStartable
 import com.android.systemui.biometrics.AuthController
 import com.android.systemui.biometrics.EllipseOverlapDetectorParams
+import com.android.systemui.biometrics.FingerprintInteractiveToAuthProvider
+import com.android.systemui.biometrics.FingerprintInteractiveToAuthGoogleProviderImpl
 import com.android.systemui.biometrics.UdfpsUtils
 import com.android.systemui.biometrics.data.repository.BiometricStatusRepository
 import com.android.systemui.biometrics.data.repository.BiometricStatusRepositoryImpl
@@ -92,6 +94,10 @@ interface BiometricsModule {
     @Binds
     @SysUISingleton
     fun displayStateRepository(impl: DisplayStateRepositoryImpl): DisplayStateRepository
+
+    @Binds
+    @SysUISingleton
+    fun fingerprintInteractiveToAuthProvider(impl: FingerprintInteractiveToAuthGoogleProviderImpl): FingerprintInteractiveToAuthProvider
 
     companion object {
         /** Background [Executor] for HAL related operations. */
