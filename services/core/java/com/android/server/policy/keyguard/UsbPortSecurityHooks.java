@@ -16,8 +16,10 @@ import android.os.UserHandle;
 import android.util.Slog;
 
 import com.android.internal.R;
+import com.android.internal.annotations.GuardedBy;
 import com.android.internal.os.BackgroundThread;
 
+import java.util.ArrayList;
 import java.util.Objects;
 
 public class UsbPortSecurityHooks {
@@ -34,13 +36,33 @@ public class UsbPortSecurityHooks {
         this.usbManager = Objects.requireNonNull(ctx.getSystemService(UsbManager.class));
     }
 
+    private static volatile int isSupportedCached;
+
+    private static boolean isSupported(Context ctx) {
+        int cache = isSupportedCached;
+        if (cache != 0) {
+            return cache > 0;
+        }
+
+        boolean res = ctx.getResources().getBoolean(R.bool.config_usbPortSecuritySupported);
+        isSupportedCached = res ? 1 : -1;
+        return res;
+    }
+
     public static void init(Context ctx) {
-        if (!ctx.getResources().getBoolean(R.bool.config_usbPortSecuritySupported)) {
+        if (!isSupported(ctx)) {
             return;
         }
 
         var i = new UsbPortSecurityHooks(ctx);
-        INSTANCE = i;
+        synchronized (pendingCallbacks) {
+            INSTANCE = i;
+            for (Runnable cb : pendingCallbacks) {
+                Slog.d(TAG, "init: enqueued a pending callback");
+                i.handler.post(cb);
+            }
+            pendingCallbacks.clear();
+        }
         i.registerPortChangeReceiver();
     }
 
@@ -61,11 +83,25 @@ public class UsbPortSecurityHooks {
         context.registerReceiver(receiver, filter, null, handler);
     }
 
+    private static final ArrayList<Runnable> pendingCallbacks = new ArrayList<>();
+
     public static void onKeyguardShowingStateChanged(Context ctx, boolean showing, int userId) {
-        UsbPortSecurityHooks i = INSTANCE;
-        if (i != null) {
-            i.handler.post(() -> i.onKeyguardShowingStateChangedInner(ctx, showing, userId));
+        if (!isSupported(ctx)) {
+            return;
         }
+
+        UsbPortSecurityHooks instance;
+        synchronized (pendingCallbacks) {
+            instance = INSTANCE;
+            if (instance == null) {
+                // UsbService hasn't completed initialization yet, delay the callback until then
+                Slog.d(TAG, "onKeyguardShowingStateChanged: adding pending callback: showing: " + showing + " userId " + userId);
+                pendingCallbacks.add(() -> onKeyguardShowingStateChanged(ctx, showing, userId));
+                return;
+            }
+        }
+
+        instance.handler.post(() -> instance.onKeyguardShowingStateChangedInner(ctx, showing, userId));
     }
 
     private boolean keyguardDismissedAtLeastOnce;
