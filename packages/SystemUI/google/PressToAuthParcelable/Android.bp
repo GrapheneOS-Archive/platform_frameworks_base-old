@@ -1,0 +1,23 @@
+aidl_interface {
+    name: "PressToAuthParcelable",
+    stability: "vintf",
+    owner: "google",
+    srcs: [
+        "com/google/**/*.aidl",
+    ],
+
+    backend: {
+        cpp: { enabled: false, },
+        ndk: { enabled: false, },
+        rust: { enabled: false, },
+    },
+
+    versions_with_info: [
+        {
+            version: "1",
+            imports: [],
+        },
+    ],
+
+    frozen: true,
+}
