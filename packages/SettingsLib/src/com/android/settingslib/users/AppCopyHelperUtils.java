@@ -65,4 +65,29 @@ public final class AppCopyHelperUtils {
 
         }
     }
+
+    static int compareExtraContents(SelectableAppInfo lhs, SelectableAppInfo rhs) {
+        SelectableAppInfoExt lhsExt = lhs.ext;
+        SelectableAppInfoExt rhsExt = rhs.ext;
+        final int installedComparison = Boolean.compare(lhsExt.installed, rhsExt.installed);
+        if (installedComparison != 0) {
+            return installedComparison;
+        }
+
+        final int uidComparison =
+                Integer.compare(lhsExt.installerOfRecordUid, rhsExt.installerOfRecordUid);
+        if (uidComparison != 0) {
+            if (lhsExt.installerOfRecordUid == Process.INVALID_UID) {
+                return 1;
+            }
+
+            if (rhsExt.installerOfRecordUid == Process.INVALID_UID) {
+                return -1;
+            }
+
+            return uidComparison;
+        }
+
+        return 0;
+    }
 }

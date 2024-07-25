@@ -246,6 +246,11 @@ public class AppCopyHelper {
     private static class AppLabelComparator implements Comparator<SelectableAppInfo> {
         @Override
         public int compare(SelectableAppInfo lhs, SelectableAppInfo rhs) {
+            final int compareExt = AppCopyHelperUtils.compareExtraContents(lhs, rhs);
+            if (compareExt != 0) {
+                return compareExt;
+            }
+
             String lhsLabel = lhs.appName.toString();
             String rhsLabel = rhs.appName.toString();
             return lhsLabel.toLowerCase().compareTo(rhsLabel.toLowerCase());
