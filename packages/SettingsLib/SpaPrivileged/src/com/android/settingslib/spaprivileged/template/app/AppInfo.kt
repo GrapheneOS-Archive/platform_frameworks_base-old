@@ -163,7 +163,7 @@ class AppInfoProvider(private val packageInfo: PackageInfo) {
             lines.add(stringResource(R.string.app_info_update_time, s))
         }
 
-        val installerUserId = if (appInfo == null) {
+        val installerUserId = if (appInfo == null || UserHandle.myUserId() != UserHandle.USER_SYSTEM) {
             UserHandle.USER_NULL
         } else {
             val installerUid = ctx.packageManager.getInstallerOfRecordUid(
