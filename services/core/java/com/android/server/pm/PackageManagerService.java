@@ -6719,6 +6719,26 @@ public class PackageManagerService implements PackageSender, TestUtilityService 
                 Binder.restoreCallingIdentity(token);
             }
         }
+
+        @Override
+        public final int getInstallerOfRecordUid(@NonNull String pkgName, @UserIdInt int userId) {
+            mContext.enforceCallingPermission(Manifest.permission.GRANT_RUNTIME_PERMISSIONS, null);
+            final int callingUid = Binder.getCallingUid();
+            Computer snapshot = snapshotComputer();
+            snapshot.enforceCrossUserPermission(callingUid, userId, true, true,
+                    "Checking installer of record uid only available to shell and permission controller");
+            final PackageStateInternal targetPsi =
+                    snapshot.getPackageStateInternal(pkgName, Process.SYSTEM_UID);
+            if (targetPsi == null) {
+                return INVALID_UID;
+            }
+
+            if (snapshot.shouldFilterApplication(targetPsi, callingUid, userId)) {
+                return INVALID_UID;
+            }
+
+            return targetPsi.getInstallSource().mInstallerPackageUid;
+        }
     }
 
     private class PackageManagerInternalImpl extends PackageManagerInternalBase {

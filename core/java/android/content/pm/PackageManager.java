@@ -11740,4 +11740,14 @@ public abstract class PackageManager {
             throw e.rethrowFromSystemServer();
         }
     }
+
+    /** @hide */
+    @RequiresPermission(Manifest.permission.GRANT_RUNTIME_PERMISSIONS)
+    public int getInstallerOfRecordUid(@NonNull String packageName, int userId) {
+        try {
+            return ActivityThread.getPackageManager().getInstallerOfRecordUid(packageName, userId);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
 }
