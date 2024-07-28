@@ -34,15 +34,16 @@ class EuiccGoogleHooks extends PackageHooks {
 
     @Override
     public boolean shouldBlockPackageVisibility(int userId, PackageStateInternal otherPkg) {
-        AndroidPackage otherApk = otherPkg.getAndroidPackage();
-        if (otherApk != null && PackageExt.get(otherApk).getPackageId() == PackageId.TYCHO) {
-            return false;
+        // EuiccGoogle is a privileged app, block it from interacting with unprivileged
+        // parts of sandboxed Google Play
+        switch (otherPkg.getPackageName()) {
+            case PackageId.GSF_NAME:
+            case PackageId.GMS_CORE_NAME:
+            case PackageId.PLAY_STORE_NAME:
+                return true;
         }
 
-        // Block EuiccGoogle from interacting with GmsCore, which is used for feature flags, logging,
-        // perf data reporting etc.
-        //
-        // Block visibility for the rest of non-system packages to reduce the attack surface.
-        return !otherPkg.isSystem();
+        // Some third-party carrier apps need to interact with EuiccGoogle for eSIM activation
+        return false;
     }
 }
