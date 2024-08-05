@@ -346,6 +346,39 @@ public class TombstoneHandler {
         if (cmdline.length < 1) {
             return false;
         }
+        if ("/vendor/bin/hw/android.hardware.bluetooth-service.bcmbtlinux".equals(cmdline[0])) {
+            return checkBacktraceFunctionNames(backtrace, 0
+                    , "abort"
+                    , "fatal_error"
+                    , "deallocate_small"
+                    , "android::hardware::bluetooth::hci::HciFlowControl::~HciFlowControl()"
+                    , "android::hardware::bluetooth::hci::shim::Deinitialize()"
+                    , "android::hardware::bluetooth::aidl::bcmbtlinux::BluetoothHci::signal_handler(int)"
+            ) || checkBacktraceFunctionNames(backtrace, 0
+                    , "abort"
+                    , "fatal_error"
+                    , "deallocate_small"
+                    , "android::hardware::bluetooth::hci::shim::Deinitialize()"
+                    , "android::hardware::bluetooth::aidl::bcmbtlinux::BluetoothHci::signal_handler(int)"
+            ) || checkBacktraceFunctionNames(backtrace, 0
+                    , "abort"
+                    , "fatal_error"
+                    , "deallocate_small"
+                    , "android::hardware::bluetooth::hci::H4Protocol::~H4Protocol()"
+                    , "android::hardware::bluetooth::hci::shim::DeinitializeCallback()"
+                    , "android::hardware::bluetooth::hci::HciFlowControl::~HciFlowControl()"
+                    , "android::hardware::bluetooth::hci::shim::Deinitialize()"
+                    , "android::hardware::bluetooth::aidl::bcmbtlinux::BluetoothHci::signal_handler(int)"
+            ) || checkBacktraceFunctionNames(backtrace, 0
+                    , "abort"
+                    , "fatal_error"
+                    , "deallocate_small"
+                    , "android::hardware::bluetooth::hci::shim::DeinitializeCallback()"
+                    , "android::hardware::bluetooth::hci::HciFlowControl::~HciFlowControl()"
+                    , "android::hardware::bluetooth::hci::shim::Deinitialize()"
+                    , "android::hardware::bluetooth::aidl::bcmbtlinux::BluetoothHci::signal_handler(int)"
+            );
+        }
 
         return false;
     }
