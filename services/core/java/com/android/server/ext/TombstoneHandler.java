@@ -152,6 +152,7 @@ public class TombstoneHandler {
             thread = threads.get(tombstone.tid);
         }
 
+        TombstoneProtos.BacktraceFrame[] backtrace = null;
         if (thread == null) {
             sb.append("\n\nno thread info");
         } else {
@@ -177,8 +178,8 @@ public class TombstoneHandler {
             }
 
             sb.append("\n\nbacktrace:");
-
-            for (TombstoneProtos.BacktraceFrame frame : thread.currentBacktrace) {
+            backtrace = thread.currentBacktrace;
+            for (TombstoneProtos.BacktraceFrame frame : backtrace) {
                 sb.append("\n    ");
                 sb.append(frame.fileName);
                 sb.append(" (");
@@ -201,7 +202,6 @@ public class TombstoneHandler {
             String path = tombstone.commandLine[0];
             progName = path.substring(path.lastIndexOf('/') + 1);
         }
-
 
         var pm = LocalServices.getService(PackageManagerInternal.class);
 
@@ -273,6 +273,11 @@ public class TombstoneHandler {
             }
         }
 
+        if (shouldIgnore(tombstone, backtrace)) {
+            Slog.d(TAG, "ignored tombstone for " + progName);
+            return;
+        }
+
         final boolean showReportButton;
 
         if ("system_server".equals(progName)) {
@@ -334,5 +339,27 @@ public class TombstoneHandler {
         n.moreInfoIntent = i;
 
         n.maybeShow();
+    }
+
+    private static boolean shouldIgnore(TombstoneProtos.Tombstone t, TombstoneProtos.BacktraceFrame[] backtrace) {
+        String[] cmdline = t.commandLine;
+        if (cmdline.length < 1) {
+            return false;
+        }
+
+        return false;
+    }
+
+    private static boolean checkBacktraceFunctionNames(TombstoneProtos.BacktraceFrame[] backtrace, int offset, String... names) {
+        if (offset + names.length > backtrace.length) {
+            return false;
+        }
+
+        for (int i = 0; i < names.length; ++i) {
+            if (!names[i].equals(backtrace[offset + i].functionName)) {
+                return false;
+            }
+        }
+        return true;
     }
 }
