@@ -380,6 +380,24 @@ public class TombstoneHandler {
             );
         }
 
+        if ("/apex/com.google.pixel.wifi.ext/bin/hw/vendor.google.wifi_ext-service-vendor".equals(cmdline[0])) {
+            return checkBacktraceFunctionNames(backtrace, 0
+                    // harmless crash after disabling Wi-Fi hotspot
+                    , "SetLogHandler::cancel()"
+                    , "wifi_get_cancel_cmd(int, wifi_interface_info*) (.cfi)"
+                    , "aidl::android::hardware::wifi::WifiChip::stopLoggingToDebugRingBufferInternal()"
+                    , "aidl::android::hardware::wifi::WifiChip::stopLoggingToDebugRingBuffer()"
+                    , "aidl::android::hardware::wifi::_aidl_android_hardware_wifi_IWifiChip_onTransact(AIBinder*, unsigned int, AParcel const*, AParcel*)"
+            ) || checkBacktraceFunctionNames(backtrace, 0
+                    // harmless crash when Wi-Fi is disabled
+                    , "wifi_cleanup.cfi"
+                    , "aidl::android::hardware::wifi::legacy_hal::WifiLegacyHal::stop(std::__1::unique_lock<std::__1::recursive_mutex>*, std::__1::function<void ()> const&)"
+                    , "aidl::android::hardware::wifi::Wifi::stopLegacyHalAndDeinitializeModeController(std::__1::unique_lock<std::__1::recursive_mutex>*)"
+                    , "aidl::android::hardware::wifi::Wifi::stopInternal(std::__1::unique_lock<std::__1::recursive_mutex>*)"
+                    , "aidl::android::hardware::wifi::Wifi::stop()"
+            );
+        }
+
         return false;
     }
 
