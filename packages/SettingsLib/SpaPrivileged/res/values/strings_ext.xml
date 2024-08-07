@@ -2,4 +2,7 @@
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="app_info_install_time">Installed: %1$s</string>
     <string name="app_info_update_time">Updated: %1$s</string>
+
+    <string name="app_info_installed_or_updated_by_primary_user">Installed/Updated by: %1$s</string>
+    <string name="app_info_installed_or_updated_by_secondary_user">Installed/Updated by: %1$s (Secondary user)</string>
 </resources>

@@ -162,6 +162,7 @@ public class AppCopyHelper {
                 info.packageName = app.packageName;
                 info.appName = app.loadLabel(mPackageManager);
                 info.icon = app.loadIcon(mPackageManager);
+                info.ext = AppCopyHelperUtils.instantiateSelectableAppInfoExt(mPackageManager, app);
                 mVisibleApps.add(info);
             }
         }
@@ -220,6 +221,8 @@ public class AppCopyHelper {
                     info.packageName = app.activityInfo.packageName;
                     info.appName = app.activityInfo.applicationInfo.loadLabel(mPackageManager);
                     info.icon = app.activityInfo.loadIcon(mPackageManager);
+                    info.ext = AppCopyHelperUtils.instantiateSelectableAppInfoExt(
+                            mPackageManager, app.activityInfo.applicationInfo);
 
                     visibleApps.add(info);
                 }
@@ -232,6 +235,7 @@ public class AppCopyHelper {
         public String packageName;
         public CharSequence appName;
         public Drawable icon;
+        public AppCopyHelperUtils.SelectableAppInfoExt ext;
 
         @Override
         public String toString() {
@@ -242,6 +246,11 @@ public class AppCopyHelper {
     private static class AppLabelComparator implements Comparator<SelectableAppInfo> {
         @Override
         public int compare(SelectableAppInfo lhs, SelectableAppInfo rhs) {
+            final int compareExt = AppCopyHelperUtils.compareExtraContents(lhs, rhs);
+            if (compareExt != 0) {
+                return compareExt;
+            }
+
             String lhsLabel = lhs.appName.toString();
             String rhsLabel = rhs.appName.toString();
             return lhsLabel.toLowerCase().compareTo(rhsLabel.toLowerCase());

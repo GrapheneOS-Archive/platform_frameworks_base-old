@@ -865,4 +865,6 @@ interface IPackageManager {
 
     void sendBootCompletedBroadcastToPackage(String packageName, boolean includeStopped,
                                                     int userId);
+
+    int getInstallerOfRecordUid(String packageName, int userId);
 }

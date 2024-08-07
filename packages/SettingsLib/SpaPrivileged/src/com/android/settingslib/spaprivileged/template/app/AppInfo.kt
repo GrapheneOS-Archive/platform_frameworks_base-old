@@ -18,6 +18,7 @@ package com.android.settingslib.spaprivileged.template.app
 
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
+import android.os.UserHandle
 import android.text.BidiFormatter
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
@@ -160,6 +161,39 @@ class AppInfoProvider(private val packageInfo: PackageInfo) {
             }
             val s = formatDate(pi.lastUpdateTime, dateFormat, timeFormat)
             lines.add(stringResource(R.string.app_info_update_time, s))
+        }
+
+        val installerUserId = if (appInfo == null || UserHandle.myUserId() != UserHandle.USER_SYSTEM) {
+            UserHandle.USER_NULL
+        } else {
+            val installerUid = ctx.packageManager.getInstallerOfRecordUid(
+                appInfo.packageName, UserHandle.getUserId(appInfo.uid)
+            )
+            if (installerUid == android.os.Process.INVALID_UID) {
+                UserHandle.USER_NULL
+            } else {
+                UserHandle.getUserId(installerUid)
+            }
+        }
+
+        if (installerUserId != UserHandle.USER_NULL) {
+            val userMgr: android.os.UserManager? =
+                ctx.getSystemService(android.os.UserManager::class.java)
+            userMgr?.getUserInfo(installerUserId)?.name?.let { userName ->
+                lines.add(
+                    if (installerUserId == UserHandle.USER_SYSTEM) {
+                        stringResource(
+                            R.string.app_info_installed_or_updated_by_primary_user,
+                            userName,
+                        )
+                    } else {
+                        stringResource(
+                            R.string.app_info_installed_or_updated_by_secondary_user,
+                            userName,
+                        )
+                    }
+                )
+            }
         }
 
         return lines.joinToString(separator = System.lineSeparator())
