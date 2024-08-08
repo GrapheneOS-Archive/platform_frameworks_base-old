@@ -369,6 +369,14 @@ public class TombstoneHandler {
                     , "android::hardware::bluetooth::hci::HciFlowControl::~HciFlowControl()"
                     , "android::hardware::bluetooth::hci::shim::Deinitialize()"
                     , "android::hardware::bluetooth::aidl::bcmbtlinux::BluetoothHci::signal_handler(int)"
+            ) || checkBacktraceFunctionNames(backtrace, 0
+                    , "abort"
+                    , "fatal_error"
+                    , "deallocate_small"
+                    , "android::hardware::bluetooth::hci::shim::DeinitializeCallback()"
+                    , "android::hardware::bluetooth::hci::HciFlowControl::~HciFlowControl()"
+                    , "android::hardware::bluetooth::hci::shim::Deinitialize()"
+                    , "android::hardware::bluetooth::aidl::bcmbtlinux::BluetoothHci::signal_handler(int)"
             );
         }
 
