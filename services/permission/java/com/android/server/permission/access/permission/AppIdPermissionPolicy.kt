@@ -43,6 +43,8 @@ import com.android.server.permission.access.util.hasAnyBit
 import com.android.server.permission.access.util.hasBits
 import com.android.server.permission.access.util.isInternal
 import com.android.server.pm.KnownPackages
+import com.android.server.pm.ext.PackageExt
+import com.android.server.pm.ext.PackageHooks
 import com.android.server.pm.parsing.PackageInfoUtils
 import com.android.server.pm.pkg.AndroidPackage
 import com.android.server.pm.pkg.PackageState
@@ -845,13 +847,43 @@ class AppIdPermissionPolicy : SchemePolicy() {
         userId: Int,
         installedPackageState: PackageState?
     ) {
-        packageState.androidPackage?.requestedPermissions?.forEach { permissionName ->
-            evaluatePermissionState(
-                packageState.appId,
-                userId,
-                permissionName,
-                installedPackageState
-            )
+        val androidPackage = packageState.androidPackage
+        if (androidPackage != null) {
+            val pkgHooks = PackageExt.get(androidPackage).hooks()
+            androidPackage.requestedPermissions.forEach { permissionName ->
+                val appId = packageState.appId
+                evaluatePermissionState(
+                    appId,
+                    userId,
+                    permissionName,
+                    installedPackageState
+                )
+
+                val override = pkgHooks.overridePermissionState(permissionName, userId)
+                var flags = -1
+                if (override == PackageHooks.PERMISSION_OVERRIDE_GRANT) {
+                    flags = PermissionFlags.SYSTEM_FIXED or PermissionFlags.RUNTIME_GRANTED
+                } else if (override == PackageHooks.PERMISSION_OVERRIDE_REVOKE) {
+                    if (!getPermissionFlags(appId, userId, permissionName).hasBits(PermissionFlags.USER_SET)) {
+                        flags = 0
+                    }
+                }
+
+                if (flags != -1) {
+                    val mask = PermissionFlags.ROLE or
+                            PermissionFlags.RUNTIME_GRANTED or
+                            PermissionFlags.USER_SET or
+                            PermissionFlags.USER_FIXED or
+                            PermissionFlags.POLICY_FIXED or
+                            PermissionFlags.SYSTEM_FIXED or
+                            PermissionFlags.PREGRANT or
+                            PermissionFlags.LEGACY_GRANTED or
+                            PermissionFlags.APP_OP_REVOKED or
+                            PermissionFlags.ONE_TIME or
+                            PermissionFlags.HIBERNATION
+                    updatePermissionFlags(appId, userId, permissionName, mask, flags)
+                }
+            }
         }
     }
 
