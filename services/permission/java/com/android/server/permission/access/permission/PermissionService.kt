@@ -68,6 +68,7 @@ import com.android.server.PermissionThread
 import com.android.server.ServiceThread
 import com.android.server.SystemConfig
 import com.android.server.companion.virtual.VirtualDeviceManagerInternal
+import com.android.server.ext.PackageManagerHooks
 import com.android.server.permission.access.AccessCheckingService
 import com.android.server.permission.access.AccessState
 import com.android.server.permission.access.AppOpUri
@@ -798,6 +799,13 @@ class PermissionService(private val service: AccessCheckingService) :
             context.checkCallingOrSelfPermission(
                 Manifest.permission.ADJUST_RUNTIME_PERMISSIONS_POLICY
             ) == PackageManager.PERMISSION_GRANTED
+
+        if (isGranted) {
+            if (PackageManagerHooks.shouldBlockGrantRuntimePermission(packageManagerInternal,
+                    permissionName, packageName, userId)) {
+                return
+            }
+        }
 
         service.mutateState {
             with(onPermissionFlagsChangedListener) {
