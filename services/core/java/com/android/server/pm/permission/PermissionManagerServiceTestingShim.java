@@ -582,8 +582,8 @@ public class PermissionManagerServiceTestingShim implements PermissionManagerSer
     }
 
     @Override
-    public void updatePermissions(@NonNull AndroidPackage pkg, int userId) {
-        mOldImplementation.updatePermissions(pkg, userId);
-        mNewImplementation.updatePermissions(pkg, userId);
+    public void updatePermissions(@NonNull PackageState pkgState, int userId) {
+        mOldImplementation.updatePermissions(pkgState, userId);
+        mNewImplementation.updatePermissions(pkgState, userId);
     }
 }

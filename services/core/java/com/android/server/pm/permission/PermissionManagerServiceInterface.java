@@ -30,6 +30,7 @@ import android.permission.PermissionManagerInternal;
 
 import com.android.server.pm.pkg.AndroidPackage;
 import com.android.server.pm.pkg.PackageState;
+import com.android.server.pm.pkg.PackageStateInternal;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
@@ -650,5 +651,5 @@ public interface PermissionManagerServiceInterface extends PermissionManagerInte
             @NonNull PackageState packageState, @Nullable AndroidPackage pkg,
             @NonNull List<AndroidPackage> sharedUserPkgs, @UserIdInt int userId);
 
-    void updatePermissions(@NonNull AndroidPackage pkg, int userId);
+    void updatePermissions(@NonNull PackageState packageState, int userId);
 }
