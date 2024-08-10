@@ -50,22 +50,29 @@ public class DuressPasswordHelper {
         });
     }
 
-    void setDuressCredentials(LockscreenCredential ownerCredential,
-                                 LockscreenCredential pin, LockscreenCredential password) {
-        Objects.requireNonNull(ownerCredential, "ownerCredential");
-        Objects.requireNonNull(pin, "pin");
-        Objects.requireNonNull(password, "password");
-
+    private void checkOwnerCredential(LockscreenCredential ownerCredential) {
         int userId = UserHandle.USER_SYSTEM;
 
         if (lockSettingsService.getCredentialType(userId) == CREDENTIAL_TYPE_NONE) {
             if (!ownerCredential.isNone()) {
                 throw new IllegalArgumentException("!ownerCredential.isNone()");
             }
-        } else if (lockSettingsService.checkCredential(ownerCredential, userId, null)
-                .getResponseCode() != VerifyCredentialResponse.RESPONSE_OK) {
-            throw new SecurityException("owner credential verification failed");
+        } else {
+            VerifyCredentialResponse response = lockSettingsService.checkCredential(ownerCredential, userId, null);
+
+            if (response.getResponseCode() != VerifyCredentialResponse.RESPONSE_OK) {
+                throw new SecurityException("owner credential verification failed; " + response);
+            }
         }
+    }
+
+    void setDuressCredentials(LockscreenCredential ownerCredential,
+                                 LockscreenCredential pin, LockscreenCredential password) {
+        Objects.requireNonNull(ownerCredential, "ownerCredential");
+        Objects.requireNonNull(pin, "pin");
+        Objects.requireNonNull(password, "password");
+
+        checkOwnerCredential(ownerCredential);
 
         if (pin.isNone() && password.isNone()) {
             // exception handling is delegated to the caller
@@ -81,7 +88,8 @@ public class DuressPasswordHelper {
         DuressCredentials.create(spManager, pin, password).save(lockSettingsStorage);
     }
 
-    boolean hasDuressCredentials() {
+    boolean hasDuressCredentials(LockscreenCredential ownerCredential) {
+        checkOwnerCredential(ownerCredential);
         return DuressCredentials.maybeGet(lockSettingsStorage) != null;
     }
 

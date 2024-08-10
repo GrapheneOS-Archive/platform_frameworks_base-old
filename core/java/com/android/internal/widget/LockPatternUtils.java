@@ -2049,9 +2049,9 @@ public class LockPatternUtils {
         }
     }
 
-    public boolean hasDuressCredentials() {
+    public boolean hasDuressCredentials(@NonNull LockscreenCredential ownerCredential) {
         try {
-            return getLockSettings().hasDuressCredentials();
+            return getLockSettings().hasDuressCredentials(ownerCredential);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
