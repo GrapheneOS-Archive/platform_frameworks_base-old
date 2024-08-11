@@ -21,6 +21,7 @@ import android.content.pm.PackageManager
 import android.content.pm.PermissionGroupInfo
 import android.content.pm.PermissionInfo
 import android.content.pm.SigningDetails
+import android.content.pm.SpecialRuntimePermAppUtils
 import android.os.Build
 import android.permission.flags.Flags
 import android.util.Slog
@@ -46,6 +47,8 @@ import com.android.server.pm.KnownPackages
 import com.android.server.pm.ext.PackageExt
 import com.android.server.pm.ext.PackageHooks
 import com.android.server.pm.parsing.PackageInfoUtils
+import com.android.server.pm.permission.SpecialRuntimePermUtils
+import com.android.server.pm.permission.SpecialRuntimePermUtils.isSpecialRuntimePermission
 import com.android.server.pm.pkg.AndroidPackage
 import com.android.server.pm.pkg.PackageState
 import libcore.util.EmptyArray
@@ -277,6 +280,9 @@ class AppIdPermissionPolicy : SchemePolicy() {
             }
             val oldFlags = getPermissionFlags(appId, userId, permissionName)
             if (oldFlags.hasAnyBit(SYSTEM_OR_POLICY_FIXED_MASK)) {
+                return@forEach
+            }
+            if (isSpecialRuntimePermission(permissionName)) {
                 return@forEach
             }
             var newFlags = oldFlags
@@ -1019,7 +1025,7 @@ class AppIdPermissionPolicy : SchemePolicy() {
                     packageState ->
                     targetSdkVersion.coerceAtMost(packageState.androidPackage!!.targetSdkVersion)
                 }
-            if (targetSdkVersion < Build.VERSION_CODES.M) {
+            if (targetSdkVersion < Build.VERSION_CODES.M && !isSpecialRuntimePermission(permissionName)) {
                 if (permission.isRuntimeOnly) {
                     // Different from the old implementation, which simply skips a runtime-only
                     // permission, we now only allow holding on to the restriction related flags,
@@ -1155,6 +1161,14 @@ class AppIdPermissionPolicy : SchemePolicy() {
                 } else {
                     newFlags andInv PermissionFlags.SOFT_RESTRICTED
                 }
+
+
+            if (!newFlags.hasBits(PermissionFlags.USER_SET)
+                    && isSpecialRuntimePermission(permissionName)
+                    && requestingPackageStates.anyIndexed { _, it -> it.isSystem }) {
+                newFlags = newFlags or PermissionFlags.RUNTIME_GRANTED
+            }
+
             setPermissionFlags(appId, userId, permissionName, newFlags)
         } else {
             Slog.e(

@@ -65,6 +65,9 @@ interface IPackageInstaller {
     @EnforcePermission("INSTALL_PACKAGES")
     void setPermissionsResult(int sessionId, boolean accepted);
 
+    @EnforcePermission("INSTALL_GRANT_RUNTIME_PERMISSIONS")
+    void updatePermissionStates(int sessionId, in String[] permissionNames, in int[] states);
+
     void bypassNextStagedInstallerCheck(boolean value);
 
     void bypassNextAllowedApexUpdateCheck(boolean value);
