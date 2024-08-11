@@ -20,6 +20,7 @@ import static android.content.Intent.FLAG_ACTIVITY_NO_HISTORY;
 import static android.view.WindowManager.LayoutParams.SYSTEM_FLAG_HIDE_NON_SYSTEM_OVERLAY_WINDOWS;
 
 import android.Manifest;
+import android.annotation.Nullable;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.AppGlobals;
@@ -41,6 +42,7 @@ import android.content.pm.PackageManager.ApplicationInfoFlags;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -54,6 +56,7 @@ import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
+import android.util.Pair;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -958,6 +961,11 @@ public class PackageInstallerActivity extends Activity {
     }
 
     void handleSpecialRuntimePermissionAutoGrants() {
+        if (Build.VERSION.SDK_INT >= 35) {
+            handleSpecialRuntimePermissionAutoGrantsV2();
+            return;
+        }
+
         var skipPermissionAutoGrants = new ArrayList<String>();
 
         if (mGrantInternetPermission != null) {
@@ -975,5 +983,42 @@ public class PackageInstallerActivity extends Activity {
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
+    }
+
+    private static void maybeAddPermissionState(String perm, @Nullable CheckBox checkBox, ArrayList<Pair<String, Integer>> dst) {
+        if (checkBox != null) {
+            int state = checkBox.isChecked() ?
+                    PackageInstaller.SessionParams.PERMISSION_STATE_GRANTED :
+                    PackageInstaller.SessionParams.PERMISSION_STATE_DENIED;
+            dst.add(Pair.create(perm, Integer.valueOf(state)));
+        }
+    }
+
+    void handleSpecialRuntimePermissionAutoGrantsV2() {
+        int sessionId = mSessionId;
+        if (sessionId == -1) {
+            sessionId = getIntent().getIntExtra(EXTRA_STAGED_SESSION_ID, -1);
+            if (sessionId == -1) {
+                return;
+            }
+        }
+
+        var list = new ArrayList<Pair<String, Integer>>();
+        maybeAddPermissionState(Manifest.permission.INTERNET, mGrantInternetPermission, list);
+
+        if (list.isEmpty()) {
+            return;
+        }
+
+        int num = list.size();
+        String[] permissions = new String[num];
+        int[] states = new int[num];
+        for (int i = 0; i < num; ++i) {
+            Pair<String, Integer> pair = list.get(i);
+            permissions[i] = pair.first;
+            states[i] = pair.second.intValue();
+        }
+
+        mInstaller.updatePermissionStates(sessionId, permissions, states);
     }
 }
