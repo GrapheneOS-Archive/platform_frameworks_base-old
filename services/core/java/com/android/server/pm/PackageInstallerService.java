@@ -1499,6 +1499,19 @@ public class PackageInstallerService extends IPackageInstaller.Stub implements
         }
     }
 
+    @android.annotation.EnforcePermission(android.Manifest.permission.INSTALL_GRANT_RUNTIME_PERMISSIONS)
+    @Override
+    public void updatePermissionStates(int sessionId, String[] permissionNames, int[] states) {
+        updatePermissionStates_enforcePermission();
+
+        synchronized (mSessions) {
+            PackageInstallerSession session = mSessions.get(sessionId);
+            if (session != null) {
+                session.updatePermissionStates(permissionNames, states);
+            }
+        }
+    }
+
     private boolean isValidForInstallConstraints(PackageStateInternal ps,
             String installerPackageName, int installerUid, String packageName) {
         final var snapshot = mPm.snapshotComputer();
