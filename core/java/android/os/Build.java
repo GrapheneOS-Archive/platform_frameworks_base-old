@@ -1244,7 +1244,7 @@ public class Build {
          * Vanilla Ice Cream.
          */
         @FlaggedApi(Flags.FLAG_ANDROID_OS_BUILD_VANILLA_ICE_CREAM)
-        public static final int VANILLA_ICE_CREAM = CUR_DEVELOPMENT;
+        public static final int VANILLA_ICE_CREAM = 35;
     }
 
     /** The type of build, like "user" or "eng". */
