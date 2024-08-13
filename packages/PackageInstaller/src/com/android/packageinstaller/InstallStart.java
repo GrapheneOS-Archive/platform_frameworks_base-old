@@ -21,6 +21,7 @@ import static com.android.packageinstaller.PackageUtil.getMaxTargetSdkVersionFor
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AppOpsManager;
 import android.app.DialogFragment;
 import android.app.admin.DevicePolicyManager;
 import android.content.ContentResolver;
@@ -54,6 +55,7 @@ public class InstallStart extends Activity {
 
     private PackageManager mPackageManager;
     private UserManager mUserManager;
+    private AppOpsManager mAppOpsManager;
     private boolean mAbortInstall = false;
     private boolean mShouldFinish = true;
 
@@ -78,6 +80,7 @@ public class InstallStart extends Activity {
         }
         mPackageManager = getPackageManager();
         mUserManager = getSystemService(UserManager.class);
+        mAppOpsManager = getSystemService(AppOpsManager.class);
 
         Intent intent = getIntent();
         String callingPackage = getCallingPackage();
@@ -152,7 +155,22 @@ public class InstallStart extends Activity {
             mAbortInstall = true;
         }
 
-        checkDevicePolicyRestrictions(isTrustedSource);
+        // During RUNTIME an app store that is not a trusted source cannot install
+        // anything when the work profile has been restricted to not allow unknown sources
+
+        // In order to work around this, USER_TRUSTED_SOURCE flag is created
+        // This will allow trusting this source, but only for this user/profile
+        // and only disable some checks, like device policy restrictions on unknown sources
+
+        boolean isUserTrustedSource = false;
+        if (callingPackage != null && !isTrustedSource) {
+            isUserTrustedSource =
+                    mAppOpsManager.checkOp(AppOpsManager.OP_USER_TRUSTED_SOURCE, callingUid, callingPackage)
+                            == AppOpsManager.MODE_ALLOWED;
+            Log.i(TAG, "Calling package " + callingPackage + " isUserTrustedSource=" + isUserTrustedSource);
+        }
+
+        checkDevicePolicyRestrictions(isTrustedSource || isUserTrustedSource);
 
         final String installerPackageNameFromIntent = getIntent().getStringExtra(
                 Intent.EXTRA_INSTALLER_PACKAGE_NAME);

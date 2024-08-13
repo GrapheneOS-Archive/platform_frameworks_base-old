@@ -16,7 +16,8 @@ class PlayStoreHooks {
             res.addAll(createUsesPerms(
                     Manifest.permission.REQUEST_INSTALL_PACKAGES,
                     Manifest.permission.REQUEST_DELETE_PACKAGES,
-                    Manifest.permission.UPDATE_PACKAGES_WITHOUT_USER_ACTION
+                    Manifest.permission.UPDATE_PACKAGES_WITHOUT_USER_ACTION,
+                    Manifest.permission.USER_TRUSTED_SOURCE
             ));
             return res;
         }
