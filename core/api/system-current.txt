@@ -4873,6 +4873,8 @@ package android.ext {
   public interface PackageId {
     field public static final int ANDROID_AUTO = 10; // 0xa
     field public static final String ANDROID_AUTO_NAME = "com.google.android.projection.gearhead";
+    field public static final int DPC = 13; // 0xd
+    field public static final String DPC_NAME = "com.google.android.apps.work.clouddpc";
     field public static final int EUICC_SUPPORT_PIXEL = 5; // 0x5
     field public static final String EUICC_SUPPORT_PIXEL_NAME = "com.google.euiccpixel";
     field public static final int GMS_CORE = 2; // 0x2

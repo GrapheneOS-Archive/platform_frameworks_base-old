@@ -2199,6 +2199,10 @@ UnflaggedApi: android.ext.PackageId#ANDROID_AUTO:
     New API must be flagged with @FlaggedApi: field android.ext.PackageId.ANDROID_AUTO
 UnflaggedApi: android.ext.PackageId#ANDROID_AUTO_NAME:
     New API must be flagged with @FlaggedApi: field android.ext.PackageId.ANDROID_AUTO_NAME
+UnflaggedApi: android.ext.PackageId#DPC:
+    New API must be flagged with @FlaggedApi: field android.ext.PackageId.DPC
+UnflaggedApi: android.ext.PackageId#DPC_NAME:
+    New API must be flagged with @FlaggedApi: field android.ext.PackageId.DPC_NAME
 UnflaggedApi: android.ext.PackageId#EUICC_SUPPORT_PIXEL:
     New API must be flagged with @FlaggedApi: field android.ext.PackageId.EUICC_SUPPORT_PIXEL
 UnflaggedApi: android.ext.PackageId#EUICC_SUPPORT_PIXEL_NAME:
