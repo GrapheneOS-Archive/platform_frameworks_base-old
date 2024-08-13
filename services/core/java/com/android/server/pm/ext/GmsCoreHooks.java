@@ -20,8 +20,10 @@ class GmsCoreHooks {
         @Override
         public List<ParsedUsesPermissionImpl> addUsesPermissions() {
             var res = super.addUsesPermissions();
-            var l = createUsesPerms(Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-            res.addAll(l);
+            res.addAll(createUsesPerms(
+                    Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                    Manifest.permission.REQUEST_INSTALL_PACKAGES
+            ));
             return res;
         }
 
