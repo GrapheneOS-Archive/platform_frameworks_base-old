@@ -1111,6 +1111,8 @@ Todo: android.provider.ContactsContract.RawContacts#newEntityIterator(android.da
 
 UnflaggedApi: android.Manifest.permission#OTHER_SENSORS:
     New API must be flagged with @FlaggedApi: field android.Manifest.permission.OTHER_SENSORS
+UnflaggedApi: android.Manifest.permission#USER_TRUSTED_SOURCE:
+    New API must be flagged with @FlaggedApi: field android.Manifest.permission.USER_TRUSTED_SOURCE
 UnflaggedApi: android.Manifest.permission_group#NETWORK:
     New API must be flagged with @FlaggedApi: field android.Manifest.permission_group.NETWORK
 UnflaggedApi: android.Manifest.permission_group#OTHER_SENSORS:
@@ -1201,6 +1203,8 @@ UnflaggedApi: android.app.ActivityManager#getHistoricalProcessStartReasons(int):
     New API must be flagged with @FlaggedApi: method android.app.ActivityManager.getHistoricalProcessStartReasons(int)
 UnflaggedApi: android.app.ActivityManager#setApplicationStartInfoCompletionListener(java.util.concurrent.Executor, java.util.function.Consumer<android.app.ApplicationStartInfo>):
     New API must be flagged with @FlaggedApi: method android.app.ActivityManager.setApplicationStartInfoCompletionListener(java.util.concurrent.Executor,java.util.function.Consumer<android.app.ApplicationStartInfo>)
+UnflaggedApi: android.app.AppOpsManager#OPSTR_USER_TRUSTED_SOURCE:
+    New API must be flagged with @FlaggedApi: field android.app.AppOpsManager.OPSTR_USER_TRUSTED_SOURCE
 UnflaggedApi: android.app.ApplicationStartInfo:
     New API must be flagged with @FlaggedApi: class android.app.ApplicationStartInfo
 UnflaggedApi: android.app.ApplicationStartInfo#CREATOR:

@@ -1587,9 +1587,12 @@ public class AppOpsManager {
      */
     public static final int OP_EMERGENCY_LOCATION = AppProtoEnums.APP_OP_EMERGENCY_LOCATION;
 
+    /** @hide Act as a user trusted source for installation. */
+    public static final int OP_USER_TRUSTED_SOURCE = AppProtoEnums.APP_OP_USER_TRUSTED_SOURCE;
+
     /** @hide */
     @UnsupportedAppUsage(maxTargetSdk = Build.VERSION_CODES.R, trackingBug = 170729553)
-    public static final int _NUM_OP = 148;
+    public static final int _NUM_OP = 149;
 
     /**
      * All app ops represented as strings.
@@ -1743,6 +1746,7 @@ public class AppOpsManager {
             OPSTR_ARCHIVE_ICON_OVERLAY,
             OPSTR_UNARCHIVAL_CONFIRMATION,
             OPSTR_EMERGENCY_LOCATION,
+            OPSTR_USER_TRUSTED_SOURCE,
     })
     public @interface AppOpString {}
 
@@ -2467,6 +2471,10 @@ public class AppOpsManager {
     @FlaggedApi(FLAG_LOCATION_BYPASS)
     public static final String OPSTR_EMERGENCY_LOCATION = "android:emergency_location";
 
+    /** Act as user trusted source during package installation **/
+    public static final String OPSTR_USER_TRUSTED_SOURCE
+            = "android:user_trusted_source";
+
     /** {@link #sAppOpsToNote} not initialized yet for this op */
     private static final byte SHOULD_COLLECT_NOTE_OP_NOT_INITIALIZED = 0;
     /** Should not collect noting of this app-op in {@link #sAppOpsToNote} */
@@ -2551,6 +2559,7 @@ public class AppOpsManager {
             OP_SYSTEM_ALERT_WINDOW,
             OP_WRITE_SETTINGS,
             OP_GET_USAGE_STATS,
+            OP_USER_TRUSTED_SOURCE,
             OP_REQUEST_INSTALL_PACKAGES,
             OP_START_FOREGROUND,
             OP_SMS_FINANCIAL_TRANSACTIONS,
@@ -3050,6 +3059,9 @@ public class AppOpsManager {
         // TODO(b/301150056): STOPSHIP determine how this appop should work with the permission
         new AppOpInfo.Builder(OP_EMERGENCY_LOCATION, OPSTR_EMERGENCY_LOCATION, "EMERGENCY_LOCATION")
                 .setPermission(Manifest.permission.LOCATION_BYPASS).build(),
+        new AppOpInfo.Builder(OP_USER_TRUSTED_SOURCE, OPSTR_USER_TRUSTED_SOURCE, "USER_TRUSTED_SOURCE")
+                .setSwitchCode(OP_USER_TRUSTED_SOURCE)
+                .setPermission(Manifest.permission.USER_TRUSTED_SOURCE).build(),
     };
 
     // The number of longs needed to form a full bitmask of app ops

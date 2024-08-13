@@ -6758,6 +6758,17 @@
         android:label="@string/permlab_access_notification_policy"
         android:protectionLevel="normal" />
 
+    <!-- Allows an app store to install apps despite DISALLOW_INSTALL_UNKNOWN_SOURCES
+         restriction
+         <p>Declaring the permission implies intention to use the API and the user of the
+         device or the device policy application can grant permission through the Settings application.
+         <p>Protection level: signature|privileged|appop
+         <p>An app store loader has to be the one which provides data to install an app.
+         <p>An app store has to have both permission:USER_TRUSTED_SOURCE AND
+         appop:USER_TRUSTED_SOURCE allowed to be able to access the read logs. -->
+    <permission android:name="android.permission.USER_TRUSTED_SOURCE"
+        android:protectionLevel="signature|appop" />
+
     <!-- Allows modification of do not disturb rules and policies. Only allowed for system
         processes.
         @hide -->

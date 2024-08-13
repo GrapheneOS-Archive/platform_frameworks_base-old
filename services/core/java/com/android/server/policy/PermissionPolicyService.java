@@ -290,6 +290,8 @@ public final class PermissionPolicyService extends SystemService {
                     // mode, regardless of whether the app has requested the permission, so we
                     // should not reset it.
                     continue;
+                case Manifest.permission.USER_TRUSTED_SOURCE:
+                    continue;
                 default:
                     final int appOpCode = AppOpsManager.permissionToOpCode(
                             appOpPermissionInfo.name);
