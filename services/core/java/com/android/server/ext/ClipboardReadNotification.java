@@ -96,7 +96,7 @@ public class ClipboardReadNotification extends AppSwitchNotificationBase {
         nb.setContentText(contentText);
 
         {
-            Intent settingsIntent = SettingsIntents.getAppIntent(SettingsIntents.APP_CLIPBOARD,
+            Intent settingsIntent = SettingsIntents.getAppIntent(ctx, SettingsIntents.APP_CLIPBOARD,
                     pkgName);
             PendingIntent pi = PendingIntent.getActivityAsUser(ctx, 0, settingsIntent,
                     PendingIntent.FLAG_IMMUTABLE, null, userHandle);
