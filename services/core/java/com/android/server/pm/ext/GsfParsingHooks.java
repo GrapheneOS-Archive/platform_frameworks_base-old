@@ -1,6 +1,9 @@
 package com.android.server.pm.ext;
 
+import android.os.Build;
+
 import com.android.internal.pm.pkg.component.ParsedPermission;
+import com.android.internal.pm.pkg.component.ParsedProvider;
 
 class GsfParsingHooks extends GmsCompatPkgParsingHooks {
 
@@ -28,5 +31,18 @@ class GsfParsingHooks extends GmsCompatPkgParsingHooks {
         // bug), which blocks GSF from being installed.
         // Since this permission isn't actually used for anything, removing it is safe.
         return "androidx.core.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION".equals(p.getName());
+    }
+
+    @Override
+    public boolean shouldSkipProvider(ParsedProvider p) {
+        // On SDK 35, all GSF ContentProviders are moved to GmsCore and GSF becomes an
+        // "android:hasCode=false" package, i.e. it never runs.
+        //
+        // Users who have installed GSF 34 while on SDK 34 (Android 14) will still have it after
+        // updating to SDK 35 (Android 15), which leads to GmsCore breaking due to ContentProvider
+        // conflicts between GSF and GmsCore.
+        //
+        // As a workaround, ignore all GSF ContentProvider on SDK 35+.
+        return Build.VERSION.SDK_INT >= 35;
     }
 }
