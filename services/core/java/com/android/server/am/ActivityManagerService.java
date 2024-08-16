@@ -462,6 +462,7 @@ import com.android.server.appop.AppOpsService;
 import com.android.server.compat.PlatformCompat;
 import com.android.server.contentcapture.ContentCaptureManagerInternal;
 import com.android.server.criticalevents.CriticalEventLog;
+import com.android.server.ext.DynCodeLoadingUtils;
 import com.android.server.firewall.IntentFirewall;
 import com.android.server.graphics.fonts.FontManagerInternal;
 import com.android.server.job.JobSchedulerInternal;
@@ -20978,5 +20979,20 @@ public class ActivityManagerService extends IActivityManager.Stub
     public String[] getSystemIdmapPaths() {
         // see comment in AssetManager#createSystemAssetsInZygoteLocked()
         return android.content.res.AssetManager.systemIdmapPaths_;
+    }
+
+    @Override
+    public void showDynCodeLoadingNotification(int type, String pkgName, @Nullable String path,
+                                            List<String> reportBody, String denialType) {
+        final int callerUid = Binder.getCallingUid();
+        enforceCallingPackage(pkgName, callerUid);
+
+        final long token = Binder.clearCallingIdentity();
+        try {
+            DynCodeLoadingUtils.handleAppReportedDcl(mContext, type, pkgName,
+                    UserHandle.getUserId(callerUid), path, reportBody, denialType);
+        } finally {
+            Binder.restoreCallingIdentity(token);
+        }
     }
 }
