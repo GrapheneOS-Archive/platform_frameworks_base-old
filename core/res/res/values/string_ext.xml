@@ -49,4 +49,7 @@
     <string name="notif_memory_dcl_title">%1$s tried to perform DCL via memory</string>
     <java-symbol type="string" name="notif_memory_dcl_title" />
 
+    <string name="notif_storage_dcl_title">%1$s tried to perform DCL via storage</string>
+    <java-symbol type="string" name="notif_storage_dcl_title" />
+
 </resources>
