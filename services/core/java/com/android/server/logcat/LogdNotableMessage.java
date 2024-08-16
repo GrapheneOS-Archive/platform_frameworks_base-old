@@ -1,5 +1,6 @@
 package com.android.server.logcat;
 
+import android.annotation.Nullable;
 import android.app.ActivityManagerInternal;
 import android.app.ActivityManagerInternal.ProcessRecordSnapshot;
 import android.content.Context;
@@ -16,6 +17,8 @@ import com.android.server.ext.DynCodeLoadingUtils;
 import com.android.server.os.nano.AppCompatProtos;
 
 import java.lang.reflect.Field;
+
+import libcore.util.HexEncoding;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -135,8 +138,53 @@ public class LogdNotableMessage {
             n.moreInfoIntent = DynCodeLoadingUtils.getMoreInfoIntent(n, report);
             n.maybeShow();
         }
+        else if ((SELinuxFlags.RESTRICT_STORAGE_DYN_CODE_EXEC_FLAGS & flagValue) != 0) {
+            var n = DynCodeLoadingUtils.createStorageDclNotif(ctx, appInfo);
+            var report = DynCodeLoadingUtils.DclReport.createForStorageDcl(flagName);
+            DynCodeLoadingUtils.handleStorageDclAuditMessage(msg, n, report);
+            n.moreInfoIntent = DynCodeLoadingUtils.getMoreInfoIntent(n, report);
+            n.maybeShow();
+        }
         else {
             Slog.w(TAG, "unknown flag " + msg);
         }
+    }
+
+    // see common/security/lsm_audit.c in Linux kernel, function dump_common_audit_data()
+    @Nullable
+    public static String extractAuditUntrustedString(String msg, String dataPrefix) {
+        // leading space is important, it's never included in data itself
+        String dataStart = ' ' + dataPrefix + '=';
+
+        int idx = msg.indexOf(dataStart);
+        String res = null;
+        if (idx > 0) {
+            res = extractAuditUntrustedStringInner(msg, idx + dataStart.length());
+        }
+        return res;
+    }
+
+    // see common/kernel/audit.c in Linux kernel, function audit_log_n_untrustedstring()
+    @Nullable
+    public static String extractAuditUntrustedStringInner(String s, int start) {
+        if (s.charAt(start) == '"') {
+            int end = s.indexOf('"', start + 1);
+            if (end > start) {
+                return s.substring(start + 1, end);
+            }
+        } else {
+            int end = s.indexOf(' ', start);
+            if (end == -1) {
+                end = s.length();
+            }
+            try {
+                byte[] b = HexEncoding.decode(s.substring(start, end));
+                return new String(b, UTF_8);
+            } catch (Exception e) {
+                Slog.d(TAG, "", e);
+            }
+        }
+        Slog.d(TAG, "extractUntrustedAuditString: malformed string: start: " + start + ", str: " + s);
+        return null;
     }
 }
