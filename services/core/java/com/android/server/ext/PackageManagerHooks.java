@@ -106,6 +106,9 @@ public class PackageManagerHooks {
         flagsArr[AppBindArgs.FLAGS_IDX_HOOKED_LOCATION_MANAGER] =
                 HookedLocationManager.getFlags(gosPs, isUserApp);
 
+        flagsArr[AppBindArgs.FLAGS_IDX_DYN_CODE_LOADING] =
+                android.ext.dcl.DynCodeLoading.getAppBindFlags(pm.getContext(), userId, appInfo, unfilteredGosPs);
+
         var b = new Bundle();
         b.putParcelable(AppBindArgs.KEY_GOS_PACKAGE_STATE, gosPs);
         b.putIntArray(AppBindArgs.KEY_FLAGS_ARRAY, flagsArr);
