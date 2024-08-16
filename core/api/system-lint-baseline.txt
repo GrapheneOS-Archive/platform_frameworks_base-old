@@ -2333,6 +2333,8 @@ UnflaggedApi: android.ext.cscopes.ContactsGroup#writeToParcel(android.os.Parcel,
     New API must be flagged with @FlaggedApi: method android.ext.cscopes.ContactsGroup.writeToParcel(android.os.Parcel,int)
 UnflaggedApi: android.ext.dcl.DynCodeLoading:
     New API must be flagged with @FlaggedApi: class android.ext.dcl.DynCodeLoading
+UnflaggedApi: android.ext.dcl.DynCodeLoading#checkDexFileOpen(int, String):
+    New API must be flagged with @FlaggedApi: method android.ext.dcl.DynCodeLoading.checkDexFileOpen(int,String)
 UnflaggedApi: android.ext.dcl.DynCodeLoading#checkInMemoryDexFileOpen(int):
     New API must be flagged with @FlaggedApi: method android.ext.dcl.DynCodeLoading.checkInMemoryDexFileOpen(int)
 UnflaggedApi: android.ext.settings.BoolSetting:
