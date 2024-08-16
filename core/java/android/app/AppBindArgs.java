@@ -7,6 +7,7 @@ public interface AppBindArgs {
 
     int FLAGS_IDX_SPECIAL_RUNTIME_PERMISSIONS = 0;
     int FLAGS_IDX_HOOKED_LOCATION_MANAGER = 1;
+    int FLAGS_IDX_DYN_CODE_LOADING = 2;
 
     int FLAGS_ARRAY_LEN = 10;
 }

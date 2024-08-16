@@ -12,6 +12,7 @@ import com.android.internal.R;
 import com.android.internal.os.SELinuxFlags;
 import com.android.server.LocalServices;
 import com.android.server.ext.AppSwitchNotification;
+import com.android.server.ext.DynCodeLoadingUtils;
 import com.android.server.os.nano.AppCompatProtos;
 
 import java.lang.reflect.Field;
@@ -126,6 +127,12 @@ public class LogdNotableMessage {
             var n = AppSwitchNotification.create(ctx, appInfo, SettingsIntents.APP_NATIVE_DEBUGGING);
             n.titleRes = R.string.notif_native_debug_title;
             n.gosPsFlagSuppressNotif = GosPackageState.FLAG_BLOCK_NATIVE_DEBUGGING_SUPPRESS_NOTIF;
+            n.maybeShow();
+        }
+        else if ((SELinuxFlags.RESTRICT_MEMORY_DYN_CODE_EXEC_FLAGS & flagValue) != 0) {
+            AppSwitchNotification n = DynCodeLoadingUtils.createMemoryDclNotif(ctx, appInfo);
+            var report = DynCodeLoadingUtils.DclReport.createForMemoryDcl(flagName);
+            n.moreInfoIntent = DynCodeLoadingUtils.getMoreInfoIntent(n, report);
             n.maybeShow();
         }
         else {

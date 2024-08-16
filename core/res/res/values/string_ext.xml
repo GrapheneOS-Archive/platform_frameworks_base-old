@@ -46,4 +46,7 @@
     <string name="notif_hmalloc_crash_title">hardened_malloc detected an error in %1$s</string>
     <java-symbol type="string" name="notif_hmalloc_crash_title" />
 
+    <string name="notif_memory_dcl_title">%1$s tried to perform DCL via memory</string>
+    <java-symbol type="string" name="notif_memory_dcl_title" />
+
 </resources>
