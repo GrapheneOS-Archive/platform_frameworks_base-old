@@ -4,6 +4,7 @@ import android.annotation.Nullable;
 import android.content.Context;
 import android.content.pm.GosPackageState;
 import android.content.pm.SrtPermissions;
+import android.ext.dcl.DynCodeLoading;
 import android.location.HookedLocationManager;
 import android.os.Bundle;
 import android.os.Process;
@@ -54,6 +55,8 @@ class ActivityThreadHooks {
         SrtPermissions.setFlags(flags[AppBindArgs.FLAGS_IDX_SPECIAL_RUNTIME_PERMISSIONS]);
 
         HookedLocationManager.setFlags(flags[AppBindArgs.FLAGS_IDX_HOOKED_LOCATION_MANAGER]);
+
+        DynCodeLoading.handleAppBindFlags(flags[AppBindArgs.FLAGS_IDX_DYN_CODE_LOADING]);
 
         return args;
     }
