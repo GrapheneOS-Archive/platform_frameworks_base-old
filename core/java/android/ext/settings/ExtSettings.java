@@ -66,7 +66,7 @@ public class ExtSettings {
             "persist.native_debug", defaultBool(R.bool.setting_default_allow_native_debugging));
 
     public static final IntSetting CLIPBOARD_READ_ACCESS = new IntSetting(
-            Setting.Scope.PER_USER, "clipboard_read_access",
+            Setting.Scope.PER_USER, Settings.Secure.CLIPBOARD_READ_ACCESS,
             ClipboardReadSetting.DEFAULT, ClipboardReadSetting.VALID_VALUES);
 
     // AppCompatConfig specifies which hardening features are compatible/incompatible with a
