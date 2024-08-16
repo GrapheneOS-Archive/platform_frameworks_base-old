@@ -147,7 +147,7 @@ public abstract class AppSwitch {
         }
     }
 
-    private boolean isUsingDefaultValue(@Nullable GosPackageStateBase ps) {
+    protected boolean isUsingDefaultValue(@Nullable GosPackageStateBase ps) {
         return ps == null || (gosPsFlagNonDefault != 0 && !ps.hasFlags(gosPsFlagNonDefault));
     }
 
@@ -165,5 +165,9 @@ public abstract class AppSwitch {
 
     public final void addSuppressNotificationFlag(GosPackageState.Editor ed) {
         ed.addFlags(gosPsFlagSuppressNotif);
+    }
+
+    public final void removeSuppressNotificationFlag(GosPackageState.Editor ed) {
+        ed.clearFlags(gosPsFlagSuppressNotif);
     }
 }

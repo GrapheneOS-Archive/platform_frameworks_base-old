@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.GosPackageState;
 import android.ext.SettingsIntents;
+import android.ext.settings.app.AswDenyNativeDebug;
 import android.util.Slog;
 
 import com.android.internal.R;
@@ -123,7 +124,8 @@ public class LogdNotableMessage {
                 return;
             }
 
-            var n = AppSwitchNotification.create(ctx, appInfo, SettingsIntents.APP_NATIVE_DEBUGGING);
+            var n = AppSwitchNotification.create(ctx, appInfo, AswDenyNativeDebug.I,
+                    SettingsIntents.APP_NATIVE_DEBUGGING);
             n.titleRes = R.string.notif_native_debug_title;
             n.gosPsFlagSuppressNotif = GosPackageState.FLAG_BLOCK_NATIVE_DEBUGGING_SUPPRESS_NOTIF;
             n.maybeShow();

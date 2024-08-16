@@ -6757,6 +6757,9 @@ public final class Settings {
         /** @hide */
         public static final String SCRAMBLE_SIM_PIN_LAYOUT = "scramble_sim_pin_layout";
 
+        /** @hide */
+        public static final String CLIPBOARD_READ_ACCESS = "clipboard_read_access";
+
         // ExtSettings END
 
         // NOTE: If you add new settings here, be sure to add them to

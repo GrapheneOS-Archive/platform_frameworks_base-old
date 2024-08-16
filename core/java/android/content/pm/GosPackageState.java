@@ -78,6 +78,10 @@ public final class GosPackageState extends GosPackageStateBase implements Parcel
 
     /** @hide */ public static final int FLAG_HAS_PACKAGE_FLAGS = 1 << 25;
 
+    /** @hide */ public static final int FLAG_CLIPBOARD_READ_NON_DEFAULT = 1 << 26;
+    /** @hide */ public static final int FLAG_CLIPBOARD_READ = 1 << 27;
+    /** @hide */ public static final int FLAG_CLIPBOARD_READ_SUPPRESS_NOTIF = 1 << 28;
+
     // to distinguish between the case when no dflags are set and the case when dflags weren't calculated yet
     public static final int DFLAGS_SET = 1;
 

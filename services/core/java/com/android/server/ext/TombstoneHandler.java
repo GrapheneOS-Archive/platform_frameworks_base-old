@@ -10,6 +10,8 @@ import android.content.pm.PackageManagerInternal;
 import android.ext.LogViewerApp;
 import android.ext.SettingsIntents;
 import android.ext.settings.ExtSettings;
+import android.ext.settings.app.AswUseHardenedMalloc;
+import android.ext.settings.app.AswUseMemoryTagging;
 import android.os.DropBoxManager;
 import android.os.Process;
 import android.os.TombstoneWithHeadersProto;
@@ -317,7 +319,7 @@ public class TombstoneHandler {
         switch (type) {
             case ASW_NOTIF_TYPE_MEMTAG -> {
                 n = AppSwitchNotification.maybeCreate(ctx, firstPackageName, packageUid,
-                        SettingsIntents.APP_MEMTAG);
+                        AswUseMemoryTagging.I, SettingsIntents.APP_MEMTAG);
                 if (n == null) {
                     return;
                 }
@@ -326,7 +328,7 @@ public class TombstoneHandler {
             }
             case ASW_NOTIF_TYPE_HARDENED_MALLOC -> {
                 n = AppSwitchNotification.maybeCreate(ctx, firstPackageName, packageUid,
-                        SettingsIntents.APP_HARDENED_MALLOC);
+                        AswUseHardenedMalloc.I, SettingsIntents.APP_HARDENED_MALLOC);
                 if (n == null) {
                     return;
                 }
