@@ -148,34 +148,37 @@ public class GosPackageStatePmHooks {
 
     @Nullable
     public static GosPackageState get(PackageManagerService pm, int callingUid, String packageName, int userId) {
-        Computer snapshot = pm.snapshotComputer();
-        PackageStateInternal packageState = snapshot.getPackageStates().get(packageName);
+        Computer pmComputer = pm.snapshotComputer();
+        PackageStateInternal packageState = pmComputer.getPackageStates().get(packageName);
         if (packageState == null) {
-            // likely the package was racily uninstalled
+            // the package was likely racily uninstalled
+            return null;
+        }
+
+        return get(pmComputer, packageState,
+                packageState.getUserStateOrDefault(userId).getGosPackageState(),
+                callingUid, userId);
+    }
+
+    @Nullable
+    public static GosPackageState get(Computer pmComputer,
+                                      PackageStateInternal packageState, GosPackageStatePm gosPsPm,
+                                      int callingUid, int userId) {
+        if (gosPsPm == null) {
             return null;
         }
 
         final int appId = packageState.getAppId();
-
         if (!GosPackageState.attachableToPackage(appId)) {
             return null;
         }
 
         Permission permission = Permission.get(callingUid, appId, userId, false);
-
         if (permission == null) {
             return null;
         }
 
-        GosPackageStatePm gosPs = packageState.getUserStateOrDefault(userId).getGosPackageState();
-
-        if (gosPs == null) {
-            return null;
-        }
-
-        int derivedFlags = maybeDeriveFlags(snapshot, gosPs, packageState);
-
-        return permission.filterRead(gosPs, derivedFlags);
+        return permission.filterRead(gosPsPm, maybeDeriveFlags(pmComputer, gosPsPm, packageState));
     }
 
     static boolean set(PackageManagerService pm, String packageName, int userId,
