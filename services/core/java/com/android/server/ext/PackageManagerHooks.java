@@ -4,6 +4,7 @@ import android.Manifest;
 import android.annotation.Nullable;
 import android.annotation.UserIdInt;
 import android.app.AppBindArgs;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.GosPackageState;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManagerInternal;
@@ -17,6 +18,7 @@ import android.util.ArraySet;
 import android.util.Slog;
 
 import com.android.internal.app.ContactScopes;
+import com.android.server.pm.Computer;
 import com.android.server.pm.GosPackageStatePmHooks;
 import com.android.server.pm.PackageManagerService;
 import com.android.server.pm.ext.PackageExt;
@@ -25,6 +27,8 @@ import com.android.server.pm.permission.SpecialRuntimePermUtils;
 import com.android.server.pm.pkg.AndroidPackage;
 import com.android.server.pm.pkg.GosPackageStatePm;
 import com.android.server.pm.pkg.PackageStateInternal;
+
+import static java.util.Objects.requireNonNull;
 
 public class PackageManagerHooks {
 
@@ -69,7 +73,8 @@ public class PackageManagerHooks {
         final int appId = UserHandle.getAppId(callingUid);
         final int userId = UserHandle.getUserId(callingUid);
 
-        PackageStateInternal pkgState = pm.snapshotComputer().getPackageStateInternal(packageName);
+        Computer pmComputer = pm.snapshotComputer();
+        PackageStateInternal pkgState = pmComputer.getPackageStateInternal(packageName);
         if (pkgState == null) {
             return null;
         }
@@ -87,7 +92,12 @@ public class PackageManagerHooks {
         // isSystem() remains true even if isUpdatedSystemApp() is true
         final boolean isUserApp = !pkgState.isSystem();
 
-        GosPackageState gosPs = GosPackageStatePmHooks.get(pm, callingUid, packageName, userId);
+        GosPackageStatePm unfilteredGosPs = pkgState.getUserStateOrDefault(userId).getGosPackageState();
+        // GosPackageState that is filtered for the target app
+        GosPackageState gosPs = GosPackageStatePmHooks.get(pmComputer, pkgState, unfilteredGosPs, callingUid, userId);
+
+        ApplicationInfo appInfo =
+                requireNonNull(pmComputer.getApplicationInfo(packageName, 0L, userId));
 
         int[] flagsArr = new int[AppBindArgs.FLAGS_ARRAY_LEN];
         flagsArr[AppBindArgs.FLAGS_IDX_SPECIAL_RUNTIME_PERMISSIONS] =
