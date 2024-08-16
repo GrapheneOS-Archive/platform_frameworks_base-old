@@ -14,6 +14,7 @@ import android.util.Slog;
 
 import com.android.internal.R;
 import com.android.server.LocalServices;
+import com.android.server.logcat.LogdNotableMessage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +35,10 @@ public class DynCodeLoadingUtils {
         public static DclReport createForMemoryDcl(String denialType) {
             return new DclReport("memory_DCL", denialType);
         }
+
+        public static DclReport createForStorageDcl(String denialType) {
+            return new DclReport("storage_DCL", denialType);
+        }
     }
 
     public static void handleAppReportedDcl(Context ctx, int type, String pkgName, int userId, @Nullable String path,
@@ -50,6 +55,12 @@ public class DynCodeLoadingUtils {
         if (type == DynCodeLoading.RESTRICT_MEMORY_DCL) {
             var n = createMemoryDclNotif(ctx, appInfo);
             var report = DclReport.createForMemoryDcl(denialType);
+            report.lines.addAll(reportBody);
+            n.moreInfoIntent = DynCodeLoadingUtils.getMoreInfoIntent(n, report);
+            n.maybeShow();
+        } else if (type == DynCodeLoading.RESTRICT_STORAGE_DCL) {
+            var n = createStorageDclNotif(ctx, appInfo);
+            var report = DynCodeLoadingUtils.DclReport.createForStorageDcl(denialType);
             report.lines.addAll(reportBody);
             n.moreInfoIntent = DynCodeLoadingUtils.getMoreInfoIntent(n, report);
             n.maybeShow();
@@ -77,5 +88,29 @@ public class DynCodeLoadingUtils {
         i.putExtra(LogViewerApp.EXTRA_ERROR_TYPE, report.type);
         i.putExtra(LogViewerApp.EXTRA_SOURCE_PACKAGE, n.pkgName);
         return i;
+    }
+
+    public static AppSwitchNotification createStorageDclNotif(Context ctx, ApplicationInfo appInfo) {
+        var n = AppSwitchNotification.create(ctx, appInfo, SettingsIntents.APP_STORAGE_DYN_CODE_LOADING);
+        n.titleRes = R.string.notif_storage_dcl_title;
+        n.gosPsFlagSuppressNotif = GosPackageState.FLAG_RESTRICT_STORAGE_DYN_CODE_LOADING_SUPPRESS_NOTIF;
+        return n;
+    }
+
+    public static void handleStorageDclAuditMessage(String auditMsg,
+                                                    AppSwitchNotification n, DclReport report) {
+        String thread = LogdNotableMessage.extractAuditUntrustedString(auditMsg, "comm");
+        if (thread != null) {
+            report.lines.add("thread: " + thread);
+        }
+
+        String path = LogdNotableMessage.extractAuditUntrustedString(auditMsg, "path");
+        if (path != null) {
+            report.lines.add("targetPath: " + path);
+        }
+    }
+
+    static boolean isDataApkPath(String path) {
+        return path.startsWith("/data/app/") && path.endsWith(".apk");
     }
 }
