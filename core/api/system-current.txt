@@ -4958,6 +4958,7 @@ package android.ext.cscopes {
 package android.ext.dcl {
 
   public class DynCodeLoading {
+    method public static void checkDexFileOpen(int, @NonNull String) throws java.lang.Exception;
     method public static void checkInMemoryDexFileOpen(int);
   }
 
