@@ -4,16 +4,12 @@ import android.annotation.BoolRes;
 import android.annotation.IntegerRes;
 import android.annotation.StringRes;
 import android.content.Context;
-import android.content.res.Resources;
 import android.provider.Settings;
 
 import com.android.internal.R;
 
 import java.util.concurrent.TimeUnit;
-import java.util.function.BooleanSupplier;
 import java.util.function.Function;
-import java.util.function.IntSupplier;
-import java.util.function.Supplier;
 import java.util.function.ToIntFunction;
 
 /**
@@ -76,17 +72,17 @@ public class ExtSettings {
             Setting.Scope.GLOBAL, Settings.Global.ALLOW_DISABLING_HARDENING_VIA_APP_COMPAT_CONFIG,
             defaultBool(R.bool.setting_default_allow_disabling_hardening_via_app_compat_config));
 
-    public static final BoolSetting RESTRICT_MEMORY_DYN_CODE_EXEC_BY_DEFAULT = new BoolSetting(
-            Setting.Scope.GLOBAL, Settings.Global.RESTRICT_MEMORY_DYN_CODE_EXEC_BY_DEFAULT,
-            defaultBool(R.bool.setting_default_restrict_memory_dyn_code_exec));
+    public static final BoolSetting RESTRICT_MEMORY_DYN_CODE_LOADING_BY_DEFAULT = new BoolSetting(
+            Setting.Scope.GLOBAL, Settings.Global.RESTRICT_MEMORY_DYN_CODE_LOADING_BY_DEFAULT,
+            defaultBool(R.bool.setting_default_restrict_memory_dyn_code_loading));
 
-    public static final BoolSetting RESTRICT_STORAGE_DYN_CODE_EXEC_BY_DEFAULT = new BoolSetting(
-            Setting.Scope.GLOBAL, Settings.Global.RESTRICT_STORAGE_DYN_CODE_EXEC_BY_DEFAULT,
-            defaultBool(R.bool.setting_default_restrict_storage_dyn_code_exec));
+    public static final BoolSetting RESTRICT_STORAGE_DYN_CODE_LOADING_BY_DEFAULT = new BoolSetting(
+            Setting.Scope.GLOBAL, Settings.Global.RESTRICT_STORAGE_DYN_CODE_LOADING_BY_DEFAULT,
+            defaultBool(R.bool.setting_default_restrict_storage_dyn_code_loading));
 
-    public static final BoolSetting RESTRICT_WEBVIEW_DYN_CODE_EXEC_BY_DEFAULT = new BoolSetting(
-            Setting.Scope.GLOBAL, Settings.Global.RESTRICT_WEBVIEW_DYN_CODE_EXEC_BY_DEFAULT,
-            defaultBool(R.bool.setting_default_restrict_webview_dyn_code_exec));
+    public static final BoolSetting RESTRICT_WEBVIEW_DYN_CODE_LOADING_BY_DEFAULT = new BoolSetting(
+            Setting.Scope.GLOBAL, Settings.Global.RESTRICT_WEBVIEW_DYN_CODE_LOADING_BY_DEFAULT,
+            defaultBool(R.bool.setting_default_restrict_webview_dyn_code_loading));
 
     public static final BoolSetting FORCE_APP_MEMTAG_BY_DEFAULT = new BoolSetting(
             Setting.Scope.GLOBAL, Settings.Global.FORCE_APP_MEMTAG_BY_DEFAULT,

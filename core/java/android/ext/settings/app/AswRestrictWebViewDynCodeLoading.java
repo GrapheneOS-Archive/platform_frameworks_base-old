@@ -11,21 +11,21 @@ import android.util.ArraySet;
 import com.android.internal.R;
 
 /** @hide */
-public class AswRestrictWebViewDynamicCodeExecution extends AppSwitch {
-    public static final AswRestrictWebViewDynamicCodeExecution I = new AswRestrictWebViewDynamicCodeExecution();
+public class AswRestrictWebViewDynCodeLoading extends AppSwitch {
+    public static final AswRestrictWebViewDynCodeLoading I = new AswRestrictWebViewDynCodeLoading();
 
-    private AswRestrictWebViewDynamicCodeExecution() {
-        gosPsFlagNonDefault = GosPackageState.FLAG_RESTRICT_WEBVIEW_DYN_CODE_EXEC_NON_DEFAULT;
-        gosPsFlag = GosPackageState.FLAG_RESTRICT_WEBVIEW_DYN_CODE_EXEC;
+    private AswRestrictWebViewDynCodeLoading() {
+        gosPsFlagNonDefault = GosPackageState.FLAG_RESTRICT_WEBVIEW_DYN_CODE_LOADING_NON_DEFAULT;
+        gosPsFlag = GosPackageState.FLAG_RESTRICT_WEBVIEW_DYN_CODE_LOADING;
     }
 
     private static volatile ArraySet<String> allowedSystemPkgs;
 
     private static boolean shouldAllowByDefaultToSystemPackage(Context ctx, String pkg) {
-        var set = allowedSystemPkgs;
+        ArraySet<String> set = allowedSystemPkgs;
         if (set == null) {
             set = new ArraySet<>(ctx.getResources()
-                .getStringArray(R.array.system_pkgs_allowed_webview_dyn_code_exec_by_default));
+                .getStringArray(R.array.system_pkgs_allowed_webview_dyn_code_loading_by_default));
             allowedSystemPkgs = set;
         }
         return set.contains(pkg);
@@ -59,7 +59,7 @@ public class AswRestrictWebViewDynamicCodeExecution extends AppSwitch {
             return false;
         }
         else {
-            return ExtSettings.RESTRICT_WEBVIEW_DYN_CODE_EXEC_BY_DEFAULT.get(ctx, userId);
+            return ExtSettings.RESTRICT_WEBVIEW_DYN_CODE_LOADING_BY_DEFAULT.get(ctx, userId);
         }
     }
 }
