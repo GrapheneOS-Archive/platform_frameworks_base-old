@@ -33,9 +33,8 @@ public class TestService extends Service {
     }
 
     class BinderImpl extends ITestService.Stub {
-        @Override
         @Nullable
-        public String testDynamicCodeExecution(String typeStr, boolean isAllowed, ParcelFileDescriptor appDataFileFd, ParcelFileDescriptor execmodFd) {
+        public String testDynamicCodeLoading(String typeStr, boolean isAllowed, ParcelFileDescriptor appDataFileFd, ParcelFileDescriptor execmodFd) {
             boolean isIsolated = Process.isIsolated();
             MultiTests.Type type = MultiTests.Type.valueOf(typeStr);
 
@@ -79,7 +78,7 @@ public class TestService extends Service {
                     throw new IllegalStateException(e);
                 }
 
-                Log.d("testDce" + (isAllowed? "_allowed" : "_restricted"), "isolated " + isIsolated
+                Log.d("testDcl" + (isAllowed? "_allowed" : "_restricted"), "isolated " + isIsolated
                     +", targetSdk " + targetSdk + " " + m.getName() + ": " + Errno.name(ret));
 
                 int expectedRet = isAllowed?
