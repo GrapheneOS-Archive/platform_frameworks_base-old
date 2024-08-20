@@ -6,9 +6,9 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.GosPackageStateBase;
 import android.ext.BrowserUtils;
 import android.ext.settings.app.AswDenyNativeDebug;
-import android.ext.settings.app.AswRestrictMemoryDynCodeExec;
-import android.ext.settings.app.AswRestrictStorageDynCodeExec;
-import android.ext.settings.app.AswRestrictWebViewDynamicCodeExecution;
+import android.ext.settings.app.AswRestrictMemoryDynCodeLoading;
+import android.ext.settings.app.AswRestrictStorageDynCodeLoading;
+import android.ext.settings.app.AswRestrictWebViewDynCodeLoading;
 import android.os.Build;
 import android.os.Process;
 import android.os.SystemProperties;
@@ -65,7 +65,7 @@ public class SELinuxFlags {
 
         long res = ALL_RESTRICTIONS;
 
-        if (!AswRestrictWebViewDynamicCodeExecution.I.get(ctx, userId, callerAppInfo, callerPs)) {
+        if (!AswRestrictWebViewDynCodeLoading.I.get(ctx, userId, callerAppInfo, callerPs)) {
             res &= ~MEMORY_DYN_CODE_EXEC_FLAGS_THAT_BREAK_WEB_JIT;
         }
 
@@ -86,7 +86,7 @@ public class SELinuxFlags {
             res &= ~DENY_PROCESS_PTRACE;
         }
 
-        if (!AswRestrictMemoryDynCodeExec.I.get(ctx, userId, appInfo, ps)) {
+        if (!AswRestrictMemoryDynCodeLoading.I.get(ctx, userId, appInfo, ps)) {
             if (BrowserUtils.isSystemBrowser(ctx, appInfo.packageName)) {
                 // Chromium-based browsers use JIT only in isolated processes
                 if (isIsolatedProcess) {
@@ -97,7 +97,7 @@ public class SELinuxFlags {
             }
         }
 
-        if (!AswRestrictStorageDynCodeExec.I.get(ctx, userId, appInfo, ps)) {
+        if (!AswRestrictStorageDynCodeLoading.I.get(ctx, userId, appInfo, ps)) {
             res &= ~RESTRICT_STORAGE_DYN_CODE_EXEC_FLAGS;
         }
 
