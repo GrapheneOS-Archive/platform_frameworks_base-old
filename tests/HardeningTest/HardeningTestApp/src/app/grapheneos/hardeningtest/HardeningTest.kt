@@ -5,7 +5,6 @@ import android.content.Intent
 import android.os.Environment
 import android.os.ParcelFileDescriptor
 import android.os.Process
-import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.rule.ServiceTestRule
 import androidx.test.runner.AndroidJUnit4
@@ -37,11 +36,11 @@ class HardeningTest {
         service = bindService(serviceRule, TestService::class)
     }
 
-    private fun testDynamicCodeExecution(svc: ITestService, isAllowed: Boolean, type: MultiTests.Type) {
+    private fun testDynamicCodeLoading(svc: ITestService, isAllowed: Boolean, type: MultiTests.Type) {
         Assert.assertEquals("Environment.isExecmemBlocked()",
             !isAllowed, Environment.isExecmemBlocked())
 
-        svc.testDynamicCodeExecution(
+        svc.testDynamicCodeLoading(
             type.name,
             isAllowed,
             ParcelFileDescriptor.adoptFd(Utils.getFdForExecAppDataFileTest(ctx)),
@@ -52,28 +51,28 @@ class HardeningTest {
     }
 
     @Test
-    fun testMemoryDceAllowed() = testDynamicCodeExecution(service, true, MultiTests.Type.MemoryDce)
+    fun testMemoryDclAllowed() = testDynamicCodeLoading(service, true, MultiTests.Type.MemoryDcl)
 
     @Test
-    fun testMemoryDceAllowedIsolated() = testDynamicCodeExecution(isolatedService, true, MultiTests.Type.MemoryDce)
+    fun testMemoryDclAllowedIsolated() = testDynamicCodeLoading(isolatedService, true, MultiTests.Type.MemoryDcl)
 
     @Test
-    fun testMemoryDceRestricted() = testDynamicCodeExecution(service, false, MultiTests.Type.MemoryDce)
+    fun testMemoryDclRestricted() = testDynamicCodeLoading(service, false, MultiTests.Type.MemoryDcl)
 
     @Test
-    fun testMemoryDceRestrictedIsolated() = testDynamicCodeExecution(isolatedService, false, MultiTests.Type.MemoryDce)
+    fun testMemoryDclRestrictedIsolated() = testDynamicCodeLoading(isolatedService, false, MultiTests.Type.MemoryDcl)
 
     @Test
-    fun testStorageDceAllowed() = testDynamicCodeExecution(service, true, MultiTests.Type.StorageDce)
+    fun testStorageDclAllowed() = testDynamicCodeLoading(service, true, MultiTests.Type.StorageDcl)
 
     @Test
-    fun testStorageDceAllowedIsolated() = testDynamicCodeExecution(isolatedService, true, MultiTests.Type.StorageDce)
+    fun testStorageDclAllowedIsolated() = testDynamicCodeLoading(isolatedService, true, MultiTests.Type.StorageDcl)
 
     @Test
-    fun testStorageDceRestricted() = testDynamicCodeExecution(service, false, MultiTests.Type.StorageDce)
+    fun testStorageDclRestricted() = testDynamicCodeLoading(service, false, MultiTests.Type.StorageDcl)
 
     @Test
-    fun testStorageDceRestrictedIsolated() = testDynamicCodeExecution(isolatedService, false, MultiTests.Type.StorageDce)
+    fun testStorageDclRestrictedIsolated() = testDynamicCodeLoading(isolatedService, false, MultiTests.Type.StorageDcl)
 
     private fun testPtrace(svc: ITestService, isAllowed: Boolean) {
         svc.testPtrace(isAllowed, mainProcessPid)?.let {
