@@ -649,8 +649,8 @@ public class GosPackageStatePmHooks {
                     | FLAG_BLOCK_NATIVE_DEBUGGING
                     | FLAG_RESTRICT_MEMORY_DYN_CODE_LOADING_NON_DEFAULT
                     | FLAG_RESTRICT_MEMORY_DYN_CODE_LOADING
-                    | FLAG_RESTRICT_STORAGE_DYN_CODE_EXEC_NON_DEFAULT
-                    | FLAG_RESTRICT_STORAGE_DYN_CODE_EXEC
+                    | FLAG_RESTRICT_STORAGE_DYN_CODE_LOADING_NON_DEFAULT
+                    | FLAG_RESTRICT_STORAGE_DYN_CODE_LOADING
                     | FLAG_RESTRICT_WEBVIEW_DYN_CODE_EXEC_NON_DEFAULT
                     | FLAG_RESTRICT_WEBVIEW_DYN_CODE_EXEC
                     | FLAG_USE_HARDENED_MALLOC_NON_DEFAULT
@@ -681,7 +681,7 @@ public class GosPackageStatePmHooks {
             final int systemUidWriteFlags = settingsWriteFlags
                     | FLAG_BLOCK_NATIVE_DEBUGGING_SUPPRESS_NOTIF
                     | FLAG_RESTRICT_MEMORY_DYN_CODE_LOADING_SUPPRESS_NOTIF
-                    | FLAG_RESTRICT_STORAGE_DYN_CODE_EXEC_SUPPRESS_NOTIF
+                    | FLAG_RESTRICT_STORAGE_DYN_CODE_LOADING_SUPPRESS_NOTIF
                     | FLAG_FORCE_MEMTAG_SUPPRESS_NOTIF;
 
             final int systemUidWriteFields =
