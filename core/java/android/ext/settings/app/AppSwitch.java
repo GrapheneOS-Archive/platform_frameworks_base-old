@@ -155,15 +155,19 @@ public abstract class AppSwitch {
         ed.clearFlags(gosPsFlagNonDefault | gosPsFlag);
     }
 
-    public final boolean isNotificationSuppressed(@Nullable GosPackageStateBase ps) {
+    public final boolean hasNotification() {
+        return gosPsFlagSuppressNotif != 0;
+    }
+
+    public final boolean isNotificationEnabled(@Nullable GosPackageStateBase ps) {
         int flag = gosPsFlagSuppressNotif;
         if (flag == 0) {
             return false;
         }
-        return ps != null && ps.hasFlags(flag);
+        return ps == null || !ps.hasFlags(flag);
     }
 
-    public final void addSuppressNotificationFlag(GosPackageState.Editor ed) {
-        ed.addFlags(gosPsFlagSuppressNotif);
+    public final void setNotificationEnabled(GosPackageState.Editor ed, boolean enabled) {
+        ed.setFlagsState(gosPsFlagSuppressNotif, !enabled);
     }
 }
