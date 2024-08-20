@@ -70,15 +70,15 @@ public class SELinuxTest extends BaseHostJUnit4Test {
         }
     }
 
-    enum DceTestType {
-        Memory(GosPsFlags.FLAG_RESTRICT_MEMORY_DYN_CODE_EXEC, GosPsFlags.FLAG_RESTRICT_MEMORY_DYN_CODE_EXEC_NON_DEFAULT),
-        Storage(GosPsFlags.FLAG_RESTRICT_STORAGE_DYN_CODE_EXEC, GosPsFlags.FLAG_RESTRICT_STORAGE_DYN_CODE_EXEC_NON_DEFAULT),
+    enum DclTestType {
+        Memory(GosPsFlags.FLAG_RESTRICT_MEMORY_DYN_CODE_LOADING, GosPsFlags.FLAG_RESTRICT_MEMORY_DYN_CODE_LOADING_NON_DEFAULT),
+        Storage(GosPsFlags.FLAG_RESTRICT_STORAGE_DYN_CODE_LOADING, GosPsFlags.FLAG_RESTRICT_STORAGE_DYN_CODE_LOADING_NON_DEFAULT),
         ;
 
         final int gosPsFlag;
         final int gosPsNonDefaultFlag;
 
-        DceTestType(int gosPsFlag, int gosPsNonDefaultFlag) {
+        DclTestType(int gosPsFlag, int gosPsNonDefaultFlag) {
             this.gosPsFlag = gosPsFlag;
             this.gosPsNonDefaultFlag = gosPsNonDefaultFlag;
         }
@@ -89,32 +89,32 @@ public class SELinuxTest extends BaseHostJUnit4Test {
     }
 
     @Test
-    public void testDynamicCodeExecutionRestricted() {
+    public void testDynamicCodeLoadingRestricted() {
         forEachPackage(pkg -> {
-            for (var t : DceTestType.values()) {
+            for (var t : DclTestType.values()) {
                 setComplexFlagState(pkg, t.gosPsFlag, t.gosPsNonDefaultFlag, true);
-                runDeviceTest(pkg, t.testName("DceRestricted"));
+                runDeviceTest(pkg, t.testName("DclRestricted"));
 
                 if (pkg == TEST_PACKAGE_SDK_LATEST_PREINSTALLED) {
-                    // check that DCE is blocked regardless of GosPackageState flags
+                    // check that DCL is blocked regardless of GosPackageState flags
                     setComplexFlagState(pkg, t.gosPsFlag, t.gosPsNonDefaultFlag, false);
-                    runDeviceTest(pkg, t.testName("DceRestricted"));
+                    runDeviceTest(pkg, t.testName("DclRestricted"));
                 }
             }
         });
     }
 
     @Test
-    public void testDynamicCodeExecutionAllowed() {
+    public void testDynamicCodeLoadingAllowed() {
         forEachPackage(pkg -> {
             if (pkg == TEST_PACKAGE_SDK_LATEST_PREINSTALLED) {
-                // preinstalled apps are DCE-restricted (except allowlisted ones)
+                // preinstalled apps are DCL-restricted (except allowlisted ones)
                 return;
             }
 
-            for (var t : DceTestType.values()) {
+            for (var t : DclTestType.values()) {
                 setComplexFlagState(pkg, t.gosPsFlag, t.gosPsNonDefaultFlag, false);
-                runDeviceTest(pkg, t.testName("DceAllowed"));
+                runDeviceTest(pkg, t.testName("DclAllowed"));
             }
         });
     }
