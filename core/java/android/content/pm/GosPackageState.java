@@ -61,8 +61,8 @@ public final class GosPackageState extends GosPackageStateBase implements Parcel
     /** @hide */ public static final int FLAG_RESTRICT_STORAGE_DYN_CODE_LOADING = 1 << 13;
     /** @hide */ public static final int FLAG_RESTRICT_STORAGE_DYN_CODE_LOADING_SUPPRESS_NOTIF = 1 << 14;
 
-    /** @hide */ public static final int FLAG_RESTRICT_WEBVIEW_DYN_CODE_EXEC_NON_DEFAULT = 1 << 15;
-    /** @hide */ public static final int FLAG_RESTRICT_WEBVIEW_DYN_CODE_EXEC = 1 << 16;
+    /** @hide */ public static final int FLAG_RESTRICT_WEBVIEW_DYN_CODE_LOADING_NON_DEFAULT = 1 << 15;
+    /** @hide */ public static final int FLAG_RESTRICT_WEBVIEW_DYN_CODE_LOADING = 1 << 16;
 
     /** @hide */ public static final int FLAG_USE_HARDENED_MALLOC_NON_DEFAULT = 1 << 17;
     /** @hide */ public static final int FLAG_USE_HARDENED_MALLOC = 1 << 18;
