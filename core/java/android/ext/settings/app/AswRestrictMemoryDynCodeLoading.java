@@ -13,14 +13,14 @@ import com.android.internal.os.SELinuxFlags;
 import com.android.server.os.nano.AppCompatProtos;
 
 /** @hide */
-public class AswRestrictStorageDynCodeExec extends AppSwitch {
-    public static final AswRestrictStorageDynCodeExec I = new AswRestrictStorageDynCodeExec();
+public class AswRestrictMemoryDynCodeLoading extends AppSwitch {
+    public static final AswRestrictMemoryDynCodeLoading I = new AswRestrictMemoryDynCodeLoading();
 
-    private AswRestrictStorageDynCodeExec() {
-        gosPsFlagNonDefault = GosPackageState.FLAG_RESTRICT_STORAGE_DYN_CODE_EXEC_NON_DEFAULT;
-        gosPsFlag = GosPackageState.FLAG_RESTRICT_STORAGE_DYN_CODE_EXEC;
-        gosPsFlagSuppressNotif = GosPackageState.FLAG_RESTRICT_STORAGE_DYN_CODE_EXEC_SUPPRESS_NOTIF;
-        compatChangeToDisableHardening = AppCompatProtos.ALLOW_STORAGE_DYN_CODE_EXEC;
+    private AswRestrictMemoryDynCodeLoading() {
+        gosPsFlagNonDefault = GosPackageState.FLAG_RESTRICT_MEMORY_DYN_CODE_LOADING_NON_DEFAULT;
+        gosPsFlag = GosPackageState.FLAG_RESTRICT_MEMORY_DYN_CODE_LOADING;
+        gosPsFlagSuppressNotif = GosPackageState.FLAG_RESTRICT_MEMORY_DYN_CODE_LOADING_SUPPRESS_NOTIF;
+        compatChangeToDisableHardening = AppCompatProtos.ALLOW_MEMORY_DYN_CODE_EXEC;
     }
 
     private static volatile ArraySet<String> allowedSystemPkgs;
@@ -29,7 +29,7 @@ public class AswRestrictStorageDynCodeExec extends AppSwitch {
         var set = allowedSystemPkgs;
         if (set == null) {
             set = new ArraySet<>(ctx.getResources()
-                .getStringArray(R.array.system_pkgs_allowed_storage_dyn_code_exec_by_default));
+                .getStringArray(R.array.system_pkgs_allowed_memory_dyn_code_loading_by_default));
             allowedSystemPkgs = set;
         }
         return set.contains(pkg);
@@ -65,7 +65,7 @@ public class AswRestrictStorageDynCodeExec extends AppSwitch {
             return !shouldAllowByDefaultToSystemPkg(ctx, appInfo.packageName);
         } else {
             si.defaultValueReason = DVR_DEFAULT_SETTING;
-            return ExtSettings.RESTRICT_STORAGE_DYN_CODE_EXEC_BY_DEFAULT.get(ctx, userId);
+            return ExtSettings.RESTRICT_MEMORY_DYN_CODE_LOADING_BY_DEFAULT.get(ctx, userId);
         }
     }
 }
