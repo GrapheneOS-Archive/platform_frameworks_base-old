@@ -13,8 +13,8 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 
-import static app.grapheneos.hardeningtest.MultiTests.Type.MemoryDce;
-import static app.grapheneos.hardeningtest.MultiTests.Type.StorageDce;
+import static app.grapheneos.hardeningtest.MultiTests.Type.MemoryDcl;
+import static app.grapheneos.hardeningtest.MultiTests.Type.StorageDcl;
 
 public class MultiTests {
     static {
@@ -22,33 +22,33 @@ public class MultiTests {
     }
 
     enum Type {
-        MemoryDce,
-        StorageDce,
+        MemoryDcl,
+        StorageDcl,
     }
 
-    @MultiTest(type = MemoryDce)
+    @MultiTest(type = MemoryDcl)
     public static native int execmem();
 
-    @MultiTest(type = MemoryDce, alwaysDeniedMinSdk = 28, alwaysDeniedMinSdkIsolated = 1, skipAllowedTest = true)
+    @MultiTest(type = MemoryDcl, alwaysDeniedMinSdk = 28, alwaysDeniedMinSdkIsolated = 1, skipAllowedTest = true)
     public static native int execmod(int fd);
 
     // no @MultiTest, special-cased in test runner
     public static native int ptrace(int pid);
 
-    @MultiTest(type = MemoryDce)
+    @MultiTest(type = MemoryDcl)
     public static native int exec_appdomain_tmpfs();
 
-    @MultiTest(type = MemoryDce, alwaysDeniedMinSdk = 28, alwaysDeniedMinSdkIsolated = 1)
+    @MultiTest(type = MemoryDcl, alwaysDeniedMinSdk = 28, alwaysDeniedMinSdkIsolated = 1)
     public static native int execute_ashmem();
 
-    @MultiTest(type = MemoryDce)
+    @MultiTest(type = MemoryDcl)
     public static native int execute_ashmem_libcutils();
 
     // successful allowedTest never returns, skip it
-    @MultiTest(type = StorageDce, skipAllowedTest = true)
+    @MultiTest(type = StorageDcl, skipAllowedTest = true)
     public static native int exec_app_data_file(int fd);
 
-    @MultiTest(type = StorageDce, skipAllowedTest = true)
+    @MultiTest(type = StorageDcl, skipAllowedTest = true)
     public static int exec_app_data_file_path() throws IOException {
         var ctx = ActivityThread.currentApplication();
         File file = new File(ctx.getFilesDir(), "self_exe_" + System.nanoTime());
