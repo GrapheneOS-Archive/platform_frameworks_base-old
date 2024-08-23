@@ -605,13 +605,13 @@ public class GosPackageStatePmHooks {
                     ,0);
 
             grantedPermissions = new SparseArray<>();
-            if (Build.isDebuggable()) {
-                var fullPermission = new Permission(-1, -1, -1, -1,
-                    Permission.ALLOW_CROSS_USER_OR_PROFILE_READS
-                            | Permission.ALLOW_CROSS_USER_OR_PROFILE_WRITES
-                );
 
-                grantedPermissions.put(Process.SHELL_UID, fullPermission);
+            var fullPermission = new Permission(-1, -1, -1, -1,
+                Permission.ALLOW_CROSS_USER_OR_PROFILE_READS
+                        | Permission.ALLOW_CROSS_USER_OR_PROFILE_WRITES
+            );
+            grantedPermissions.put(Process.SHELL_UID, fullPermission);
+            if (Build.isDebuggable()) {
                 // for root adb
                 grantedPermissions.put(Process.ROOT_UID, fullPermission);
             }
@@ -740,10 +740,6 @@ public class GosPackageStatePmHooks {
     }
 
     public static int runShellCommand(PackageManagerShellCommand cmd) {
-        if (!Build.isDebuggable()) {
-            return 1;
-        }
-
         String packageName = cmd.getNextArgRequired();
         int userId = Integer.parseInt(cmd.getNextArgRequired());
 
