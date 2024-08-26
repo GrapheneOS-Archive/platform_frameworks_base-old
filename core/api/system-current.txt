@@ -4890,6 +4890,8 @@ package android.ext {
     field public static final String G_SEARCH_APP_NAME = "com.google.android.googlequicksearchbox";
     field public static final int PIXEL_CAMERA_SERVICES = 9; // 0x9
     field public static final String PIXEL_CAMERA_SERVICES_NAME = "com.google.android.apps.camera.services";
+    field public static final int PIXEL_HEALTH = 13; // 0xd
+    field public static final String PIXEL_HEALTH_NAME = "com.google.android.apps.pixel.health";
     field public static final int PLAY_STORE = 3; // 0x3
     field public static final String PLAY_STORE_NAME = "com.android.vending";
     field public static final int TYCHO = 11; // 0xb
