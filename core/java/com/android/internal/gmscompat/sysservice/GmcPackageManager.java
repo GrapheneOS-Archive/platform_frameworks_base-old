@@ -404,9 +404,15 @@ public class GmcPackageManager extends ApplicationPackageManager {
             //
             // Play Store respects the value of InstallSourceInfo#getUpdateOwnerPackageName():
             // packages that have non-Play Store update owners are not updated by Play Store
-            String updateOwnerPackage = areUnknownGmsUpdatesRestricted() ?
-                    PackageUtils.getFirstPartyAppSourcePackageName(GmsCompat.appContext()) :
-                    PackageId.PLAY_STORE_NAME;
+            ContentResolver cr = GmsCompat.appContext().getContentResolver();
+            String updateOwnerPackage = PlayStoreHooks.isInstallAllowed(PackageId.ANDROID_AUTO_NAME, cr) ?
+                    // Play Store tries to use installer session preapporaval when update ownership is
+                    // set and Play Store is not the update owner. Installer session preapproval is
+                    // disabled on GrapheneOS, which leads to installation failure. As a workaround,
+                    // unconditionally return to Play Store that it's already the update owner. OS
+                    // will handle update ownership change confirmation itself.
+                    PackageId.PLAY_STORE_NAME :
+                    PackageUtils.getFirstPartyAppSourcePackageName(GmsCompat.appContext());
             res = new InstallSourceInfo(
                     res.getInitiatingPackageName(),
                     res.getInitiatingPackageSigningInfo(),
@@ -418,15 +424,6 @@ public class GmcPackageManager extends ApplicationPackageManager {
         }
 
         return res;
-    }
-
-    private static boolean areUnknownGmsUpdatesRestricted() {
-        if (!Build.isDebuggable()) {
-            return true;
-        }
-
-        ContentResolver cr = GmsCompat.appContext().getContentResolver();
-        return Settings.Global.getInt(cr, "gmscompat_allow_unknown_updates", 0) == 0;
     }
 
     private PackageInfo makePseudoDisabledPackageInfoOrThrow(String pkgName, PackageInfoFlags flags) throws NameNotFoundException {
