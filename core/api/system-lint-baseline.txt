@@ -2167,6 +2167,8 @@ UnflaggedApi: android.ext.AppInfoExt#FLAG_HAS_GMSCORE_CLIENT_LIBRARY:
     New API must be flagged with @FlaggedApi: field android.ext.AppInfoExt.FLAG_HAS_GMSCORE_CLIENT_LIBRARY
 UnflaggedApi: android.ext.AppInfoExt#describeContents():
     New API must be flagged with @FlaggedApi: method android.ext.AppInfoExt.describeContents()
+UnflaggedApi: android.ext.AppInfoExt#getInitialPackageId():
+    New API must be flagged with @FlaggedApi: method android.ext.AppInfoExt.getInitialPackageId()
 UnflaggedApi: android.ext.AppInfoExt#getPackageId():
     New API must be flagged with @FlaggedApi: method android.ext.AppInfoExt.getPackageId()
 UnflaggedApi: android.ext.AppInfoExt#hasCompatChange(int):
