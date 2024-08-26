@@ -4851,6 +4851,7 @@ package android.ext {
   public final class AppInfoExt implements android.os.Parcelable {
     ctor public AppInfoExt(int, int, long);
     method public int describeContents();
+    method public static int getInitialPackageId();
     method public int getPackageId();
     method public boolean hasCompatChange(int);
     method public boolean hasCompatConfig();
