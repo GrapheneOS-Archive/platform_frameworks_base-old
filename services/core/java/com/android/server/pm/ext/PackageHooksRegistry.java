@@ -16,6 +16,7 @@ public class PackageHooksRegistry {
             case PackageId.EUICC_SUPPORT_PIXEL_NAME -> new EuiccSupportPixelHooks.ParsingHooks();
             case PackageId.G_EUICC_LPA_NAME -> new EuiccGoogleHooks.ParsingHooks();
             case PackageId.PIXEL_CAMERA_SERVICES_NAME -> new PixelCameraServicesHooks.ParsingHooks();
+            case PackageId.PIXEL_HEALTH_NAME -> new PixelHealthHooks.ParsingHooks();
             default -> PackageParsingHooks.DEFAULT;
         };
     }
@@ -27,6 +28,7 @@ public class PackageHooksRegistry {
             case PackageId.G_EUICC_LPA -> new EuiccGoogleHooks();
             case PackageId.ANDROID_AUTO -> new AndroidAutoHooks();
             case PackageId.PIXEL_CAMERA_SERVICES -> new PixelCameraServicesHooks();
+            case PackageId.PIXEL_HEALTH -> new PixelHealthHooks();
             default -> PackageHooks.DEFAULT;
         };
     }
