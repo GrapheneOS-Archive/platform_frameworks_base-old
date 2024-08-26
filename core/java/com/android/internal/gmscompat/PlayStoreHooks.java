@@ -21,6 +21,7 @@ import android.app.PendingIntent;
 import android.app.compat.gms.GmsCompat;
 import android.app.usage.StorageStats;
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -30,6 +31,7 @@ import android.content.pm.IPackageDataObserver;
 import android.content.pm.IPackageDeleteObserver;
 import android.content.pm.PackageInstaller;
 import android.content.pm.PackageManager;
+import android.ext.PackageId;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -42,7 +44,6 @@ import com.android.internal.gmscompat.util.GmcActivityUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayDeque;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
@@ -334,6 +335,17 @@ public final class PlayStoreHooks {
         } catch (IntentSender.SendIntentException e) {
             Log.d(TAG, "", e);
         }
+    }
+
+    public static boolean isInstallAllowed(String pkgName, ContentResolver cr) {
+        switch (pkgName) {
+            case PackageId.GMS_CORE_NAME:
+            case PackageId.PLAY_STORE_NAME:
+            case PackageId.ANDROID_AUTO_NAME:
+            case PackageId.PIXEL_HEALTH_NAME:
+                return Settings.Global.getInt(cr, "gmscompat_play_store_can_install_" + pkgName, 0) == 1;
+        }
+        return true;
     }
 
     private PlayStoreHooks() {}

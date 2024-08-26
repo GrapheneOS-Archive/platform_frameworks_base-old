@@ -187,6 +187,7 @@ import com.android.modules.utils.TypedXmlSerializer;
 import com.android.server.LocalServices;
 import com.android.server.pm.Installer.InstallerException;
 import com.android.server.pm.dex.DexManager;
+import com.android.server.pm.ext.PackageExt;
 import com.android.server.pm.pkg.AndroidPackage;
 import com.android.server.pm.pkg.PackageStateInternal;
 
@@ -3803,53 +3804,56 @@ public class PackageInstallerSession extends IPackageInstallerSession.Stub {
         final String initiatingPackageName = mInstallSource.mInitiatingPackageName;
         if (initiatingPackageName != null && !isInstallerShell
                 && !android.util.PackageUtils.getFirstPartyAppSourcePackageName(mContext)
-                        .equals(initiatingPackageName)
-                && !areUnknownGmsUpdatesAllowed()) {
+                        .equals(initiatingPackageName)) {
             final int errorCode = PackageManager.INSTALL_FAILED_SESSION_INVALID;
-            switch (mPackageName) {
-                case PackageId.GSF_NAME:
-                case PackageId.GMS_CORE_NAME:
-                case PackageId.PLAY_STORE_NAME: {
-                    if (PackageId.PLAY_STORE_NAME.equals(initiatingPackageName)) {
-                        if (mVersionCode <= params.maxAllowedVersion) {
-                            break;
+
+            boolean isInstallerPlayStore = false;
+            if (PackageId.PLAY_STORE_NAME.equals(initiatingPackageName)) {
+                AndroidPackage pkg = pmi.getPackage(PackageId.PLAY_STORE_NAME);
+                isInstallerPlayStore = pkg != null && PackageExt.get(pkg).getPackageId() == PackageId.PLAY_STORE;
+            }
+
+            boolean skipExtraChecks = isInstallerPlayStore &&
+                     com.android.internal.gmscompat.PlayStoreHooks.isInstallAllowed(mPackageName,
+                             mContext.getContentResolver());
+
+            if (!skipExtraChecks) {
+                switch (mPackageName) {
+                    case PackageId.GSF_NAME:
+                    case PackageId.GMS_CORE_NAME:
+                    case PackageId.PLAY_STORE_NAME: {
+                        if (isInstallerPlayStore) {
+                            if (mVersionCode <= params.maxAllowedVersion) {
+                                break;
+                            }
+
+                            // lock that is held at this point is per-session lock, call into
+                            // PackageManager is safe
+                            AndroidPackage pkg = pmi.getPackage(mPackageName);
+                            if (pkg != null && pkg.getLongVersionCode() == mVersionCode) {
+                                break;
+                            }
+
+                            String msg = "Installation of " + mPackageName + " version " + mVersionCode
+                                        + " is blocked to prevent breaking gmscompat. " +
+                                        "Max allowed version is " + params.maxAllowedVersion;
+                            throw new PackageManagerException(errorCode, msg);
                         }
 
-                        // lock that is held at this point is per-session lock, call into
-                        // PackageManager is safe
-                        AndroidPackage pkg = mPm.snapshotComputer().getPackage(mPackageName);
-                        if (pkg != null && pkg.getLongVersionCode() == mVersionCode) {
-                            break;
-                        }
-
-                        String msg = "Installation of " + mPackageName + " version " + mVersionCode
-                                    + " is blocked to prevent breaking gmscompat. " +
-                                    "Max allowed version is " + params.maxAllowedVersion;
+                        String msg = "Installation of " + mPackageName
+                                + " is blocked to prevent breaking gmscompat";
                         throw new PackageManagerException(errorCode, msg);
                     }
-
-                    String msg = "Installation of " + mPackageName
-                            + " is blocked to prevent breaking gmscompat";
-                    throw new PackageManagerException(errorCode, msg);
+                    case PackageId.ANDROID_AUTO_NAME:
+                    case PackageId.PIXEL_HEALTH_NAME:
+                        throw new PackageManagerException(errorCode,
+                                "Only the first-party package source and shell are allowed " +
+                                        "to install " + PackageId.PIXEL_HEALTH_NAME);
                 }
-
-                case PackageId.ANDROID_AUTO_NAME:
-                    String msg = "Installation of " + mPackageName + " is blocked to prevent breaking gmscompat";
-                    throw new PackageManagerException(errorCode, msg);
             }
         }
 
         return packageLite;
-    }
-
-    private boolean areUnknownGmsUpdatesAllowed() {
-        if (!Build.isDebuggable()) {
-            return false;
-        }
-        var cr = mContext.getContentResolver();
-        var key = "gmscompat_allow_unknown_updates";
-        int def = 0;
-        return android.provider.Settings.Global.getInt(cr, key, def) == 1;
     }
 
     @GuardedBy("mLock")
