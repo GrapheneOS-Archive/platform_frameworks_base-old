@@ -46,8 +46,9 @@ public interface PackageId {
     String TYCHO_NAME = "com.google.android.apps.tycho";
     int TYCHO = 11;
 
-    /** @hide */
-    String G_TEXT_TO_SPEECH_NAME = "com.google.android.tts";
-    /** @hide */
-    int G_TEXT_TO_SPEECH = 12;
+    /** @hide */ String G_TEXT_TO_SPEECH_NAME = "com.google.android.tts";
+    /** @hide */ int G_TEXT_TO_SPEECH = 12;
+
+    String PIXEL_HEALTH_NAME = "com.google.android.apps.pixel.health";
+    int PIXEL_HEALTH = 13;
 }
