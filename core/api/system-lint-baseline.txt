@@ -2233,6 +2233,10 @@ UnflaggedApi: android.ext.PackageId#PIXEL_CAMERA_SERVICES:
     New API must be flagged with @FlaggedApi: field android.ext.PackageId.PIXEL_CAMERA_SERVICES
 UnflaggedApi: android.ext.PackageId#PIXEL_CAMERA_SERVICES_NAME:
     New API must be flagged with @FlaggedApi: field android.ext.PackageId.PIXEL_CAMERA_SERVICES_NAME
+UnflaggedApi: android.ext.PackageId#PIXEL_HEALTH:
+    New API must be flagged with @FlaggedApi: field android.ext.PackageId.PIXEL_HEALTH
+UnflaggedApi: android.ext.PackageId#PIXEL_HEALTH_NAME:
+    New API must be flagged with @FlaggedApi: field android.ext.PackageId.PIXEL_HEALTH_NAME
 UnflaggedApi: android.ext.PackageId#PLAY_STORE:
     New API must be flagged with @FlaggedApi: field android.ext.PackageId.PLAY_STORE
 UnflaggedApi: android.ext.PackageId#PLAY_STORE_NAME:
