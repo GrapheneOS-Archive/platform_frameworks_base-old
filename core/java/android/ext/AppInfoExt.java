@@ -2,6 +2,7 @@ package android.ext;
 
 import android.annotation.NonNull;
 import android.annotation.SystemApi;
+import android.app.AppGlobals;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -31,6 +32,10 @@ public final class AppInfoExt implements Parcelable {
      */
     public int getPackageId() {
         return packageId;
+    }
+
+    public static int getInitialPackageId() {
+        return AppGlobals.getInitialPackageId();
     }
 
     public boolean hasFlag(int flag) {
