@@ -1373,8 +1373,19 @@ public class SystemConfig {
                                 associations = new ArraySet<>();
                                 mAllowedAssociations.put(target, associations);
                             }
-                            Slog.i(TAG, "Adding association: " + target + " <- " + allowed);
-                            associations.add(allowed);
+                            if (!allowed.isEmpty()) {
+                                Slog.i(TAG, "Adding association: " + target + " <- " + allowed);
+                                associations.add(allowed);
+                            } else {
+                                // Empty "allowed" value enables full assocation restrictions,
+                                // without exemptions
+                                if (associations.isEmpty()) {
+                                    Slog.i(TAG, "Enabled full association restrictions for " + target);
+                                } else {
+                                    Slog.w(TAG, "Unable to enable full association restrictions for "
+                                            + target + ": allow-association allowlist is non-empty");
+                                }
+                            }
                         } else {
                             logNotAllowedInPartition(name, permFile, parser);
                         }
