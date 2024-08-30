@@ -647,10 +647,13 @@ public class GosPackageStatePmHooks {
                     FLAG_ALLOW_ACCESS_TO_OBB_DIRECTORY
                     | FLAG_BLOCK_NATIVE_DEBUGGING_NON_DEFAULT
                     | FLAG_BLOCK_NATIVE_DEBUGGING
+                    | FLAG_BLOCK_NATIVE_DEBUGGING_SUPPRESS_NOTIF
                     | FLAG_RESTRICT_MEMORY_DYN_CODE_LOADING_NON_DEFAULT
                     | FLAG_RESTRICT_MEMORY_DYN_CODE_LOADING
+                    | FLAG_RESTRICT_MEMORY_DYN_CODE_LOADING_SUPPRESS_NOTIF
                     | FLAG_RESTRICT_STORAGE_DYN_CODE_LOADING_NON_DEFAULT
                     | FLAG_RESTRICT_STORAGE_DYN_CODE_LOADING
+                    | FLAG_RESTRICT_STORAGE_DYN_CODE_LOADING_SUPPRESS_NOTIF
                     | FLAG_RESTRICT_WEBVIEW_DYN_CODE_LOADING_NON_DEFAULT
                     | FLAG_RESTRICT_WEBVIEW_DYN_CODE_LOADING
                     | FLAG_USE_HARDENED_MALLOC_NON_DEFAULT
@@ -659,6 +662,7 @@ public class GosPackageStatePmHooks {
                     | FLAG_USE_EXTENDED_VA_SPACE
                     | FLAG_FORCE_MEMTAG_NON_DEFAULT
                     | FLAG_FORCE_MEMTAG
+                    | FLAG_FORCE_MEMTAG_SUPPRESS_NOTIF
                     | FLAG_ENABLE_EXPLOIT_PROTECTION_COMPAT_MODE
             ;
 
