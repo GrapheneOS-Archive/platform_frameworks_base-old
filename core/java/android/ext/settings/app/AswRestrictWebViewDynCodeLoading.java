@@ -35,16 +35,12 @@ public class AswRestrictWebViewDynCodeLoading extends AppSwitch {
     public Boolean getImmutableValue(Context ctx, int userId, ApplicationInfo appInfo,
                                      @Nullable GosPackageStateBase ps, StateInfo si) {
         if (appInfo.isSystemApp()) {
-            // TODO uncomment after WebView respects Environment.isDynamicCodeExecutionRestricted()
-            /*
-            if (shouldAllowByDefaultToSystemPackage(ctx, packageName)) {
+            if (shouldAllowByDefaultToSystemPackage(ctx, appInfo.packageName)) {
                 // allow manual restriction
                 return null;
             } else {
                 return true;
             }
-             */
-            return null;
         }
 
         return null;
@@ -54,11 +50,8 @@ public class AswRestrictWebViewDynCodeLoading extends AppSwitch {
     protected boolean getDefaultValueInner(Context ctx, int userId, ApplicationInfo appInfo,
                                            @Nullable GosPackageStateBase ps, StateInfo si) {
         if (appInfo.isSystemApp()) {
-            // TODO uncomment after WebView respects Environment.isDynamicCodeExecutionRestricted()
-            // return !shouldAllowByDefaultToSystemPackage(ctx, packageName);
-            return false;
-        }
-        else {
+            return !shouldAllowByDefaultToSystemPackage(ctx, appInfo.packageName);
+        } else {
             return ExtSettings.RESTRICT_WEBVIEW_DYN_CODE_LOADING_BY_DEFAULT.get(ctx, userId);
         }
     }
