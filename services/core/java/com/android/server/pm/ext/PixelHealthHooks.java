@@ -2,14 +2,21 @@ package com.android.server.pm.ext;
 
 import android.Manifest;
 import android.app.ActivityThread;
+import android.app.role.RoleManager;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.ext.PackageId;
 
 import com.android.internal.gmscompat.PlayStoreHooks;
 import com.android.internal.pm.pkg.component.ParsedUsesPermission;
 import com.android.internal.pm.pkg.parsing.PackageParsingHooks;
+import com.android.role.RoleManagerLocal;
+import com.android.server.LocalManagerRegistry;
 import com.android.server.pm.pkg.AndroidPackage;
 import com.android.server.pm.pkg.PackageStateInternal;
+
+import java.util.Objects;
+import java.util.Set;
 
 class PixelHealthHooks extends PackageHooks {
     static final String PERMISSION_FAR_INFRARED_TEMPERATURE =
@@ -53,19 +60,39 @@ class PixelHealthHooks extends PackageHooks {
     }
 
     @Override
-    public boolean shouldBlockPackageVisibility(int userId, PackageStateInternal otherPkg) {
-        if (otherPkg.isSystem()) {
+    public boolean shouldBlockPackageVisibility(int userId, PackageStateInternal otherPkg, boolean isSelfToOther) {
+        if (!isUserInstalledPkg(otherPkg)) {
             return false;
         }
 
-        AndroidPackage otherAPkg = otherPkg.getPkg();
-        if (otherAPkg != null && PackageExt.get(otherAPkg).getPackageId() == PackageId.PLAY_STORE) {
-            Context ctx = ActivityThread.currentActivityThread().getSystemContext();
-            if (PlayStoreHooks.isInstallAllowed(PackageId.PIXEL_HEALTH_NAME, ctx.getContentResolver())) {
-                return false;
-            }
+        if ("com.fitbit.FitbitMobile".equals(otherPkg.getPackageName())) {
+            // Pixel Health app performs Fitbit certificate checks itself
+            return false;
         }
 
-        return true;
+        if (isSelfToOther) {
+            // hide all other user apps from Pixel Health app
+            return true;
+        }
+
+        AndroidPackage otherAPkg = otherPkg.getPkg();
+        if (otherAPkg == null) {
+            return true;
+        }
+
+        if (PackageExt.get(otherAPkg).getPackageId() == PackageId.PLAY_STORE) {
+            Context ctx = ActivityThread.currentActivityThread().getSystemContext();
+            ContentResolver cr = ctx.getContentResolver();
+            return !PlayStoreHooks.isInstallAllowed(PackageId.PIXEL_HEALTH_NAME, cr);
+        }
+
+        RoleManagerLocal roleManager = Objects.requireNonNull(
+                LocalManagerRegistry.getManager(RoleManagerLocal.class)
+        );
+        Set<String> homeRoleHolders = roleManager.getRolesAndHolders(userId).get(RoleManager.ROLE_HOME);
+        // Don't block visiblity from current launcher to Pixel Health app. Association restrictions
+        // between them remain enforced.
+        boolean isAllowed = homeRoleHolders != null && homeRoleHolders.contains(otherAPkg.getPackageName());
+        return !isAllowed;
     }
 }
