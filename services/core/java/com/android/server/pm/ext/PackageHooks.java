@@ -25,6 +25,14 @@ public class PackageHooks {
         return NO_PERMISSION_OVERRIDE;
     }
 
+    /**
+     * @param isSelfToOther direction of visibility: from self to other package or from other
+     * package to self
+     */
+    public boolean shouldBlockPackageVisibility(int userId, PackageStateInternal otherPkg, boolean isSelfToOther) {
+        return shouldBlockPackageVisibility(userId, otherPkg);
+    }
+
     public boolean shouldBlockPackageVisibility(int userId, PackageStateInternal otherPkg) {
         return false;
     }
@@ -55,18 +63,20 @@ public class PackageHooks {
     private static boolean shouldBlockPackageVisibilityTwoWay(
             PackageStateInternal pkgSetting, int pkgUserId,
             PackageStateInternal otherPkgSetting, int otherPkgUserId) {
-        boolean res = shouldBlockPackageVisibilityInner(pkgSetting, pkgUserId, otherPkgSetting);
+        boolean res = shouldBlockPackageVisibilityInner(pkgSetting, pkgUserId, otherPkgSetting, true);
         if (!res) {
-            res = shouldBlockPackageVisibilityInner(otherPkgSetting, otherPkgUserId, pkgSetting);
+            res = shouldBlockPackageVisibilityInner(otherPkgSetting, otherPkgUserId, pkgSetting, false);
         }
         return res;
     }
 
     private static boolean shouldBlockPackageVisibilityInner(
-            PackageStateInternal pkgSetting, int pkgUserId, PackageStateInternal otherPkgSetting) {
+            PackageStateInternal pkgSetting, int pkgUserId, PackageStateInternal otherPkgSetting,
+            boolean isSelfToOther) {
         AndroidPackage pkg = pkgSetting.getPkg();
         if (pkg != null) {
-            return PackageExt.get(pkg).hooks().shouldBlockPackageVisibility(pkgUserId, otherPkgSetting);
+            return PackageExt.get(pkg).hooks()
+                    .shouldBlockPackageVisibility(pkgUserId, otherPkgSetting, isSelfToOther);
         }
 
         return false;
